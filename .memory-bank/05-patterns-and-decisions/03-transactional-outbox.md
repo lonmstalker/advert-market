@@ -62,13 +62,15 @@ Debezium captures changes to `notification_outbox` via PostgreSQL WAL and publis
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | `UUID` | Outbox record ID |
-| `idempotency_key` | `VARCHAR` | Deduplication key |
-| `topic` | `VARCHAR` | Target Kafka topic |
-| `partition_key` | `VARCHAR` | Kafka partition key (usually `deal_id`) |
+| `id` | `BIGSERIAL` | Outbox record ID |
+| `deal_id` | `UUID` | Related deal (nullable) |
+| `idempotency_key` | `VARCHAR(200)` | Deduplication key (unique) |
+| `topic` | `VARCHAR(100)` | Target Kafka topic |
+| `partition_key` | `VARCHAR(100)` | Kafka partition key (usually `deal_id`) |
 | `payload` | `JSONB` | Event payload |
-| `status` | `VARCHAR` | `PENDING` → `PROCESSING` → `DELIVERED` / `FAILED` |
+| `status` | `VARCHAR(20)` | `PENDING` → `PROCESSING` → `DELIVERED` / `FAILED` |
 | `retry_count` | `INTEGER` | Delivery attempts |
+| `version` | `INTEGER` | Optimistic locking |
 | `created_at` | `TIMESTAMPTZ` | Created within domain transaction |
 | `processed_at` | `TIMESTAMPTZ` | When picked up by publisher |
 
