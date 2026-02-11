@@ -196,6 +196,7 @@ await tonConnectUI.sendTransaction({
 ## Conventions
 
 MUST follow these documents:
+- [Design Guidelines](./DESIGN_GUIDELINES.md) — layout, typography, colors, animations, anti-patterns checklist
 - [TypeScript Conventions](../.memory-bank/17-typescript-conventions.md) — strict TS, testing, performance, financial data rules
 - [API Contracts](../.memory-bank/11-api-contracts.md) — endpoints, request/response schemas, pagination, errors
 - [Module Architecture](../.memory-bank/15-module-architecture.md) — project structure, dependency rules
