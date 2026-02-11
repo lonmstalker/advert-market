@@ -1,6 +1,6 @@
 # Онбординг
 
-> 3 экрана при первом запуске. Показывается только новым пользователям (нет записи в `users`).
+> 3 экрана при первом запуске. Показывается по флагу `onboardingCompleted == false` из ответа auth.
 
 ## Навигация
 
@@ -16,15 +16,15 @@
 |---|---|
 | **Route** | `/onboarding` |
 | **Цель** | Познакомить с платформой при первом запуске |
-| **Кто видит** | Новый пользователь (нет записи в `users`) |
+| **Кто видит** | Пользователь с `onboardingCompleted == false` |
 | **Данные** | Нет |
 
 ### UI
 
 - Иллюстрация (TON/Telegram стилистика)
-- Заголовок `title1`: "Ad Market"
-- Подзаголовок `body`, `secondary`: "Безопасная реклама в Telegram с TON эскроу"
-- Кнопка "Начать" (`primary`, full-width)
+- Заголовок: `t('onboarding.welcome.title')` — "Ad Market"
+- Подзаголовок: `t('onboarding.welcome.subtitle')` — "Безопасная реклама в Telegram с TON эскроу"
+- Кнопка `t('onboarding.welcome.start')` (`primary`, full-width)
 
 ### Действия
 
@@ -44,34 +44,43 @@
 | | |
 |---|---|
 | **Route** | `/onboarding/interest` |
-| **Цель** | Понять главный сценарий пользователя для персонализации |
-| **Кто видит** | Новый пользователь |
-| **Данные** | Нет (сохраняет в `localStorage`) |
+| **Цель** | Понять сценарии пользователя для персонализации |
+| **Кто видит** | Пользователь с `onboardingCompleted == false` |
+| **Данные** | Нет |
 
 ### UI
 
-- Заголовок `title2`: "Что вас интересует?"
-- Две крупные карточки (tappable):
-  - **"Хочу рекламу"** — подзаголовок: "Найдите каналы и разместите рекламу"
-  - **"Владею каналом"** — подзаголовок: "Получайте заказы на рекламу"
-- Мелкий текст `caption`, `secondary`: "Можно и то, и другое"
+- Заголовок: `t('onboarding.interest.title')` — "Что вас интересует?"
+- Две крупные карточки (**toggle**, можно выбрать одну или обе):
+  - **`t('onboarding.interest.advertiser')`** — "Хочу рекламу" — подзаголовок: `t('onboarding.interest.advertiser.description')` — "Найдите каналы и разместите рекламу"
+  - **`t('onboarding.interest.owner')`** — "Владею каналом" — подзаголовок: `t('onboarding.interest.owner.description')` — "Получайте заказы на рекламу"
+- Мелкий текст: `t('onboarding.interest.hint')` — "Можно выбрать оба варианта"
+- Кнопка `t('common.continue')` (`primary`, full-width) — активна при выборе хотя бы одной карточки
 
 ### Действия
 
 | Действие | Результат |
 |----------|-----------|
-| Тап по карточке | `localStorage.setItem('onboarding_interest', 'advertiser' \| 'owner')` → `/onboarding/tour` |
+| Тап по карточке | Toggle selection (вкл/выкл). Карточка подсвечивается при выборе |
+| "Продолжить" | → `/onboarding/tour` |
 
 ### Состояние
 
 ```typescript
-type OnboardingInterest = 'advertiser' | 'owner';
-// localStorage key: 'onboarding_interest'
+type OnboardingInterest = 'advertiser' | 'owner' | 'both';
+
+// Локальный state, отправляется на сервер при завершении онбординга
+const [selected, setSelected] = useState<Set<'advertiser' | 'owner'>>(new Set());
+
+// Результат:
+// selected = {'advertiser'} → 'advertiser'
+// selected = {'owner'} → 'owner'
+// selected = {'advertiser', 'owner'} → 'both'
 ```
 
 ### Компоненты
 
-- Кастомные карточки выбора (не `GroupItem` — крупный формат с иконками)
+- Кастомные карточки выбора с toggle-поведением (не `GroupItem` — крупный формат с иконками)
 
 ---
 
@@ -81,38 +90,59 @@ type OnboardingInterest = 'advertiser' | 'owner';
 |---|---|
 | **Route** | `/onboarding/tour` |
 | **Цель** | Краткий тур по 3 ключевым функциям |
-| **Кто видит** | Новый пользователь |
-| **Данные** | `onboarding_interest` из `localStorage` |
+| **Кто видит** | Пользователь с `onboardingCompleted == false` |
+| **Данные** | `selected` interest из предыдущего шага |
 
 ### UI
 
 Swipeable карусель из 3 слайдов:
 
-| # | Заголовок | Описание |
-|---|-----------|----------|
-| 1 | Каталог каналов | Найдите идеальную площадку для рекламы |
-| 2 | Безопасные сделки | TON эскроу защищает обе стороны |
-| 3 | Прозрачная доставка | Автоматическая проверка размещения |
+| # | Заголовок (i18n) | Описание (i18n) |
+|---|------------------|-----------------|
+| 1 | `t('onboarding.tour.slide1.title')` | `t('onboarding.tour.slide1.description')` |
+| 2 | `t('onboarding.tour.slide2.title')` | `t('onboarding.tour.slide2.description')` |
+| 3 | `t('onboarding.tour.slide3.title')` | `t('onboarding.tour.slide3.description')` |
 
 - Индикатор точек (dot indicator)
-- Кнопка "Завершить" (`primary`, full-width) — видна на последнем слайде
-- Кнопка "Пропустить" (`link`, `secondary`) — видна на 1 и 2 слайде
+- Кнопка `t('onboarding.tour.finish')` (`primary`, full-width) — видна на последнем слайде
+- Кнопка `t('onboarding.tour.skip')` (`link`, `secondary`) — видна на 1 и 2 слайде
 
 ### Действия
 
 | Действие | Результат |
 |----------|-----------|
 | Свайп | Переход между слайдами |
-| "Завершить" / "Пропустить" | Redirect по `onboarding_interest` |
+| "Завершить" / "Пропустить" | `PUT /api/v1/profile/onboarding` → redirect по interest |
+
+### Сохранение на сервере
+
+```
+PUT /api/v1/profile/onboarding
+```
+
+```typescript
+{
+  interest: 'advertiser' | 'owner' | 'both';
+}
+```
+
+Сервер устанавливает `onboardingCompleted = true` + сохраняет `interest` в профиле пользователя.
 
 ### Логика редиректа
 
 ```typescript
-const interest = localStorage.getItem('onboarding_interest');
-if (interest === 'owner') {
-  navigate('/profile/channels/new');
-} else {
-  navigate('/catalog');
+const interest = getOnboardingInterest(); // из state предыдущего шага
+
+switch (interest) {
+  case 'advertiser':
+    navigate('/catalog');
+    break;
+  case 'owner':
+    navigate('/profile/channels/new');
+    break;
+  case 'both':
+    navigate('/catalog'); // основной сценарий — поиск каналов
+    break;
 }
 ```
 
@@ -128,13 +158,31 @@ if (interest === 'owner') {
 
 ### Guard route
 
-Онбординг показывается **только** если `POST /api/v1/auth/validate` вернул пользователя без флага `onboardingCompleted`. После завершения онбординга флаг сохраняется в `localStorage` и на сервере.
+Пользователь **уже создан** при команде `/start` в боте или при `POST /api/v1/auth/login` (upsert). Онбординг показывается **только** если `onboardingCompleted == false` в ответе auth.
+
+```typescript
+// В корневом роутере
+const { data: authData } = useAuth();
+
+if (!authData.onboardingCompleted) {
+  return <Navigate to="/onboarding" />;
+}
+```
+
+После завершения онбординга (`PUT /api/v1/profile/onboarding`) — инвалидация auth query, guard пропускает пользователя дальше.
 
 ### Анимации
 
 - Fade-in при первом появлении
 - Slide-transition между экранами
 - Карусель с momentum scrolling
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| `PUT /api/v1/profile/onboarding` failed | Toast `t('errors.network')` + retry |
+| Offline | Banner `t('errors.offline')` |
 
 ### Файловая структура
 

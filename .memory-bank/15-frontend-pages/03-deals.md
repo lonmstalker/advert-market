@@ -13,6 +13,7 @@
       ├── /deals/:dealId/creative/review
       ├── /deals/:dealId/schedule
       ├── [Sheet] Оплата (TON Connect)
+      ├── [Sheet] Поддержка
       ├── /deals/:dealId/dispute
       └── /deals/:dealId/dispute/evidence
 ```
@@ -38,7 +39,7 @@ GET /api/v1/deals?role=channel&cursor=&limit=20
 
 ### UI
 
-- **Сегмент-контрол**: "Как рекламодатель" / "Как канал"
+- **Сегмент-контрол**: `t('deals.list.asAdvertiser')` / `t('deals.list.asChannel')`
   - Виден только если пользователь имеет сделки в обеих ролях
 - **Список сделок** — `Group` + `GroupItem`:
   - `before`: аватар канала (40×40)
@@ -47,6 +48,10 @@ GET /api/v1/deals?role=channel&cursor=&limit=20
   - `after`: статус-badge (цветной)
 - **Infinite scroll** — skeleton загрузка
 - **Сортировка** по `updatedAt` (desc)
+
+### ABAC (для вкладки "Как канал")
+
+Менеджер видит сделки канала **только** с правом `view_deals`. Без этого права — вкладка "Как канал" скрыта.
 
 ### Статус-badges
 
@@ -72,10 +77,17 @@ GET /api/v1/deals?role=channel&cursor=&limit=20
 
 ### Empty states
 
-| Роль | Emoji | Заголовок | Описание | CTA |
-|------|-------|-----------|----------|-----|
-| Рекламодатель | `📬` | Нет сделок | Найдите канал для рекламы | [Каталог каналов] → `/catalog` |
-| Канал | `📬` | Нет предложений | Зарегистрируйте канал, чтобы получать заказы | [Добавить канал] → `/profile/channels/new` |
+| Роль | Emoji | i18n title | i18n description | CTA |
+|------|-------|------------|------------------|-----|
+| Рекламодатель | `📬` | `deals.empty.advertiser.title` | `deals.empty.advertiser.description` | `deals.empty.advertiser.cta` → `/catalog` |
+| Канал | `📬` | `deals.empty.channel.title` | `deals.empty.channel.description` | `deals.empty.channel.cta` → `/profile/channels/new` |
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка загрузки | `ErrorScreen` + retry |
+| Offline | Banner `t('errors.offline')` |
 
 ---
 
@@ -85,7 +97,7 @@ GET /api/v1/deals?role=channel&cursor=&limit=20
 |---|---|
 | **Route** | `/deals/:dealId` |
 | **Цель** | Центральный экран сделки — статус, действия, timeline |
-| **Кто видит** | Рекламодатель или владелец/менеджер канала этой сделки |
+| **Кто видит** | Рекламодатель или владелец/менеджер канала этой сделки (`view_deals`) |
 
 ### API
 
@@ -104,34 +116,38 @@ GET /api/v1/deals/:dealId/escrow     # Для funded-статусов
 
 ### UI
 
-- **Статус-badge** — крупный, вверху
+- **Header row:**
+  - **Статус-badge** — крупный, вверху
+  - **ShareButton** — deep link `t.me/AdvertMarketBot/app?startapp=deal_{dealId_short}` (см. 6.4)
 - **Карточка канала** — compact, tap → `/catalog/channels/:channelId`
 - **Сумма** — `title2`, bold, `tabular-nums`, `<Amount>`
 - **Блок действий** — зависит от роли и статуса (матрица ниже)
-- **Group "Бриф"** — если есть, collapsible
-- **Group "Креатив"** — если есть, превью текста + медиа thumbnails
-- **Group "Эскроу"** — статус эскроу, баланс (для funded-статусов)
-- **Group "Таймлайн"** — хронологический список событий
+- **Group `t('deals.detail.brief')`** — если есть, collapsible
+- **Group `t('deals.detail.creative')`** — если есть, превью текста + медиа thumbnails
+- **Group `t('deals.detail.escrow')`** — статус эскроу, баланс (для funded-статусов)
+- **Group `t('deals.detail.timeline')`** — хронологический список событий
+- **Кнопка `t('deals.detail.support')`** (`secondary`, small) — открывает Support Sheet
 
 ### Матрица действий
 
-| Статус | Рекламодатель | Владелец канала |
-|--------|--------------|-----------------|
-| `OFFER_PENDING` | [Отменить] `secondary destructive` | [Принять] `primary` / [Переговоры] `secondary` → 3.3 / [Отклонить] `secondary destructive` |
-| `NEGOTIATING` | [Ответить] `secondary` → 3.3 / [Отменить] `secondary destructive` | [Ответить] `secondary` → 3.3 / [Отклонить] `secondary destructive` |
-| `ACCEPTED` | — (ждёт оплаты) | [Отменить] `secondary destructive` |
-| `AWAITING_PAYMENT` | [Оплатить] `primary` → Sheet 3.8 | — (ждёт оплаты) |
-| `FUNDED` | [Отправить бриф] `primary` → 3.4 | [Отправить креатив] `primary` → 3.5 (если есть бриф) |
-| `CREATIVE_SUBMITTED` | [Одобрить] `primary` → 3.6 / [Ревизия] `secondary` → 3.6 | — (ждёт ревью) |
-| `CREATIVE_APPROVED` | — | [Опубликовать] `primary` / [Запланировать] `secondary` → 3.7 |
-| `SCHEDULED` | — | — (ожидание публикации) |
-| `PUBLISHED` | — | — |
-| `DELIVERY_VERIFYING` | — | — |
-| `COMPLETED_RELEASED` | Оставить отзыв (v2) | — |
-| `DISPUTED` | [Добавить доказательства] `secondary` → 3.11 | [Добавить доказательства] `secondary` → 3.11 |
-| `CANCELLED` | — | — |
-| `REFUNDED` | — | — |
-| `EXPIRED` | — | — |
+| Статус | Рекламодатель | Owner | Manager (required right) |
+|--------|--------------|-------|--------------------------|
+| `DRAFT` | — | — | — |
+| `OFFER_PENDING` | [Отменить] `secondary destructive` | [Принять] `primary` / [Переговоры] `secondary` → 3.3 / [Отклонить] `secondary destructive` | `moderate`: то же что Owner |
+| `NEGOTIATING` | [Ответить] `secondary` → 3.3 / [Отменить] `secondary destructive` | [Ответить] `secondary` → 3.3 / [Отклонить] `secondary destructive` | `moderate`: то же что Owner |
+| `ACCEPTED` | — (ждёт оплаты) | [Отменить] `secondary destructive` | — |
+| `AWAITING_PAYMENT` | [Оплатить] `primary` → Sheet 3.8 | — (ждёт оплаты) | — |
+| `FUNDED` | [Отправить бриф] `primary` → 3.4 | [Отправить креатив] `primary` → 3.5 (если есть бриф) | `moderate`: то же что Owner |
+| `CREATIVE_SUBMITTED` | [Одобрить] `primary` → 3.6 / [Ревизия] `secondary` → 3.6 | — (ждёт ревью) | — |
+| `CREATIVE_APPROVED` | — | [Опубликовать] `primary` / [Запланировать] `secondary` → 3.7 | `publish`: то же что Owner |
+| `SCHEDULED` | — | — | — |
+| `PUBLISHED` | — | — | — |
+| `DELIVERY_VERIFYING` | — | — | — |
+| `COMPLETED_RELEASED` | Оставить отзыв (v2) | — | — |
+| `DISPUTED` | [Добавить доказательства] `secondary` → 3.11 | [Добавить доказательства] `secondary` → 3.11 | `view_deals`: то же |
+| `CANCELLED` | — | — | — |
+| `REFUNDED` | — | — | — |
+| `EXPIRED` | — | — | — |
 
 **Реализация:** exhaustive `switch` с `default: never`.
 
@@ -158,6 +174,14 @@ function getDealRole(deal: Deal, userId: number): DealRole {
 
 Деструктивные действия (отмена, отклонение) требуют `DialogModal` подтверждения.
 
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| 404 сделка не найдена | `ErrorScreen` `t('errors.notFound.title')` + navigate `/deals` |
+| 403 нет доступа | `ErrorScreen` `t('errors.forbidden.title')` |
+| 409 статус изменился | Toast `t('errors.conflict')` + auto-refetch |
+
 ---
 
 ## 3.3 Переговоры
@@ -166,7 +190,7 @@ function getDealRole(deal: Deal, userId: number): DealRole {
 |---|---|
 | **Route** | `/deals/:dealId/negotiate` |
 | **Цель** | Отправить контр-предложение по цене |
-| **Кто видит** | Обе стороны в статусе `OFFER_PENDING` / `NEGOTIATING` |
+| **Кто видит** | Рекламодатель или Owner/Manager (`moderate`) в статусе `OFFER_PENDING` / `NEGOTIATING` |
 
 ### API
 
@@ -178,9 +202,9 @@ POST /api/v1/deals/:dealId/negotiate     # Контр-предложение
 ### UI
 
 - **Текущие условия** — read-only карточка: тип поста + текущая цена (`<Amount>`)
-- **Input "Ваша цена"** — numeric, TON, `<Amount>` format
-- **Input "Комментарий"** — `textarea`, optional, max 2000 символов
-- Кнопка "Отправить предложение" (`primary`)
+- **Input `t('deals.negotiate.price')`** — numeric, TON, `<Amount>` format
+- **Input `t('deals.negotiate.comment')`** — `textarea`, optional, max 2000 символов
+- Кнопка `t('deals.negotiate.submit')` (`primary`)
 
 ### Request body
 
@@ -197,6 +221,10 @@ POST /api/v1/deals/:dealId/negotiate     # Контр-предложение
 | Действие | Результат |
 |----------|-----------|
 | "Отправить" | `POST /api/v1/deals/:id/negotiate` → navigate back to `/deals/:dealId` |
+
+### ABAC
+
+Manager: требуется `moderate`.
 
 ---
 
@@ -219,13 +247,13 @@ POST /api/v1/deals/:dealId/brief  # Отправка брифа
 
 ### UI
 
-- Заголовок `title2`: "Бриф для креатива"
-- **Input "Текст поста"** — `textarea`, placeholder: "Опишите что должно быть в посте"
-- **Input "Ссылка/CTA"** — URL input
-- **Input "Ограничения"** — `textarea`, placeholder: "Что НЕ включать"
-- **Select "Тон"** — профессиональный / неформальный / нейтральный
+- Заголовок: `t('deals.brief.title')`
+- **Input `t('deals.brief.text')`** — `textarea`, placeholder: `t('deals.brief.textPlaceholder')`
+- **Input `t('deals.brief.cta')`** — URL input
+- **Input `t('deals.brief.restrictions')`** — `textarea`, placeholder: `t('deals.brief.restrictionsPlaceholder')`
+- **Select `t('deals.brief.tone')`** — `t('deals.brief.tone.professional')` / `t('deals.brief.tone.informal')` / `t('deals.brief.tone.neutral')`
 - **Загрузка файлов** — примеры, референсы (drag & drop или file picker)
-- Кнопка "Отправить бриф" (`primary`)
+- Кнопка `t('deals.brief.submit')` (`primary`)
 
 ### Действия
 
@@ -241,7 +269,7 @@ POST /api/v1/deals/:dealId/brief  # Отправка брифа
 |---|---|
 | **Route** | `/deals/:dealId/creative` |
 | **Цель** | Владелец канала создаёт черновик поста по брифу |
-| **Кто видит** | Владелец/менеджер (right: `moderate`) в статусе `FUNDED` |
+| **Кто видит** | Owner/Manager (`moderate`) в статусе `FUNDED` |
 
 ### API
 
@@ -255,15 +283,32 @@ POST /api/v1/deals/:dealId/creative   # Отправка креатива
 
 ### UI
 
-- **Group "Бриф"** — read-only, данные от рекламодателя (collapsible)
-- **Input "Текст поста"** — `textarea`, max 4096 символов (Telegram limit), character counter
+- **Group `t('deals.creative.brief')`** — read-only, данные от рекламодателя (collapsible)
+- **Кнопка `t('deals.creative.importFromTelegram')`** (`secondary`, small) — импорт существующего поста из канала (см. "Импорт из Telegram" ниже)
+- **Input `t('deals.creative.text')`** — `textarea`, max 4096 символов (Telegram limit), character counter
 - **Загрузка медиа** — до 10 изображений, drag & drop, thumbnails grid
 - **Builder кнопок** — опционально:
-  - Каждая кнопка: Input "Текст" + Input "URL"
+  - Каждая кнопка: Input `t('deals.creative.buttonText')` + Input `t('deals.creative.buttonUrl')`
   - До 3 рядов кнопок
-  - Кнопка "Добавить кнопку" (`link`)
+  - Кнопка `t('deals.creative.addButton')` (`link`)
 - **Превью** — имитация Telegram-поста (real-time обновление при вводе)
-- Кнопка "Отправить на ревью" (`primary`)
+- Кнопка `t('deals.creative.submit')` (`primary`)
+
+### Импорт из Telegram (MVP)
+
+Флоу пересылки поста через бота:
+
+1. Пользователь нажимает `t('deals.creative.importFromTelegram')`
+2. Mini App показывает инструкцию: `t('deals.creative.importInstruction')` — "Перешлите пост боту @AdvertMarketBot"
+3. Кнопка `t('deals.creative.openBot')` → `openTelegramLink('https://t.me/AdvertMarketBot')`
+4. Пользователь пересылает пост боту
+5. Бот парсит пост (text, media, buttons) → сохраняет по `dealId`
+6. Mini App polling `GET /api/v1/deals/:dealId/creative/import` (каждые 3s, таймаут 60s)
+7. При получении — автозаполнение формы
+
+### ABAC
+
+Manager: требуется `moderate`.
 
 ### Request body
 
@@ -281,6 +326,7 @@ POST /api/v1/deals/:dealId/creative   # Отправка креатива
 | Действие | Результат |
 |----------|-----------|
 | Ввод текста | Real-time обновление превью |
+| "Импорт из Telegram" | Инструкция + polling → автозаполнение |
 | "Отправить на ревью" | `POST /api/v1/deals/:id/creative` → navigate `/deals/:dealId` |
 
 ---
@@ -291,7 +337,7 @@ POST /api/v1/deals/:dealId/creative   # Отправка креатива
 |---|---|
 | **Route** | `/deals/:dealId/creative/review` |
 | **Цель** | Рекламодатель оценивает черновик и принимает решение |
-| **Кто видит** | Рекламодатель в статусе `CREATIVE_SUBMITTED` |
+| **Кто видит** | **Рекламодатель only** в статусе `CREATIVE_SUBMITTED` |
 
 ### API
 
@@ -307,11 +353,11 @@ POST /api/v1/deals/:dealId/creative/revision # Запросить ревизию
 ### UI
 
 - **Превью креатива** — как в Telegram: текст + медиа + кнопки
-- **Group "Бриф"** — read-only, для сравнения (collapsible)
-- **Input "Комментарий к ревизии"** — `textarea`, появляется при нажатии "Запросить ревизию"
+- **Group `t('deals.review.brief')`** — read-only, для сравнения (collapsible)
+- **Input `t('deals.review.revisionComment')`** — `textarea`, появляется при нажатии "Запросить ревизию"
 - Две кнопки:
-  - "Запросить ревизию" (`secondary`)
-  - "Одобрить" (`primary`)
+  - `t('deals.review.requestRevision')` (`secondary`)
+  - `t('deals.review.approve')` (`primary`)
 
 ### Действия
 
@@ -328,7 +374,7 @@ POST /api/v1/deals/:dealId/creative/revision # Запросить ревизию
 |---|---|
 | **Route** | `/deals/:dealId/schedule` |
 | **Цель** | Владелец канала выбирает время публикации |
-| **Кто видит** | Владелец/менеджер (right: `publish`) в статусе `CREATIVE_APPROVED` |
+| **Кто видит** | Owner/Manager (`publish`) в статусе `CREATIVE_APPROVED` |
 
 ### API
 
@@ -345,8 +391,8 @@ POST /api/v1/deals/:dealId/schedule  # Запланировать
 - **Time picker** — hour:minute
 - **Timezone** — авто-определение, read-only (из `Intl.DateTimeFormat().resolvedOptions().timeZone`)
 - Две кнопки:
-  - "Опубликовать сейчас" (`primary`)
-  - "Запланировать" (`secondary`) — активна только после выбора даты/времени
+  - `t('deals.schedule.publishNow')` (`primary`)
+  - `t('deals.schedule.schedule')` (`secondary`) — активна только после выбора даты/времени
 
 ### Request body (schedule)
 
@@ -363,6 +409,10 @@ POST /api/v1/deals/:dealId/schedule  # Запланировать
 | "Опубликовать сейчас" | `POST /api/v1/deals/:id/publish` → navigate `/deals/:dealId` |
 | "Запланировать" | `POST /api/v1/deals/:id/schedule` → navigate `/deals/:dealId` |
 
+### ABAC
+
+Manager: требуется `publish`.
+
 ---
 
 ## 3.8 Оплата (Sheet — TON Connect)
@@ -371,7 +421,7 @@ POST /api/v1/deals/:dealId/schedule  # Запланировать
 |---|---|
 | **Route** | N/A (Sheet overlay на 3.2) |
 | **Цель** | Оплата сделки через TON Connect |
-| **Кто видит** | Рекламодатель в статусе `AWAITING_PAYMENT` |
+| **Кто видит** | **Рекламодатель only** в статусе `AWAITING_PAYMENT` |
 
 ### API
 
@@ -387,21 +437,20 @@ GET /api/v1/deals/:dealId/deposit   # escrow address, amount
 - **Комиссия платформы** — `caption`, `secondary` (10%)
 - **Итого** — `title2`, bold
 - **Статус кошелька** — иконка + адрес (truncated), если подключён
-- Кнопка "Подключить кошелёк" (`secondary`) — если не подключён
-- Кнопка "Оплатить" (`primary`) — доступна после подключения
-- Текст `caption`, `secondary`: "Средства будут заморожены в эскроу до завершения сделки"
+- Кнопка `t('wallet.connectWallet')` (`secondary`) — если не подключён
+- Кнопка `t('deals.payment.pay')` (`primary`) — доступна после подключения
+- Текст `caption`: `t('deals.payment.escrowNote')`
 
 ### Действия
 
 | Действие | Результат |
 |----------|-----------|
 | "Подключить кошелёк" | TON Connect flow (tonConnectUI.connectWallet()) |
-| "Оплатить" | Подписать транзакцию → toast "Оплата обрабатывается" → закрыть sheet |
+| "Оплатить" | Подписать транзакцию → toast `t('wallet.toast.paymentSent')` → закрыть sheet |
 
 ### TON Connect интеграция
 
 ```typescript
-// Отправка транзакции через TON Connect
 const transaction = {
   validUntil: Math.floor(Date.now() / 1000) + 600, // 10 min
   messages: [{
@@ -414,6 +463,14 @@ await tonConnectUI.sendTransaction(transaction);
 
 После отправки — polling `dealKeys.detail(dealId)` до смены статуса на `FUNDED`.
 
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Кошелёк отклонил | Toast `t('wallet.error.walletRejected')` |
+| Недостаточно TON | Toast `t('wallet.error.insufficientTon')` |
+| Таймаут | Toast `t('wallet.error.timeout')` |
+
 ---
 
 ## 3.9 Открытие спора
@@ -422,7 +479,7 @@ await tonConnectUI.sendTransaction(transaction);
 |---|---|
 | **Route** | `/deals/:dealId/dispute` (POST-форма, когда спора ещё нет) |
 | **Цель** | Подать спор по сделке |
-| **Кто видит** | Обе стороны в funded-статусах (`FUNDED`...`DELIVERY_VERIFYING`) |
+| **Кто видит** | Рекламодатель или Owner/Manager (`view_deals`) в funded-статусах (`FUNDED`...`DELIVERY_VERIFYING`) |
 
 ### API
 
@@ -433,16 +490,16 @@ POST /api/v1/deals/:dealId/dispute   # Открыть спор
 
 ### UI
 
-- **Select "Причина"** — enum:
-  - `POST_DELETED` — Пост удалён
-  - `POST_EDITED` — Пост изменён
-  - `WRONG_CONTENT` — Неправильный контент
-  - `QUALITY_ISSUE` — Проблемы с качеством
-  - `OTHER` — Другое
-- **Input "Описание"** — `textarea`, max 5000 символов
+- **Select `t('deals.dispute.reason')`** — enum:
+  - `POST_DELETED` — `t('deals.dispute.reason.postDeleted')`
+  - `POST_EDITED` — `t('deals.dispute.reason.postEdited')`
+  - `WRONG_CONTENT` — `t('deals.dispute.reason.wrongContent')`
+  - `QUALITY_ISSUE` — `t('deals.dispute.reason.qualityIssue')`
+  - `OTHER` — `t('deals.dispute.reason.other')`
+- **Input `t('deals.dispute.description')`** — `textarea`, max 5000 символов
 - **Загрузка доказательств** — скриншоты (file picker)
-- **Предупреждение** — `destructive` text: "Эскроу будет заморожен до разрешения спора"
-- Кнопка "Подать спор" (`primary`, destructive color)
+- **Предупреждение** — `destructive` text: `t('deals.dispute.warning')`
+- Кнопка `t('deals.dispute.submit')` (`primary`, destructive color)
 
 ### Действия
 
@@ -459,6 +516,10 @@ POST /api/v1/deals/:dealId/dispute   # Открыть спор
 }
 ```
 
+### ABAC
+
+Manager: требуется `view_deals` (минимум — участник сделки).
+
 ---
 
 ## 3.10 Детали спора
@@ -467,7 +528,7 @@ POST /api/v1/deals/:dealId/dispute   # Открыть спор
 |---|---|
 | **Route** | `/deals/:dealId/dispute` (GET-вид, когда спор уже открыт) |
 | **Цель** | Просмотр статуса спора и доказательств |
-| **Кто видит** | Обе стороны в статусе `DISPUTED` |
+| **Кто видит** | Рекламодатель или Owner/Manager (`view_deals`) в статусе `DISPUTED` |
 
 ### API
 
@@ -487,10 +548,10 @@ Route `/deals/:dealId/dispute` показывает:
 
 - **Статус спора** — badge
 - **Причина и описание** — от инициатора
-- **Group "Доказательства"** — timeline (append-only):
-  - Каждый элемент: автор + тип + содержимое + время
+- **Group `t('deals.dispute.evidence')`** — timeline (append-only):
+  - Каждый элемент: автор + содержимое (скрины + текст + ссылки) + время
 - **Результат** — если разрешён: решение + обоснование
-- Кнопка "Добавить доказательства" (`secondary`) — если спор открыт
+- Кнопка `t('deals.dispute.addEvidence')` (`secondary`) — если спор открыт
 
 ### Действия
 
@@ -506,7 +567,7 @@ Route `/deals/:dealId/dispute` показывает:
 |---|---|
 | **Route** | `/deals/:dealId/dispute/evidence` |
 | **Цель** | Добавить доказательства к открытому спору |
-| **Кто видит** | Обе стороны в статусе `DISPUTED` |
+| **Кто видит** | Рекламодатель или Owner/Manager (`view_deals`) в статусе `DISPUTED` |
 
 ### API
 
@@ -515,25 +576,81 @@ GET  /api/v1/deals/:dealId/dispute            # Контекст спора
 POST /api/v1/deals/:dealId/dispute/evidence   # Отправка доказательства
 ```
 
-### UI
+### UI — комбинированная форма
 
-- **Select "Тип"** — `SCREENSHOT` / `TEXT` / `LINK`
-- **Контент-поле** — зависит от типа:
-  - `SCREENSHOT`: file upload
-  - `TEXT`: `textarea`
-  - `LINK`: URL input
-- **Input "Комментарий"** — `textarea`
-- Кнопка "Отправить" (`primary`)
+Одна подача = комбинация всех типов (хотя бы одно поле обязательно):
+
+- **Секция `t('deals.evidence.screenshots')`** — file upload, до 5 скриншотов, thumbnails grid
+- **Секция `t('deals.evidence.description')`** — `textarea`, max 5000 символов
+- **Секция `t('deals.evidence.links')`** — до 3 URL inputs, кнопка `t('deals.evidence.addLink')` (`link`)
+- **Input `t('deals.evidence.comment')`** — `textarea`, общий комментарий
+- Кнопка `t('deals.evidence.submit')` (`primary`) — активна если хотя бы одно поле заполнено
 
 ### Request body
 
 ```typescript
 {
-  evidenceType: 'SCREENSHOT' | 'TEXT' | 'LINK';
-  content: {
-    url?: string;     // для SCREENSHOT и LINK
-    text?: string;    // для TEXT
-    caption?: string; // комментарий
+  screenshots?: string[];  // URLs после загрузки, max 5
+  description?: string;    // max 5000
+  links?: string[];        // max 3, valid URLs
+  comment?: string;        // общий комментарий
+}
+```
+
+### Валидация
+
+- Хотя бы одно из полей (`screenshots`, `description`, `links`) должно быть заполнено
+- Скриншоты: max 5, форматы: JPEG/PNG/WebP, max 10MB каждый
+- Ссылки: max 3, valid URL format
+
+### Действия
+
+| Действие | Результат |
+|----------|-----------|
+| "Отправить" | `POST /api/v1/deals/:id/dispute/evidence` → navigate `/deals/:dealId/dispute` |
+
+---
+
+## 3.12 Support Sheet
+
+| | |
+|---|---|
+| **Route** | N/A (Sheet overlay на 3.2) |
+| **Цель** | Обращение в поддержку по сделке |
+| **Кто видит** | Все участники сделки |
+
+### API
+
+```
+POST /api/v1/support   # Создаёт тикет
+```
+
+### UI
+
+- Заголовок: `t('deals.support.title')`
+- **Select `t('deals.support.topicLabel')`**:
+  - `PAYMENT_ISSUE` — `t('deals.support.topic.payment')`
+  - `CREATIVE_ISSUE` — `t('deals.support.topic.creative')`
+  - `OTHER` — `t('deals.support.topic.other')`
+- **Input `t('deals.support.descriptionLabel')`** — `textarea`, max 5000
+- **Read-only контекст** (подставляется автоматически):
+  - Deal ID
+  - Текущий статус
+  - Сумма сделки
+  - Роль обращающегося
+- Кнопка `t('deals.support.submit')` (`primary`)
+
+### Request body
+
+```typescript
+{
+  dealId: string;
+  topic: 'PAYMENT_ISSUE' | 'CREATIVE_ISSUE' | 'OTHER';
+  description: string;  // max 5000
+  context: {
+    dealStatus: DealStatus;
+    amountNano: bigint;
+    role: DealRole;
   };
 }
 ```
@@ -542,7 +659,15 @@ POST /api/v1/deals/:dealId/dispute/evidence   # Отправка доказат�
 
 | Действие | Результат |
 |----------|-----------|
-| "Отправить" | `POST /api/v1/deals/:id/dispute/evidence` → navigate `/deals/:dealId/dispute` |
+| "Отправить" | `POST /api/v1/support` → toast `t('deals.support.sent')` → закрыть sheet |
+
+Бот пересылает тикет операторам в группу поддержки.
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка отправки | Toast `t('common.toast.saveFailed')` |
 
 ---
 
@@ -570,9 +695,12 @@ src/features/deals/
     DealTimeline.tsx
     DealStatusBadge.tsx
     PaymentSheet.tsx            # TON Connect sheet
+    SupportSheet.tsx            # Support ticket sheet
     TelegramPostPreview.tsx     # Превью креатива
     ButtonBuilder.tsx           # Builder кнопок для креатива
+    EvidenceForm.tsx            # Комбинированная форма доказательств
     EvidenceTimeline.tsx
+    CreativeImportFlow.tsx      # Импорт поста через бота
   hooks/
     useDealRole.ts
     useDealActions.ts
@@ -583,4 +711,5 @@ src/features/deals/
     deal.ts                     # Zod schemas
     creative.ts
     dispute.ts
+    support.ts
 ```

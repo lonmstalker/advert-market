@@ -29,14 +29,18 @@ GET /api/v1/channels?cursor=&limit=20&q=&topic=&minSubs=&maxSubs=&minPrice=&maxP
 
 **Query keys:** `channelKeys.list(params)`
 
+### Deep link при входе
+
+При наличии `startapp=channel_{id}` в параметрах Telegram Mini App — автоматический роутинг на `/catalog/channels/:id` (обработка в корневом роутере, см. 6.4).
+
 ### UI
 
-- **Поисковая строка** — сверху, debounce 300ms
-- **Кнопка "Фильтры"** — справа от поиска, badge с количеством активных фильтров
+- **Поисковая строка** — сверху, debounce 300ms, placeholder: `t('catalog.search.placeholder')`
+- **Кнопка `t('catalog.filters.button')`** — справа от поиска, badge с количеством активных фильтров
 - **Список каналов** — `Group` + `GroupItem`:
   - `before`: аватар канала (40×40)
   - Заголовок: название канала
-  - `subtitle`: "{subscribers} подписчиков"
+  - `subtitle`: `t('catalog.channel.subscribers', { count })`
   - `after`: цена (мин. из pricing rules, формат `<Amount>`)
 - **Infinite scroll** — skeleton загрузка (3 GroupItem placeholder)
 - **Pull-to-refresh**
@@ -52,9 +56,9 @@ GET /api/v1/channels?cursor=&limit=20&q=&topic=&minSubs=&maxSubs=&minPrice=&maxP
 
 ### Empty state
 
-| Emoji | Заголовок | Описание | CTA |
-|-------|-----------|----------|-----|
-| `🔍` | Ничего не найдено | Попробуйте изменить фильтры | [Сбросить фильтры] |
+| Emoji | i18n title | i18n description | CTA |
+|-------|------------|------------------|-----|
+| `🔍` | `catalog.empty.title` | `catalog.empty.description` | `catalog.empty.cta` → Reset filters |
 
 ### Состояние фильтров
 
@@ -71,6 +75,13 @@ type CatalogFilters = {
 ```
 
 Хранение: URL search params (shareable, back-compatible).
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка загрузки списка | `ErrorScreen` + retry |
+| Offline | Banner `t('errors.offline')` |
 
 ---
 
@@ -90,18 +101,18 @@ GET /api/v1/channels/topics   # Список тематик (или enum на к
 
 ### UI
 
-- Заголовок `title2`: "Фильтры"
-- **Тематика** — `Select`, список категорий из API/enum
-- **Подписчики** — два `Input` (numeric): "От" / "До"
-- **Цена за пост** — два `Input` (numeric, TON): "От" / "До"
-- **Сортировка** — `Select`:
-  - По релевантности (default)
-  - По подписчикам
-  - По цене (возр.)
-  - По цене (убыв.)
-  - По ER
-- Кнопка "Показать N каналов" (`primary`, full-width) — N обновляется при изменении фильтров
-- Кнопка "Сбросить" (`link`)
+- Заголовок: `t('catalog.filters.title')`
+- **Тематика** — `Select`, `t('catalog.filters.topic')`
+- **Подписчики** — два `Input` (numeric): `t('catalog.filters.from')` / `t('catalog.filters.to')`
+- **Цена за пост** — два `Input` (numeric, TON): `t('catalog.filters.from')` / `t('catalog.filters.to')`
+- **Сортировка** — `Select`, `t('catalog.filters.sort')`:
+  - `t('catalog.filters.sort.relevance')` (default)
+  - `t('catalog.filters.sort.subscribers')`
+  - `t('catalog.filters.sort.priceAsc')`
+  - `t('catalog.filters.sort.priceDesc')`
+  - `t('catalog.filters.sort.er')`
+- Кнопка `t('catalog.filters.show', { count: N })` (`primary`, full-width) — N обновляется при изменении фильтров
+- Кнопка `t('catalog.filters.reset')` (`link`)
 
 ### Действия
 
@@ -133,45 +144,62 @@ GET /api/v1/channels/topics   # Список тематик (или enum на к
 
 ```
 GET /api/v1/channels/:channelId
-GET /api/v1/channels/:channelId/team   # Проверка: пользователь — owner?
+GET /api/v1/channels/:channelId/team   # Проверка: роль пользователя
 ```
 
 **Query keys:** `channelKeys.detail(channelId)`, `channelKeys.team(channelId)`
 
 ### UI
 
-- **Аватар** — крупный (80×80)
-- **Название** — `title1`
+- **Header row:**
+  - **Аватар** — крупный (80×80)
+  - **Название** — `title1`
+  - **ShareButton** — иконка share, рядом с заголовком (см. 6.4)
 - **Описание** — `body`
-- **Group "Статистика"** — `GroupItem`:
-  - Подписчики (formatted number)
-  - Средний охват
-  - ER (engagement rate, %)
-- **Group "Цены"** — `GroupItem` для каждого pricing rule:
+- **Group `t('catalog.channel.stats')`** — `GroupItem`:
+  - `t('catalog.channel.subscribers')` (formatted number)
+  - `t('catalog.channel.avgReach')`
+  - `t('catalog.channel.er')` (%)
+- **Group `t('catalog.channel.pricing')`** — `GroupItem` для каждого pricing rule:
   - Название типа поста
   - `after`: цена в TON (`<Amount>`)
 - **Тематики** — caption badges
-- **Кнопка** (sticky bottom, full-width):
-  - Если НЕ owner: "Создать сделку" (`primary`) → 2.4
-  - Если owner: "Редактировать" (`secondary`) → `/profile/channels/:channelId/edit`
+- **Кнопки** (sticky bottom, full-width):
+  - Если НЕ member: `t('catalog.channel.createDeal')` (`primary`) → 2.4
+  - Если **owner**: ОБЕ кнопки — `t('catalog.channel.edit')` (`secondary`) + `t('catalog.channel.createDeal')` (`primary`)
+  - Если manager: только `t('catalog.channel.createDeal')` (`primary`)
+
+### ABAC
+
+| Роль | Кнопки |
+|------|--------|
+| Посторонний | "Создать сделку" |
+| Owner | "Редактировать" + "Создать сделку" (может тестировать как рекламодатель) |
+| Manager (любые права) | "Создать сделку" |
+
+> "Редактировать" — **OWNER-ONLY** (`@channelAuth.isOwner` на бэкенде). Менеджеры НЕ видят эту кнопку, даже с `manage_listings`.
 
 ### Действия
 
 | Действие | Результат |
 |----------|-----------|
 | "Создать сделку" | → `/deals/new?channelId=:channelId` |
-| "Редактировать" | → `/profile/channels/:channelId/edit` (если owner) |
+| "Редактировать" | → `/profile/channels/:channelId/edit` (только owner) |
+| ShareButton | Deep link `t.me/AdvertMarketBot/app?startapp=channel_{channelId}` → `switchInlineQuery()` или clipboard + toast |
 | BackButton | → `/catalog` |
 
-### Определение owner
+### Определение роли
 
 ```typescript
-const { data: team } = useQuery({
-  queryKey: channelKeys.team(channelId),
-  queryFn: () => fetchChannelTeam(channelId),
-});
-const isOwner = team?.some(m => m.userId === currentUser.id && m.role === 'OWNER');
+const { isOwner, hasRight } = useChannelRights(channelId);
 ```
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| 404 канал не найден | `ErrorScreen` `t('errors.notFound.title')` + navigate `/catalog` |
+| Ошибка загрузки | `ErrorScreen` + retry |
 
 ---
 
@@ -195,10 +223,10 @@ POST /api/v1/deals                   # Создание сделки
 ### UI
 
 - **Карточка канала** (read-only, compact): аватар + название + подписчики
-- **Select "Тип поста"** — из pricing rules канала
+- **Select `t('deals.create.postType')`** — из pricing rules канала
 - **Цена** — `title2`, `tabular-nums`, read-only (обновляется при выборе типа)
-- **Input "Сообщение владельцу"** — `textarea`, optional, max 2000 символов, placeholder: "Опишите пожелания к рекламе"
-- Кнопка "Отправить оффер" (`primary`, full-width)
+- **Input `t('deals.create.message')`** — `textarea`, optional, max 2000 символов, placeholder: `t('deals.create.messagePlaceholder')`
+- Кнопка `t('deals.create.submit')` (`primary`, full-width)
 
 ### Действия
 
@@ -221,6 +249,13 @@ POST /api/v1/deals                   # Создание сделки
 
 - `pricingRuleId` — обязательно (Select не может быть пустым)
 - `message` — опционально, max 2000 символов
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| 409 (deal already exists) | Toast `t('deals.error.alreadyExists')` |
+| Ошибка создания | Toast `t('common.toast.saveFailed')` |
 
 ---
 
@@ -245,6 +280,7 @@ src/features/channels/
     PricingRulesList.tsx        # Список цен
   hooks/
     useChannelFilters.ts        # URL search params state
+    useChannelRights.ts         # ABAC hook (isOwner, hasRight)
   types/
     channel.ts                  # Zod schemas + types
 ```
