@@ -115,5 +115,5 @@ deal:
 - [Deal State Machine](../06-deal-state-machine.md)
 - [Deal Lifecycle](../03-feature-specs/02-deal-lifecycle.md)
 - [Transactional Outbox](../05-patterns-and-decisions/03-transactional-outbox.md)
-- [Inter-Module Interaction](./26-inter-module-interaction.md)
+- [Inter-Module Interaction](./34-inter-module-interaction.md)
 - [Deal Timeout Scheduler](./19-deal-timeout-scheduler.md)

@@ -15,61 +15,19 @@
 
 ```groovy
 dependencies {
-    implementation 'io.github.neodix42:ton4j-smartcontract:0.8.0'
-    implementation 'io.github.neodix42:ton4j-tonlib:0.8.0'
-    implementation 'io.github.neodix42:ton4j-address:0.8.0'
-    implementation 'io.github.neodix42:ton4j-cell:0.8.0'
-    implementation 'io.github.neodix42:ton4j-mnemonic:0.8.0'
+    implementation 'io.github.neodix42:smartcontract:1.3.2'
+    implementation 'io.github.neodix42:tonlib:1.3.2'
+    implementation 'io.github.neodix42:address:1.3.2'
 }
 ```
 
+> Modules `cell` and `mnemonic` are transitive dependencies. See `platform-bom/build.gradle` for version management.
+
 ---
 
-## TON Center API Endpoint Catalog
+## TON Center API
 
-### Base URLs
-
-| Environment | URL |
-|-------------|-----|
-| Testnet v2 | `https://testnet.toncenter.com/api/v2/` |
-| Mainnet v2 | `https://toncenter.com/api/v2/` |
-
-**Auth**: Header `X-API-Key: <key>`
-
-### Rate Limits
-
-| Tier | Rate |
-|------|------|
-| No key | 1 req/sec |
-| Basic key | 10 req/sec |
-| Advanced key | 25 req/sec |
-
-Rate exceeded -> HTTP 429. Strategy: token bucket limiter on our side.
-
-### Key Endpoints
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/getAddressBalance` | GET | Check deposit address balance |
-| `/getTransactions` | GET | Detect incoming deposits (pagination: `lt` + `hash`) |
-| `/getAddressInformation` | GET | Wallet state and seqno |
-| `/sendBoc` | POST | Broadcast signed transaction |
-| `/getMasterchainInfo` | GET | Current block height for confirmation counting |
-| `/estimateFee` | POST | Estimate transaction fee before sending |
-
-### Error Handling
-
-| HTTP Code | Meaning | Retry? |
-|-----------|---------|--------|
-| 200 | Success | -- |
-| 400 | Invalid request | No |
-| 401 | Invalid API key | No |
-| 429 | Rate limit | Yes, after Retry-After |
-| 500 | Server error | Yes, exponential backoff |
-| 502/503 | Gateway/unavailable | Yes, exponential backoff |
-
-**Retry config**: max 3 attempts, backoff 1s -> 2s -> 4s.
-**Timeouts**: connect 5s, read 30s.
+See [TON Center API Endpoint Catalog](./08-ton-center-api-catalog.md) for endpoints, rate limits, error handling, and retry strategy.
 
 ---
 
@@ -167,34 +125,15 @@ Before submitting, call `estimateFee` to verify sufficient balance. Typical tran
 
 ## Configuration
 
+API configuration: see [TON Center API Catalog](./08-ton-center-api-catalog.md).
+
 ```yaml
 ton:
-  api:
-    url: ${TON_API_URL:https://testnet.toncenter.com/api/v2/}
-    key: ${TON_API_KEY:}
-    timeout:
-      connect: 5s
-      read: 30s
-    retry:
-      max-attempts: 3
-      initial-backoff: 1s
   wallet:
-    mnemonic: ${TON_WALLET_MNEMONIC:}
+    mnemonic: ${TON_WALLET_MNEMONIC:}   # 24-word platform wallet mnemonic
   deposit:
     poll-interval: 10s
-
----
-spring.config.activate.on-profile: prod
-ton:
-  api:
-    url: https://toncenter.com/api/v2/
 ```
-
-| Variable | Description |
-|----------|-------------|
-| `TON_API_URL` | TON Center base URL |
-| `TON_API_KEY` | API key for rate limit tier |
-| `TON_WALLET_MNEMONIC` | 24-word platform wallet mnemonic |
 
 ---
 
@@ -298,5 +237,6 @@ ton:
 
 - [Escrow Flow](../07-financial-system/02-escrow-flow.md)
 - [Confirmation Policy](./15-confirmation-policy.md)
+- [Seqno Management](./43-seqno-management.md)
 - [Workers -- TON Deposit Watcher](../04-architecture/04-workers.md)
 - [External API Resilience](./28-external-api-resilience.md)

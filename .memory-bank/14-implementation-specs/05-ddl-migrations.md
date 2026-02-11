@@ -450,8 +450,155 @@ All COMMENT ON TABLE, COMMENT ON COLUMN, and COMMENT ON FUNCTION statements. Com
 
 ---
 
+## 006-financial-fixes.sql
+
+### Remove balance >= 0 constraint
+
+```sql
+ALTER TABLE account_balances DROP CONSTRAINT account_balances_balance_nano_check;
+```
+
+`EXTERNAL_TON` is a contra-account that goes negative on every deposit. Non-negative checks enforced at application level.
+
+### Add tx_ref to ledger_entries
+
+```sql
+ALTER TABLE ledger_entries ADD COLUMN tx_ref UUID NOT NULL;
+CREATE INDEX idx_ledger_tx_ref ON ledger_entries(tx_ref);
+```
+
+Groups debit+credit entries. Invariant: `SUM(debit_nano) = SUM(credit_nano)` per `tx_ref`.
+
+### Subwallet sequence + unique constraint
+
+```sql
+CREATE SEQUENCE deal_subwallet_seq START 1;
+ALTER TABLE deals ADD CONSTRAINT uq_deals_subwallet_id UNIQUE (subwallet_id);
+```
+
+Replaces `Math.abs(dealId.hashCode())` which has Integer.MIN_VALUE overflow and birthday paradox collisions at ~65K deals.
+
+### Missing deal columns
+
+```sql
+ALTER TABLE deals ADD COLUMN funded_at TIMESTAMPTZ;
+ALTER TABLE deals ADD COLUMN deposit_tx_hash VARCHAR(100);
+```
+
+### tx_type for reconciliation
+
+```sql
+ALTER TABLE ton_transactions ADD COLUMN tx_type VARCHAR(20)
+    CHECK (tx_type IN ('DEPOSIT', 'PAYOUT', 'REFUND', 'OVERPAYMENT_REFUND'));
+```
+
+### Description column for ledger entries
+
+```sql
+ALTER TABLE ledger_entries ADD COLUMN description VARCHAR(500);
+```
+
+### tx_ref in audit_log
+
+```sql
+ALTER TABLE audit_log ADD COLUMN tx_ref UUID;
+CREATE INDEX idx_audit_tx_ref ON audit_log(tx_ref) WHERE tx_ref IS NOT NULL;
+```
+
+---
+
+## 007-audit-findings.sql
+
+### Fix deal status defaults and indexes
+
+```sql
+ALTER TABLE deals ALTER COLUMN status SET DEFAULT 'DRAFT';
+
+-- Rebuild partial indexes with correct terminal status names
+DROP INDEX IF EXISTS idx_deals_status;
+CREATE INDEX idx_deals_status ON deals(status)
+    WHERE status NOT IN ('COMPLETED_RELEASED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED', 'EXPIRED');
+
+DROP INDEX IF EXISTS idx_deals_deadline;
+CREATE INDEX idx_deals_deadline ON deals(deadline_at)
+    WHERE deadline_at IS NOT NULL
+    AND status NOT IN ('COMPLETED_RELEASED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED', 'EXPIRED');
+```
+
+### fee_nano for network fee tracking
+
+```sql
+ALTER TABLE ton_transactions ADD COLUMN fee_nano BIGINT DEFAULT 0;
+```
+
+### TX hash references on deals
+
+```sql
+ALTER TABLE deals ADD COLUMN payout_tx_hash VARCHAR(100);
+ALTER TABLE deals ADD COLUMN refunded_tx_hash VARCHAR(100);
+```
+
+---
+
+## Cumulative Schema (after all migrations)
+
+### ledger_entries (final)
+
+```sql
+CREATE TABLE ledger_entries (
+    id              BIGSERIAL,
+    deal_id         UUID,
+    account_id      VARCHAR(100)  NOT NULL,
+    entry_type      VARCHAR(30)   NOT NULL,
+    debit_nano      BIGINT        NOT NULL DEFAULT 0 CHECK (debit_nano >= 0),
+    credit_nano     BIGINT        NOT NULL DEFAULT 0 CHECK (credit_nano >= 0),
+    tx_ref          UUID          NOT NULL,              -- 006
+    description     VARCHAR(500),                        -- 006
+    idempotency_key VARCHAR(200)  NOT NULL,
+    created_at      TIMESTAMPTZ   DEFAULT now(),
+    PRIMARY KEY (id, created_at),
+    CHECK (debit_nano > 0 OR credit_nano > 0),
+    CHECK (NOT (debit_nano > 0 AND credit_nano > 0))
+) PARTITION BY RANGE (created_at);
+```
+
+### account_balances (final)
+
+```sql
+CREATE TABLE account_balances (
+    account_id      VARCHAR(100)  PRIMARY KEY,
+    balance_nano    BIGINT        NOT NULL DEFAULT 0,    -- NO CHECK >= 0 (006)
+    last_entry_id   BIGINT        NOT NULL DEFAULT 0,
+    version         INTEGER       NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ   DEFAULT now()
+);
+```
+
+### deals (final, additional columns)
+
+```sql
+-- Additional columns from 006 + 007:
+funded_at           TIMESTAMPTZ,              -- 006
+deposit_tx_hash     VARCHAR(100),             -- 006
+payout_tx_hash      VARCHAR(100),             -- 007
+refunded_tx_hash    VARCHAR(100),             -- 007
+-- subwallet_id now UNIQUE (006)
+-- status default: 'DRAFT' (007)
+```
+
+### ton_transactions (final, additional columns)
+
+```sql
+-- Additional columns from 006 + 007:
+tx_type     VARCHAR(20) CHECK (tx_type IN ('DEPOSIT', 'PAYOUT', 'REFUND', 'OVERPAYMENT_REFUND')),  -- 006
+fee_nano    BIGINT DEFAULT 0,                -- 007
+```
+
+---
+
 ## Related Documents
 
 - [Data Stores](../04-architecture/05-data-stores.md)
 - [Double-Entry Ledger](../05-patterns-and-decisions/05-double-entry-ledger.md)
 - [Project Scaffold](./06-project-scaffold.md)
+- [Seqno Management](./43-seqno-management.md)

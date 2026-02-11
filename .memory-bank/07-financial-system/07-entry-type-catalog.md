@@ -54,17 +54,11 @@ Complete enumeration of `entry_type` values used in `ledger_entries`. Each entry
 
 | entry_type | Description | Debit Account | Credit Account |
 |------------|-------------|---------------|----------------|
-| `REVERSAL` | Reverses a previous entry (linked via `tx_ref`) | (opposite of original) | (opposite of original) |
-| `FEE_ADJUSTMENT` | Corrects estimated fee to actual on-chain fee | varies | varies |
+| `REVERSAL` | Operator-initiated reversal (linked via `tx_ref`) | (opposite of original) | (opposite of original) |
+| `FEE_ADJUSTMENT` | Operator-initiated fee correction (manual only) | varies | varies |
 | `DUST_WRITEOFF` | Monthly write-off of subwallet dust | `DUST_WRITEOFF` | `NETWORK_FEES` |
 
-### Recovery Operations
-
-| entry_type | Description | Note |
-|------------|-------------|------|
-| `REVERSAL` | Reverses a previous entry (linked via `tx_ref`) | Used for operator corrections only |
-
-> **Note**: Ledger entries are written AFTER on-chain TX confirmation (single-phase). There are no "pending" entry types. See [Payout Wallet Architecture](../14-implementation-specs/40-payout-wallet-architecture.md).
+> **Note**: `FEE_ADJUSTMENT` is for manual operator corrections only. In normal operation, gas fees are recorded with actual amounts after on-chain TX confirmation (single-phase recording). See [Payout Wallet Architecture](../14-implementation-specs/40-payout-wallet-architecture.md).
 
 ## Idempotency Key Patterns
 

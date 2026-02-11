@@ -63,26 +63,45 @@ WHERE direction = 'IN'
 **Tolerance**: 0 nanoTON (must be exact for deposits)
 **Severity**: CRITICAL if mismatch
 
+### Deposits check (including partial deposits)
+
+```sql
+-- Ledger side: total deposits (full + partial) debited from EXTERNAL_TON
+SELECT
+    COALESCE(SUM(debit_nano), 0) AS ledger_deposits
+FROM ledger_entries
+WHERE entry_type IN ('ESCROW_DEPOSIT', 'PARTIAL_DEPOSIT')
+  AND account_id = 'EXTERNAL_TON'
+  AND created_at >= :range_start
+  AND created_at < :range_end;
+```
+
+> **Note**: Using DEBIT on `EXTERNAL_TON` (not CREDIT on ESCROW) captures both full and partial deposits without double-counting promote entries.
+
 ### Payouts check
 
 ```sql
--- Ledger side: total payouts debited from escrow
+-- Ledger side: total withdrawals to external TON (actual on-chain payouts)
 SELECT
-    COALESCE(SUM(debit_nano), 0) AS ledger_payouts
+    COALESCE(SUM(credit_nano), 0) AS ledger_payouts
 FROM ledger_entries
-WHERE entry_type IN ('OWNER_PAYOUT', 'PLATFORM_COMMISSION')
+WHERE entry_type = 'OWNER_WITHDRAWAL'
+  AND account_id = 'EXTERNAL_TON'
   AND created_at >= :range_start
   AND created_at < :range_end;
 
--- TON side: total confirmed outgoing transactions
+-- TON side: total confirmed outgoing payout transactions
 SELECT
     COALESCE(SUM(amount_nano), 0) AS ton_payouts
 FROM ton_transactions
 WHERE direction = 'OUT'
+  AND tx_type = 'PAYOUT'
   AND status = 'CONFIRMED'
   AND confirmed_at >= :range_start
   AND confirmed_at < :range_end;
 ```
+
+> **Note**: `OWNER_WITHDRAWAL` (OWNER_PENDING -> EXTERNAL_TON) is the correct entry type for on-chain payout comparison, not `OWNER_PAYOUT` which is an internal ledger operation (ESCROW -> OWNER_PENDING).
 
 ---
 
@@ -105,12 +124,12 @@ LEFT JOIN LATERAL (
     WHERE deal_id = d.id AND entry_type = 'ESCROW_DEPOSIT'
 ) le_deposit ON true
 LEFT JOIN LATERAL (
-    SELECT SUM(debit_nano) AS total
+    SELECT SUM(credit_nano) AS total
     FROM ledger_entries
     WHERE deal_id = d.id AND entry_type = 'OWNER_PAYOUT'
 ) le_payout ON true
 LEFT JOIN LATERAL (
-    SELECT SUM(debit_nano) AS total
+    SELECT SUM(credit_nano) AS total
     FROM ledger_entries
     WHERE deal_id = d.id AND entry_type = 'PLATFORM_COMMISSION'
 ) le_commission ON true

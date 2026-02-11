@@ -66,7 +66,7 @@ CREDIT NETWORK_FEES       {actual_gas_fee}
 ALTER TABLE ton_transactions ADD COLUMN fee_nano BIGINT DEFAULT 0;
 ```
 
-> **Note**: `fee_nano` addition should be included in a follow-up migration when implementing the TON integration module.
+> `fee_nano` added in `007-audit-findings.sql`.
 
 ## Reconciliation Check
 
