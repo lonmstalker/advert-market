@@ -2,10 +2,9 @@ package com.advertmarket.communication.webhook;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
 
 /**
  * Deduplicates Telegram updates by update_id using Redis SET NX.
@@ -20,6 +19,7 @@ public class UpdateDeduplicator {
     private final StringRedisTemplate redis;
     private final Counter acquiredCounter;
 
+    /** Creates the deduplicator backed by Redis. */
     public UpdateDeduplicator(StringRedisTemplate redis, MeterRegistry meterRegistry) {
         this.redis = redis;
         this.acquiredCounter = Counter.builder("telegram.update.dedup.acquired")

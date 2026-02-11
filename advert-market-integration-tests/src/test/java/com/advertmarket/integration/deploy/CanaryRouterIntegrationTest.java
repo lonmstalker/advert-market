@@ -1,5 +1,8 @@
 package com.advertmarket.integration.deploy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.advertmarket.communication.canary.CanaryRouter;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,9 +12,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Integration test for CanaryRouter with real Redis.
@@ -28,7 +28,8 @@ class CanaryRouterIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        var factory = new LettuceConnectionFactory(redis.getHost(), redis.getMappedPort(6379));
+        var factory = new LettuceConnectionFactory(
+                redis.getHost(), redis.getMappedPort(6379));
         factory.afterPropertiesSet();
         redisTemplate = new StringRedisTemplate(factory);
         // Clear canary keys between tests
@@ -80,7 +81,7 @@ class CanaryRouterIntegrationTest {
         boolean resultB = canaryRouter.isCanary(123456L);
 
         // With different salts, at least some users will get different results
-        // We test with a known user — the point is the salt changes the routing
+        // We test with a known user - the point is the salt changes the routing
         // For a deterministic check, we verify both paths are reachable
         canaryRouter.setCanaryPercent(100);
         assertThat(canaryRouter.isCanary(123456L)).isTrue();

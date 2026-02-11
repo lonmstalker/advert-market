@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '4.0.2' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
     id 'com.github.node-gradle.node' version '7.1.0' apply false
+    id 'com.github.spotbugs' version '6.4.8' apply false
 }
 
 allprojects {
@@ -10,11 +11,12 @@ allprojects {
 
     repositories {
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 
 subprojects {
-    plugins.withType(JavaPlugin) {
+    pluginManager.withPlugin('java') {
         java {
             toolchain {
                 languageVersion = JavaLanguageVersion.of(25)
@@ -26,8 +28,80 @@ subprojects {
             options.compilerArgs.addAll(['--enable-preview'])
         }
 
+        // --- BOM for annotationProcessor configuration ---
+        dependencies {
+            annotationProcessor platform(project(':platform-bom'))
+            testAnnotationProcessor platform(project(':platform-bom'))
+        }
+
+        // --- Lombok ---
+        dependencies {
+            compileOnly 'org.projectlombok:lombok'
+            annotationProcessor 'org.projectlombok:lombok'
+            testCompileOnly 'org.projectlombok:lombok'
+            testAnnotationProcessor 'org.projectlombok:lombok'
+        }
+
+        // --- MapStruct ---
+        dependencies {
+            implementation 'org.mapstruct:mapstruct'
+            annotationProcessor 'org.mapstruct:mapstruct-processor'
+            annotationProcessor 'org.projectlombok:lombok-mapstruct-binding'
+        }
+
+        // --- Static analysis annotations ---
+        dependencies {
+            compileOnly 'com.github.spotbugs:spotbugs-annotations'
+            compileOnly 'org.checkerframework:checker-qual'
+        }
+
+        // --- Utilities ---
+        dependencies {
+            implementation 'com.google.guava:guava'
+            implementation 'org.apache.commons:commons-lang3'
+        }
+
+        // --- Test ---
         dependencies {
             testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        }
+
+        // --- spring-properties-md ---
+        dependencies {
+            compileOnly 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api'
+            annotationProcessor 'com.github.lonmstalker.spring-properties-md:spring-properties-md-processor'
+        }
+
+        // --- Checkstyle ---
+        apply plugin: 'checkstyle'
+        checkstyle {
+            toolVersion = '13.2.0'
+            configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+            maxWarnings = 0
+        }
+        tasks.withType(Checkstyle).configureEach {
+            reports {
+                xml.required = true
+                html.required = true
+            }
+        }
+
+        // --- SpotBugs ---
+        apply plugin: 'com.github.spotbugs'
+        spotbugs {
+            effort = 'MAX'
+            reportLevel = 'MEDIUM'
+            excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
+        }
+        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+            reports {
+                html.required = true
+                xml.required = false
+            }
+        }
+        // Disable SpotBugs for test source sets (reflection, throws Exception, etc.)
+        tasks.matching { it.name == 'spotbugsTest' }.configureEach {
+            enabled = false
         }
 
         tasks.withType(Test).configureEach {

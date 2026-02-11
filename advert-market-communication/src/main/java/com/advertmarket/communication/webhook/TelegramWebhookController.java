@@ -1,12 +1,11 @@
 package com.advertmarket.communication.webhook;
 
-import com.pengrad.telegrambot.utility.BotUtils;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.utility.BotUtils;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,10 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
  * Telegram webhook endpoint.
  * Validates secret token, deduplicates by update_id, acks fast (200 OK), processes async.
  */
+@Slf4j
 @RestController
 public class TelegramWebhookController {
-
-    private static final Logger log = LoggerFactory.getLogger(TelegramWebhookController.class);
 
     private final String webhookSecret;
     private final UpdateDeduplicator deduplicator;
@@ -29,6 +27,7 @@ public class TelegramWebhookController {
     private final Timer webhookLatency;
     private final Counter duplicatesCounter;
 
+    /** Creates the webhook controller. */
     public TelegramWebhookController(
             @Value("${app.telegram.webhook.secret:}") String webhookSecret,
             UpdateDeduplicator deduplicator,
@@ -45,9 +44,11 @@ public class TelegramWebhookController {
                 .register(meterRegistry);
     }
 
+    /** Handles incoming Telegram webhook updates. */
     @PostMapping("/api/v1/bot/webhook")
     public ResponseEntity<Void> handleWebhook(
-            @RequestHeader(value = "X-Telegram-Bot-Api-Secret-Token", required = false) String secretToken,
+            @RequestHeader(value = "X-Telegram-Bot-Api-Secret-Token",
+                    required = false) String secretToken,
             @RequestBody String body) {
 
         return webhookLatency.record(() -> {
@@ -75,7 +76,7 @@ public class TelegramWebhookController {
                 return ResponseEntity.ok().<Void>build();
             }
 
-            // 4. Fast ack — process async
+            // 4. Fast ack - process async
             processor.processAsync(update);
 
             return ResponseEntity.ok().<Void>build();

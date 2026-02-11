@@ -1,12 +1,11 @@
 package com.advertmarket.shared.deploy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.HashMap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.HashMap;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class UserBucketTest {
 
@@ -35,7 +34,7 @@ class UserBucketTest {
             counts.merge(bucket, 1, Integer::sum);
         }
 
-        // Each bucket should get ~1000 items (1%). Allow ±30% variance.
+        // Each bucket should get ~1000 items (1%). Allow +/-30% variance.
         double expected = total / 100.0;
         for (int bucket = 0; bucket < 100; bucket++) {
             int count = counts.getOrDefault(bucket, 0);
@@ -52,7 +51,9 @@ class UserBucketTest {
         for (long userId = 0; userId < 1000; userId++) {
             int b1 = UserBucket.compute(userId, "salt-a");
             int b2 = UserBucket.compute(userId, "salt-b");
-            if (b1 != b2) changed++;
+            if (b1 != b2) {
+                changed++;
+            }
         }
         // At least 90% of users should get a different bucket
         assertThat(changed).isGreaterThan(900);
@@ -84,7 +85,7 @@ class UserBucketTest {
         }
 
         double actualPercent = (canaryCount * 100.0) / total;
-        // Allow ±2% absolute deviation
+        // Allow +/-2% absolute deviation
         assertThat(actualPercent)
                 .as("Expected ~%d%% canary, got %.1f%%", percent, actualPercent)
                 .isBetween(percent - 2.0, percent + 2.0);

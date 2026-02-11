@@ -47,8 +47,12 @@ public final class UserBucket {
      * @return true if user should go to canary
      */
     public static boolean isCanary(long userKey, String salt, int canaryPercent) {
-        if (canaryPercent <= 0) return false;
-        if (canaryPercent >= 100) return true;
+        if (canaryPercent <= 0) {
+            return false;
+        }
+        if (canaryPercent >= 100) {
+            return true;
+        }
         return compute(userKey, salt) < canaryPercent;
     }
 }

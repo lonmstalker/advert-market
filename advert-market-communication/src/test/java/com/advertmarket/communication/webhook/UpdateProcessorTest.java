@@ -1,16 +1,14 @@
 package com.advertmarket.communication.webhook;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.pengrad.telegrambot.model.CallbackQuery;
-import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.InlineQuery;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Field;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class UpdateProcessorTest {
 

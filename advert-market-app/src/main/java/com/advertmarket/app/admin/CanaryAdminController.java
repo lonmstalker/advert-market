@@ -2,8 +2,8 @@ package com.advertmarket.app.admin;
 
 import com.advertmarket.communication.canary.CanaryRouter;
 import com.advertmarket.shared.deploy.CanaryProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.time.Instant;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,26 +12,25 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
-
 /**
  * Authenticated admin endpoint for canary percent control.
  * Auth via static bearer token from environment (CANARY_ADMIN_TOKEN).
  */
+@Slf4j
 @RestController
 @RequestMapping("/internal/v1/canary")
 public class CanaryAdminController {
 
-    private static final Logger log = LoggerFactory.getLogger(CanaryAdminController.class);
-
     private final CanaryRouter canaryRouter;
     private final String adminToken;
 
+    /** Creates the controller with canary router and properties. */
     public CanaryAdminController(CanaryRouter canaryRouter, CanaryProperties canaryProperties) {
         this.canaryRouter = canaryRouter;
         this.adminToken = canaryProperties.adminToken();
     }
 
+    /** Returns current canary status. */
     @GetMapping
     public ResponseEntity<CanaryStatus> getCanary(
             @RequestHeader("Authorization") String authorization) {
@@ -45,6 +44,7 @@ public class CanaryAdminController {
         ));
     }
 
+    /** Updates canary percent and/or salt. */
     @PutMapping
     public ResponseEntity<CanaryStatus> setCanary(
             @RequestHeader("Authorization") String authorization,
@@ -77,9 +77,11 @@ public class CanaryAdminController {
         return ("Bearer " + adminToken).equals(authorization);
     }
 
+    /** Current canary deployment status. */
     public record CanaryStatus(int percent, String salt, Instant timestamp) {
     }
 
+    /** Request to update canary settings. */
     public record CanaryUpdate(Integer percent, String salt) {
     }
 }

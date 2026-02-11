@@ -1,5 +1,7 @@
 package com.advertmarket.integration.deploy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.advertmarket.communication.webhook.UpdateDeduplicator;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,8 +11,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration test for UpdateDeduplicator with real Redis.
@@ -27,7 +27,8 @@ class UpdateDeduplicatorIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        var factory = new LettuceConnectionFactory(redis.getHost(), redis.getMappedPort(6379));
+        var factory = new LettuceConnectionFactory(
+                redis.getHost(), redis.getMappedPort(6379));
         factory.afterPropertiesSet();
         redisTemplate = new StringRedisTemplate(factory);
         deduplicator = new UpdateDeduplicator(redisTemplate, new SimpleMeterRegistry());

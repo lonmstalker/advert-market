@@ -3,23 +3,20 @@ package com.advertmarket.communication.canary;
 import com.advertmarket.shared.deploy.UserBucket;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
 
 /**
  * Feature-flag canary router (Option B).
  * Determines whether a user should be routed to canary or stable code path.
  * Canary percent is stored in Redis and cached locally with a short TTL.
  */
+@Slf4j
 @Component
 public class CanaryRouter {
-
-    private static final Logger log = LoggerFactory.getLogger(CanaryRouter.class);
 
     static final String REDIS_KEY = "canary:percent";
     static final String SALT_KEY = "canary:salt";
@@ -34,6 +31,7 @@ public class CanaryRouter {
     private volatile String cachedSalt = "";
     private final AtomicLong lastFetchTime = new AtomicLong(0);
 
+    /** Creates the canary router backed by Redis. */
     public CanaryRouter(StringRedisTemplate redis, MeterRegistry meterRegistry) {
         this.redis = redis;
         this.stableCounter = Counter.builder("canary.route.decision")
@@ -73,7 +71,8 @@ public class CanaryRouter {
      */
     public void setCanaryPercent(int percent) {
         if (percent < 0 || percent > 100) {
-            throw new IllegalArgumentException("Canary percent must be between 0 and 100, got: " + percent);
+            throw new IllegalArgumentException(
+                    "Canary percent must be between 0 and 100, got: " + percent);
         }
         redis.opsForValue().set(REDIS_KEY, String.valueOf(percent));
         cachedPercent.set(percent);

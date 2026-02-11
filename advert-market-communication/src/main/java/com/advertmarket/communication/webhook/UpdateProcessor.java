@@ -4,27 +4,25 @@ import com.advertmarket.communication.canary.CanaryRouter;
 import com.pengrad.telegrambot.model.Update;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.stereotype.Component;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
 
 /**
  * Async processor for Telegram updates.
  * Extracts user key, routes through canary, then delegates to handler.
  */
+@Slf4j
 @Component
 public class UpdateProcessor {
-
-    private static final Logger log = LoggerFactory.getLogger(UpdateProcessor.class);
 
     private final CanaryRouter canaryRouter;
     private final Counter handlerErrors;
     private final ExecutorService executor;
 
+    /** Creates the update processor with canary routing. */
     public UpdateProcessor(CanaryRouter canaryRouter, MeterRegistry meterRegistry) {
         this.canaryRouter = canaryRouter;
         this.handlerErrors = Counter.builder("telegram.handler.errors")
@@ -50,7 +48,8 @@ public class UpdateProcessor {
             boolean canary = canaryRouter.isCanary(userId);
             MDC.put("canary", String.valueOf(canary));
 
-            log.info("Processing update_id={} user_id={} canary={}", update.updateId(), userId, canary);
+            log.info("Processing update_id={} user_id={} canary={}",
+                    update.updateId(), userId, canary);
 
             // TODO: Delegate to actual BotUpdateHandler based on canary flag
             // if (canary) { canaryHandler.handle(update); }
@@ -66,8 +65,8 @@ public class UpdateProcessor {
 
     /**
      * Extract a stable user key from the update.
-     * Priority: message.from.id → callback_query.from.id → inline_query.from.id
-     * → my_chat_member.from.id → chat_member.from.id → chat.id → update_id
+     * Priority: message.from.id, callback_query.from.id, inline_query.from.id,
+     * my_chat_member.from.id, chat_member.from.id, chat.id, update_id.
      */
     static long extractUserId(Update update) {
         if (update.message() != null && update.message().from() != null) {
