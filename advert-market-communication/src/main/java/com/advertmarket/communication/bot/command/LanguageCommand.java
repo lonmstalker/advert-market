@@ -8,20 +8,17 @@ import com.advertmarket.communication.bot.internal.dispatch.BotCommand;
 import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.shared.i18n.LocalizationService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * Handles the /language command to display language selection.
  */
+@RequiredArgsConstructor
 @Component
 public class LanguageCommand implements BotCommand {
 
     private final LocalizationService i18n;
-
-    /** Creates the language command. */
-    public LanguageCommand(LocalizationService i18n) {
-        this.i18n = i18n;
-    }
 
     @Override
     public String command() {
@@ -32,7 +29,7 @@ public class LanguageCommand implements BotCommand {
     public void handle(UpdateContext ctx, TelegramSender sender) {
         String lang = ctx.languageCode() != null
                 ? ctx.languageCode() : "ru";
-        Reply.html(ctx,
+        Reply.text(ctx,
                 i18n.msg("bot.language.prompt", lang))
                 .keyboard(KeyboardBuilder.inline()
                         .callbackButton(

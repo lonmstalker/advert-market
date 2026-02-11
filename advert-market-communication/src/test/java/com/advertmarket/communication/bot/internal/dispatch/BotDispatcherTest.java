@@ -17,8 +17,10 @@ import com.pengrad.telegrambot.model.User;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("BotDispatcher")
 class BotDispatcherTest {
 
     private final TelegramSender sender =
@@ -31,6 +33,7 @@ class BotDispatcherTest {
             mock(LocalizationService.class);
 
     @Test
+    @DisplayName("Dispatches command to matching handler")
     void dispatchesCommand() throws Exception {
         var handled = new AtomicBoolean();
         BotCommand cmd = new BotCommand() {
@@ -57,6 +60,7 @@ class BotDispatcherTest {
     }
 
     @Test
+    @DisplayName("Dispatches callback to matching handler")
     void dispatchesCallback() throws Exception {
         var handled = new AtomicBoolean();
         CallbackHandler handler = new CallbackHandler() {
@@ -83,6 +87,7 @@ class BotDispatcherTest {
     }
 
     @Test
+    @DisplayName("Longest prefix wins for callback routing")
     void callbackLongestPrefixWins() throws Exception {
         var shortHandled = new AtomicBoolean();
         var longHandled = new AtomicBoolean();
@@ -123,6 +128,7 @@ class BotDispatcherTest {
     }
 
     @Test
+    @DisplayName("Delegates command errors to error handler")
     void commandErrorDelegatesToHandler() throws Exception {
         BotCommand cmd = new BotCommand() {
             @Override
@@ -152,6 +158,7 @@ class BotDispatcherTest {
     }
 
     @Test
+    @DisplayName("Ignores unknown commands")
     void unknownCommandIgnored() throws Exception {
         var dispatcher = new BotDispatcher(List.of(),
                 List.of(), List.of(), sender, errorHandler,
@@ -165,6 +172,7 @@ class BotDispatcherTest {
     }
 
     @Test
+    @DisplayName("Strips bot username from command")
     void stripsBotnameFromCommand() throws Exception {
         var handled = new AtomicBoolean();
         BotCommand cmd = new BotCommand() {
@@ -191,6 +199,7 @@ class BotDispatcherTest {
     }
 
     @Test
+    @DisplayName("Blocked user receives block message")
     void blockedUserReceivesBlockMessage() throws Exception {
         when(blockPort.isBlocked(1L)).thenReturn(true);
         when(i18n.msg("bot.blocked", "ru"))
@@ -207,6 +216,7 @@ class BotDispatcherTest {
     }
 
     @Test
+    @DisplayName("Dispatches to message handler")
     void dispatchesMessageHandler() throws Exception {
         var handled = new AtomicBoolean();
         MessageHandler handler = new MessageHandler() {

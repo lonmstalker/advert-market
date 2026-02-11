@@ -3,9 +3,9 @@ package com.advertmarket.communication.bot.internal.error;
 import static com.advertmarket.communication.bot.internal.BotConstants.METRIC_WEBHOOK_ERROR;
 
 import com.advertmarket.shared.metric.MetricsFacade;
-import com.fasterxml.jackson.core.JsonParseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -27,10 +27,10 @@ public class BotExceptionHandler {
         this.metrics = metrics;
     }
 
-    /** Handles JSON parse errors from malformed payloads. */
-    @ExceptionHandler(JsonParseException.class)
-    public ResponseEntity<Void> handleJsonParse(
-            JsonParseException exception) {
+    /** Handles unreadable HTTP messages (malformed JSON, etc.). */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Void> handleUnreadableMessage(
+            HttpMessageNotReadableException exception) {
         metrics.incrementCounter(METRIC_WEBHOOK_ERROR,
                 "type", "json_parse");
         log.warn("Malformed webhook payload", exception);

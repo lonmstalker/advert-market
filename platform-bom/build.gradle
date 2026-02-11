@@ -54,6 +54,9 @@ dependencies {
         api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api:v0.1.0'
         api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-processor:v0.1.0'
 
+        // OpenAPI
+        api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
+
         // Test
         api 'org.testcontainers:testcontainers:2.0.3'
         api 'org.testcontainers:testcontainers-postgresql:2.0.3'

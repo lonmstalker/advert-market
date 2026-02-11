@@ -59,18 +59,18 @@ public class TelegramSender {
         this.executor = executor;
     }
 
-    /** Sends an HTML text message to the given chat. */
-    public void send(long chatId, @NonNull String htmlText) {
-        var request = new SendMessage(chatId, htmlText)
-                .parseMode(ParseMode.HTML);
+    /** Sends a MarkdownV2 text message to the given chat. */
+    public void send(long chatId, @NonNull String text) {
+        var request = new SendMessage(chatId, text)
+                .parseMode(ParseMode.MarkdownV2);
         execute(request, chatId);
     }
 
-    /** Sends an HTML message with an inline keyboard. */
-    public void send(long chatId, @NonNull String htmlText,
+    /** Sends a MarkdownV2 message with an inline keyboard. */
+    public void send(long chatId, @NonNull String text,
             @NonNull InlineKeyboardMarkup keyboard) {
-        var request = new SendMessage(chatId, htmlText)
-                .parseMode(ParseMode.HTML)
+        var request = new SendMessage(chatId, text)
+                .parseMode(ParseMode.MarkdownV2)
                 .replyMarkup(keyboard);
         execute(request, chatId);
     }

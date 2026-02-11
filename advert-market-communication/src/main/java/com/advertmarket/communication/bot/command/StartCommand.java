@@ -59,7 +59,7 @@ public class StartCommand implements BotCommand {
     private void handleWelcome(UpdateContext ctx,
             TelegramSender sender) {
         String lang = langOf(ctx);
-        Reply.html(ctx, i18n.msg("bot.welcome", lang))
+        Reply.text(ctx, i18n.msg("bot.welcome", lang))
                 .keyboard(KeyboardBuilder.inline()
                         .webAppButton(
                                 i18n.msg("bot.welcome.button",
@@ -75,7 +75,7 @@ public class StartCommand implements BotCommand {
         String route = resolveRoute(param);
         String url = webAppUrl + route;
 
-        Reply.html(ctx,
+        Reply.text(ctx,
                 i18n.msg("bot.deeplink.opening", lang))
                 .keyboard(KeyboardBuilder.inline()
                         .webAppButton(

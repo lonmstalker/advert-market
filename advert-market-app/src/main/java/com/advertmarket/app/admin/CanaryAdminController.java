@@ -2,6 +2,9 @@ package com.advertmarket.app.admin;
 
 import com.advertmarket.communication.canary.CanaryRouter;
 import com.advertmarket.shared.deploy.CanaryProperties;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/internal/v1/canary")
+@Tag(name = "Admin", description = "Internal admin endpoints")
 public class CanaryAdminController {
 
     private final CanaryRouter canaryRouter;
@@ -31,6 +35,9 @@ public class CanaryAdminController {
     }
 
     /** Returns current canary status. */
+    @Operation(summary = "Get canary status")
+    @ApiResponse(responseCode = "200",
+            description = "Current canary configuration")
     @GetMapping
     public ResponseEntity<CanaryStatus> getCanary(
             @RequestHeader("Authorization") String authorization) {
@@ -45,6 +52,9 @@ public class CanaryAdminController {
     }
 
     /** Updates canary percent and/or salt. */
+    @Operation(summary = "Update canary settings")
+    @ApiResponse(responseCode = "200",
+            description = "Updated canary configuration")
     @PutMapping
     public ResponseEntity<CanaryStatus> setCanary(
             @RequestHeader("Authorization") String authorization,

@@ -15,8 +15,10 @@ import com.advertmarket.communication.api.notification.NotificationType;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.shared.i18n.LocalizationService;
 import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("TelegramNotificationService")
 class TelegramNotificationServiceTest {
 
     private final TelegramSender sender =
@@ -27,10 +29,11 @@ class TelegramNotificationServiceTest {
             new TelegramNotificationService(sender, i18n);
 
     @Test
+    @DisplayName("Substitutes template variables")
     void send_substitutesVariables() {
         when(i18n.msg("notification.new_offer", "ru"))
-                .thenReturn("<b>New offer</b>\n"
-                        + "Offer for {channel_name}.");
+                .thenReturn("*New offer*\n"
+                        + "Offer for {channel_name}\\.");
 
         var request = new NotificationRequest(
                 100L,
@@ -45,6 +48,7 @@ class TelegramNotificationServiceTest {
     }
 
     @Test
+    @DisplayName("Handles all notification types")
     void send_handlesAllTypes() {
         for (var type : NotificationType.values()) {
             String key = "notification."
@@ -61,6 +65,7 @@ class TelegramNotificationServiceTest {
     }
 
     @Test
+    @DisplayName("Returns false on send error")
     void send_returnsFalseOnError() {
         when(i18n.msg(anyString(), eq("ru")))
                 .thenReturn("template");

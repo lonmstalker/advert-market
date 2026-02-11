@@ -11,18 +11,18 @@ import com.pengrad.telegrambot.request.SendMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * Fluent builder for bot replies.
+ * Fluent builder for bot replies using MarkdownV2 parse mode.
  *
  * <p>Example usage:
  * <pre>{@code
- * Reply.html(ctx, "<b>Welcome!</b>")
+ * Reply.text(ctx, "*Welcome\\!*")
  *     .keyboard(KeyboardBuilder.inline()
  *         .urlButton("Open", url)
  *         .build())
  *     .disablePreview()
  *     .send(sender);
  *
- * Reply.callback(ctx).text("Saved").send(sender);
+ * Reply.callback(ctx).callbackText("Saved").send(sender);
  * Reply.localized(ctx, i18n, "bot.welcome").send(sender);
  * }</pre>
  */
@@ -30,7 +30,7 @@ public final class Reply {
 
     private Long chatId;
     private String callbackQueryId;
-    private String htmlText;
+    private String text;
     private String callbackAnswerText;
     private InlineKeyboardMarkup keyboard;
     private boolean noPreview;
@@ -38,17 +38,19 @@ public final class Reply {
     private Reply() {
     }
 
-    /** Creates a reply that sends an HTML message to the chat. */
-    public static Reply html(@NonNull UpdateContext ctx,
-            @NonNull String text) {
+    /**
+     * Creates a reply that sends a MarkdownV2 message to the chat.
+     */
+    public static Reply text(@NonNull UpdateContext ctx,
+            @NonNull String markdownV2Text) {
         var reply = new Reply();
         reply.chatId = ctx.chatId();
-        reply.htmlText = text;
+        reply.text = markdownV2Text;
         return reply;
     }
 
     /**
-     * Creates a localized HTML reply using message bundles.
+     * Creates a localized MarkdownV2 reply using message bundles.
      *
      * @param ctx  the update context
      * @param i18n the localization service
@@ -61,7 +63,7 @@ public final class Reply {
             @NonNull String key, Object... args) {
         String lang = ctx.languageCode() != null
                 ? ctx.languageCode() : "ru";
-        return html(ctx, i18n.msg(key, lang, args));
+        return text(ctx, i18n.msg(key, lang, args));
     }
 
     /** Creates a reply that answers a callback query. */
@@ -89,7 +91,7 @@ public final class Reply {
     }
 
     /** Sets the text shown in the callback answer toast. */
-    public Reply text(String answerText) {
+    public Reply callbackText(String answerText) {
         this.callbackAnswerText = answerText;
         return this;
     }
@@ -112,8 +114,8 @@ public final class Reply {
     }
 
     private void sendMessage(TelegramSender sender) {
-        var request = new SendMessage(chatId, htmlText)
-                .parseMode(ParseMode.HTML);
+        var request = new SendMessage(chatId, text)
+                .parseMode(ParseMode.MarkdownV2);
         if (keyboard != null) {
             request.replyMarkup(keyboard);
         }

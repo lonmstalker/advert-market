@@ -9,11 +9,14 @@ import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
 import java.lang.reflect.Field;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("UpdateContext")
 class UpdateContextTest {
 
     @Test
+    @DisplayName("Extracts chat ID from message")
     void chatId_fromMessage() throws Exception {
         var update = createUpdateWithMessageChat(100L, 42L);
         var ctx = new UpdateContext(update);
@@ -21,6 +24,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Extracts chat ID from callback message")
     void chatId_fromCallbackMessage() throws Exception {
         var update = createUpdateWithCallbackChat(200L, 55L);
         var ctx = new UpdateContext(update);
@@ -28,6 +32,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Falls back to user ID when no chat")
     void chatId_fallsBackToUserId() throws Exception {
         var update = createUpdateWithInlineQuery(300L);
         var ctx = new UpdateContext(update);
@@ -35,6 +40,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Extracts user ID from message")
     void userId_fromMessage() throws Exception {
         var update = createUpdateWithMessageFrom(12345L);
         var ctx = new UpdateContext(update);
@@ -42,6 +48,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Extracts user ID from callback query")
     void userId_fromCallbackQuery() throws Exception {
         var update = createUpdateWithCallbackFrom(67890L);
         var ctx = new UpdateContext(update);
@@ -49,6 +56,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Extracts user ID from inline query")
     void userId_fromInlineQuery() throws Exception {
         var update = createUpdateWithInlineQuery(11111L);
         var ctx = new UpdateContext(update);
@@ -56,6 +64,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Falls back to update ID when no user found")
     void userId_fallbackToUpdateId() throws Exception {
         var update = new Update();
         setField(update, "update_id", 99999);
@@ -64,6 +73,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Returns message text")
     void messageText_returnsText() throws Exception {
         var update = createUpdateWithText(1L, "/start");
         var ctx = new UpdateContext(update);
@@ -71,12 +81,14 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Returns null when no message")
     void messageText_nullWithoutMessage() {
         var ctx = new UpdateContext(new Update());
         assertThat(ctx.messageText()).isNull();
     }
 
     @Test
+    @DisplayName("Detects text message")
     void isTextMessage_true() throws Exception {
         var update = createUpdateWithText(1L, "hello");
         var ctx = new UpdateContext(update);
@@ -84,6 +96,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Returns false for message without text")
     void isTextMessage_falseWithoutText() throws Exception {
         var update = createUpdateWithMessageFrom(1L);
         var ctx = new UpdateContext(update);
@@ -91,6 +104,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Detects callback query")
     void isCallbackQuery_true() throws Exception {
         var update = createUpdateWithCallbackFrom(1L);
         var ctx = new UpdateContext(update);
@@ -98,6 +112,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Returns callback data")
     void callbackData_returnsData() throws Exception {
         var update = createUpdateWithCallbackData(1L, "lang:ru");
         var ctx = new UpdateContext(update);
@@ -105,6 +120,7 @@ class UpdateContextTest {
     }
 
     @Test
+    @DisplayName("Returns user language code")
     void languageCode_returnsCode() throws Exception {
         var user = new User(1L);
         setField(user, "language_code", "ru");

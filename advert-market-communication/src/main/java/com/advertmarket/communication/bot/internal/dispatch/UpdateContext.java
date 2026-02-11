@@ -18,9 +18,9 @@ public record UpdateContext(Update update) {
             return update.message().chat().id();
         }
         if (update.callbackQuery() != null
-                && update.callbackQuery().message() != null
-                && update.callbackQuery().message().chat() != null) {
-            return update.callbackQuery().message().chat().id();
+                && update.callbackQuery().maybeInaccessibleMessage() != null
+                && update.callbackQuery().maybeInaccessibleMessage().chat() != null) {
+            return update.callbackQuery().maybeInaccessibleMessage().chat().id();
         }
         return userId();
     }

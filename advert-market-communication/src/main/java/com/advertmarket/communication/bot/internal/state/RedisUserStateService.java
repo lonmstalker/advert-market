@@ -1,6 +1,7 @@
 package com.advertmarket.communication.bot.internal.state;
 
 import java.time.Duration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 /**
  * Redis-backed implementation of {@link UserStatePort}.
  */
+@RequiredArgsConstructor
 @Slf4j
 @Component
 @EnableConfigurationProperties(UserStateProperties.class)
@@ -18,13 +20,6 @@ public class RedisUserStateService implements UserStatePort {
 
     private final StringRedisTemplate redis;
     private final UserStateProperties properties;
-
-    /** Creates the state service backed by Redis. */
-    public RedisUserStateService(StringRedisTemplate redis,
-            UserStateProperties properties) {
-        this.redis = redis;
-        this.properties = properties;
-    }
 
     @Override
     @Nullable

@@ -1,6 +1,7 @@
 package com.advertmarket.communication.bot.internal.block;
 
 import java.time.Duration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 /**
  * Redis-backed implementation of {@link UserBlockPort}.
  */
+@RequiredArgsConstructor
 @Slf4j
 @Component
 @EnableConfigurationProperties(UserBlockProperties.class)
@@ -17,13 +19,6 @@ public class RedisUserBlockService implements UserBlockPort {
 
     private final StringRedisTemplate redis;
     private final UserBlockProperties properties;
-
-    /** Creates the block service backed by Redis. */
-    public RedisUserBlockService(StringRedisTemplate redis,
-            UserBlockProperties properties) {
-        this.redis = redis;
-        this.properties = properties;
-    }
 
     @Override
     public boolean isBlocked(long userId) {

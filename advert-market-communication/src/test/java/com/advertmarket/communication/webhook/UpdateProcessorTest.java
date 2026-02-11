@@ -8,29 +8,35 @@ import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
 import java.lang.reflect.Field;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("UpdateProcessor")
 class UpdateProcessorTest {
 
     @Test
+    @DisplayName("Extracts user ID from message")
     void extractUserId_fromMessage() throws Exception {
         var update = createUpdateWithMessageFrom(12345L);
         assertThat(UpdateProcessor.extractUserId(update)).isEqualTo(12345L);
     }
 
     @Test
+    @DisplayName("Extracts user ID from callback query")
     void extractUserId_fromCallbackQuery() throws Exception {
         var update = createUpdateWithCallbackFrom(67890L);
         assertThat(UpdateProcessor.extractUserId(update)).isEqualTo(67890L);
     }
 
     @Test
+    @DisplayName("Extracts user ID from inline query")
     void extractUserId_fromInlineQuery() throws Exception {
         var update = createUpdateWithInlineQueryFrom(11111L);
         assertThat(UpdateProcessor.extractUserId(update)).isEqualTo(11111L);
     }
 
     @Test
+    @DisplayName("Falls back to update ID when no user found")
     void extractUserId_fallbackToUpdateId() throws Exception {
         var update = new Update();
         setField(update, "update_id", 99999);

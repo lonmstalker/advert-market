@@ -2,10 +2,12 @@ package com.advertmarket.communication.notification;
 
 import com.advertmarket.communication.api.notification.NotificationPort;
 import com.advertmarket.communication.api.notification.NotificationRequest;
+import com.advertmarket.communication.bot.internal.builder.MarkdownV2Util;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.shared.i18n.LocalizationService;
 import java.util.Locale;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
  * Sends notifications to users via Telegram messages
  * using localized templates from message bundles.
  */
+@RequiredArgsConstructor
 @Slf4j
 @Component
 public class TelegramNotificationService
@@ -20,13 +23,6 @@ public class TelegramNotificationService
 
     private final TelegramSender sender;
     private final LocalizationService i18n;
-
-    /** Creates the notification service. */
-    public TelegramNotificationService(TelegramSender sender,
-            LocalizationService i18n) {
-        this.sender = sender;
-        this.i18n = i18n;
-    }
 
     @Override
     public boolean send(NotificationRequest request) {
@@ -54,7 +50,7 @@ public class TelegramNotificationService
         for (var entry : variables.entrySet()) {
             result = result.replace(
                     "{" + entry.getKey() + "}",
-                    entry.getValue());
+                    MarkdownV2Util.escape(entry.getValue()));
         }
         return result;
     }

@@ -8,6 +8,7 @@ import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.shared.i18n.LocalizationService;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,22 +16,18 @@ import org.springframework.stereotype.Component;
  * Handles callback queries with prefix "lang:" for language
  * selection.
  */
+@RequiredArgsConstructor
 @Slf4j
 @Component
 public class LanguageCallbackHandler implements CallbackHandler {
 
     private static final Map<String, String> LANGUAGE_NAMES =
             Map.of(
-                    "ru", "\u0420\u0443\u0441\u0441\u043a\u0438\u0439", // NON-NLS
+                    "ru", "Русский", // NON-NLS
                     "en", "English"
             );
 
     private final LocalizationService i18n;
-
-    /** Creates the callback handler. */
-    public LanguageCallbackHandler(LocalizationService i18n) {
-        this.i18n = i18n;
-    }
 
     @Override
     public String prefix() {
@@ -51,7 +48,7 @@ public class LanguageCallbackHandler implements CallbackHandler {
         String lang = ctx.languageCode() != null
                 ? ctx.languageCode() : "ru";
         Reply.callback(ctx)
-                .text(i18n.msg("bot.language.selected",
+                .callbackText(i18n.msg("bot.language.selected",
                         lang, langName))
                 .send(sender);
         // TODO: save language preference via identity-api

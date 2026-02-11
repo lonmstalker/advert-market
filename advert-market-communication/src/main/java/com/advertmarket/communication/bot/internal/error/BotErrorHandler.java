@@ -4,6 +4,7 @@ import static com.advertmarket.communication.bot.internal.BotConstants.METRIC_HA
 
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.response.BaseResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Component;
@@ -11,16 +12,12 @@ import org.springframework.stereotype.Component;
 /**
  * Handles errors that occur during bot command processing.
  */
+@RequiredArgsConstructor
 @Slf4j
 @Component
 public class BotErrorHandler {
 
     private final MetricsFacade metrics;
-
-    /** Creates the error handler with metrics support. */
-    public BotErrorHandler(MetricsFacade metrics) {
-        this.metrics = metrics;
-    }
 
     /**
      * Handles an exception thrown during command processing.

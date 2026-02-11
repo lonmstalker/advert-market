@@ -8,10 +8,12 @@ import static org.mockito.Mockito.when;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+@DisplayName("CanaryRouter")
 class CanaryRouterTest {
 
     private StringRedisTemplate redis;
@@ -27,6 +29,7 @@ class CanaryRouterTest {
     }
 
     @Test
+    @DisplayName("Zero percent routes all users to stable")
     void isCanary_zeroPercent_alwaysStable() {
         when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("0");
         when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn("");
@@ -37,6 +40,7 @@ class CanaryRouterTest {
     }
 
     @Test
+    @DisplayName("Hundred percent routes all users to canary")
     void isCanary_hundredPercent_alwaysCanary() {
         when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("100");
         when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn("");
@@ -47,12 +51,14 @@ class CanaryRouterTest {
     }
 
     @Test
+    @DisplayName("Setting canary percent writes to Redis")
     void setCanaryPercent_writesToRedis() {
         router.setCanaryPercent(25);
         verify(valueOps).set(CanaryRouter.REDIS_KEY, "25");
     }
 
     @Test
+    @DisplayName("Setting canary percent rejects out-of-range values")
     void setCanaryPercent_rejectsOutOfRange() {
         assertThatThrownBy(() -> router.setCanaryPercent(-1))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -61,6 +67,7 @@ class CanaryRouterTest {
     }
 
     @Test
+    @DisplayName("Returns current canary percent from Redis")
     void getCanaryPercent_returnsCurrentValue() {
         when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("42");
         when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn(null);
@@ -69,12 +76,14 @@ class CanaryRouterTest {
     }
 
     @Test
+    @DisplayName("Setting salt writes to Redis")
     void setSalt_writesToRedis() {
         router.setSalt("v2-rollout");
         verify(valueOps).set(CanaryRouter.SALT_KEY, "v2-rollout");
     }
 
     @Test
+    @DisplayName("Uses cached values when Redis fails")
     void isCanary_redisFails_usesCachedValues() {
         // First call succeeds and caches
         when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("50");
@@ -89,6 +98,7 @@ class CanaryRouterTest {
     }
 
     @Test
+    @DisplayName("Canary status is consistent for the same user")
     void isCanary_stickyPerUser() {
         when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("50");
         when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn("");

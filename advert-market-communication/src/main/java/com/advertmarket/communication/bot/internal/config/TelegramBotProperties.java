@@ -1,6 +1,9 @@
 package com.advertmarket.communication.bot.internal.config;
 
 import io.github.springpropertiesmd.api.annotation.PropertyDoc;
+import io.github.springpropertiesmd.api.annotation.PropertyExample;
+import io.github.springpropertiesmd.api.annotation.PropertyGroupDoc;
+import io.github.springpropertiesmd.api.annotation.Requirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,12 +19,27 @@ import org.springframework.validation.annotation.Validated;
  * @param webapp      web app configuration
  */
 @ConfigurationProperties(prefix = "app.telegram")
+@PropertyGroupDoc(
+        displayName = "Telegram Bot",
+        description = "Root configuration for the Telegram bot",
+        category = "Telegram"
+)
 @Validated
 public record TelegramBotProperties(
-        @PropertyDoc(description = "Telegram bot token from BotFather")
+        @PropertyDoc(
+                description = "Telegram bot token from BotFather",
+                required = Requirement.REQUIRED,
+                sensitive = true
+        )
+        @PropertyExample("123456:ABC-DEF...")
         @NotBlank String botToken,
-        @PropertyDoc(description = "Telegram bot username")
+
+        @PropertyDoc(
+                description = "Telegram bot username",
+                required = Requirement.REQUIRED
+        )
         @NotBlank String botUsername,
+
         @Valid @DefaultValue Webhook webhook,
         @Valid WebApp webapp
 ) {
@@ -33,7 +51,17 @@ public record TelegramBotProperties(
      * @param secret the secret token for webhook validation
      */
     public record Webhook(
+            @PropertyDoc(
+                    description = "Webhook URL for receiving updates",
+                    required = Requirement.OPTIONAL
+            )
             @DefaultValue("") String url,
+
+            @PropertyDoc(
+                    description = "Secret token for webhook validation",
+                    required = Requirement.OPTIONAL,
+                    sensitive = true
+            )
             @DefaultValue("") String secret
     ) {
     }
@@ -44,7 +72,10 @@ public record TelegramBotProperties(
      * @param url the web app URL
      */
     public record WebApp(
-            @PropertyDoc(description = "Telegram Web App URL")
+            @PropertyDoc(
+                    description = "Telegram Web App URL",
+                    required = Requirement.REQUIRED
+            )
             @NotBlank String url
     ) {
     }
