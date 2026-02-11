@@ -1,0 +1,2 @@
+- ALWAYS follow instructions in [AGENTS.md](AGENTS.md)
+- SHOULD use `codex` skill when you have feature architecture, plan, definition of done and you need implement and write tests

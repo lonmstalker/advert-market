@@ -1,0 +1,10 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    api platform(project(':platform-bom'))
+
+    api 'org.jooq:jooq'
+    implementation 'org.postgresql:postgresql'
+}

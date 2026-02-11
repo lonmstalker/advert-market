@@ -1,0 +1,28 @@
+plugins {
+    id 'com.github.node-gradle.node'
+}
+
+node {
+    version = '24.13.1'
+    download = true
+}
+
+tasks.register('npmBuild', NpmTask) {
+    dependsOn 'npmInstall'
+    args = ['run', 'build']
+}
+
+tasks.register('npmLint', NpmTask) {
+    dependsOn 'npmInstall'
+    args = ['run', 'lint']
+}
+
+tasks.register('npmTypecheck', NpmTask) {
+    dependsOn 'npmInstall'
+    args = ['run', 'typecheck']
+}
+
+tasks.register('npmTest', NpmTask) {
+    dependsOn 'npmInstall'
+    args = ['run', 'test']
+}

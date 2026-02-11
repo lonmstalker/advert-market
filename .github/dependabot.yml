@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - auto
+
+  - package-ecosystem: npm
+    directory: /advert-market-frontend
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - auto
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - auto

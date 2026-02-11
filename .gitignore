@@ -1,0 +1,41 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Java
+*.class
+*.jar
+*.war
+hs_err_pid*
+
+# IntelliJ (user-specific)
+*.iml
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+.idea/httpRequests/
+.idea/dataSources/
+out/
+
+# Node (frontend)
+node_modules/
+dist/
+.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / Secrets
+.env
+.env.*
+!.env.example
+
+# Testcontainers
+.testcontainers*
+
+# jOOQ generated (regenerated from DB)
+advert-market-db/src/generated/

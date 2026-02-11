@@ -1,0 +1,25 @@
+plugins {
+    id 'java-library'
+    id 'io.spring.dependency-management'
+}
+
+dependencies {
+    api platform(project(':platform-bom'))
+    api project(':advert-market-deal-api')
+    implementation project(':advert-market-financial-api')
+    implementation project(':advert-market-identity-api')
+    implementation project(':advert-market-marketplace-api')
+    implementation project(':advert-market-shared')
+    implementation project(':advert-market-db')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:kafka'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+}
