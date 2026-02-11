@@ -534,4 +534,4 @@ errors.timeout
 
 ### 5. Локализация — ZERO hardcoded strings, namespace structure в 6.1
 
-### 6. Error states — глобальная таблица в 6.2 + per-page ошибки в 04-wallet.md
+### 6. Error states — глобальная таблица в 6.2 + per-page ошибки во всех файлах (01-06)

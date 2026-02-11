@@ -130,6 +130,12 @@ GET /api/v1/channels/topics   # Список тематик (или enum на к
 - `Input` (numeric)
 - `Button` (primary + link)
 
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка загрузки тематик | Inline error + retry |
+
 ---
 
 ## 2.3 Карточка канала

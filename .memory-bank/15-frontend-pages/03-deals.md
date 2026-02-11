@@ -226,6 +226,13 @@ POST /api/v1/deals/:dealId/negotiate     # Контр-предложение
 
 Manager: требуется `moderate`.
 
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка отправки | Toast `t('common.toast.saveFailed')` |
+| 409 статус изменился | Toast `t('errors.conflict')` + auto-refetch + navigate `/deals/:dealId` |
+
 ---
 
 ## 3.4 Отправка брифа
@@ -260,6 +267,13 @@ POST /api/v1/deals/:dealId/brief  # Отправка брифа
 | Действие | Результат |
 |----------|-----------|
 | "Отправить" | `POST /api/v1/deals/:id/brief` → navigate `/deals/:dealId` |
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка отправки брифа | Toast `t('common.toast.saveFailed')` |
+| 409 статус изменился | Toast `t('errors.conflict')` + auto-refetch |
 
 ---
 
@@ -329,6 +343,15 @@ Manager: требуется `moderate`.
 | "Импорт из Telegram" | Инструкция + polling → автозаполнение |
 | "Отправить на ревью" | `POST /api/v1/deals/:id/creative` → navigate `/deals/:dealId` |
 
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка отправки креатива | Toast `t('common.toast.saveFailed')` |
+| Ошибка загрузки медиа | Toast `t('deals.error.mediaUploadFailed')` |
+| Таймаут импорта из Telegram | Toast `t('deals.error.importTimeout')` + retry |
+| 409 статус изменился | Toast `t('errors.conflict')` + auto-refetch |
+
 ---
 
 ## 3.6 Ревью креатива
@@ -365,6 +388,13 @@ POST /api/v1/deals/:dealId/creative/revision # Запросить ревизию
 |----------|-----------|
 | "Одобрить" | `POST /api/v1/deals/:id/creative/approve` → navigate `/deals/:dealId` |
 | "Запросить ревизию" | Показать поле комментария → `POST /api/v1/deals/:id/creative/revision` → navigate `/deals/:dealId` |
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка одобрения/ревизии | Toast `t('common.toast.saveFailed')` |
+| 409 статус изменился | Toast `t('errors.conflict')` + auto-refetch |
 
 ---
 
@@ -412,6 +442,14 @@ POST /api/v1/deals/:dealId/schedule  # Запланировать
 ### ABAC
 
 Manager: требуется `publish`.
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка публикации/планирования | Toast `t('common.toast.saveFailed')` |
+| 409 статус изменился | Toast `t('errors.conflict')` + auto-refetch |
+| Дата в прошлом | Inline error `t('deals.error.pastDate')` |
 
 ---
 
@@ -520,6 +558,13 @@ POST /api/v1/deals/:dealId/dispute   # Открыть спор
 
 Manager: требуется `view_deals` (минимум — участник сделки).
 
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка открытия спора | Toast `t('common.toast.saveFailed')` |
+| 409 статус не позволяет спор | Toast `t('errors.conflict')` + auto-refetch |
+
 ---
 
 ## 3.10 Детали спора
@@ -558,6 +603,13 @@ Route `/deals/:dealId/dispute` показывает:
 | Действие | Результат |
 |----------|-----------|
 | "Добавить доказательства" | → `/deals/:dealId/dispute/evidence` |
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка загрузки спора | `ErrorScreen` + retry |
+| 404 спор не найден | `ErrorScreen` `t('errors.notFound.title')` + navigate `/deals/:dealId` |
 
 ---
 
@@ -608,6 +660,13 @@ POST /api/v1/deals/:dealId/dispute/evidence   # Отправка доказат�
 | Действие | Результат |
 |----------|-----------|
 | "Отправить" | `POST /api/v1/deals/:id/dispute/evidence` → navigate `/deals/:dealId/dispute` |
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка отправки доказательств | Toast `t('common.toast.saveFailed')` |
+| Ошибка загрузки скриншотов | Toast `t('deals.error.mediaUploadFailed')` |
 
 ---
 

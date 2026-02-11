@@ -121,8 +121,8 @@ GET  /api/v1/channels/topics   # Тематики (enum)
 **Шаг 1: Проверка канала**
 - **Input `t('profile.register.channelLink')`** — формат `@username` или `t.me/...`
 - Кнопка `t('profile.register.verify')` (`secondary`)
-- Инструкция: `t('profile.register.addBotInstruction')` — "Добавьте @AdMarketBot как администратора канала"
-- **Кнопка копирования** рядом с "@AdMarketBot": иконка copy → `navigator.clipboard.writeText('@AdMarketBot')` → toast `t('common.copied')`
+- Инструкция: `t('profile.register.addBotInstruction')` — "Добавьте @AdvertMarketBot как администратора канала"
+- **Кнопка копирования** рядом с "@AdvertMarketBot": иконка copy → `navigator.clipboard.writeText('@AdvertMarketBot')` → toast `t('common.copied')`
 - **Кнопка `t('profile.register.openBot')`** — `openTelegramLink('https://t.me/AdvertMarketBot')`
 
 **Шаг 2: Настройка (после проверки)**
@@ -218,14 +218,20 @@ PUT /api/v1/profile/language
 ### UI
 
 - **Group** с `RadioGroup`:
-  - Русский (default из `Telegram.WebApp.initDataUnsafe.user.language_code`)
-  - English
+  - `t('profile.language.ru')` (default из `Telegram.WebApp.initDataUnsafe.user.language_code`)
+  - `t('profile.language.en')`
 
 ### Действия
 
 | Действие | Результат |
 |----------|-----------|
 | Выбор языка | `i18n.changeLanguage()` + `PUT /api/v1/profile/language` + BackButton |
+
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка сохранения языка | Toast `t('common.toast.saveFailed')` + rollback `i18n.changeLanguage()` |
 
 ---
 
@@ -440,6 +446,13 @@ GET /api/v1/channels/:channelId/team
 |-------|------------|------------------|-----|
 | `👥` | `profile.team.empty.title` | `profile.team.empty.description` | `profile.team.empty.cta` → `invite` |
 
+### Error states
+
+| Ошибка | UI |
+|--------|----|
+| Ошибка загрузки команды | `ErrorScreen` + retry |
+| 403 нет доступа | `ErrorScreen` `t('errors.forbidden.title')` + navigate back |
+
 ---
 
 ## 5.8 Приглашение в команду
@@ -463,7 +476,7 @@ POST /api/v1/channels/:channelId/team
   - `publish` — `t('profile.rights.publish')`
   - `moderate` — `t('profile.rights.moderate')`
   - `view_deals` — `t('profile.rights.viewDeals')`
-  - `manage_listings` — `t('profile.rights.manageListings')` (NOTE: OWNER-ONLY на бэкенде, визуально доступен при invite)
+  - `manage_listings` — `t('profile.rights.manageListings')` (**скрыт** если inviter — manager; виден только owner, т.к. OWNER-ONLY на бэкенде)
   - `manage_team` — `t('profile.rights.manageTeam')`
 - Кнопка `t('profile.invite.submit')` (`primary`)
 
