@@ -69,6 +69,7 @@ subprojects {
         // --- spring-properties-md ---
         dependencies {
             compileOnly 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api'
+            testCompileOnly 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api'
             annotationProcessor 'com.github.lonmstalker.spring-properties-md:spring-properties-md-processor'
         }
 
@@ -107,6 +108,12 @@ subprojects {
         tasks.withType(Test).configureEach {
             useJUnitPlatform()
             jvmArgs '--enable-preview'
+
+            // Run test classes in parallel (up to half available CPUs)
+            maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+            // Reuse JVM for up to 200 test classes before forking new one
+            forkEvery = 200
         }
 
         tasks.withType(JavaExec).configureEach {
