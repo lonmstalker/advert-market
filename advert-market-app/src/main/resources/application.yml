@@ -44,6 +44,10 @@ spring:
     default-property-inclusion: non_null
     serialization:
       write-dates-as-timestamps: false
+  messages:
+    basename: messages/bot,messages/notifications
+    encoding: UTF-8
+    fallback-to-system-locale: false
 
 app:
   auth:
@@ -53,9 +57,39 @@ app:
     anti-replay-window-seconds: 300
   telegram:
     bot-token: ${TELEGRAM_BOT_TOKEN:}
+    bot-username: ${TELEGRAM_BOT_USERNAME:AdvertMarketBot}
     webhook:
       url: ${TELEGRAM_WEBHOOK_URL:}
       secret: ${TELEGRAM_WEBHOOK_SECRET:}
+    webapp:
+      url: ${TELEGRAM_WEBAPP_URL:https://app.advertmarket.com}
+    sender:
+      global-per-sec: 30
+      per-chat-per-sec: 1
+      cache-expire-after-access: 5m
+      cache-maximum-size: 10000
+      replenish-fixed-rate-ms: 1000
+    resilience:
+      circuit-breaker:
+        sliding-window-size: 50
+        failure-rate-threshold: 40
+        slow-call-duration: 5s
+        wait-in-open-state: 15s
+        half-open-calls: 10
+        minimum-calls: 20
+      bulkhead:
+        max-concurrent-calls: 30
+        max-wait-duration: 1s
+    retry:
+      max-attempts: 3
+      backoff-intervals: 1s,2s,4s
+    deduplication:
+      ttl: 24h
+    state:
+      default-ttl: 1h
+      key-prefix: "tg:state:"
+    block:
+      key-prefix: "tg:block:"
   ton:
     api-url: ${TON_API_URL:https://testnet.toncenter.com/api/v2}
     api-key: ${TON_API_KEY:}

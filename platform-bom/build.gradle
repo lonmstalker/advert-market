@@ -26,6 +26,12 @@ dependencies {
         // Observability
         api 'io.micrometer:micrometer-registry-prometheus:1.16.3'
 
+        // Resilience4j
+        api 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
+        api 'io.github.resilience4j:resilience4j-retry:2.2.0'
+        api 'io.github.resilience4j:resilience4j-bulkhead:2.2.0'
+        api 'io.github.resilience4j:resilience4j-micrometer:2.2.0'
+
         // Database
         api 'org.postgresql:postgresql:42.7.9'
         api 'org.jooq:jooq:3.20.11'

@@ -4,4 +4,20 @@
     <Match>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
+    <!-- Records expose their components by design -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="~.*\..*Context$"/>
+    </Match>
+    <!-- Facade intentionally exposes underlying registry -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="com.advertmarket.shared.metric.MetricsFacade"/>
+        <Method name="registry"/>
+    </Match>
+    <!-- ConfigurationProperties records expose list components -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="~.*Properties$"/>
+    </Match>
 </FindBugsFilter>

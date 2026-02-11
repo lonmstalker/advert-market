@@ -8,7 +8,12 @@ dependencies {
 
     // Only for @ConfigurationProperties annotation (compile-only, no Spring runtime)
     compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+    compileOnly 'io.micrometer:micrometer-core'
+    compileOnly 'org.springframework:spring-context'
 
+    testImplementation 'io.micrometer:micrometer-core'
+    testImplementation 'org.springframework:spring-context'
+    testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

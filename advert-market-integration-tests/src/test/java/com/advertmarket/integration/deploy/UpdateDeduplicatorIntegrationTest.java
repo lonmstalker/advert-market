@@ -2,8 +2,10 @@ package com.advertmarket.integration.deploy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.communication.webhook.DeduplicationProperties;
 import com.advertmarket.communication.webhook.UpdateDeduplicator;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -31,7 +33,10 @@ class UpdateDeduplicatorIntegrationTest {
                 redis.getHost(), redis.getMappedPort(6379));
         factory.afterPropertiesSet();
         redisTemplate = new StringRedisTemplate(factory);
-        deduplicator = new UpdateDeduplicator(redisTemplate, new SimpleMeterRegistry());
+        deduplicator = new UpdateDeduplicator(
+                redisTemplate,
+                new DeduplicationProperties(Duration.ofHours(24)),
+                new SimpleMeterRegistry());
     }
 
     @Test

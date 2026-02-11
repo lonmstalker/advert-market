@@ -1,39 +1,57 @@
 package com.advertmarket.communication.webhook;
 
+import static com.advertmarket.communication.bot.internal.BotConstants.MDC_CANARY;
+import static com.advertmarket.communication.bot.internal.BotConstants.MDC_UPDATE_ID;
+import static com.advertmarket.communication.bot.internal.BotConstants.MDC_USER_ID;
+import static com.advertmarket.communication.bot.internal.BotConstants.METRIC_HANDLER_ERRORS;
+
+import com.advertmarket.communication.bot.internal.dispatch.BotDispatcher;
+import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
+import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.communication.canary.CanaryRouter;
 import com.pengrad.telegrambot.model.Update;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
  * Async processor for Telegram updates.
- * Extracts user key, routes through canary, then delegates to handler.
+ * Extracts user key, routes through canary, then delegates
+ * to handler.
  */
 @Slf4j
 @Component
 public class UpdateProcessor {
 
     private final CanaryRouter canaryRouter;
+    private final BotDispatcher dispatcher;
+    private final TelegramSender sender;
     private final Counter handlerErrors;
     private final ExecutorService executor;
 
     /** Creates the update processor with canary routing. */
-    public UpdateProcessor(CanaryRouter canaryRouter, MeterRegistry meterRegistry) {
+    public UpdateProcessor(CanaryRouter canaryRouter,
+            BotDispatcher dispatcher,
+            TelegramSender sender,
+            MeterRegistry meterRegistry,
+            @Qualifier("botUpdateExecutor")
+            ExecutorService executor) {
         this.canaryRouter = canaryRouter;
-        this.handlerErrors = Counter.builder("telegram.handler.errors")
+        this.dispatcher = dispatcher;
+        this.sender = sender;
+        this.handlerErrors = Counter.builder(METRIC_HANDLER_ERRORS)
                 .description("Update handler errors")
                 .register(meterRegistry);
-        // Virtual thread executor for async processing
-        this.executor = Executors.newVirtualThreadPerTaskExecutor();
+        this.executor = executor;
     }
 
     /**
      * Submit update for async processing. Returns immediately.
+     *
+     * @param update the Telegram update
      */
     public void processAsync(Update update) {
         executor.submit(() -> processUpdate(update));
@@ -42,52 +60,73 @@ public class UpdateProcessor {
     private void processUpdate(Update update) {
         long userId = extractUserId(update);
         try {
-            MDC.put("user_id", String.valueOf(userId));
-            MDC.put("update_id", String.valueOf(update.updateId()));
+            org.slf4j.MDC.put(MDC_USER_ID,
+                    String.valueOf(userId));
+            org.slf4j.MDC.put(MDC_UPDATE_ID,
+                    String.valueOf(update.updateId()));
 
             boolean canary = canaryRouter.isCanary(userId);
-            MDC.put("canary", String.valueOf(canary));
+            org.slf4j.MDC.put(MDC_CANARY,
+                    String.valueOf(canary));
 
-            log.info("Processing update_id={} user_id={} canary={}",
+            log.info("Processing update_id={} user_id={} "
+                    + "canary={}",
                     update.updateId(), userId, canary);
 
-            // TODO: Delegate to actual BotUpdateHandler based on canary flag
-            // if (canary) { canaryHandler.handle(update); }
-            // else { stableHandler.handle(update); }
+            dispatcher.dispatch(new UpdateContext(update));
 
         } catch (Exception e) {
             handlerErrors.increment();
-            log.error("Error processing update_id={}", update.updateId(), e);
+            log.error("Error processing update_id={}",
+                    update.updateId(), e);
+            trySendError(userId, update.updateId());
         } finally {
-            MDC.clear();
+            org.slf4j.MDC.clear();
+        }
+    }
+
+    private void trySendError(long userId, int updateId) {
+        try {
+            sender.send(userId,
+                    "\u26a0 An error occurred. " // NON-NLS
+                    + "Please try again later.");
+        } catch (Exception ex) {
+            log.debug("Could not send error message for "
+                    + "update_id={}", updateId, ex);
         }
     }
 
     /**
      * Extract a stable user key from the update.
-     * Priority: message.from.id, callback_query.from.id, inline_query.from.id,
-     * my_chat_member.from.id, chat_member.from.id, chat.id, update_id.
+     *
+     * @param update the Telegram update
+     * @return user id or fallback to update_id
      */
     static long extractUserId(Update update) {
-        if (update.message() != null && update.message().from() != null) {
+        if (update.message() != null
+                && update.message().from() != null) {
             return update.message().from().id();
         }
-        if (update.callbackQuery() != null && update.callbackQuery().from() != null) {
+        if (update.callbackQuery() != null
+                && update.callbackQuery().from() != null) {
             return update.callbackQuery().from().id();
         }
-        if (update.inlineQuery() != null && update.inlineQuery().from() != null) {
+        if (update.inlineQuery() != null
+                && update.inlineQuery().from() != null) {
             return update.inlineQuery().from().id();
         }
-        if (update.myChatMember() != null && update.myChatMember().from() != null) {
+        if (update.myChatMember() != null
+                && update.myChatMember().from() != null) {
             return update.myChatMember().from().id();
         }
-        if (update.chatMember() != null && update.chatMember().from() != null) {
+        if (update.chatMember() != null
+                && update.chatMember().from() != null) {
             return update.chatMember().from().id();
         }
-        if (update.message() != null && update.message().chat() != null) {
+        if (update.message() != null
+                && update.message().chat() != null) {
             return update.message().chat().id();
         }
-        // Last resort: use update_id (not sticky across updates, documented limitation)
         return update.updateId();
     }
 }
