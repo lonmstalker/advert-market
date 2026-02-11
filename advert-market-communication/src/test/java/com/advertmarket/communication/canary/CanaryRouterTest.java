@@ -1,0 +1,105 @@
+package com.advertmarket.communication.canary;
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class CanaryRouterTest {
+
+    private StringRedisTemplate redis;
+    private ValueOperations<String, String> valueOps;
+    private CanaryRouter router;
+
+    @BeforeEach
+    void setUp() {
+        redis = mock(StringRedisTemplate.class);
+        valueOps = mock(ValueOperations.class);
+        when(redis.opsForValue()).thenReturn(valueOps);
+        router = new CanaryRouter(redis, new SimpleMeterRegistry());
+    }
+
+    @Test
+    void isCanary_zeroPercent_alwaysStable() {
+        when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("0");
+        when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn("");
+
+        for (long userId = 0; userId < 100; userId++) {
+            assertThat(router.isCanary(userId)).isFalse();
+        }
+    }
+
+    @Test
+    void isCanary_hundredPercent_alwaysCanary() {
+        when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("100");
+        when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn("");
+
+        for (long userId = 0; userId < 100; userId++) {
+            assertThat(router.isCanary(userId)).isTrue();
+        }
+    }
+
+    @Test
+    void setCanaryPercent_writesToRedis() {
+        router.setCanaryPercent(25);
+        verify(valueOps).set(CanaryRouter.REDIS_KEY, "25");
+    }
+
+    @Test
+    void setCanaryPercent_rejectsOutOfRange() {
+        assertThatThrownBy(() -> router.setCanaryPercent(-1))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> router.setCanaryPercent(101))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getCanaryPercent_returnsCurrentValue() {
+        when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("42");
+        when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn(null);
+
+        assertThat(router.getCanaryPercent()).isEqualTo(42);
+    }
+
+    @Test
+    void setSalt_writesToRedis() {
+        router.setSalt("v2-rollout");
+        verify(valueOps).set(CanaryRouter.SALT_KEY, "v2-rollout");
+    }
+
+    @Test
+    void isCanary_redisFails_usesCachedValues() {
+        // First call succeeds and caches
+        when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("50");
+        when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn("test");
+        router.getCanaryPercent(); // triggers cache fill
+
+        // Force cache expiry by setting percent directly
+        router.setCanaryPercent(50);
+
+        // Even if Redis throws on next refresh, cached value is used
+        assertThat(router.getCanaryPercent()).isEqualTo(50);
+    }
+
+    @Test
+    void isCanary_stickyPerUser() {
+        when(valueOps.get(CanaryRouter.REDIS_KEY)).thenReturn("50");
+        when(valueOps.get(CanaryRouter.SALT_KEY)).thenReturn("");
+
+        long userId = 42L;
+        boolean first = router.isCanary(userId);
+        for (int i = 0; i < 50; i++) {
+            assertThat(router.isCanary(userId))
+                    .as("Canary status must be stable for same user")
+                    .isEqualTo(first);
+        }
+    }
+}

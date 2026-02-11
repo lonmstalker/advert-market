@@ -1,7 +1,15 @@
 plugins {
     id 'java-library'
+    id 'io.spring.dependency-management'
 }
 
 dependencies {
     api platform(project(':platform-bom'))
+
+    // Only for @ConfigurationProperties annotation (compile-only, no Spring runtime)
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
