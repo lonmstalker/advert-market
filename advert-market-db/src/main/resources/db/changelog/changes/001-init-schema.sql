@@ -1,64 +1,8 @@
-# Complete DDL Migration Scripts
+--liquibase formatted sql
 
-## Migration Tool: Liquibase
+--changeset advert-market:001-init-schema
 
-**Decision**: Liquibase for database migrations.
-
-| Criterion | Liquibase | Flyway |
-|-----------|-----------|--------|
-| Format | YAML/XML/SQL changelogs | Pure SQL |
-| Rollback | Auto-generated rollback support | Manual undo scripts |
-| Diff/snapshot | Built-in DB diff and snapshot | No |
-| Preconditions | Conditional execution | No |
-| Java integration | Spring Boot auto-config | Spring Boot auto-config |
-
-### Gradle
-
-```groovy
-dependencies {
-    implementation 'org.liquibase:liquibase-core'
-}
-```
-
-### Configuration
-
-```yaml
-spring:
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-```
-
----
-
-### Changelog Structure
-
-```
-src/main/resources/db/changelog/
-  db.changelog-master.yaml          # Master changelog (includeAll)
-  changes/
-    001-init-schema.sql             # All tables + indexes
-    002-triggers.sql                # Immutability + updated_at triggers
-    003-partitions.sql              # Monthly partitions (2026)
-    004-seed-data.sql               # Default commission tiers
-    005-comments.sql                # COMMENT ON TABLE/COLUMN/FUNCTION
-```
-
-Master changelog:
-```yaml
-databaseChangeLog:
-  - includeAll:
-      path: db/changelog/changes/
-      relativeToChangelogFile: false
-```
-
----
-
-## 001-init-schema.sql — All Tables
-
-### 1. users
-
-```sql
+-- 1. users
 CREATE TABLE users (
     id              BIGINT        PRIMARY KEY,
     username        VARCHAR(255),
@@ -70,11 +14,8 @@ CREATE TABLE users (
     created_at      TIMESTAMPTZ   DEFAULT now(),
     updated_at      TIMESTAMPTZ   DEFAULT now()
 );
-```
 
-### 2. channels
-
-```sql
+-- 2. channels
 CREATE TABLE channels (
     id                  BIGINT        PRIMARY KEY,
     title               VARCHAR(255)  NOT NULL,
@@ -93,11 +34,8 @@ CREATE TABLE channels (
 CREATE INDEX idx_channels_owner ON channels(owner_id);
 CREATE INDEX idx_channels_category ON channels(category) WHERE is_active;
 CREATE INDEX idx_channels_active ON channels(is_active, subscriber_count DESC);
-```
 
-### 3. channel_memberships
-
-```sql
+-- 3. channel_memberships
 CREATE TABLE channel_memberships (
     id              BIGSERIAL     PRIMARY KEY,
     channel_id      BIGINT        NOT NULL REFERENCES channels(id),
@@ -111,11 +49,8 @@ CREATE TABLE channel_memberships (
 );
 
 CREATE INDEX idx_memberships_user ON channel_memberships(user_id);
-```
 
-### 4. channel_pricing_rules
-
-```sql
+-- 4. channel_pricing_rules (before deals due to FK)
 CREATE TABLE channel_pricing_rules (
     id              BIGSERIAL     PRIMARY KEY,
     channel_id      BIGINT        NOT NULL REFERENCES channels(id),
@@ -131,11 +66,8 @@ CREATE TABLE channel_pricing_rules (
 );
 
 CREATE INDEX idx_pricing_rules_channel ON channel_pricing_rules(channel_id, is_active);
-```
 
-### 5. commission_tiers
-
-```sql
+-- 5. commission_tiers
 CREATE TABLE commission_tiers (
     id              SERIAL        PRIMARY KEY,
     min_amount_nano BIGINT        NOT NULL DEFAULT 0,
@@ -146,11 +78,8 @@ CREATE TABLE commission_tiers (
     created_at      TIMESTAMPTZ   DEFAULT now(),
     CHECK (max_amount_nano IS NULL OR max_amount_nano > min_amount_nano)
 );
-```
 
-### 6. deals
-
-```sql
+-- 6. deals
 CREATE TABLE deals (
     id                  UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     channel_id          BIGINT        NOT NULL REFERENCES channels(id),
@@ -181,11 +110,8 @@ CREATE INDEX idx_deals_owner ON deals(owner_id, status);
 CREATE INDEX idx_deals_channel ON deals(channel_id);
 CREATE INDEX idx_deals_status ON deals(status) WHERE status NOT IN ('COMPLETED', 'CANCELLED', 'REFUNDED');
 CREATE INDEX idx_deals_deadline ON deals(deadline_at) WHERE deadline_at IS NOT NULL AND status NOT IN ('COMPLETED', 'CANCELLED', 'REFUNDED');
-```
 
-### 7. deal_events (partitioned, immutable)
-
-```sql
+-- 7. deal_events (partitioned, immutable)
 CREATE TABLE deal_events (
     id              BIGSERIAL,
     deal_id         UUID          NOT NULL,
@@ -200,11 +126,8 @@ CREATE TABLE deal_events (
 ) PARTITION BY RANGE (created_at);
 
 CREATE INDEX idx_deal_events_deal ON deal_events(deal_id, created_at DESC);
-```
 
-### 8. ledger_entries (partitioned, immutable, double-entry)
-
-```sql
+-- 8. ledger_entries (partitioned, immutable, double-entry)
 CREATE TABLE ledger_entries (
     id              BIGSERIAL,
     deal_id         UUID,
@@ -222,13 +145,8 @@ CREATE TABLE ledger_entries (
 CREATE UNIQUE INDEX idx_ledger_idempotency ON ledger_entries(idempotency_key, created_at);
 CREATE INDEX idx_ledger_account ON ledger_entries(account_id, created_at DESC);
 CREATE INDEX idx_ledger_deal ON ledger_entries(deal_id) WHERE deal_id IS NOT NULL;
-```
 
-**Note**: `idx_ledger_idempotency` includes `created_at` because partitioned tables require partition key in unique indexes.
-
-### 9. account_balances (CQRS projection)
-
-```sql
+-- 9. account_balances (CQRS projection)
 CREATE TABLE account_balances (
     account_id      VARCHAR(100)  PRIMARY KEY,
     balance_nano    BIGINT        NOT NULL DEFAULT 0 CHECK (balance_nano >= 0),
@@ -236,11 +154,8 @@ CREATE TABLE account_balances (
     version         INTEGER       NOT NULL DEFAULT 0,
     updated_at      TIMESTAMPTZ   DEFAULT now()
 );
-```
 
-### 10. ton_transactions
-
-```sql
+-- 10. ton_transactions
 CREATE TABLE ton_transactions (
     id              BIGSERIAL     PRIMARY KEY,
     deal_id         UUID          REFERENCES deals(id),
@@ -260,11 +175,8 @@ CREATE TABLE ton_transactions (
 CREATE INDEX idx_ton_tx_deal ON ton_transactions(deal_id);
 CREATE INDEX idx_ton_tx_pending ON ton_transactions(status) WHERE status = 'PENDING';
 CREATE INDEX idx_ton_tx_address ON ton_transactions(to_address) WHERE direction = 'IN';
-```
 
-### 11. disputes
-
-```sql
+-- 11. disputes
 CREATE TABLE disputes (
     id              BIGSERIAL     PRIMARY KEY,
     deal_id         UUID          NOT NULL REFERENCES deals(id) UNIQUE,
@@ -280,11 +192,8 @@ CREATE TABLE disputes (
 );
 
 CREATE INDEX idx_disputes_status ON disputes(status) WHERE status = 'OPEN';
-```
 
-### 12. dispute_evidence (immutable)
-
-```sql
+-- 12. dispute_evidence (immutable)
 CREATE TABLE dispute_evidence (
     id              BIGSERIAL     PRIMARY KEY,
     dispute_id      BIGINT        NOT NULL REFERENCES disputes(id),
@@ -295,11 +204,8 @@ CREATE TABLE dispute_evidence (
 );
 
 CREATE INDEX idx_evidence_dispute ON dispute_evidence(dispute_id);
-```
 
-### 13. notification_outbox
-
-```sql
+-- 13. notification_outbox
 CREATE TABLE notification_outbox (
     id              BIGSERIAL     PRIMARY KEY,
     deal_id         UUID,
@@ -315,11 +221,8 @@ CREATE TABLE notification_outbox (
 
 CREATE INDEX idx_outbox_pending ON notification_outbox(created_at) WHERE status = 'PENDING';
 CREATE INDEX idx_outbox_recipient ON notification_outbox(recipient_id);
-```
 
-### 14. posting_checks (partitioned, write-once)
-
-```sql
+-- 14. posting_checks (partitioned, write-once)
 CREATE TABLE posting_checks (
     id              BIGSERIAL,
     deal_id         UUID          NOT NULL,
@@ -332,11 +235,8 @@ CREATE TABLE posting_checks (
 ) PARTITION BY RANGE (checked_at);
 
 CREATE INDEX idx_posting_checks_deal ON posting_checks(deal_id, check_number);
-```
 
-### 15. pii_store
-
-```sql
+-- 15. pii_store
 CREATE TABLE pii_store (
     id              BIGSERIAL     PRIMARY KEY,
     user_id         BIGINT        NOT NULL REFERENCES users(id),
@@ -350,11 +250,8 @@ CREATE TABLE pii_store (
 );
 
 CREATE INDEX idx_pii_user ON pii_store(user_id);
-```
 
-### 16. audit_log (immutable)
-
-```sql
+-- 16. audit_log (immutable)
 CREATE TABLE audit_log (
     id              BIGSERIAL     PRIMARY KEY,
     actor_id        BIGINT,
@@ -368,90 +265,3 @@ CREATE TABLE audit_log (
 );
 
 CREATE INDEX idx_audit_entity ON audit_log(entity_type, entity_id, created_at DESC);
-```
-
----
-
-## Optimistic Locking (version column)
-
-| Table | version | Reason |
-|-------|:---:|--------|
-| users | yes | Profile updates |
-| channels | yes | Settings, price_per_post_nano |
-| channel_memberships | yes | Role/rights changes |
-| channel_pricing_rules | yes | Price changes |
-| commission_tiers | yes | Admin configuration |
-| deals | yes | FSM transitions (critical) |
-| account_balances | yes | CQRS projection, concurrent updates |
-| ton_transactions | yes | Confirmations, status |
-| disputes | yes | Resolution process |
-| notification_outbox | yes | Concurrent worker processing |
-| pii_store | yes | Encrypted data updates |
-| deal_events | no | Append-only, immutable |
-| ledger_entries | no | Append-only, immutable |
-| audit_log | no | Append-only, immutable |
-| dispute_evidence | no | Append-only, immutable |
-| posting_checks | no | Write-once checks |
-
-`version` is managed by the application (jOOQ optimistic locking), NOT by trigger.
-
----
-
-## Partition Creation (003-partitions.sql)
-
-Monthly partitions for 2026 for: `deal_events`, `ledger_entries`, `posting_checks`.
-
-```sql
-CREATE TABLE deal_events_2026_01 PARTITION OF deal_events FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
--- ... 12 months each
-```
-
-**Automation**: Create pg_cron job or separate Liquibase changeset to add future partitions.
-
----
-
-## Immutability Triggers (002-triggers.sql)
-
-For append-only tables: `ledger_entries`, `deal_events`, `audit_log`, `dispute_evidence`.
-
-```sql
-CREATE OR REPLACE FUNCTION prevent_update_delete()
-RETURNS TRIGGER AS $$
-BEGIN
-    RAISE EXCEPTION 'UPDATE and DELETE are not allowed on %', TG_TABLE_NAME;
-END;
-$$ LANGUAGE plpgsql;
-```
-
----
-
-## updated_at Auto-Update (002-triggers.sql)
-
-```sql
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-```
-
-Applied to: `users`, `channels`, `deals`.
-
----
-
-## 005-comments.sql — COMMENT ON
-
-All COMMENT ON TABLE, COMMENT ON COLUMN, and COMMENT ON FUNCTION statements. Comments in English. Covers:
-- 16 tables
-- Key columns (financial amounts, double-entry, versioning, CQRS, commission, PII)
-- 2 trigger functions
-
----
-
-## Related Documents
-
-- [Data Stores](../04-architecture/05-data-stores.md)
-- [Double-Entry Ledger](../05-patterns-and-decisions/05-double-entry-ledger.md)
-- [Project Scaffold](./06-project-scaffold.md)

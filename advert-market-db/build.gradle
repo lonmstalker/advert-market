@@ -6,5 +6,6 @@ dependencies {
     api platform(project(':platform-bom'))
 
     api 'org.jooq:jooq'
+    implementation 'org.liquibase:liquibase-core'
     implementation 'org.postgresql:postgresql'
 }
