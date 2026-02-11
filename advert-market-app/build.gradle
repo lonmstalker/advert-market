@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
+    id 'org.springdoc.openapi-gradle-plugin'
 }
 
 dependencies {
@@ -32,4 +33,10 @@ dependencies {
 
 springBoot {
     mainClass = 'com.advertmarket.app.AdvertMarketApplication'
+}
+
+openApi {
+    apiDocsUrl = 'http://localhost:8080/v3/api-docs.yaml'
+    outputDir = file("${rootDir}/api")
+    outputFileName = 'openapi.yml'
 }
