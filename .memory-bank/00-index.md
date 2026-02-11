@@ -75,6 +75,17 @@
 | [16-java-conventions.md](./16-java-conventions.md) | Java 21 conventions: testing, performance, quality, payment guarantees |
 | [17-typescript-conventions.md](./17-typescript-conventions.md) | TypeScript/React conventions: testing, performance, financial UI |
 
+### Frontend Pages
+
+| File | Description |
+|------|-------------|
+| [15-frontend-pages/01-onboarding.md](./15-frontend-pages/01-onboarding.md) | Onboarding: welcome, interest, tour (3 screens) |
+| [15-frontend-pages/02-catalog.md](./15-frontend-pages/02-catalog.md) | Catalog: channel list, filters, channel detail, create deal |
+| [15-frontend-pages/03-deals.md](./15-frontend-pages/03-deals.md) | Deals: list, detail, negotiate, brief, creative, review, schedule, payment, dispute |
+| [15-frontend-pages/04-wallet.md](./15-frontend-pages/04-wallet.md) | Wallet: balance, top-up, withdraw, history, transaction detail |
+| [15-frontend-pages/05-profile.md](./15-frontend-pages/05-profile.md) | Profile: settings, channel registration, management, team |
+| [15-frontend-pages/06-shared-components.md](./15-frontend-pages/06-shared-components.md) | Shared: sheets, modals, toasts, skeletons, empty states, navigation, routing |
+
 ### Infrastructure & Operations
 
 | File | Description |
@@ -121,4 +132,4 @@
 
 ---
 
-*Generated from C4 architecture model (`architecture/banking/`). 68 files total.*
+*Generated from C4 architecture model (`architecture/banking/`). 74 files total.*
