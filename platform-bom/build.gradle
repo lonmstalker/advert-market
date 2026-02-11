@@ -32,9 +32,9 @@ dependencies {
 
         // Test
         api 'org.testcontainers:testcontainers:2.0.3'
-        api 'org.testcontainers:postgresql:2.0.3'
-        api 'org.testcontainers:kafka:2.0.3'
-        api 'org.testcontainers:junit-jupiter:2.0.3'
+        api 'org.testcontainers:testcontainers-postgresql:2.0.3'
+        api 'org.testcontainers:testcontainers-kafka:2.0.3'
+        api 'org.testcontainers:testcontainers-junit-jupiter:2.0.3'
         api 'org.assertj:assertj-core:3.27.6'
         api 'com.tngtech.archunit:archunit-junit5:1.4.1'
     }

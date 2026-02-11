@@ -35,6 +35,11 @@ spring:
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
+      properties:
+        session.timeout.ms: 30000
+    listener:
+      ack-mode: manual
+      concurrency: 1
   jackson:
     default-property-inclusion: non_null
     serialization:

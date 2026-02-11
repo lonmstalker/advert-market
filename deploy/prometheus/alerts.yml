@@ -1,0 +1,49 @@
+groups:
+  - name: canary
+    rules:
+      - alert: CanaryErrorSpike
+        expr: rate(telegram_handler_errors_total[5m]) > 5/60
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Telegram handler error spike (>5/min)"
+          description: "Error rate {{ $value | humanize }}/s. Consider rolling back canary to 0%."
+
+      - alert: WebhookLatencyHigh
+        expr: histogram_quantile(0.99, rate(telegram_webhook_latency_seconds_bucket[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Webhook p99 latency > 5s"
+          description: "p99 latency is {{ $value | humanize }}s. Check app health."
+
+      - alert: CanaryRouteZero
+        expr: |
+          canary_percent_current > 0
+          and rate(canary_route_decision_total{route="canary"}[5m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Canary percent > 0 but no canary routing decisions"
+          description: "Canary is set to {{ $value }}% but no users are being routed. Check Redis connectivity."
+
+      - alert: ReadinessProbeDown
+        expr: up{job="advert-market"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application instance is down"
+          description: "Instance {{ $labels.instance }} readiness probe is failing."
+
+      - alert: HighDuplicateRate
+        expr: rate(telegram_update_duplicates_total[5m]) / rate(telegram_update_dedup_acquired_total[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Telegram duplicate rate > 50%"
+          description: "High duplicate update rate. Possible webhook retry storm."
