@@ -179,6 +179,20 @@ views {
 
   // ── Additional Static Views ───────────────────────────────────────────────
 
+  // Telegram Webhook Flow (Blue-Green + Canary)
+  dynamic view webhookFlow {
+    title 'Telegram Webhook Flow'
+    description 'Telegram sends update → nginx → active app (blue/green) → dedup → canary routing → async processing'
+
+    telegramPlatform -> adMarketplace.nginx 'POST /api/v1/bot/webhook (HTTPS)'
+    adMarketplace.nginx -> adMarketplace.backendApi 'Proxy to active upstream'
+    adMarketplace.telegramBot.webhookHandler -> adMarketplace.telegramBot.updateDeduplicator 'Check update_id dedup'
+    adMarketplace.telegramBot.updateDeduplicator -> adMarketplace.redisCache.updateDedup 'SET NX tg:update:{id}'
+    adMarketplace.telegramBot.webhookHandler -> adMarketplace.telegramBot.canaryRouter 'Route by user_id'
+    adMarketplace.telegramBot.canaryRouter -> adMarketplace.redisCache.canaryConfig 'Read canary percent + salt'
+    adMarketplace.telegramBot.webhookHandler -> adMarketplace.telegramBot.botCommandRouter 'Delegate to command handler'
+  }
+
   // Kafka Topics Overview
   view kafkaTopics of adMarketplace.kafka {
     title 'Kafka Topics & Consumer Groups'

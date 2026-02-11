@@ -8,20 +8,28 @@ deployment {
   // ── MVP Deployment ────────────────────────────────────────────────────────
 
   environment mvp 'MVP' {
-    description 'Single-host deployment for pre-PMF phase'
+    description 'Single-host blue-green deployment with canary feature flags'
 
     host appHost 'App Host (VPS)' {
-      description 'Single VPS running all application processes'
+      description 'Single VPS: nginx + blue/green app containers + infrastructure'
 
-      process backendProcess 'Backend Process' {
-        description 'JVM: Backend API + Workers in single process'
+      process nginxProcess 'Nginx Reverse Proxy' {
+        description 'TLS termination, upstream switching (blue/green), /internal access control'
+        instanceOf adMarketplace.nginx
+      }
+
+      process blueProcess 'App Blue' {
+        description 'JVM blue instance: Backend API + Telegram Bot + Workers (port 8080)'
         instanceOf adMarketplace.backendApi
+        instanceOf adMarketplace.telegramBot
         instanceOf adMarketplace.workers
       }
 
-      process botProcess 'Bot Process' {
-        description 'Telegram Bot webhook handler'
+      process greenProcess 'App Green' {
+        description 'JVM green instance: Backend API + Telegram Bot + Workers (port 8080) — started on deploy'
+        instanceOf adMarketplace.backendApi
         instanceOf adMarketplace.telegramBot
+        instanceOf adMarketplace.workers
       }
     }
 
@@ -31,17 +39,17 @@ deployment {
     }
 
     managedService managedPostgres 'Managed PostgreSQL' {
-      description 'PostgreSQL 16 — single instance, all tables'
+      description 'PostgreSQL 18 — single instance, all tables'
       instanceOf adMarketplace.primaryDb
     }
 
     managedService managedRedis 'Managed Redis' {
-      description 'Redis 7 — cache + distributed locks'
+      description 'Redis 8.4 — cache + distributed locks + canary config + update dedup'
       instanceOf adMarketplace.redisCache
     }
 
     managedService managedKafka 'Managed Kafka' {
-      description 'Kafka cluster (min 3 brokers) — event streaming + Schema Registry'
+      description 'Kafka 4.1 KRaft (no ZooKeeper) — event streaming'
       instanceOf adMarketplace.kafka
     }
   }
@@ -90,8 +98,8 @@ deployment {
       }
     }
 
-    managedService scaledRedis 'Redis Cluster' {
-      description 'Redis Cluster — cache + distributed locks, horizontal scaling'
+    managedService scaledRedis 'Redis 8.4 Cluster' {
+      description 'Redis Cluster — cache + distributed locks + canary config + update dedup'
       instanceOf adMarketplace.redisCache
     }
 

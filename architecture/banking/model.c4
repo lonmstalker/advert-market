@@ -72,11 +72,11 @@ model {
       }
     }
 
-    // ── Container: Backend API (Kotlin / Spring Boot) ─────────────────────
+    // ── Container: Backend API (Java / Spring Boot) ───────────────────────
 
     backendApi = container 'Backend API' {
       #mvp
-      description 'Kotlin + Spring Boot — REST API, domain services, financial core'
+      description 'Java 25 + Spring Boot 4 — REST API, domain services, financial core'
 
       // Deal Domain
       dealTransitionService = service 'Deal Transition Service' {
@@ -158,11 +158,31 @@ model {
       }
     }
 
+    // ── Container: Nginx Reverse Proxy ────────────────────────────────────
+
+    nginx = container 'Nginx' {
+      #mvp
+      description 'Reverse proxy: TLS termination, blue-green upstream switching, /actuator and /internal access control'
+    }
+
     // ── Container: Telegram Bot ───────────────────────────────────────────
 
     telegramBot = container 'Telegram Bot' {
       #mvp
-      description 'Bot process: webhook handler, notification dispatcher, command router'
+      description 'Webhook handler, notification dispatcher, command router — runs inside Backend API process'
+
+      webhookHandler = component 'Webhook Handler' {
+        description 'POST /api/v1/bot/webhook — validates secret, deduplicates by update_id via Redis SET NX, fast ack'
+      }
+
+      updateDeduplicator = component 'Update Deduplicator' {
+        #idempotent
+        description 'Redis SET NX with 24h TTL for update_id deduplication'
+      }
+
+      canaryRouter = component 'Canary Router' {
+        description 'Feature-flag routing: SHA-256(user_id + salt) % 100 — Redis-backed percent, 5s local cache'
+      }
 
       botNotifier = component 'Bot Notifier' {
         description 'Dispatches notification events to Telegram messages to users'
@@ -217,7 +237,7 @@ model {
 
     primaryDb = database 'PostgreSQL' {
       #mvp
-      description 'PostgreSQL 16 — primary data store with partitioned tables'
+      description 'PostgreSQL 18 — primary data store with partitioned tables'
 
       // Existing core tables
       deals = component 'deals' {
@@ -320,7 +340,7 @@ model {
 
     redisCache = cache 'Redis' {
       #mvp
-      description 'Redis 7 — balance cache (TTL) + distributed locks for escrow dedup'
+      description 'Redis 8.4 — balance cache (TTL) + distributed locks for escrow dedup'
 
       balanceCache = component 'Balance Cache' {
         #cqrs-read
@@ -331,11 +351,30 @@ model {
         #idempotent
         description 'Redis locks for escrow/payout deduplication, reconciliation exclusion'
       }
+
+      canaryConfig = component 'Canary Config' {
+        description 'canary:percent and canary:salt keys — runtime feature-flag config'
+      }
+
+      updateDedup = component 'Update Dedup Keys' {
+        #idempotent
+        description 'tg:update:{id} SET NX with 24h TTL — webhook idempotency'
+      }
     }
 
   } // end adMarketplace
 
   // ── Relationships ─────────────────────────────────────────────────────────
+
+  // Nginx reverse proxy
+  telegramPlatform -[sync]-> adMarketplace.nginx 'POST webhook updates (HTTPS)'
+  adMarketplace.nginx -[sync]-> adMarketplace.backendApi 'Proxy to active upstream (blue or green)'
+
+  // Telegram Bot (webhook, dedup, canary)
+  adMarketplace.telegramBot.webhookHandler -[reads]-> adMarketplace.telegramBot.updateDeduplicator 'Check duplicate update_id'
+  adMarketplace.telegramBot.updateDeduplicator -[stores]-> adMarketplace.redisCache.updateDedup 'SET NX with 24h TTL'
+  adMarketplace.telegramBot.webhookHandler -[sync]-> adMarketplace.telegramBot.canaryRouter 'Route user to stable/canary'
+  adMarketplace.telegramBot.canaryRouter -[reads]-> adMarketplace.redisCache.canaryConfig 'Read canary percent + salt'
 
   // Actor -> System
   advertiser -[sync]-> adMarketplace.miniApp 'Browse channels, create deals, pay escrow'
