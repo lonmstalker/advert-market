@@ -17,6 +17,11 @@ tasks.register('npmLint', NpmTask) {
     args = ['run', 'lint']
 }
 
+tasks.register('npmFormat', NpmTask) {
+    dependsOn 'npmInstall'
+    args = ['run', 'format']
+}
+
 tasks.register('npmTypecheck', NpmTask) {
     dependsOn 'npmInstall'
     args = ['run', 'typecheck']
@@ -25,4 +30,9 @@ tasks.register('npmTypecheck', NpmTask) {
 tasks.register('npmTest', NpmTask) {
     dependsOn 'npmInstall'
     args = ['run', 'test']
+}
+
+tasks.register('npmBuildStorybook', NpmTask) {
+    dependsOn 'npmInstall'
+    args = ['run', 'build-storybook']
 }

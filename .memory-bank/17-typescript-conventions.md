@@ -59,7 +59,7 @@
 }
 ```
 
-Zero `any`. ESLint `@typescript-eslint/no-explicit-any: error`.
+Zero `any`. Biome `noExplicitAny: error`.
 
 ### Project Structure (Feature-Based)
 
@@ -135,13 +135,15 @@ Financial data NEVER served from cache without revalidation:
 { networkMode: 'online' }  // for escrow/balance queries
 ```
 
-## 5. ESLint Rules (Key Enforcement)
+## 5. Biome Rules (Key Enforcement)
 
 | Rule | Setting |
 |---|---|
-| `@typescript-eslint/no-explicit-any` | `error` |
-| `@typescript-eslint/ban-ts-comment` | `error` |
-| `import/no-restricted-paths` | shared ← features forbidden |
-| `no-restricted-imports` | Redux, axios, direct fetch |
-| `i18next/no-literal-string` | All strings through `t()` |
-| `import/no-default-export` | Error (except pages) |
+| `noExplicitAny` | `error` |
+| `noUnusedVariables` | `error` |
+| `noUnusedImports` | `error` |
+| `useExhaustiveDependencies` | `warn` |
+| `useHookAtTopLevel` | `error` |
+| `noDefaultExport` | `error` (except `src/pages/**`) |
+| `useImportType` | `error` |
+| Restricted imports | Redux, axios forbidden |
