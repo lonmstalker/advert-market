@@ -32,13 +32,23 @@ Gas: ~0.005 TON from subwallet balance
 Subwallet balance after: 1000 - 900 - 0.005 = 99.995 TON
 ```
 
-Ledger entries (created AFTER TX confirmation with actual amounts):
+Ledger entries are recorded in **two steps**:
+
+**Step 1a: Release entries** (at deal state transition, BEFORE payout TX):
 
 ```
-tx_ref: {payout_tx_ref}
+tx_ref: {release_tx_ref}
 DEBIT  ESCROW:{deal_id}            1000 TON
 CREDIT OWNER_PENDING:{owner_id}     900 TON
 CREDIT COMMISSION:{deal_id}         100 TON
+```
+
+**Step 1b: Withdrawal entry** (AFTER payout TX confirmed on-chain):
+
+```
+tx_ref: {withdrawal_tx_ref}
+DEBIT  OWNER_PENDING:{owner_id}     900 TON
+CREDIT EXTERNAL_TON                  900 TON
 ```
 
 ### Step 2: Commission Sweep

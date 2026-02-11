@@ -23,7 +23,9 @@ On release, 3 ledger entries in a single `tx_ref` group:
 
 **Rounding**: `floor()` for commission, remainder to owner. Dust sweep handles sub-nanoTON remainders via `PLATFORM_TREASURY`.
 
-All 3 entries recorded atomically in a single DB transaction before payout command is emitted (crash-safe).
+All 3 **release entries** recorded atomically in a single DB transaction at the time of deal state transition (DELIVERY_VERIFYING -> COMPLETED_RELEASED), **before** payout command is emitted via outbox. This is an internal ledger operation (no blockchain TX involved).
+
+> **Two-step recording**: Release entries (ESCROW -> COMMISSION + OWNER_PENDING) are pre-payout-TX. The **withdrawal entry** (OWNER_PENDING -> EXTERNAL_TON) is written separately, AFTER the payout TX is confirmed on-chain (single-phase recording for blockchain TXs). See [Payout Wallet Architecture](./40-payout-wallet-architecture.md).
 
 ## Payout Command (Kafka)
 
@@ -84,7 +86,8 @@ Notification sent at PAYOUT_CONFIRMED: owner gets "Выплата {amount} TON" 
 - Redis lock prevents concurrent execution for same deal
 - Idempotency key prevents re-execution after restart
 - `ton_transactions.tx_hash` PK prevents duplicate recording
-- Ledger entries recorded BEFORE payout command emitted (crash-safe)
+- Release entries (ESCROW -> COMMISSION + OWNER_PENDING) recorded BEFORE payout command (same DB TX as state transition)
+- Withdrawal entry (OWNER_PENDING -> EXTERNAL_TON) recorded AFTER payout TX confirmed on-chain
 
 ## Metrics
 

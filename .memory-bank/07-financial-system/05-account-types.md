@@ -113,6 +113,18 @@ See [Overpayment & Underpayment](../14-implementation-specs/31-overpayment-under
 
 See [Late Deposit Handling](../14-implementation-specs/39-late-deposit-handling.md) for details.
 
+### DUST_WRITEOFF
+
+| Attribute | Value |
+|-----------|-------|
+| **Format** | `DUST_WRITEOFF` |
+| **Cardinality** | Singleton |
+| **Purpose** | Tracks monthly write-off of subwallet dust (< 1000 nanoTON) |
+| **Debited by** | Monthly dust write-off batch |
+| **Normal balance** | Debit (expense account) |
+
+See [Payout Wallet Architecture](../14-implementation-specs/40-payout-wallet-architecture.md) for dust handling details.
+
 ## Account Lifecycle per Deal
 
 ```mermaid

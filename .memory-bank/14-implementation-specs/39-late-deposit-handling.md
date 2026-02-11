@@ -22,13 +22,22 @@ When `DepositWatcher` detects an incoming TX for a subwallet:
 
 ```
 1. Load deal by subwallet_id
-2. If deal.status == AWAITING_PAYMENT:
+2. Read on-chain TX logical time (lt) and timestamp
+3. If deal.status == AWAITING_PAYMENT:
      -> Normal flow (transition to FUNDED)
-3. If deal.status IN (EXPIRED, CANCELLED, REFUNDED):
-     -> Late deposit: trigger auto-refund
-4. If deal.status IN (FUNDED, CREATIVE_SUBMITTED, ...):
+4. If deal.status IN (EXPIRED, CANCELLED, REFUNDED):
+     -> Check on-chain TX timestamp vs deal.deadline_at:
+        a. If TX timestamp < deal.deadline_at (sent BEFORE expiry, detected AFTER):
+           -> Grace deposit: treat as valid, transition to FUNDED if possible
+              (requires deal.status reversal by operator or auto-recovery)
+           -> If CANCELLED/REFUNDED: late deposit, auto-refund
+        b. If TX timestamp >= deal.deadline_at (sent AFTER expiry):
+           -> Late deposit: trigger auto-refund
+5. If deal.status IN (FUNDED, CREATIVE_SUBMITTED, ...):
      -> Overpayment: existing overpayment flow (spec 31)
 ```
+
+> **TX timestamp check**: The on-chain TX `created_lt` (logical time) is used to determine when the TX was actually submitted, NOT when it was detected by the Deposit Watcher. This prevents punishing advertisers for TON network delays or platform downtime.
 
 ### Reconciliation Check (New)
 
