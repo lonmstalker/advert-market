@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:19
+    image: postgres:latest
     container_name: am-postgres
     environment:
       POSTGRES_DB: advertmarket
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d advertmarket"]
       interval: 5s

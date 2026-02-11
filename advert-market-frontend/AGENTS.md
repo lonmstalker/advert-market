@@ -106,6 +106,93 @@ type Option = { label: string; value: string | null; image?: string }
 </Group>
 ```
 
+## Telegram Mini Apps SDK: @telegram-apps/sdk-react
+
+React bindings for TMA client SDK. Version: 3.3.9+
+
+### Setup (already configured)
+
+```tsx
+// main.tsx — init BEFORE rendering
+import { init } from '@telegram-apps/sdk-react';
+init();
+
+// Components — use useSignal + useLaunchParams hooks
+import { useLaunchParams, useSignal, useRawInitData } from '@telegram-apps/sdk-react';
+import * as backButton from '@telegram-apps/sdk-react'; // namespace import for components
+```
+
+### Key APIs
+
+| API | Purpose | Pattern |
+|-----|---------|---------|
+| `useLaunchParams(true)` | Get launch params (camelCased) | `const lp = useLaunchParams(true)` |
+| `useSignal(signal)` | Track signal reactively | `const isVisible = useSignal(backButton.isVisible)` |
+| `useRawInitData()` | Raw initData for auth | `const initData = useRawInitData()` |
+| `backButton.show()` / `.hide()` | Back navigation | Call in useEffect |
+| `mainButton.setParams({text, isVisible})` | Primary CTA | Bind to route/page |
+| `hapticFeedback.impactOccurred('medium')` | Tactile feedback | On payment confirm |
+| `cloudStorage.setItem(key, value)` | Persistent storage | User preferences |
+| `popup.open({title, message, buttons})` | Native popup | Confirmations |
+| `closingBehavior.enableConfirmation()` | Prevent accidental close | During active deal flow |
+| `viewport.expand()` | Expand to full height | On app init |
+| `miniApp.ready()` | Signal app is ready | After init |
+
+### Rules
+
+1. **ALWAYS use SDK hooks** — never access `window.Telegram.WebApp` directly
+2. **Initialize in main.tsx** — `init()` must run before React renders
+3. **Use `useSignal`** to read signal values in components — signals are NOT React state
+4. **Use namespace imports** for components: `import * as backButton from '@telegram-apps/sdk-react'`
+5. **Mount components before use**: some require `await viewport.mount()` before reading values
+6. **eruda** auto-loads in dev mode for mobile debugging — no manual setup needed
+
+## TON Connect: @tonconnect/ui-react
+
+TON wallet connection for React. Version: 2.4.1+
+
+### Setup (already configured)
+
+```tsx
+// App.tsx — TonConnectUIProvider wraps the entire app
+<TonConnectUIProvider manifestUrl={TON_MANIFEST_URL}>
+  {children}
+</TonConnectUIProvider>
+
+// public/tonconnect-manifest.json — served statically
+```
+
+### Key APIs
+
+| Hook/Component | Purpose |
+|---------------|---------|
+| `<TonConnectButton />` | Pre-built connect/disconnect button |
+| `useTonConnectUI()` | `[tonConnectUI, setOptions]` — modal control, send transactions |
+| `useTonWallet()` | Connected wallet info (account, chain, device) |
+| `useTonAddress()` | Shortcut for wallet address |
+| `useIsConnectionRestored()` | Whether previous session was restored |
+
+### Transaction Pattern
+
+```tsx
+const [tonConnectUI] = useTonConnectUI();
+await tonConnectUI.sendTransaction({
+  validUntil: Math.floor(Date.now() / 1000) + 300,
+  messages: [{
+    address: escrowAddress,
+    amount: String(amountNano), // nanoTON as string
+  }],
+});
+```
+
+### Rules
+
+1. **Amounts in nanoTON** — `1 TON = 1_000_000_000 nanoTON`, pass as string
+2. **Manifest must be publicly accessible** — no auth, no CORS, direct GET
+3. **ALWAYS check `useIsConnectionRestored()`** before showing wallet-dependent UI
+4. **Never store private keys** — TON Connect handles wallet interaction securely
+5. **Use `<TonConnectButton />`** — never build custom connect/disconnect UI
+
 ## Conventions
 
 MUST follow these documents:
@@ -121,6 +208,7 @@ Defined in `.env.development` / `.env.production`, typed in `src/vite-env.d.ts`:
 |----------|-------------|---------|
 | `VITE_API_BASE_URL` | Backend API origin | `http://localhost:8080` |
 | `VITE_TON_NETWORK` | TON blockchain network | `testnet` / `mainnet` |
+| `VITE_TON_MANIFEST_URL` | TON Connect manifest URL (optional) | `https://admarket.app/tonconnect-manifest.json` |
 
 Access: `import.meta.env.VITE_API_BASE_URL`. Vite proxy forwards `/api` → backend in dev.
 

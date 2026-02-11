@@ -1,4 +1,5 @@
 import type { z } from 'zod/v4';
+import { retrieveRawInitData } from '@telegram-apps/sdk-react';
 import type { PaginationParams } from './types';
 import { ApiError, problemDetailSchema } from './types';
 
@@ -10,7 +11,11 @@ function getAuthToken(): string | null {
 }
 
 function getInitData(): string {
-  return window.Telegram?.WebApp.initData ?? '';
+  try {
+    return retrieveRawInitData() ?? '';
+  } catch {
+    return '';
+  }
 }
 
 async function request<T>(
