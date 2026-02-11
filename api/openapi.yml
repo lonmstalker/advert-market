@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: Advert Market API
+  version: 0.1.0
+  description: Telegram Mini App marketplace for channel advertising
+servers:
+  - url: /api/v1
+    description: Default API prefix
+paths:
+  /auth/telegram:
+    post:
+      operationId: authenticateTelegram
+      tags: [Auth]
+      summary: Authenticate via Telegram initData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramAuthRequest'
+      responses:
+        '200':
+          description: JWT token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid initData
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+components:
+  schemas:
+    TelegramAuthRequest:
+      type: object
+      required: [initData]
+      properties:
+        initData:
+          type: string
+          description: Telegram Mini App initData string
+    AuthResponse:
+      type: object
+      required: [accessToken, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserInfo'
+    UserInfo:
+      type: object
+      required: [id, username, displayName]
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        displayName:
+          type: string
+    ProblemDetail:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+    PaginatedResponse:
+      type: object
+      required: [items, hasNext]
+      properties:
+        items:
+          type: array
+          items: {}
+        nextCursor:
+          type: string
+          nullable: true
+        hasNext:
+          type: boolean
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    telegramInitData:
+      type: apiKey
+      in: header
+      name: X-Telegram-Init-Data
+security:
+  - bearerAuth: []
+  - telegramInitData: []

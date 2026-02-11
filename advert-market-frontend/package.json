@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "api:types": "openapi-typescript ../api/openapi.yml -o src/shared/api/schema.gen.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -51,6 +52,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "jsdom": "^28.0.0",
     "msw": "^2.12.10",
+    "openapi-typescript": "^7.13.0",
     "playwright": "^1.58.2",
     "storybook": "^10.2.8",
     "typescript": "^5.9.3",
