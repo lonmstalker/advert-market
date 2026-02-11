@@ -218,6 +218,33 @@ Partition key: `recipient_id` (not deal_id).
 }
 ```
 
+#### SWEEP_COMMISSION
+```json
+{
+  "event_type": "SWEEP_COMMISSION",
+  "deal_id": "...",
+  "payload": {
+    "commission_account_id": "COMMISSION:deal-123",
+    "amount_nano": 100000000,
+    "subwallet_id": 12345
+  }
+}
+```
+
+#### AUTO_REFUND_LATE_DEPOSIT
+```json
+{
+  "event_type": "AUTO_REFUND_LATE_DEPOSIT",
+  "deal_id": "...",
+  "payload": {
+    "tx_hash": "abc123...",
+    "amount_nano": 1000000000,
+    "refund_address": "EQ...",
+    "subwallet_id": 12345
+  }
+}
+```
+
 ### 7. reconciliation.triggers
 
 ```json

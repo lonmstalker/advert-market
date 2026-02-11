@@ -4,6 +4,8 @@
 
 Reconciliation is a periodic three-way comparison that ensures consistency between the platform's internal ledger, the TON blockchain, and deal aggregates. It is the financial safety net — detecting any discrepancies before they become problems.
 
+**14 checks total** — see [Reconciliation SQL](../14-implementation-specs/14-reconciliation-sql.md) for complete SQL queries.
+
 ## Three-Way Reconciliation
 
 ```mermaid
@@ -141,3 +143,4 @@ Uses Redis distributed lock `lock:reconciliation` (TTL 300s) to prevent concurre
 - [CQRS](../05-patterns-and-decisions/02-cqrs.md) — projection verification
 - [Workers](../04-architecture/04-workers.md) — Reconciliation Worker
 - [Security & Compliance](../10-security-and-compliance.md) — audit requirements
+- [Reconciliation SQL](../14-implementation-specs/14-reconciliation-sql.md) — 14 SQL checks

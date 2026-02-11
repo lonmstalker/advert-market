@@ -309,18 +309,154 @@ GROUP BY deal_id;
 
 ---
 
+## Check 9: Overpayment Timeout
+
+**Rule**: OVERPAYMENT accounts must be zeroed within 24 hours (auto-refund triggered).
+
+```sql
+SELECT
+    ab.account_id,
+    ab.balance_nano,
+    ab.updated_at
+FROM account_balances ab
+WHERE ab.account_id LIKE 'OVERPAYMENT:%'
+  AND ab.balance_nano > 0
+  AND ab.updated_at < NOW() - INTERVAL '24 hours';
+```
+
+**Expected**: No rows returned (all overpayments auto-refunded)
+**Severity**: HIGH (stuck overpayment, advertiser money not returned)
+
+---
+
+## Check 10: OWNER_PENDING Completion
+
+**Rule**: OWNER_PENDING accounts should be zeroed within 30 days after release.
+
+```sql
+SELECT
+    ab.account_id,
+    ab.balance_nano,
+    ab.updated_at
+FROM account_balances ab
+WHERE ab.account_id LIKE 'OWNER_PENDING:%'
+  AND ab.balance_nano > 0
+  AND ab.updated_at < NOW() - INTERVAL '30 days';
+```
+
+**Expected**: No rows returned
+**Severity**: MEDIUM (unclaimed payout, requires operator resolution)
+
+---
+
+## Check 11: Outbound TX vs Ledger Withdrawals
+
+**Rule**: Every confirmed outbound TX must have a corresponding withdrawal ledger entry.
+
+```sql
+SELECT
+    tt.id,
+    tt.deal_id,
+    tt.tx_hash,
+    tt.amount_nano,
+    tt.tx_type
+FROM ton_transactions tt
+LEFT JOIN ledger_entries le
+    ON le.deal_id = tt.deal_id
+    AND le.entry_type = 'OWNER_WITHDRAWAL'
+    AND le.account_id = 'EXTERNAL_TON'
+WHERE tt.direction = 'OUT'
+  AND tt.status = 'CONFIRMED'
+  AND tt.tx_type = 'PAYOUT'
+  AND le.id IS NULL
+  AND tt.confirmed_at >= :range_start
+  AND tt.confirmed_at < :range_end;
+```
+
+**Expected**: No rows returned (every payout TX has a withdrawal entry)
+**Severity**: CRITICAL (on-chain TX without ledger record)
+
+---
+
+## Check 12: Commission Sweep Completeness
+
+**Rule**: COMMISSION accounts should be swept to PLATFORM_TREASURY periodically.
+
+```sql
+SELECT
+    ab.account_id,
+    ab.balance_nano,
+    ab.updated_at
+FROM account_balances ab
+WHERE ab.account_id LIKE 'COMMISSION:%'
+  AND ab.balance_nano > 1000  -- above dust threshold
+  AND ab.updated_at < NOW() - INTERVAL '7 days';
+```
+
+**Expected**: No rows returned (commissions swept within 7 days)
+**Severity**: MEDIUM (delayed sweep, not money loss)
+
+---
+
+## Check 13: LATE_DEPOSIT Transience
+
+**Rule**: LATE_DEPOSIT accounts are temporary — must be zeroed after auto-refund.
+
+```sql
+SELECT
+    ab.account_id,
+    ab.balance_nano,
+    ab.updated_at
+FROM account_balances ab
+WHERE ab.account_id LIKE 'LATE_DEPOSIT:%'
+  AND ab.balance_nano > 0
+  AND ab.updated_at < NOW() - INTERVAL '1 hour';
+```
+
+**Expected**: No rows returned (late deposits auto-refunded within 1 hour)
+**Severity**: CRITICAL (advertiser money stuck in temp account)
+
+---
+
+## Check 14: Seqno Consistency
+
+**Rule**: No subwallet should have pending outbound TX stuck for more than 10 minutes.
+
+```sql
+SELECT
+    tt.deal_id,
+    tt.subwallet_id,
+    tt.tx_type,
+    tt.created_at
+FROM ton_transactions tt
+WHERE tt.direction = 'OUT'
+  AND tt.status = 'PENDING'
+  AND tt.created_at < NOW() - INTERVAL '10 minutes';
+```
+
+**Expected**: No rows returned (all outbound TX confirmed or failed within timeout)
+**Severity**: HIGH (potential seqno deadlock, see [43-seqno-management.md](./43-seqno-management.md))
+
+---
+
 ## Alert Severity (Updated)
 
-| Check | Pass | Fail Severity |
-|-------|------|---------------|
-| Ledger Self-Balance | diff = 0 | CRITICAL |
-| Ledger vs TON | diff = 0 | CRITICAL |
-| Ledger vs Deals | 0 mismatched | HIGH per deal |
-| CQRS Projection | 0 mismatched | HIGH (auto-fixable) |
-| Per-TX Balance (tx_ref) | 0 mismatched | CRITICAL |
-| Stuck Subwallets | 0 with balance | CRITICAL |
-| Network Fees | diff <= tolerance | HIGH |
-| Partial Deposits | ledger = on-chain | HIGH |
+| # | Check | Pass | Fail Severity |
+|---|-------|------|---------------|
+| 1 | Ledger Self-Balance | diff = 0 | CRITICAL |
+| 2 | Ledger vs TON | diff = 0 | CRITICAL |
+| 3 | Ledger vs Deals | 0 mismatched | HIGH per deal |
+| 4 | CQRS Projection | 0 mismatched | HIGH (auto-fixable) |
+| 5 | Per-TX Balance (tx_ref) | 0 mismatched | CRITICAL |
+| 6 | Stuck Subwallets | 0 with balance | CRITICAL |
+| 7 | Network Fees | diff <= tolerance | HIGH |
+| 8 | Partial Deposits | ledger = on-chain | HIGH |
+| 9 | Overpayment Timeout | 0 stale | HIGH |
+| 10 | OWNER_PENDING Completion | 0 stale | MEDIUM |
+| 11 | Outbound TX vs Ledger | 0 unmatched | CRITICAL |
+| 12 | Commission Sweep | 0 stale | MEDIUM |
+| 13 | LATE_DEPOSIT Transience | 0 stale | CRITICAL |
+| 14 | Seqno Consistency | 0 stuck | HIGH |
 
 ---
 

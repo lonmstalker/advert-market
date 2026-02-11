@@ -69,10 +69,7 @@ flowchart TB
    - `direction: IN`
    - `amount_nano`
    - `deal_id`
-4. Applies Confirmation Policy (see [Confirmation Policy](./06-confirmation-policy.md)):
-   - <= 100 TON → 1 confirmation
-   - <= 1000 TON → 3 confirmations
-   - \> 1000 TON → 5 confirmations + operator review
+4. Applies [Confirmation Policy](./06-confirmation-policy.md) (tiered by amount)
 5. After required confirmations, sends callback to Backend API
 
 ## Stage 3: Escrow Hold

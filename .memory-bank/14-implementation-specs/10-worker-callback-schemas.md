@@ -51,7 +51,7 @@ Workers communicate results back to Backend API via **Kafka topics** (not HTTP c
 ```
 
 **Idempotency key**: `payout:{deal_id}`
-**Action**: Transition deal -> COMPLETED, create payout ledger entries
+**Action**: Record on-chain TX confirmation, create withdrawal entry (OWNER_PENDING → EXTERNAL_TON). Deal already in COMPLETED_RELEASED at this point.
 
 ---
 
@@ -135,7 +135,7 @@ On failure:
 ```
 
 **Idempotency key**: `verify:{deal_id}:{check_number}`
-**Action**: If final check passed -> transition PUBLISHED -> DELIVERY_VERIFIED
+**Action**: If final check passed → transition DELIVERY_VERIFYING → COMPLETED_RELEASED (triggers escrow release + payout command)
 
 On failure:
 ```json

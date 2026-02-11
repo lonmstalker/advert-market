@@ -18,9 +18,8 @@ Dedicated expense account tracking all TON blockchain gas fees incurred by the p
 
 Every outbound TON transaction (payout, refund, commission sweep) incurs a gas fee (~0.005 TON). The fee is:
 
-1. **Estimated** before TX submission (via `estimateFee` API)
-2. **Actual** value recorded after on-chain confirmation
-3. If estimate differs from actual: adjustment entry created
+1. **Actual** value recorded after on-chain confirmation (single-phase recording)
+2. See [Network Fee Accounting](../14-implementation-specs/38-network-fee-accounting.md) for recording flow
 
 ## Fee Sources
 
@@ -40,13 +39,7 @@ Every outbound TON transaction (payout, refund, commission sweep) incurs a gas f
 
 ## Reconciliation
 
-NETWORK_FEES balance in ledger should match sum of `fee_nano` in `ton_transactions`:
-
-```sql
--- Must match
-SELECT SUM(credit_nano) - SUM(debit_nano) FROM ledger_entries WHERE account_id = 'NETWORK_FEES';
-SELECT SUM(fee_nano) FROM ton_transactions WHERE direction = 'OUT' AND status = 'CONFIRMED';
-```
+See [Reconciliation SQL Check 7](../14-implementation-specs/14-reconciliation-sql.md) for NETWORK_FEES consistency check.
 
 ## Impact on Platform Revenue
 

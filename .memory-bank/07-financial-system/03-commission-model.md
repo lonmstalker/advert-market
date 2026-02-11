@@ -39,15 +39,17 @@ Where `commission_rate_bps` is in basis points (1000 bps = 10%).
 
 ## Ledger Entries on Release
 
-When commission is deducted:
+When commission is deducted (3 entries, 1 tx_ref):
 
-| tx_ref | account_id | direction | amount_nano |
-|--------|-----------|-----------|-------------|
-| uuid-1 | `ESCROW:{deal_id}` | DEBIT | 1,000,000,000,000 |
-| uuid-1 | `COMMISSION:{deal_id}` | CREDIT | 100,000,000,000 |
-| uuid-1 | `OWNER_PENDING:{owner_id}` | CREDIT | 900,000,000,000 |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| uuid-1 | `ESCROW:{deal_id}` | 1,000,000,000,000 | 0 | ESCROW_RELEASE |
+| uuid-1 | `COMMISSION:{deal_id}` | 0 | 100,000,000,000 | PLATFORM_COMMISSION |
+| uuid-1 | `OWNER_PENDING:{owner_id}` | 0 | 900,000,000,000 | OWNER_PAYOUT |
 
-**Invariant**: Debit (1000 TON) = Credits (100 + 900 TON)
+**Invariant**: SUM(debit_nano) = SUM(credit_nano) per tx_ref
+
+For tiered commission rates and rounding details, see [Commission Rounding & Sweep](../14-implementation-specs/25-commission-rounding-sweep.md).
 
 ## Commission Account Flow
 

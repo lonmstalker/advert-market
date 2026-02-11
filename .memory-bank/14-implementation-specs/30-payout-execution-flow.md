@@ -83,11 +83,16 @@ Notification sent at PAYOUT_CONFIRMED: owner gets "Выплата {amount} TON" 
 
 ## Idempotency Guarantees
 
-- Redis lock prevents concurrent execution for same deal
-- Idempotency key prevents re-execution after restart
-- `ton_transactions.tx_hash` PK prevents duplicate recording
-- Release entries (ESCROW -> COMMISSION + OWNER_PENDING) recorded BEFORE payout command (same DB TX as state transition)
-- Withdrawal entry (OWNER_PENDING -> EXTERNAL_TON) recorded AFTER payout TX confirmed on-chain
+| Layer | Mechanism | Protects Against |
+|-------|-----------|------------------|
+| Redis lock | `lock:payout:{deal_id}` (TTL 60s) | Concurrent execution |
+| DB idempotency | `processed_events` table, key `payout:{deal_id}` | Re-execution after restart |
+| TON TX hash | `ton_transactions.tx_hash` UNIQUE | Duplicate recording |
+| Outbox | Transactional outbox + `FOR UPDATE SKIP LOCKED` | Double-emit |
+
+**Two-step recording**:
+1. Release entries (ESCROW → COMMISSION + OWNER_PENDING) recorded BEFORE payout command (same DB TX as state transition)
+2. Withdrawal entry (OWNER_PENDING → EXTERNAL_TON) recorded AFTER payout TX confirmed on-chain
 
 ## Metrics
 

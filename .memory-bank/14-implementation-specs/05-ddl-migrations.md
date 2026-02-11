@@ -158,7 +158,7 @@ CREATE TABLE deals (
     owner_id            BIGINT        NOT NULL REFERENCES users(id),
     pricing_rule_id     BIGINT        REFERENCES channel_pricing_rules(id),
     status              VARCHAR(30)   NOT NULL DEFAULT 'DRAFT',
-    amount_nano         BIGINT        NOT NULL CHECK (amount_nano > 0),
+    amount_nano         BIGINT        NOT NULL CHECK (amount_nano >= 1000000000),  -- min 1 TON
     commission_rate_bp  INTEGER       NOT NULL DEFAULT 1000,
     commission_nano     BIGINT        NOT NULL CHECK (commission_nano >= 0),
     deposit_address     VARCHAR(100),
@@ -448,6 +448,20 @@ All COMMENT ON TABLE, COMMENT ON COLUMN, and COMMENT ON FUNCTION statements. Com
 - Key columns (financial amounts, double-entry, versioning, CQRS, commission, PII)
 - 2 trigger functions
 
+### 17. processed_events (idempotency)
+
+```sql
+CREATE TABLE processed_events (
+    idempotency_key VARCHAR(200) PRIMARY KEY,
+    event_type      VARCHAR(50)  NOT NULL,
+    deal_id         UUID,
+    processed_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    result          VARCHAR(20)  NOT NULL CHECK (result IN ('SUCCESS', 'SKIPPED', 'FAILED'))
+);
+
+CREATE INDEX idx_processed_events_cleanup ON processed_events(processed_at);
+```
+
 ---
 
 ## 006-financial-fixes.sql
@@ -538,6 +552,23 @@ ALTER TABLE deals ADD COLUMN payout_tx_hash VARCHAR(100);
 ALTER TABLE deals ADD COLUMN refunded_tx_hash VARCHAR(100);
 ```
 
+### scheduled_at for Post Scheduler
+
+```sql
+ALTER TABLE deals ADD COLUMN scheduled_at TIMESTAMPTZ;
+CREATE INDEX idx_deals_scheduled ON deals(scheduled_at)
+    WHERE status = 'SCHEDULED' AND scheduled_at IS NOT NULL;
+```
+
+### notification_outbox improvements
+
+```sql
+ALTER TABLE notification_outbox ADD COLUMN max_retries INTEGER DEFAULT 5;
+ALTER TABLE notification_outbox ADD COLUMN error_message TEXT;
+ALTER TABLE notification_outbox ADD COLUMN channel VARCHAR(20) DEFAULT 'TELEGRAM'
+    CHECK (channel IN ('TELEGRAM', 'EMAIL', 'WEBHOOK'));
+```
+
 ---
 
 ## Cumulative Schema (after all migrations)
@@ -582,6 +613,7 @@ funded_at           TIMESTAMPTZ,              -- 006
 deposit_tx_hash     VARCHAR(100),             -- 006
 payout_tx_hash      VARCHAR(100),             -- 007
 refunded_tx_hash    VARCHAR(100),             -- 007
+scheduled_at        TIMESTAMPTZ,              -- 007
 -- subwallet_id now UNIQUE (006)
 -- status default: 'DRAFT' (007)
 ```

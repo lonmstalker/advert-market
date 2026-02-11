@@ -69,7 +69,7 @@ flowchart LR
 | **Partition key** | `deal_id` |
 | **Producer** | Outbox Publisher |
 | **Consumers** | TON Deposit Watcher, Payout Executor, Refund Executor |
-| **Command types** | `WATCH_DEPOSIT`, `EXECUTE_PAYOUT`, `EXECUTE_REFUND` |
+| **Command types** | `WATCH_DEPOSIT`, `EXECUTE_PAYOUT`, `EXECUTE_REFUND`, `SWEEP_COMMISSION`, `AUTO_REFUND_LATE_DEPOSIT` |
 
 ### 3. escrow.confirmations
 
@@ -140,6 +140,7 @@ flowchart LR
 | `cg-delivery-verifier` | Delivery Verifier | `delivery.commands` |
 | `cg-reconciliation` | Reconciliation Worker | `reconciliation.triggers` |
 | `cg-bot-notifier` | Bot Notifier | `notifications.outbox` |
+| `cg-deposit-handler` | Deposit Handler | `escrow.confirmations` |
 
 ## Ordering Guarantees
 
