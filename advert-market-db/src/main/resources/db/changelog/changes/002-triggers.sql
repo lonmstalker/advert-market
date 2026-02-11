@@ -36,6 +36,10 @@ CREATE TRIGGER trg_dispute_evidence_immutable
     BEFORE UPDATE OR DELETE ON dispute_evidence
     FOR EACH ROW EXECUTE FUNCTION prevent_update_delete();
 
+CREATE TRIGGER trg_posting_checks_immutable
+    BEFORE UPDATE OR DELETE ON posting_checks
+    FOR EACH ROW EXECUTE FUNCTION prevent_update_delete();
+
 -- Auto updated_at triggers
 CREATE TRIGGER trg_users_updated_at
     BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at();

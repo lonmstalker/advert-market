@@ -16,8 +16,9 @@ COMMENT ON TABLE account_balances IS 'Account balances — CQRS read model from 
 COMMENT ON TABLE ton_transactions IS 'TON blockchain transactions (deposits, payouts)';
 COMMENT ON TABLE disputes IS 'Deal disputes (one dispute per deal)';
 COMMENT ON TABLE dispute_evidence IS 'Dispute evidence attachments (immutable)';
-COMMENT ON TABLE notification_outbox IS 'Outgoing notifications (transactional outbox pattern)';
-COMMENT ON TABLE posting_checks IS 'Ad post placement verification checks (partitioned)';
+COMMENT ON TABLE ledger_idempotency_keys IS 'Global ledger idempotency guard — prevents cross-partition duplicates in ledger_entries';
+COMMENT ON TABLE notification_outbox IS 'Transactional outbox for Kafka event publishing';
+COMMENT ON TABLE posting_checks IS 'Ad post placement verification checks (partitioned, immutable)';
 COMMENT ON TABLE pii_store IS 'Encrypted personally identifiable information (PII)';
 COMMENT ON TABLE audit_log IS 'Action audit log (immutable)';
 
@@ -52,6 +53,16 @@ COMMENT ON COLUMN commission_tiers.min_amount_nano IS 'Minimum deal amount for t
 -- PII
 COMMENT ON COLUMN pii_store.encrypted_value IS 'Encrypted value (AES-256-GCM)';
 COMMENT ON COLUMN pii_store.key_version IS 'Encryption key version for key rotation';
+
+-- === Functions ===
+
+-- Outbox columns
+COMMENT ON COLUMN notification_outbox.idempotency_key IS 'Deduplication key for Kafka publishing';
+COMMENT ON COLUMN notification_outbox.topic IS 'Target Kafka topic';
+COMMENT ON COLUMN notification_outbox.partition_key IS 'Kafka partition key (usually deal_id)';
+
+-- Dispute evidence
+COMMENT ON COLUMN dispute_evidence.content_hash IS 'SHA-256 hash of evidence content for tamper detection';
 
 -- === Functions ===
 

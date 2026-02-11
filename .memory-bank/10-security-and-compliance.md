@@ -72,7 +72,9 @@ Personally identifiable information is stored in an isolated `pii_store` with fi
 | Field | Encryption | Storage |
 |-------|-----------|---------|
 | `ton_payout_address` | AES-256-GCM | `pii_store` table |
-| Telegram user data | From initData (not stored long-term) | Session only |
+| Telegram profile (`first_name`, `last_name`, `username`) | None (public Telegram data) | `users` table |
+
+Telegram profile data (`first_name`, `last_name`, `username`) хранится в таблице `users` для отображения в UI. Это публичные данные Telegram-профиля. Чувствительные данные (адреса кошельков) хранятся только в зашифрованном `pii_store`.
 
 ### Encryption
 
@@ -91,7 +93,7 @@ All financial records are append-only:
 | `ledger_entries` | No UPDATE/DELETE, database triggers enforce |
 | `audit_log` | WORM — Write Once Read Many |
 | `deal_events` | No UPDATE/DELETE |
-| `dispute_evidence` | No UPDATE/DELETE, content hashed (SHA-256) |
+| `dispute_evidence` | No UPDATE/DELETE, `content_hash` (SHA-256) for tamper detection |
 
 ### Custodial Risk Mitigation
 

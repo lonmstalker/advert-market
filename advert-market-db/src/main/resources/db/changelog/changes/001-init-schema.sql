@@ -146,6 +146,12 @@ CREATE UNIQUE INDEX idx_ledger_idempotency ON ledger_entries(idempotency_key, cr
 CREATE INDEX idx_ledger_account ON ledger_entries(account_id, created_at DESC);
 CREATE INDEX idx_ledger_deal ON ledger_entries(deal_id) WHERE deal_id IS NOT NULL;
 
+-- 8a. ledger_idempotency_keys (global dedup guard for partitioned ledger)
+CREATE TABLE ledger_idempotency_keys (
+    idempotency_key VARCHAR(200) PRIMARY KEY,
+    created_at      TIMESTAMPTZ  DEFAULT now()
+);
+
 -- 9. account_balances (CQRS projection)
 CREATE TABLE account_balances (
     account_id      VARCHAR(100)  PRIMARY KEY,
@@ -200,17 +206,19 @@ CREATE TABLE dispute_evidence (
     submitted_by    BIGINT        NOT NULL REFERENCES users(id),
     evidence_type   VARCHAR(30)   NOT NULL,
     content         JSONB         NOT NULL,
+    content_hash    VARCHAR(64),
     created_at      TIMESTAMPTZ   DEFAULT now()
 );
 
 CREATE INDEX idx_evidence_dispute ON dispute_evidence(dispute_id);
 
--- 13. notification_outbox
+-- 13. notification_outbox (transactional outbox for Kafka)
 CREATE TABLE notification_outbox (
     id              BIGSERIAL     PRIMARY KEY,
     deal_id         UUID,
-    recipient_id    BIGINT        NOT NULL,
-    template        VARCHAR(50)   NOT NULL,
+    idempotency_key VARCHAR(200),
+    topic           VARCHAR(100)  NOT NULL,
+    partition_key   VARCHAR(100),
     payload         JSONB         NOT NULL,
     status          VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
     retry_count     INTEGER       DEFAULT 0,
@@ -219,8 +227,8 @@ CREATE TABLE notification_outbox (
     processed_at    TIMESTAMPTZ
 );
 
+CREATE UNIQUE INDEX idx_outbox_idempotency ON notification_outbox(idempotency_key) WHERE idempotency_key IS NOT NULL;
 CREATE INDEX idx_outbox_pending ON notification_outbox(created_at) WHERE status = 'PENDING';
-CREATE INDEX idx_outbox_recipient ON notification_outbox(recipient_id);
 
 -- 14. posting_checks (partitioned, write-once)
 CREATE TABLE posting_checks (
