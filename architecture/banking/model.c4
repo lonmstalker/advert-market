@@ -1,0 +1,430 @@
+// =============================================================================
+// Ad Marketplace — Banking / Wallet / Ledger Architecture
+// model.c4 — Actors, systems, containers, components, data stores, relationships
+// =============================================================================
+
+model {
+
+  // ── Actors ────────────────────────────────────────────────────────────────
+
+  advertiser = actor 'Advertiser' {
+    description 'Pays escrow, approves creative, manages ad requests'
+  }
+
+  channelOwner = actor 'Channel Owner' {
+    description 'Owns Telegram channel, delivers creative, receives payout, manages team rights'
+  }
+
+  channelAdmin = actor 'Channel Admin' {
+    description 'PR Manager / channel admin with delegated rights from owner (publish, moderate, view deals)'
+  }
+
+  platformOperator = actor 'Platform Operator' {
+    description 'Risk control, dispute resolution, reconciliation oversight'
+  }
+
+  // ── External Systems ──────────────────────────────────────────────────────
+
+  tonBlockchain = externalSystem 'TON Blockchain' {
+    #blockchain
+    description 'The Open Network — custodial deposit/payout settlement'
+  }
+
+  telegramPlatform = externalSystem 'Telegram Platform' {
+    description 'Bot API + Mini App SDK — user identity, notifications, inline UI'
+  }
+
+  tonCenterApi = externalSystem 'TON Center API' {
+    #blockchain
+    description 'TON HTTP API provider — account state, transaction history, tx broadcast'
+  }
+
+  kafkaCluster = externalSystem 'Apache Kafka' {
+    description 'Managed Kafka cluster — event streaming, worker queues, Schema Registry'
+  }
+
+  // ── System: Ad Marketplace ────────────────────────────────────────────────
+
+  adMarketplace = system 'Ad Marketplace' {
+    description 'Telegram channel advertising marketplace with TON escrow payments'
+
+    // ── Container: Mini App (React SPA) ───────────────────────────────────
+
+    miniApp = container 'Mini App' {
+      #mvp
+      description 'React 19 + Vite SPA inside Telegram WebApp'
+
+      escrowUi = component 'Escrow UI' {
+        #financial
+        description 'Deposit address display, QR code, payment status tracker, balance view'
+      }
+
+      dealFlowUi = component 'Deal Flow UI' {
+        description 'Deal timeline, status transitions via MainButton, negotiation screens'
+      }
+
+      disputeUi = component 'Dispute UI' {
+        description 'Dispute filing form, evidence upload, resolution status tracker'
+      }
+
+      teamManagementUi = component 'Team Management UI' {
+        description 'Channel team: invite admins, assign granular rights, revoke access'
+      }
+    }
+
+    // ── Container: Backend API (Kotlin / Spring Boot) ─────────────────────
+
+    backendApi = container 'Backend API' {
+      #mvp
+      description 'Kotlin + Spring Boot — REST API, domain services, financial core'
+
+      // Deal Domain
+      dealTransitionService = service 'Deal Transition Service' {
+        #idempotent
+        description 'State machine transitions: actor-checked, idempotent, event-emitting'
+      }
+
+      dealWorkflowEngine = service 'Deal Workflow Engine' {
+        description 'Lifecycle orchestration: deadlines, side-effects, timeout scheduling'
+      }
+
+      // Financial Core
+      ledgerService = service 'Ledger Service' {
+        #financial #cqrs-write #immutable #critical
+        description 'Double-entry append-only ledger — source of truth for all money movement'
+      }
+
+      balanceProjection = service 'Balance Projection' {
+        #financial #cqrs-read
+        description 'CQRS read model — materialized from ledger events, cached in Redis'
+      }
+
+      escrowService = service 'Escrow Service' {
+        #financial #custodial #idempotent
+        description 'Deposit address generation, funding confirmation, hold, release, refund'
+      }
+
+      commissionService = service 'Commission Service' {
+        #financial
+        description 'Platform commission calculation (10% default, segment-configurable)'
+      }
+
+      reconciliationService = service 'Reconciliation Service' {
+        #financial #audit
+        description 'Ledger vs blockchain vs deal aggregate reconciliation'
+      }
+
+      tonPaymentGateway = service 'TON Payment Gateway' {
+        #financial #blockchain
+        description 'TON blockchain abstraction: address gen, tx submit, confirmation tracking'
+      }
+
+      confirmationPolicy = service 'Confirmation Policy' {
+        #financial
+        description 'Tiered confirmation: <=100 TON to 1, <=1000 to 3, >1000 to 5+operator review'
+      }
+
+      // Infrastructure
+      piiVault = service 'PII Vault' {
+        #pii
+        description 'Isolated PII storage with AES-256-GCM field-level encryption'
+      }
+
+      disputeService = service 'Dispute Service' {
+        description 'Hybrid dispute resolution: auto rules engine + operator escalation'
+      }
+
+      outboxPublisher = service 'Outbox Publisher' {
+        #outbox
+        description 'Transactional outbox to Kafka producer (Debezium CDC or direct produce)'
+      }
+
+      dealController = component 'Deal Controller' {
+        description 'REST endpoints: /api/v1/deals — CRUD, transitions, offers'
+      }
+
+      workerCallbackController = component 'Worker Callback Controller' {
+        #internal-only #worker-callback
+        description 'POST /internal/v1/worker-events — deposit confirmed, payout sent, etc.'
+      }
+
+      authService = service 'Auth Service' {
+        #mvp
+        description 'Telegram initData HMAC + anti-replay + session tokens + RBAC + channel membership rights'
+      }
+
+      channelTeamService = service 'Channel Team Service' {
+        description 'Channel team management: invite, rights delegation, revocation via channel_memberships'
+      }
+    }
+
+    // ── Container: Telegram Bot ───────────────────────────────────────────
+
+    telegramBot = container 'Telegram Bot' {
+      #mvp
+      description 'Bot process: webhook handler, notification dispatcher, command router'
+
+      botNotifier = component 'Bot Notifier' {
+        description 'Dispatches notification events to Telegram messages to users'
+      }
+
+      botCommandRouter = component 'Bot Command Router' {
+        description '/start, /language, inline keyboard actions'
+      }
+    }
+
+    // ── Container: Workers (Async processors) ─────────────────────────────
+
+    workers = container 'Workers' {
+      #mvp
+      description 'Async workers: Kafka consumers for financial operations and delivery verification'
+
+      tonDepositWatcher = worker 'TON Deposit Watcher' {
+        #financial #blockchain
+        description 'Polls TON network for incoming deposits, applies tiered confirmation policy'
+      }
+
+      payoutExecutor = worker 'Payout Executor' {
+        #financial #idempotent
+        description 'Executes TON payouts to channel owners after commission deduction'
+      }
+
+      refundExecutor = worker 'Refund Executor' {
+        #financial #idempotent
+        description 'Executes TON refunds to advertisers on dispute/cancellation resolution'
+      }
+
+      dealTimeoutWorker = worker 'Deal Timeout Worker' {
+        #financial
+        description 'Auto-cancel/refund deals stuck beyond configured deadline'
+      }
+
+      postScheduler = worker 'Post Scheduler' {
+        description 'Auto-publish approved creative to Telegram channel at scheduled_at'
+      }
+
+      deliveryVerifier = worker 'Delivery Verifier' {
+        description 'Checks published post integrity: tamper/deletion detection (24h retention)'
+      }
+
+      reconciliationWorker = worker 'Reconciliation Worker' {
+        #financial #audit
+        description 'Periodic trigger for ledger vs blockchain vs deal reconciliation'
+      }
+    }
+
+    // ── Data Stores: PostgreSQL ───────────────────────────────────────────
+
+    primaryDb = database 'PostgreSQL' {
+      #mvp
+      description 'PostgreSQL 16 — primary data store with partitioned tables'
+
+      // Existing core tables
+      deals = component 'deals' {
+        description 'Deal aggregate: status, escrow fields (deposit_address, deposit_tx_hash, funded_at, payout_tx_hash, refunded_tx_hash)'
+      }
+
+      tonTransactions = component 'ton_transactions' {
+        #financial #idempotent
+        description 'PK by tx_hash, direction IN/OUT, amount_nano, deal_id FK'
+      }
+
+      dealEvents = eventStore 'deal_events' {
+        #immutable #audit
+        description 'Partitioned immutable event stream: deal_id + created_at + event_id, event_type, from/to status'
+      }
+
+      postingChecks = component 'posting_checks' {
+        description 'Partitioned verification results: deal_id + checked_at, result (OK/DELETED/EDITED/API_ERROR)'
+      }
+
+      // New banking tables
+      ledgerEntries = eventStore 'ledger_entries' {
+        #financial #immutable #cqrs-write
+        description 'Double-entry journal: append-only, partitioned. Debit/credit accounts, amount_nano, tx_ref'
+      }
+
+      accountBalances = component 'account_balances' {
+        #financial #cqrs-read
+        description 'Materialized CQRS projection from ledger events. Account types: PLATFORM_TREASURY, ESCROW:{deal_id}, OWNER_PENDING:{user_id}, COMMISSION:{deal_id}'
+      }
+
+      auditLog = eventStore 'audit_log' {
+        #financial #immutable #audit
+        description 'WORM financial audit trail: all money-affecting operations with actor, timestamp, payload'
+      }
+
+      disputeEvidence = eventStore 'dispute_evidence' {
+        #immutable
+        description 'Append-only evidence records: screenshots, hashes, timestamps per dispute'
+      }
+
+      // Infrastructure tables
+      notificationOutbox = queue 'notification_outbox' {
+        #outbox
+        description 'Transactional outbox: idempotency_key, status (PENDING/PROCESSING/DELIVERED/FAILED)'
+      }
+
+      piiStore = component 'pii_store' {
+        #pii
+        description 'Logical PII partition: ton_payout_address, encrypted with AES-256-GCM'
+      }
+
+      channelMemberships = component 'channel_memberships' {
+        description 'Team RBAC: (channel_id, user_id), role (OWNER/MANAGER), rights JSONB'
+      }
+    }
+
+    // ── Message Broker: Kafka Topics ──────────────────────────────────────
+
+    kafka = container 'Kafka' {
+      description 'Apache Kafka — event streaming, worker command/result queues. Partitioned by deal_id.'
+
+      dealEventsTopic = topic 'deal.events' {
+        description 'Domain events from deal state machine — fan-out for all workers'
+      }
+
+      escrowCommandsTopic = topic 'escrow.commands' {
+        #financial
+        description 'Commands for deposit watcher, payout/refund executors'
+      }
+
+      escrowConfirmationsTopic = topic 'escrow.confirmations' {
+        #financial
+        description 'Results from TON deposit watcher: funding confirmed/failed'
+      }
+
+      deliveryCommandsTopic = topic 'delivery.commands' {
+        description 'Commands for post scheduler and delivery verifier'
+      }
+
+      deliveryResultsTopic = topic 'delivery.results' {
+        description 'Verification results from delivery verifier'
+      }
+
+      notificationsOutboxTopic = topic 'notifications.outbox' {
+        description 'Notification events for bot notifier'
+      }
+
+      reconciliationTriggersTopic = topic 'reconciliation.triggers' {
+        #financial #audit
+        description 'Periodic reconciliation trigger events'
+      }
+
+      dealDeadlinesTopic = topic 'deal.deadlines' {
+        description 'Deadline events for timeout worker'
+      }
+    }
+
+    // ── Data Stores: Redis ────────────────────────────────────────────────
+
+    redisCache = cache 'Redis' {
+      #mvp
+      description 'Redis 7 — balance cache (TTL) + distributed locks for escrow dedup'
+
+      balanceCache = component 'Balance Cache' {
+        #cqrs-read
+        description 'TTL-based cache for account_balances — target p99 < 200ms'
+      }
+
+      distributedLocks = component 'Distributed Locks' {
+        #idempotent
+        description 'Redis locks for escrow/payout deduplication, reconciliation exclusion'
+      }
+    }
+
+  } // end adMarketplace
+
+  // ── Relationships ─────────────────────────────────────────────────────────
+
+  // Actor -> System
+  advertiser -[sync]-> adMarketplace.miniApp 'Browse channels, create deals, pay escrow'
+  channelOwner -[sync]-> adMarketplace.miniApp 'Manage listings, accept deals, manage team'
+  channelAdmin -[sync]-> adMarketplace.miniApp 'Handle deals, submit creative (delegated rights)'
+  platformOperator -[sync]-> adMarketplace.backendApi 'Resolve disputes, review high-value tx, reconciliation'
+
+  // Mini App -> Backend API (sync REST)
+  adMarketplace.miniApp.escrowUi -[sync]-> adMarketplace.backendApi.dealController 'GET deposit address, payment status'
+  adMarketplace.miniApp.dealFlowUi -[sync]-> adMarketplace.backendApi.dealController 'POST transitions, GET timeline'
+  adMarketplace.miniApp.disputeUi -[sync]-> adMarketplace.backendApi.disputeService 'POST dispute, upload evidence'
+  adMarketplace.miniApp.teamManagementUi -[sync]-> adMarketplace.backendApi.channelTeamService 'Invite, assign rights, revoke'
+  adMarketplace.miniApp -[sync]-> adMarketplace.backendApi.authService 'Validate initData, get session'
+
+  // Backend API internal (sync)
+  adMarketplace.backendApi.dealController -[sync]-> adMarketplace.backendApi.dealTransitionService 'Trigger state transition'
+  adMarketplace.backendApi.dealController -[sync]-> adMarketplace.backendApi.authService 'Verify actor permissions'
+  adMarketplace.backendApi.dealTransitionService -[sync]-> adMarketplace.backendApi.dealWorkflowEngine 'Orchestrate side-effects'
+  adMarketplace.backendApi.dealWorkflowEngine -[sync]-> adMarketplace.backendApi.escrowService 'Initiate deposit/release/refund'
+  adMarketplace.backendApi.dealWorkflowEngine -[sync]-> adMarketplace.backendApi.ledgerService 'Record financial entries'
+  adMarketplace.backendApi.escrowService -[sync]-> adMarketplace.backendApi.tonPaymentGateway 'Generate address, submit tx'
+  adMarketplace.backendApi.escrowService -[sync]-> adMarketplace.backendApi.confirmationPolicy 'Get required confirmations'
+  adMarketplace.backendApi.escrowService -[sync]-> adMarketplace.backendApi.ledgerService 'Record hold/release/refund entries'
+  adMarketplace.backendApi.ledgerService -[sync]-> adMarketplace.backendApi.commissionService 'Calculate commission on release'
+  adMarketplace.backendApi.balanceProjection -[reads]-> adMarketplace.primaryDb.ledgerEntries 'Project balances from ledger'
+  adMarketplace.backendApi.authService -[reads]-> adMarketplace.primaryDb.channelMemberships 'Check channel team rights'
+  adMarketplace.backendApi.channelTeamService -[stores]-> adMarketplace.primaryDb.channelMemberships 'Manage team memberships'
+  adMarketplace.backendApi.reconciliationService -[reads]-> adMarketplace.primaryDb.ledgerEntries 'Read ledger for reconciliation'
+  adMarketplace.backendApi.reconciliationService -[reads]-> adMarketplace.primaryDb.tonTransactions 'Read TON txs for reconciliation'
+  adMarketplace.backendApi.reconciliationService -[reads]-> adMarketplace.primaryDb.deals 'Read deal aggregates for reconciliation'
+  adMarketplace.backendApi.piiVault -[stores]-> adMarketplace.primaryDb.piiStore 'Encrypt and store PII'
+
+  // Backend API -> Data Stores (stores/reads)
+  adMarketplace.backendApi.dealTransitionService -[stores]-> adMarketplace.primaryDb.deals 'Update deal status'
+  adMarketplace.backendApi.dealTransitionService -[stores]-> adMarketplace.primaryDb.dealEvents 'Append transition event'
+  adMarketplace.backendApi.ledgerService -[stores]-> adMarketplace.primaryDb.ledgerEntries 'Append double-entry record'
+  adMarketplace.backendApi.ledgerService -[stores]-> adMarketplace.primaryDb.auditLog 'Append audit trail'
+  adMarketplace.backendApi.balanceProjection -[stores]-> adMarketplace.primaryDb.accountBalances 'Update materialized balance'
+  adMarketplace.backendApi.tonPaymentGateway -[stores]-> adMarketplace.primaryDb.tonTransactions 'Record TON tx'
+  adMarketplace.backendApi.disputeService -[stores]-> adMarketplace.primaryDb.disputeEvidence 'Append evidence'
+  adMarketplace.backendApi.outboxPublisher -[reads]-> adMarketplace.primaryDb.notificationOutbox 'Poll pending notifications'
+
+  // Backend API -> Kafka (produce)
+  adMarketplace.backendApi.outboxPublisher -[produces]-> adMarketplace.kafka.dealEventsTopic 'Publish deal domain events'
+  adMarketplace.backendApi.outboxPublisher -[produces]-> adMarketplace.kafka.escrowCommandsTopic 'Publish escrow commands'
+  adMarketplace.backendApi.outboxPublisher -[produces]-> adMarketplace.kafka.deliveryCommandsTopic 'Publish delivery commands'
+  adMarketplace.backendApi.outboxPublisher -[produces]-> adMarketplace.kafka.notificationsOutboxTopic 'Publish notification events'
+  adMarketplace.backendApi.outboxPublisher -[produces]-> adMarketplace.kafka.dealDeadlinesTopic 'Publish deadline events'
+
+  // Kafka -> Workers (consume)
+  adMarketplace.workers.tonDepositWatcher -[consumes]-> adMarketplace.kafka.escrowCommandsTopic 'Watch for deposit commands'
+  adMarketplace.workers.payoutExecutor -[consumes]-> adMarketplace.kafka.escrowCommandsTopic 'Execute payout commands'
+  adMarketplace.workers.refundExecutor -[consumes]-> adMarketplace.kafka.escrowCommandsTopic 'Execute refund commands'
+  adMarketplace.workers.dealTimeoutWorker -[consumes]-> adMarketplace.kafka.dealDeadlinesTopic 'Process deadline timeouts'
+  adMarketplace.workers.postScheduler -[consumes]-> adMarketplace.kafka.deliveryCommandsTopic 'Schedule post publication'
+  adMarketplace.workers.deliveryVerifier -[consumes]-> adMarketplace.kafka.deliveryCommandsTopic 'Verify delivery integrity'
+  adMarketplace.workers.reconciliationWorker -[consumes]-> adMarketplace.kafka.reconciliationTriggersTopic 'Trigger reconciliation'
+
+  // Workers -> Kafka (produce results)
+  adMarketplace.workers.tonDepositWatcher -[produces]-> adMarketplace.kafka.escrowConfirmationsTopic 'Publish deposit confirmations'
+  adMarketplace.workers.deliveryVerifier -[produces]-> adMarketplace.kafka.deliveryResultsTopic 'Publish verification results'
+
+  // Workers -> Backend API callback (sync internal REST)
+  adMarketplace.workers.tonDepositWatcher -[sync]-> adMarketplace.backendApi.workerCallbackController 'POST deposit confirmed'
+  adMarketplace.workers.payoutExecutor -[sync]-> adMarketplace.backendApi.workerCallbackController 'POST payout completed'
+  adMarketplace.workers.refundExecutor -[sync]-> adMarketplace.backendApi.workerCallbackController 'POST refund completed'
+  adMarketplace.workers.postScheduler -[sync]-> adMarketplace.backendApi.workerCallbackController 'POST publication result'
+  adMarketplace.workers.deliveryVerifier -[sync]-> adMarketplace.backendApi.workerCallbackController 'POST verification result'
+
+  // Workers -> External Systems
+  adMarketplace.workers.tonDepositWatcher -[sync]-> tonCenterApi 'GET account transactions'
+  adMarketplace.workers.payoutExecutor -[sync]-> tonCenterApi 'POST send transaction'
+  adMarketplace.workers.refundExecutor -[sync]-> tonCenterApi 'POST send refund transaction'
+  adMarketplace.workers.postScheduler -[sync]-> telegramPlatform 'POST sendMessage to channel'
+  adMarketplace.workers.deliveryVerifier -[sync]-> telegramPlatform 'GET message for verification'
+
+  // TON Payment Gateway -> External
+  adMarketplace.backendApi.tonPaymentGateway -[sync]-> tonCenterApi 'Address generation, balance check'
+
+  // Telegram Bot
+  adMarketplace.telegramBot.botNotifier -[consumes]-> adMarketplace.kafka.notificationsOutboxTopic 'Consume notification events'
+  adMarketplace.telegramBot.botNotifier -[sync]-> telegramPlatform 'POST sendMessage to users'
+  adMarketplace.telegramBot.botCommandRouter -[sync]-> adMarketplace.backendApi.authService 'Validate bot commands'
+
+  // Backend API -> Redis
+  adMarketplace.backendApi.balanceProjection -[stores]-> adMarketplace.redisCache.balanceCache 'Cache projected balances'
+  adMarketplace.backendApi.escrowService -[reads]-> adMarketplace.redisCache.distributedLocks 'Acquire/release escrow locks'
+
+  // Worker callback -> deal transition
+  adMarketplace.backendApi.workerCallbackController -[sync]-> adMarketplace.backendApi.dealTransitionService 'Trigger state transition from worker result'
+
+}

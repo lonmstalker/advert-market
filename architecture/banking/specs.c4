@@ -1,0 +1,163 @@
+// =============================================================================
+// Ad Marketplace — Banking / Wallet / Ledger Architecture
+// specs.c4 — Element kinds, relationship kinds, tags, styles
+// =============================================================================
+
+specification {
+
+  // ── Element kinds ─────────────────────────────────────────────────────────
+
+  element actor {
+    style {
+      shape person
+      color amber
+    }
+  }
+
+  element externalSystem {
+    style {
+      shape rectangle
+      color muted
+      border dashed
+    }
+  }
+
+  element system {
+    style {
+      shape rectangle
+      color primary
+    }
+  }
+
+  element container {
+    style {
+      shape rectangle
+      color secondary
+    }
+  }
+
+  element component {
+    style {
+      shape rectangle
+      color green
+    }
+  }
+
+  element service {
+    style {
+      shape rectangle
+      color indigo
+    }
+  }
+
+  element database {
+    style {
+      shape storage
+      color primary
+    }
+  }
+
+  element eventStore {
+    style {
+      shape cylinder
+      color red
+    }
+  }
+
+  element queue {
+    style {
+      shape queue
+      color amber
+    }
+  }
+
+  element cache {
+    style {
+      shape cylinder
+      color muted
+    }
+  }
+
+  element worker {
+    style {
+      shape rectangle
+      color amber
+      multiple true
+    }
+  }
+
+  element topic {
+    style {
+      shape queue
+      color red
+    }
+  }
+
+  // ── Deployment node kinds ─────────────────────────────────────────────────
+
+  deploymentNode environment
+  deploymentNode host
+  deploymentNode managedService
+  deploymentNode process
+
+  // ── Relationship kinds ────────────────────────────────────────────────────
+
+  relationship sync {
+    line solid
+  }
+
+  relationship async {
+    line dashed
+  }
+
+  relationship produces {
+    line dotted
+    head open
+  }
+
+  relationship consumes {
+    line dotted
+    head vee
+  }
+
+  relationship publishes {
+    line dotted
+    head open
+  }
+
+  relationship stores {
+    line solid
+    head diamond
+  }
+
+  relationship reads {
+    line dashed
+    head open
+  }
+
+  relationship replicates {
+    line dotted
+    head onormal
+  }
+
+  // ── Tags ──────────────────────────────────────────────────────────────────
+
+  tag mvp
+  tag future
+  tag critical
+  tag financial
+  tag pii
+  tag immutable
+  tag idempotent
+  tag cqrs-write
+  tag cqrs-read
+  tag outbox
+  tag inbox
+  tag audit
+  tag custodial
+  tag blockchain
+  tag internal-only
+  tag worker-callback
+  tag deprecated
+
+}

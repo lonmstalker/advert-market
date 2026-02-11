@@ -1,0 +1,194 @@
+// =============================================================================
+// Ad Marketplace — Banking / Wallet / Ledger Architecture
+// views.c4 — Static and dynamic views (10 total)
+// =============================================================================
+
+views {
+
+  // ── Static Views ──────────────────────────────────────────────────────────
+
+  // L1 — System Landscape
+  view landscape of adMarketplace {
+    title 'Ad Marketplace — System Landscape'
+    description 'L1: actors, the Ad Marketplace system, and external dependencies'
+
+    include
+      advertiser,
+      channelOwner,
+      channelAdmin,
+      platformOperator,
+      adMarketplace,
+      tonBlockchain,
+      telegramPlatform,
+      tonCenterApi,
+      kafkaCluster
+  }
+
+  // L2 — Container View (all containers)
+  view bankingContainers of adMarketplace {
+    title 'Ad Marketplace — Banking Containers'
+    description 'L2: Mini App, Backend API, Bot, Workers, PostgreSQL, Kafka, Redis'
+
+    include
+      adMarketplace.*,
+      advertiser,
+      channelOwner,
+      channelAdmin,
+      platformOperator,
+      tonBlockchain,
+      telegramPlatform,
+      tonCenterApi,
+      kafkaCluster
+  }
+
+  // L3 — Backend API Components (Financial Core focus)
+  view ledgerComponents of adMarketplace.backendApi {
+    title 'Backend API — Ledger & Financial Components'
+    description 'L3: Financial Core, Deal Domain, Infrastructure services grouped by concern'
+
+    include
+      adMarketplace.backendApi.*,
+      adMarketplace.primaryDb,
+      adMarketplace.kafka,
+      adMarketplace.redisCache,
+      adMarketplace.workers,
+      tonCenterApi
+
+    style adMarketplace.backendApi.ledgerService {
+      color red
+    }
+    style adMarketplace.backendApi.escrowService {
+      color red
+    }
+    style adMarketplace.backendApi.commissionService {
+      color red
+    }
+    style adMarketplace.backendApi.reconciliationService {
+      color red
+    }
+    style adMarketplace.backendApi.balanceProjection {
+      color red
+    }
+  }
+
+  // L3 — Data Stores (CQRS / immutability focus)
+  view financialDataStores of adMarketplace.primaryDb {
+    title 'PostgreSQL — Financial Data Stores'
+    description 'L3: CQRS write (ledger_entries), read (account_balances), event stores, audit'
+
+    include
+      adMarketplace.primaryDb.*,
+      adMarketplace.backendApi.ledgerService,
+      adMarketplace.backendApi.balanceProjection,
+      adMarketplace.backendApi.tonPaymentGateway,
+      adMarketplace.backendApi.disputeService,
+      adMarketplace.backendApi.outboxPublisher,
+      adMarketplace.backendApi.dealTransitionService,
+      adMarketplace.backendApi.piiVault
+
+    style adMarketplace.primaryDb.ledgerEntries {
+      color red
+    }
+    style adMarketplace.primaryDb.auditLog {
+      color red
+    }
+  }
+
+  // ── Dynamic Views ─────────────────────────────────────────────────────────
+
+  // Escrow Top-Up Flow
+  dynamic view topUpFlow {
+    title 'Escrow Top-Up Flow'
+    description 'Advertiser deposits TON → watcher detects → ledger records → deal becomes FUNDED'
+
+    advertiser -> adMarketplace.miniApp.escrowUi 'Opens deal, requests deposit address'
+    adMarketplace.miniApp.escrowUi -> adMarketplace.backendApi.dealController 'GET /api/v1/deals/{id}/deposit'
+    adMarketplace.backendApi.dealController -> adMarketplace.backendApi.escrowService 'Generate deposit address'
+    adMarketplace.backendApi.escrowService -> adMarketplace.backendApi.tonPaymentGateway 'Create unique deposit address'
+    adMarketplace.backendApi.tonPaymentGateway -> tonCenterApi 'Generate address via TON API'
+    adMarketplace.backendApi.escrowService -> adMarketplace.primaryDb.deals 'Store deposit_address, expected_amount_nano'
+    advertiser -> tonBlockchain 'Sends TON to deposit address'
+    adMarketplace.workers.tonDepositWatcher -> tonCenterApi 'Poll for incoming transactions'
+    adMarketplace.workers.tonDepositWatcher -> adMarketplace.backendApi.workerCallbackController 'POST deposit confirmed (tx_hash, amount)'
+    adMarketplace.backendApi.workerCallbackController -> adMarketplace.backendApi.dealTransitionService 'Transition: AWAITING_PAYMENT → FUNDED'
+    adMarketplace.backendApi.dealTransitionService -> adMarketplace.backendApi.dealWorkflowEngine 'Orchestrate funding side-effects'
+    adMarketplace.backendApi.dealWorkflowEngine -> adMarketplace.backendApi.ledgerService 'Debit EXTERNAL_TON, Credit ESCROW:{deal_id}'
+    adMarketplace.backendApi.ledgerService -> adMarketplace.primaryDb.ledgerEntries 'Append double-entry record'
+    adMarketplace.backendApi.ledgerService -> adMarketplace.primaryDb.auditLog 'Append audit trail'
+    adMarketplace.backendApi.dealTransitionService -> adMarketplace.primaryDb.deals 'Update status = FUNDED, funded_at'
+    adMarketplace.backendApi.dealTransitionService -> adMarketplace.primaryDb.dealEvents 'Append FUNDED event'
+  }
+
+  // Payout Release Flow
+  dynamic view payoutFlow {
+    title 'Payout Release Flow'
+    description 'Delivery verified → commission calc → ledger records → TON payout → COMPLETED_RELEASED'
+
+    adMarketplace.workers.deliveryVerifier -> adMarketplace.backendApi.workerCallbackController 'POST delivery_verified (deal_id)'
+    adMarketplace.backendApi.workerCallbackController -> adMarketplace.backendApi.dealTransitionService 'Transition: DELIVERY_VERIFYING → COMPLETED_RELEASED'
+    adMarketplace.backendApi.dealTransitionService -> adMarketplace.backendApi.dealWorkflowEngine 'Orchestrate release side-effects'
+    adMarketplace.backendApi.dealWorkflowEngine -> adMarketplace.backendApi.escrowService 'Release escrow for deal'
+    adMarketplace.backendApi.escrowService -> adMarketplace.backendApi.ledgerService 'Record release entries'
+    adMarketplace.backendApi.ledgerService -> adMarketplace.backendApi.commissionService 'Calculate 10% commission'
+    adMarketplace.backendApi.ledgerService -> adMarketplace.primaryDb.ledgerEntries 'Debit ESCROW:{deal_id}, Credit COMMISSION + OWNER_PENDING'
+    adMarketplace.backendApi.ledgerService -> adMarketplace.primaryDb.auditLog 'Append payout audit trail'
+    adMarketplace.backendApi.outboxPublisher -> adMarketplace.kafka.escrowCommandsTopic 'Publish payout command'
+    adMarketplace.workers.payoutExecutor -> adMarketplace.kafka.escrowCommandsTopic 'Consume payout command'
+    adMarketplace.workers.payoutExecutor -> tonCenterApi 'Submit TON payout transaction'
+    adMarketplace.workers.payoutExecutor -> adMarketplace.backendApi.workerCallbackController 'POST payout_completed (tx_hash)'
+    adMarketplace.backendApi.dealTransitionService -> adMarketplace.primaryDb.deals 'Update payout_tx_hash, status = COMPLETED_RELEASED'
+    adMarketplace.backendApi.dealTransitionService -> adMarketplace.primaryDb.dealEvents 'Append COMPLETED_RELEASED event'
+  }
+
+  // Dispute Flow
+  dynamic view disputeFlow {
+    title 'Dispute Resolution Flow'
+    description 'Dispute opened → evidence collection → auto-resolution or operator escalation → release or refund'
+
+    advertiser -> adMarketplace.miniApp.disputeUi 'Opens dispute for deal'
+    adMarketplace.miniApp.disputeUi -> adMarketplace.backendApi.disputeService 'POST /api/v1/deals/{id}/dispute'
+    adMarketplace.backendApi.disputeService -> adMarketplace.primaryDb.disputeEvidence 'Append initial evidence'
+    adMarketplace.backendApi.disputeService -> adMarketplace.backendApi.dealTransitionService 'Transition deal to DISPUTED state'
+    channelOwner -> adMarketplace.miniApp.disputeUi 'Submits counter-evidence'
+    adMarketplace.miniApp.disputeUi -> adMarketplace.backendApi.disputeService 'POST evidence (append-only)'
+    adMarketplace.backendApi.disputeService -> adMarketplace.primaryDb.disputeEvidence 'Append counter-evidence'
+    platformOperator -> adMarketplace.backendApi.disputeService 'Review and resolve dispute'
+    adMarketplace.backendApi.disputeService -> adMarketplace.backendApi.dealTransitionService 'Resolve: release or refund'
+    adMarketplace.backendApi.dealTransitionService -> adMarketplace.backendApi.dealWorkflowEngine 'Execute resolution side-effects'
+    adMarketplace.backendApi.dealWorkflowEngine -> adMarketplace.backendApi.ledgerService 'Record release or refund entries'
+    adMarketplace.backendApi.ledgerService -> adMarketplace.primaryDb.ledgerEntries 'Append resolution entries'
+    adMarketplace.backendApi.ledgerService -> adMarketplace.primaryDb.auditLog 'Append dispute resolution audit'
+  }
+
+  // Reconciliation Flow
+  dynamic view reconciliationFlow {
+    title 'Reconciliation Flow'
+    description 'Periodic: worker triggers → reads ledger + TON txs + deals → compares → audit log + operator alert'
+
+    adMarketplace.workers.reconciliationWorker -> adMarketplace.kafka.reconciliationTriggersTopic 'Consume periodic trigger'
+    adMarketplace.workers.reconciliationWorker -> adMarketplace.backendApi.workerCallbackController 'POST reconciliation_start'
+    adMarketplace.backendApi.workerCallbackController -> adMarketplace.backendApi.reconciliationService 'Trigger reconciliation'
+    adMarketplace.backendApi.reconciliationService -> adMarketplace.primaryDb.ledgerEntries 'Read all ledger entries'
+    adMarketplace.backendApi.reconciliationService -> adMarketplace.primaryDb.tonTransactions 'Read all TON transactions'
+    adMarketplace.backendApi.reconciliationService -> adMarketplace.primaryDb.deals 'Read deal aggregates'
+    adMarketplace.backendApi.reconciliationService -> adMarketplace.primaryDb.auditLog 'Write reconciliation report'
+    adMarketplace.backendApi.outboxPublisher -> adMarketplace.kafka.notificationsOutboxTopic 'Alert operator on discrepancies'
+    adMarketplace.telegramBot.botNotifier -> adMarketplace.kafka.notificationsOutboxTopic 'Consume alert notification'
+    adMarketplace.telegramBot.botNotifier -> telegramPlatform 'Send alert to operator'
+  }
+
+  // ── Additional Static Views ───────────────────────────────────────────────
+
+  // Kafka Topics Overview
+  view kafkaTopics of adMarketplace.kafka {
+    title 'Kafka Topics & Consumer Groups'
+    description 'Event streaming topology: topics, producers (backend), consumers (workers/bot)'
+
+    include
+      adMarketplace.kafka.*,
+      adMarketplace.backendApi.outboxPublisher,
+      adMarketplace.workers.*,
+      adMarketplace.telegramBot.botNotifier
+  }
+
+}

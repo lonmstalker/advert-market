@@ -1,0 +1,128 @@
+// =============================================================================
+// Ad Marketplace — Banking / Wallet / Ledger Architecture
+// deployment.c4 — MVP and Scaled deployment views
+// =============================================================================
+
+deployment {
+
+  // ── MVP Deployment ────────────────────────────────────────────────────────
+
+  environment mvp 'MVP' {
+    description 'Single-host deployment for pre-PMF phase'
+
+    host appHost 'App Host (VPS)' {
+      description 'Single VPS running all application processes'
+
+      process backendProcess 'Backend Process' {
+        description 'JVM: Backend API + Workers in single process'
+        instanceOf adMarketplace.backendApi
+        instanceOf adMarketplace.workers
+      }
+
+      process botProcess 'Bot Process' {
+        description 'Telegram Bot webhook handler'
+        instanceOf adMarketplace.telegramBot
+      }
+    }
+
+    host miniAppStatic 'Mini App CDN' {
+      description 'nginx / CDN for React SPA static assets'
+      instanceOf adMarketplace.miniApp
+    }
+
+    managedService managedPostgres 'Managed PostgreSQL' {
+      description 'PostgreSQL 16 — single instance, all tables'
+      instanceOf adMarketplace.primaryDb
+    }
+
+    managedService managedRedis 'Managed Redis' {
+      description 'Redis 7 — cache + distributed locks'
+      instanceOf adMarketplace.redisCache
+    }
+
+    managedService managedKafka 'Managed Kafka' {
+      description 'Kafka cluster (min 3 brokers) — event streaming + Schema Registry'
+      instanceOf adMarketplace.kafka
+    }
+  }
+
+  // ── Scaled Deployment ─────────────────────────────────────────────────────
+
+  environment scaled 'Scaled' {
+    description 'Post-MVP: separated concerns, sharded PostgreSQL, dedicated worker hosts'
+
+    host apiHost 'API Host (N instances)' {
+      description 'Dedicated Backend API behind load balancer'
+      instanceOf adMarketplace.backendApi
+    }
+
+    host workerHost 'Worker Host (N instances)' {
+      description 'Dedicated financial workers — blast radius isolation'
+      instanceOf adMarketplace.workers
+    }
+
+    host botHost 'Bot Host' {
+      description 'Dedicated Telegram Bot process'
+      instanceOf adMarketplace.telegramBot
+    }
+
+    host miniAppCdn 'Mini App CDN' {
+      description 'CDN-distributed React SPA assets'
+      instanceOf adMarketplace.miniApp
+    }
+
+    managedService shardedPostgres 'Sharded PostgreSQL Cluster' {
+      description 'ShardedDslContextProvider routes by shard key (deal_id for financial)'
+
+      managedService shard0 'Shard 0 — Core' {
+        description 'users, channels, listings, requests, channel_memberships — primary + read replica'
+        instanceOf adMarketplace.primaryDb
+      }
+
+      managedService shard1 'Shard 1 — Financial' {
+        description 'deals, ledger_entries, ton_transactions, audit_log, account_balances — primary + read replica'
+        instanceOf adMarketplace.primaryDb
+      }
+
+      managedService shard2 'Shard 2 — Events' {
+        description 'deal_events, posting_checks, dispute_evidence — primary + read replica'
+        instanceOf adMarketplace.primaryDb
+      }
+    }
+
+    managedService scaledRedis 'Redis Cluster' {
+      description 'Redis Cluster — cache + distributed locks, horizontal scaling'
+      instanceOf adMarketplace.redisCache
+    }
+
+    managedService scaledKafka 'Kafka Cluster' {
+      description 'Kafka — scaled partitions per topic, Schema Registry'
+      instanceOf adMarketplace.kafka
+    }
+
+    managedService schemaRegistry 'Schema Registry' {
+      description 'Confluent Schema Registry for Avro/JSON Schema versioning'
+    }
+  }
+
+}
+
+views {
+
+  // MVP Deployment View
+  deployment view mvpDeployment {
+    title 'MVP Deployment Topology'
+    description 'Single VPS + managed services: PostgreSQL, Redis, Kafka'
+
+    include mvp.**
+  }
+
+  // Scaled Deployment View
+  deployment view scaledDeployment {
+    title 'Scaled Deployment Topology'
+    description 'Separated API/workers/bot, sharded PostgreSQL (3 shards), Redis Cluster, Kafka'
+
+    include scaled.**
+  }
+
+}
