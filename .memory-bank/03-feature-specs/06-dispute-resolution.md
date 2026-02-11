@@ -91,7 +91,33 @@ When auto-rules cannot resolve, the dispute is escalated to a Platform Operator:
 |---------|--------------|------------|
 | **Release to owner** | Debit `ESCROW:{deal_id}`, credit `COMMISSION` + `OWNER_PENDING` | `COMPLETED_RELEASED` |
 | **Refund to advertiser** | Debit `ESCROW:{deal_id}`, credit `EXTERNAL_TON` | `REFUNDED` |
-| **Partial refund** | Split between owner and advertiser (future feature) | — |
+| **Partial refund** | Split between owner and advertiser (see below) | `PARTIALLY_REFUNDED` |
+
+### Partial Refund
+
+When the ad was published but deleted/edited before the 24h retention window:
+
+| Scenario | Refund % | Calculation |
+|----------|---------|-------------|
+| Deleted within 1h | 90% to advertiser | `refund = floor(amount * 0.9)` |
+| Deleted within 6h | 75% to advertiser | `refund = floor(amount * 0.75)` |
+| Deleted within 12h | 50% to advertiser | `refund = floor(amount * 0.5)` |
+| Deleted within 24h | 25% to advertiser | `refund = floor(amount * 0.25)` |
+| Edited (content mismatch) | Operator decides (25-100%) | Manual decision |
+
+**Ledger entries for partial refund** (example: 50% refund on 1000 TON deal):
+
+| Step | Debit | Credit | Amount (nanoTON) |
+|------|-------|--------|-----------------|
+| Refund share | `ESCROW:{deal_id}` | `EXTERNAL_TON` | 500_000_000_000 |
+| Owner share | `ESCROW:{deal_id}` | `OWNER_PENDING:{user_id}` | 450_000_000_000 |
+| Commission (10% of owner share) | `ESCROW:{deal_id}` | `COMMISSION:{deal_id}` | 50_000_000_000 |
+
+**Rules**:
+- Auto-resolution uses time-based rules (table above)
+- Operator can override with any percentage
+- Commission is calculated only on the owner's share, not the full amount
+- Rounding dust (if any) goes to `PLATFORM_TREASURY`
 
 ## API Endpoints
 

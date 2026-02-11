@@ -76,6 +76,71 @@ flowchart TB
     RE[Refund Executor] -->|acquire lock| RL
 ```
 
+### Update Dedup Keys
+
+| Attribute | Value |
+|-----------|-------|
+| **Tags** | `#idempotent` |
+| **Purpose** | Telegram webhook deduplication |
+| **Written by** | Webhook Handler (Update Deduplicator) |
+| **Read by** | Webhook Handler |
+
+#### Key Schema
+
+```
+tg:update:{update_id} → "1"
+```
+
+- **Algorithm**: `SET NX EX` (set if not exists, with expiry)
+- **TTL**: 24 hours
+- **Purpose**: Prevent processing same Telegram update twice
+
+### Canary Config
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Feature-flag routing for A/B testing and canary releases |
+| **Read by** | Canary Router (Telegram Bot) |
+| **Written by** | Platform Operator (manual or CI/CD) |
+
+#### Key Schema
+
+```
+canary:percent → 10          # % of users routed to canary
+canary:salt    → "abc123"    # salt for deterministic routing
+```
+
+**Routing algorithm**: `SHA-256(user_id + salt) % 100 < percent` → canary, else stable. Local cache: 5s TTL.
+
+### Worker Heartbeats
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Worker health monitoring |
+| **Written by** | Each worker instance |
+| **Read by** | Health check endpoint, monitoring |
+
+#### Key Schema
+
+```
+worker:{type}:{instance_id} → {timestamp, status}
+```
+
+- **TTL**: 30 seconds (auto-expire if worker stops)
+- **Missing heartbeat > 60s**: triggers CRITICAL alert
+
+## Cache Invalidation Strategy
+
+| Data Type | TTL | Invalidation |
+|-----------|-----|-------------|
+| Balance cache | 5 min (configurable per account type) | Write-through on ledger entry |
+| Update dedup | 24h | Natural TTL expiry |
+| Canary config | No TTL (persistent) | Manual update |
+| Worker heartbeat | 30s | Auto-expire |
+| Distributed locks | 30s (configurable) | Explicit release or auto-expire |
+
+**Eviction policy**: `allkeys-lru` — balance cache entries are evicted first under memory pressure.
+
 ## MVP Configuration
 
 | Setting | Value |
@@ -83,7 +148,7 @@ flowchart TB
 | **Deployment** | Managed Redis (single instance) |
 | **Max memory** | 256 MB |
 | **Eviction policy** | `allkeys-lru` |
-| **Persistence** | None (cache-only; locks are short-lived) |
+| **Persistence** | RDB snapshots every 60s (1000+ keys changed) + AOF appendfsync everysec |
 
 ## Scaled Configuration
 

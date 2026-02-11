@@ -2,7 +2,7 @@
 
 ## Overview
 
-PostgreSQL 18 is the primary data store, housing 12+ tables organized by concern. Several tables use partitioning for efficient range queries and archival. The schema follows CQRS principles — `ledger_entries` (write model) and `account_balances` (read model) are separate.
+PostgreSQL 18 is the primary data store, housing 14 tables organized by concern. Several tables use partitioning for efficient range queries and archival. The schema follows CQRS principles — `ledger_entries` (write model) and `account_balances` (read model) are separate.
 
 ## Entity-Relationship Diagram
 
@@ -40,6 +40,7 @@ erDiagram
         BIGINT    channel_id      FK "→ channels.id"
         BIGINT    owner_id        FK "→ users.id"
         VARCHAR   status          "16 states — see state machine"
+        INT       version         "optimistic locking"
         BIGINT    amount_nano
         VARCHAR   deposit_address
         VARCHAR   deposit_tx_hash
@@ -191,8 +192,10 @@ erDiagram
 
 | Table | Type | Tags | Description |
 |-------|------|------|-------------|
-| `deals` | Component | — | Deal aggregate: status, escrow fields, creative data |
-| `channel_memberships` | Component | — | Team RBAC: (channel_id, user_id), role, JSONB rights |
+| `users` | Component | — | PK = Telegram user ID (BIGINT). No fixed role column — actor role is contextual (ABAC). `is_operator` flag for platform admins |
+| `channels` | Component | — | PK = Telegram channel ID. Owner FK → users. Statistics, pricing, availability JSONB |
+| `deals` | Component | — | Deal aggregate: status (16 states), version (optimistic locking), escrow fields, creative data |
+| `channel_memberships` | Component | — | Team ABAC: (channel_id, user_id), role (OWNER/MANAGER), JSONB rights |
 
 ### Financial Tables
 
@@ -229,6 +232,7 @@ CREATE TABLE deals (
     channel_id      BIGINT NOT NULL,
     owner_id        BIGINT NOT NULL,
     status          VARCHAR(50) NOT NULL,
+    version         INTEGER NOT NULL DEFAULT 0, -- optimistic locking
     amount_nano     BIGINT NOT NULL,
     deposit_address VARCHAR(100),
     deposit_tx_hash VARCHAR(100),

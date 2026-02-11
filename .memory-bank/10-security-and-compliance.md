@@ -147,6 +147,63 @@ Every security-relevant operation is recorded:
 | Dispute evidence | `dispute_evidence` | Indefinite |
 | Reconciliation results | `audit_log` | Indefinite |
 
+## Secret Management
+
+### Secret Storage
+
+| Secret | MVP Storage | Scaled Storage |
+|--------|------------|---------------|
+| Telegram Bot Token | Environment variable | HashiCorp Vault / AWS Secrets Manager |
+| Database passwords | Environment variable | External KMS |
+| PII encryption key | Environment variable | External KMS with auto-rotation |
+| JWT signing key | Environment variable | External KMS |
+| Webhook secret token | Environment variable | External KMS |
+| TON wallet private key | Environment variable (encrypted) | HSM / Vault Transit |
+
+### Secret Rotation
+
+| Secret | Rotation Frequency | Procedure |
+|--------|-------------------|-----------|
+| PII encryption key | Annually or on compromise | Re-encrypt with new key_version, keep old key for decryption |
+| JWT signing key | Quarterly | Blue-green: new key signs, both keys verify during grace period |
+| Database passwords | Quarterly | Rolling update via deployment pipeline |
+| Webhook secret | On compromise only | Re-register webhook with new secret |
+
+### Access Control
+
+- Secrets injected via `.env.server` file (gitignored, `chmod 600`)
+- Only `ad-marketplace` system user has read access
+- CI/CD secrets stored in GitHub Actions secrets (encrypted)
+- No secrets in Docker images, Gradle files, or source code
+
+## Data Retention & GDPR
+
+### Data Retention Policy
+
+| Data Category | Retention | Rationale |
+|--------------|-----------|-----------|
+| Financial records (`ledger_entries`, `audit_log`) | Indefinite | Legal/audit requirement |
+| Deal events (`deal_events`) | Indefinite | Audit trail |
+| User profiles (`users`) | Until account deletion | Active data |
+| PII (`pii_store`) | Until account deletion + 30 day grace | Right to erasure |
+| Posting checks (`posting_checks`) | 12 months | Dispute evidence window |
+| Notification outbox | 90 days after delivery | Debugging |
+| Application logs | 90 days | Operational |
+
+### Right to Erasure (Account Deletion)
+
+1. User requests deletion via Mini App settings
+2. System checks for active deals (block if any `IN_PROGRESS`)
+3. Pseudonymize `users` record: clear `username`, `display_name`, set `is_deleted = true`
+4. Delete `pii_store` record (TON address)
+5. Financial records preserved with pseudonymized user_id (legal requirement)
+6. Deletion logged in `audit_log`
+
+### Data Export
+
+User can request data export (JSON) containing:
+- Profile data, channel memberships, deal history (anonymized counterparty), notification history
+
 ## Input Validation
 
 | Layer | Validation |
@@ -163,3 +220,5 @@ Every security-relevant operation is recorded:
 - [Confirmation Policy](./07-financial-system/06-confirmation-policy.md) — deposit security
 - [Reconciliation](./07-financial-system/04-reconciliation.md) — financial safety net
 - [Idempotency Strategy](./05-patterns-and-decisions/07-idempotency-strategy.md) — double-execution prevention
+- [PII Encryption](./14-implementation-specs/07-pii-encryption.md) — encryption details
+- [Logging Strategy](./14-implementation-specs/36-logging-strategy.md) — sensitive data redaction

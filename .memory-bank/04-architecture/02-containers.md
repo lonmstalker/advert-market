@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Ad Marketplace consists of 7 containers that work together to deliver the marketplace functionality.
+The Ad Marketplace consists of 8 containers that work together to deliver the marketplace functionality.
 
 ## Container Diagram
 
@@ -16,13 +16,14 @@ flowchart TB
     end
 
     subgraph "Ad Marketplace"
+        NGX[Nginx<br/>Reverse proxy<br/>TLS, blue-green]
         MINI[Mini App<br/>React 19 + Vite 7 SPA<br/>inside Telegram WebApp]
-        API[Backend API<br/>Java 21 + Spring Boot<br/>REST API, domain services]
+        API[Backend API<br/>Java 25 + Spring Boot 4<br/>REST API, domain services]
         BOT[Telegram Bot<br/>Webhook handler<br/>notification dispatcher]
         WORK[Workers<br/>Kafka consumers<br/>financial ops, delivery]
-        PG[(PostgreSQL 18<br/>Primary data store<br/>partitioned tables)]
-        KF[Kafka<br/>Event streaming<br/>worker queues]
-        RD[(Redis 8<br/>Balance cache<br/>distributed locks)]
+        PG[(PostgreSQL 18<br/>Primary data store<br/>14 tables, partitioned)]
+        KF[Kafka 4.1<br/>Event streaming<br/>worker queues]
+        RD[(Redis 8.4<br/>Balance cache<br/>distributed locks)]
     end
 
     subgraph External
@@ -35,8 +36,10 @@ flowchart TB
     CO --> MINI
     CA --> MINI
     PO --> API
+    TG -->|POST webhook| NGX
 
-    MINI -->|REST API| API
+    MINI -->|HTTPS| NGX
+    NGX -->|Proxy| API
     API -->|stores/reads| PG
     API -->|cache| RD
     API -->|outbox publish| KF
@@ -50,6 +53,16 @@ flowchart TB
 ```
 
 ## Container Details
+
+### 0. Nginx Reverse Proxy
+
+| Attribute | Value |
+|-----------|-------|
+| **Technology** | Nginx |
+| **Tags** | `#mvp` |
+| **Role** | TLS termination, blue-green upstream switching, `/actuator` and `/internal` access control |
+
+Routes external traffic to the active Backend API instance. Blocks direct access to internal worker callback and actuator endpoints from the public internet.
 
 ### 1. Mini App
 
@@ -66,7 +79,7 @@ Communicates with Backend API via synchronous REST calls.
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21 + Spring Boot 4.0 |
+| **Technology** | Java 25 + Spring Boot 4.0.2 |
 | **Tags** | `#mvp` |
 | **Components** | 16+ services (see [Backend API Components](./03-backend-api-components.md)) |
 
@@ -78,9 +91,9 @@ The central orchestrator — handles REST endpoints, domain logic, financial cor
 |-----------|-------|
 | **Technology** | Bot webhook handler |
 | **Tags** | `#mvp` |
-| **Components** | Bot Notifier, Bot Command Router |
+| **Components** | Webhook Handler, Update Deduplicator, Canary Router, Bot Notifier, Bot Command Router |
 
-Handles notifications pipeline and basic bot commands (`/start`, `/language`).
+Handles webhook processing (dedup via Redis, canary routing), notifications pipeline, and bot commands (`/start`, `/language`, `/help`, `/mydeals`, `/balance`, `/status`, `/reconcile`).
 
 ### 4. Workers
 
@@ -98,7 +111,7 @@ Async processors for financial operations, delivery verification, timeouts, and 
 |-----------|-------|
 | **Technology** | PostgreSQL 18 |
 | **Tags** | `#mvp` |
-| **Tables** | 12+ tables (see [Data Stores](./05-data-stores.md)) |
+| **Tables** | 14 tables across 4 categories (see [Data Stores](./05-data-stores.md)) |
 
 Primary data store with partitioned tables for events and verification checks.
 
@@ -115,9 +128,9 @@ Event streaming and worker command/result queues. Partitioned by `deal_id`.
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Redis 8 |
+| **Technology** | Redis 8.4 |
 | **Tags** | `#mvp` |
-| **Components** | Balance Cache, Distributed Locks |
+| **Components** | Balance Cache, Distributed Locks, Update Dedup Keys, Canary Config, Worker Heartbeats |
 
 See [Redis Usage](./07-redis-usage.md).
 
@@ -125,7 +138,9 @@ See [Redis Usage](./07-redis-usage.md).
 
 | From | To | Protocol | Description |
 |------|----|----------|-------------|
-| Mini App | Backend API | Sync REST (HTTPS) | All user-facing operations |
+| Telegram Platform | Nginx | HTTPS | Webhook updates |
+| Mini App | Nginx | HTTPS | All user-facing operations |
+| Nginx | Backend API | HTTP (internal) | Proxy to active upstream (blue/green) |
 | Backend API | PostgreSQL | JDBC | Data persistence |
 | Backend API | Redis | Redis protocol | Cache reads/writes, lock acquisition |
 | Backend API | Kafka | Produce (via Outbox) | Domain events, commands |

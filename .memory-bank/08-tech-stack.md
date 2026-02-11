@@ -23,28 +23,28 @@ Technology choices are driven by the MVP constraints: fast development, Telegram
 
 | Technology | Version | Rationale |
 |-----------|---------|-----------|
-| **Java** | 21 (LTS) | Virtual threads, records, sealed classes, pattern matching |
-| **Spring Boot** | 4.0 | Production-ready framework, large ecosystem, virtual threads support |
+| **Java** | 25 | Virtual threads, records, sealed classes, pattern matching, --enable-preview |
+| **Spring Boot** | 4.0.2 | Production-ready framework, large ecosystem, virtual threads support |
 | **Spring Security** | — | Auth middleware for Telegram HMAC validation |
 | **Spring Kafka** | — | Kafka producer/consumer integration |
 | **jOOQ** | — | Type-safe SQL, ShardedDslContextProvider abstraction |
 | **Liquibase** | — | Database migration management (YAML changelogs) |
 
-### Why Java 21?
+### Why Java 25?
 
 - Virtual threads (Project Loom) for scalable I/O (TON polling, webhook handling)
 - Records for immutable domain models (DTOs, events)
 - Sealed classes/interfaces for deal state machine
 - Pattern matching for cleaner business logic
-- Long-term support (LTS) — production stability
+- `--enable-preview` for latest language features
 
 ## Data Stores
 
 | Technology | Version | Rationale |
 |-----------|---------|-----------|
 | **PostgreSQL** | 18 | ACID transactions, async I/O, partitioning, JSONB, mature ecosystem |
-| **Redis** | 8 | Sub-millisecond reads for balance cache, distributed locks |
-| **Apache Kafka** | 4.1 | Event streaming, KRaft mode (no ZooKeeper), partition ordering |
+| **Redis** | 8.4 | Sub-millisecond reads for balance cache, distributed locks, canary config |
+| **Apache Kafka** | 4.1.1 | Event streaming, KRaft mode (no ZooKeeper), partition ordering |
 
 ### Why PostgreSQL?
 
@@ -66,14 +66,30 @@ Technology choices are driven by the MVP constraints: fast development, Telegram
 | Technology | Purpose |
 |-----------|---------|
 | **TON Center API** | HTTP API for TON blockchain interaction |
-| **ton4j** | Java SDK for address generation, transaction building |
+| **ton4j** (1.3.2) | Java SDK for address generation, transaction building |
+
+## Build & Code Quality
+
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **Gradle** | 9.3.1 (Groovy DSL) | Build system, 18 subprojects |
+| **jOOQ** | 3.20.11 | Type-safe SQL generation |
+| **Liquibase** | — | Database migration management |
+| **Lombok** | 1.18.40 | Boilerplate reduction (constructors, loggers, builders) |
+| **MapStruct** | 1.6.3 | Type-safe DTO mapping |
+| **Checker Framework** | 3.53.1 | @Nullable/@NonNull annotations |
+| **Checkstyle** | 13.2.0 | Google Java Style (4-space indent) |
+| **SpotBugs** | 6.4.8 | Static analysis (MAX effort, MEDIUM reportLevel) |
+| **Testcontainers** | 2.0.3 | Integration testing (PostgreSQL, Kafka, Redis) |
+| **ArchUnit** | 1.4.1 | Architecture rule enforcement |
+| **springdoc-openapi** | 3.0.1 | Code-first OpenAPI spec export |
 
 ## Infrastructure
 
 | Technology | Purpose |
 |-----------|---------|
-| **Docker** | Containerization for all services |
-| **nginx** | Reverse proxy, static file serving |
+| **Docker** (29.2.1) | Containerization for all services |
+| **nginx** | Reverse proxy, TLS termination, blue-green switching |
 | **Debezium** (Scaled) | CDC for transactional outbox |
 | **Confluent Schema Registry** (Scaled) | Avro/JSON Schema versioning |
 

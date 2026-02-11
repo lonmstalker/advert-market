@@ -49,11 +49,14 @@ The channel marketplace is the entry point for advertisers. It provides a search
 
 ## Statistics Verification
 
-Channel statistics are sourced from Telegram Bot API and refreshed periodically:
+Channel statistics are sourced from Telegram Bot API and refreshed with configurable freshness guarantees:
 
-- Subscriber count — via `getChatMemberCount`
+- Subscriber count — via `getChatMemberCount` (lazy refresh on view + daily batch)
 - Verified by comparing advertised vs actual stats
-- Stale listings (>7 days since refresh) are flagged
+- Stale listings (>1h for listing page, >15min for deal creation) trigger async refresh
+- Source indicator: `BOT_VERIFIED`, `OWNER_REPORTED`, or `UNVERIFIED`
+
+See [Channel Statistics Verification](./09-channel-statistics.md) for full spec.
 
 ## API Endpoints
 
@@ -70,12 +73,14 @@ Channel statistics are sourced from Telegram Bot API and refreshed periodically:
 | Component | Role |
 |-----------|------|
 | **Mini App — Deal Flow UI** | Channel browsing and selection interface |
-| **Backend API — Deal Controller** | REST endpoints for channel operations |
-| **Backend API — Auth Service** | Verify channel ownership via Telegram Bot API |
-| **PostgreSQL** | Channel listings storage |
+| **Backend API — Channel Service** | Channel CRUD, statistics update, listing management, pricing rules |
+| **Backend API — Search Service** | Full-text search + composite filters (topic, subscribers, price), cursor pagination |
+| **Backend API — Auth Service** | Verify channel ownership via ABAC (channel_memberships) |
+| **PostgreSQL** | Channel listings storage (GIN index for full-text search) |
 
 ## Related Documents
 
 - [Deal Lifecycle](./02-deal-lifecycle.md) — what happens after selecting a channel
+- [Channel Statistics Verification](./09-channel-statistics.md) — stats collection and freshness
 - [Team Management](./07-team-management.md) — who can manage listings
 - [Actors and Personas](../02-actors-and-personas.md) — role capabilities

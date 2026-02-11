@@ -2,7 +2,7 @@
 
 ## Overview
 
-Многоуровневая стратегия тестирования для Java 21 + Spring Boot 4.0. Охватывает unit, integration, contract и end-to-end уровни с фокусом на финансовую точность, state machine корректность и Kafka consumer идемпотентность.
+Многоуровневая стратегия тестирования для Java 25 + Spring Boot 4.0.2. Охватывает unit, integration, contract и end-to-end уровни с фокусом на финансовую точность, state machine корректность и Kafka consumer идемпотентность.
 
 ---
 

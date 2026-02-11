@@ -51,6 +51,7 @@ The `deals` table is the primary aggregate:
 | `channel_id` | `BIGINT` | Target channel |
 | `owner_id` | `BIGINT` | Channel owner user ID |
 | `status` | `VARCHAR` | Current state (see [State Machine](../06-deal-state-machine.md)) |
+| `version` | `INTEGER` | Optimistic locking counter for concurrent transition safety |
 | `amount_nano` | `BIGINT` | Agreed deal amount in nanoTON |
 | `deposit_address` | `VARCHAR` | Generated TON deposit address |
 | `deposit_tx_hash` | `VARCHAR` | Deposit transaction hash |

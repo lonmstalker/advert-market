@@ -26,7 +26,7 @@ gantt
 
 | Component | Tasks |
 |-----------|-------|
-| **Project setup** | Java 21 + Spring Boot skeleton, Gradle build, Docker Compose |
+| **Project setup** | Java 25 + Spring Boot 4 skeleton, Gradle 9 build, Docker Compose |
 | **PostgreSQL schema** | Core tables: `deals`, `deal_events`, `channel_memberships` |
 | **Auth Service** | Telegram initData HMAC validation, session management |
 | **Mini App skeleton** | React 19 + Vite 7, Telegram WebApp SDK integration |

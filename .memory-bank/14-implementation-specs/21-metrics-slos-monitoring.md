@@ -110,8 +110,31 @@
 | High latency | `http_server_requests_seconds{quantile="0.95"} > 1` | 5 min |
 | Consumer lag | `kafka_consumer_lag > 1000` | 5 min |
 | Outbox lag | `outbox_lag > 500` | 5 min |
-| DLT messages | `kafka_consumer_records_consumed_total{topic=~".*DLT"} > 0` | immediate |
+| DLQ messages | `kafka_consumer_records_consumed_total{topic=~".*\\.dlq"} > 0` | immediate |
+| DLQ financial | `kafka_consumer_records_consumed_total{topic="escrow.commands.dlq"} > 0` | immediate (CRITICAL) |
 | TON API errors | `rate(ton_api_requests{status!="200"}[5m]) > 0.1` | 5 min |
+| Worker heartbeat missing | `time() - worker_heartbeat_timestamp > 60` | 1 min (CRITICAL) |
+| Backup age | `time() - backup_last_success_timestamp > 90000` (25h) | immediate |
+| Partition missing | `partition_next_month_exists == 0` | immediate (CRITICAL) |
+
+### Consumer Lag Thresholds
+
+| Topic | Warning Threshold | Critical Threshold |
+|-------|:-----------------:|:------------------:|
+| `escrow.commands` | 100 | 500 |
+| `deal.events` | 500 | 2000 |
+| `deal.deadlines` | 50 | 200 |
+| `delivery.commands` | 200 | 1000 |
+| `notifications.outbox` | 500 | 2000 |
+| `reconciliation.triggers` | 10 | 50 |
+
+### Alert Routing
+
+| Severity | Channel | Recipient |
+|----------|---------|-----------|
+| CRITICAL | Telegram Bot message | Platform Operator + on-call |
+| WARNING | Telegram Bot message | Platform Operator |
+| INFO | Grafana annotation | Dashboard only |
 
 ---
 

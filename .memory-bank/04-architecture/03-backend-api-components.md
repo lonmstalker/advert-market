@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Backend API container (Java 21 + Spring Boot) contains 16+ services organized into three concern groups: Deal Domain, Financial Core, and Infrastructure.
+The Backend API container (Java 25 + Spring Boot 4) contains 20+ services organized into four concern groups: Deal Domain, Financial Core, Marketplace, and Identity/Infrastructure.
 
 ## Component Map
 
@@ -149,7 +149,29 @@ flowchart TB
 | **Tags** | `#financial` |
 | **Role** | Tiered confirmation: <=100 TON → 1 conf, <=1000 TON → 3, >1000 TON → 5 + operator review |
 
-## Infrastructure Services
+## Marketplace Services
+
+### Channel Service
+
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Service |
+| **Module** | marketplace |
+| **Role** | Channel CRUD, statistics updates, listing management, pricing rules |
+| **Stores to** | `channels` |
+| **Depends on** | Identity API (for ownership verification) |
+
+### Search Service
+
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Service |
+| **Module** | marketplace |
+| **Role** | Channel search: PostgreSQL full-text search + composite filters (topic, subscriber_count, price range), cursor pagination |
+| **Reads** | `channels` |
+| **Indexes** | GIN index on `to_tsvector(title || description)`, composite index on `(topic, subscriber_count, price_per_post_nano)` |
+
+## Identity & Infrastructure Services
 
 ### Auth Service
 
@@ -157,14 +179,26 @@ flowchart TB
 |-----------|-------|
 | **Type** | Service |
 | **Tags** | `#mvp` |
-| **Role** | Telegram initData HMAC + anti-replay + session tokens + ABAC policy evaluation (contextual roles) |
-| **Reads** | `channel_memberships` |
+| **Module** | identity |
+| **Role** | Telegram initData HMAC + anti-replay + session tokens. Delegates permission checks to ABAC Service |
+| **Reads** | `users` |
+
+### ABAC Service
+
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Service |
+| **Module** | identity |
+| **Role** | Attribute-Based Access Control: evaluates permissions from subject + resource + action + context attributes. No fixed user roles — permissions derived from resource relationships |
+| **Reads** | `channel_memberships`, `deals` (for ownership check) |
+| **See** | [ABAC Pattern](../05-patterns-and-decisions/08-abac.md) |
 
 ### Channel Team Service
 
 | Attribute | Value |
 |-----------|-------|
 | **Type** | Service |
+| **Module** | identity |
 | **Role** | Channel team management: invite, rights delegation, revocation |
 | **Stores to** | `channel_memberships` |
 

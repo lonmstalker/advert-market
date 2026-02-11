@@ -1,6 +1,6 @@
 # Java Conventions
 
-> Mandatory reference for all Java code in advert-market. Java 21 + Spring Boot 4.0.
+> Mandatory reference for all Java code in advert-market. Java 25 + Spring Boot 4.0.2.
 
 ## 1. Testing
 

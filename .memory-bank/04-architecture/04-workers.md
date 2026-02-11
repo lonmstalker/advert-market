@@ -112,6 +112,31 @@ Each worker has its own consumer group for independent scaling:
 | Delivery Verifier | `cg-delivery-verifier` | `delivery.commands` |
 | Reconciliation Worker | `cg-reconciliation` | `reconciliation.triggers` |
 
+## Error Handling & DLQ Strategy
+
+### Dead Letter Queue (DLQ)
+
+Each Kafka topic has a corresponding DLQ topic: `{topic}.dlq`. Messages are routed to DLQ after exhausting retries.
+
+| Worker | Max Retries | Backoff | DLQ Topic |
+|--------|:-----------:|---------|-----------|
+| TON Deposit Watcher | 5 | 1s → 5s → 30s → 5m → 30m | `escrow.commands.dlq` |
+| Payout Executor | 5 | 1s → 5s → 30s → 5m → 30m | `escrow.commands.dlq` |
+| Refund Executor | 5 | 1s → 5s → 30s → 5m → 30m | `escrow.commands.dlq` |
+| Deal Timeout Worker | 3 | 1s → 5s → 30s | `deal.deadlines.dlq` |
+| Post Scheduler | 3 | 1s → 10s → 60s | `delivery.commands.dlq` |
+| Delivery Verifier | 3 | 1s → 10s → 60s | `delivery.commands.dlq` |
+| Reconciliation Worker | 2 | 5s → 60s | `reconciliation.triggers.dlq` |
+
+DLQ message envelope includes: original message, error details, retry count, worker instance, timestamp.
+
+### Health Checks
+
+- Each worker publishes heartbeat to Redis: `worker:{type}:{instance}` with 30s TTL
+- Missing heartbeat for 60s triggers CRITICAL alert
+- Spring Boot Actuator `/actuator/health` includes Kafka consumer group lag
+- See [Worker Monitoring & DLQ](../14-implementation-specs/32-worker-monitoring-dlq.md) for full spec
+
 ## MVP Deployment
 
 In the MVP deployment, all workers run in the **same JVM process** as the Backend API to minimize operational complexity. They are separated into their own hosts in the Scaled deployment for blast radius isolation.
@@ -122,3 +147,4 @@ In the MVP deployment, all workers run in the **same JVM process** as the Backen
 - [Kafka Topology](./06-kafka-topology.md) — topics and routing
 - [Deployment](../09-deployment.md) — MVP vs Scaled worker deployment
 - [Idempotency Strategy](../05-patterns-and-decisions/07-idempotency-strategy.md)
+- [Worker Monitoring & DLQ](../14-implementation-specs/32-worker-monitoring-dlq.md) — health checks, DLQ, alerting

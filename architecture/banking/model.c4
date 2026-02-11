@@ -76,19 +76,27 @@ model {
 
     backendApi = container 'Backend API' {
       #mvp
-      description 'Java 25 + Spring Boot 4 — REST API, domain services, financial core'
+      description 'Java 25 + Spring Boot 4 — REST API, domain services, financial core. Modular monolith: 18 Gradle subprojects (identity, financial, marketplace, deal, delivery, communication)'
 
-      // Deal Domain
+      // Deal Domain (deal module)
+      dealController = component 'Deal Controller' {
+        description 'REST endpoints: /api/v1/deals — CRUD, transitions, offers'
+      }
+
       dealTransitionService = service 'Deal Transition Service' {
         #idempotent
-        description 'State machine transitions: actor-checked, idempotent, event-emitting'
+        description 'State machine transitions: actor-checked, idempotent, event-emitting. Optimistic locking via version column'
       }
 
       dealWorkflowEngine = service 'Deal Workflow Engine' {
-        description 'Lifecycle orchestration: deadlines, side-effects, timeout scheduling'
+        description 'Lifecycle orchestration: deadlines, side-effects (escrow, notifications), timeout scheduling'
       }
 
-      // Financial Core
+      disputeService = service 'Dispute Service' {
+        description 'Hybrid dispute resolution: auto rules engine + operator escalation. Supports partial refund'
+      }
+
+      // Financial Core (financial module — strict isolation: NO deps on deal/marketplace/delivery/communication)
       ledgerService = service 'Ledger Service' {
         #financial #cqrs-write #immutable #critical
         description 'Double-entry append-only ledger — source of truth for all money movement'
@@ -101,7 +109,7 @@ model {
 
       escrowService = service 'Escrow Service' {
         #financial #custodial #idempotent
-        description 'Deposit address generation, funding confirmation, hold, release, refund'
+        description 'Deposit address generation, funding confirmation, hold, release, refund. Lifecycle driven by Deal state machine via EscrowPort'
       }
 
       commissionService = service 'Commission Service' {
@@ -124,37 +132,43 @@ model {
         description 'Tiered confirmation: <=100 TON to 1, <=1000 to 3, >1000 to 5+operator review'
       }
 
-      // Infrastructure
+      // Marketplace (marketplace module)
+      channelService = service 'Channel Service' {
+        description 'Channel CRUD, statistics update, listing management, pricing rules'
+      }
+
+      searchService = service 'Search Service' {
+        description 'Channel search: PostgreSQL full-text + filters (topic, subscribers, price), cursor pagination'
+      }
+
+      // Identity (identity module)
+      authService = service 'Auth Service' {
+        #mvp
+        description 'Telegram initData HMAC + anti-replay + session tokens + ABAC policy evaluation (contextual roles, not fixed user types)'
+      }
+
+      abacService = service 'ABAC Service' {
+        description 'Attribute-Based Access Control: evaluates permissions from resource relationships (advertiser=deal.advertiser_id, owner=channel_memberships.role)'
+      }
+
+      channelTeamService = service 'Channel Team Service' {
+        description 'Channel team management: invite, rights delegation, revocation via channel_memberships'
+      }
+
       piiVault = service 'PII Vault' {
         #pii
         description 'Isolated PII storage with AES-256-GCM field-level encryption'
       }
 
-      disputeService = service 'Dispute Service' {
-        description 'Hybrid dispute resolution: auto rules engine + operator escalation'
-      }
-
+      // Communication (communication module — Kafka-only input, no compile deps on deal)
       outboxPublisher = service 'Outbox Publisher' {
         #outbox
-        description 'Transactional outbox to Kafka producer (Debezium CDC or direct produce)'
-      }
-
-      dealController = component 'Deal Controller' {
-        description 'REST endpoints: /api/v1/deals — CRUD, transitions, offers'
+        description 'Transactional outbox to Kafka producer (polling-based)'
       }
 
       workerCallbackController = component 'Worker Callback Controller' {
         #internal-only #worker-callback
         description 'POST /internal/v1/worker-events — deposit confirmed, payout sent, etc.'
-      }
-
-      authService = service 'Auth Service' {
-        #mvp
-        description 'Telegram initData HMAC + anti-replay + session tokens + RBAC + channel membership rights'
-      }
-
-      channelTeamService = service 'Channel Team Service' {
-        description 'Channel team management: invite, rights delegation, revocation via channel_memberships'
       }
     }
 
@@ -237,31 +251,29 @@ model {
 
     primaryDb = database 'PostgreSQL' {
       #mvp
-      description 'PostgreSQL 18 — primary data store with partitioned tables'
+      description 'PostgreSQL 18 — primary data store with partitioned tables. 14 tables across 4 categories'
 
-      // Existing core tables
+      // Core domain tables
+      users = component 'users' {
+        description 'PK = Telegram user ID (BIGINT). No fixed role column — actor role is contextual (ABAC). is_operator flag for platform admins'
+      }
+
+      channels = component 'channels' {
+        description 'PK = Telegram channel ID. owner_id FK → users. Statistics: subscriber_count, avg_views, engagement_rate. price_per_post_nano, availability JSONB'
+      }
+
       deals = component 'deals' {
-        description 'Deal aggregate: status, escrow fields (deposit_address, deposit_tx_hash, funded_at, payout_tx_hash, refunded_tx_hash)'
+        description 'Deal aggregate: status (16 states), version (optimistic locking), escrow fields, creative_brief/draft JSONB, deadline_at'
       }
 
-      tonTransactions = component 'ton_transactions' {
-        #financial #idempotent
-        description 'PK by tx_hash, direction IN/OUT, amount_nano, deal_id FK'
+      channelMemberships = component 'channel_memberships' {
+        description 'Team ABAC: PK(channel_id, user_id), role (OWNER/MANAGER), rights JSONB (NULL for OWNER = all)'
       }
 
-      dealEvents = eventStore 'deal_events' {
-        #immutable #audit
-        description 'Partitioned immutable event stream: deal_id + created_at + event_id, event_type, from/to status'
-      }
-
-      postingChecks = component 'posting_checks' {
-        description 'Partitioned verification results: deal_id + checked_at, result (OK/DELETED/EDITED/API_ERROR)'
-      }
-
-      // New banking tables
+      // Financial tables
       ledgerEntries = eventStore 'ledger_entries' {
         #financial #immutable #cqrs-write
-        description 'Double-entry journal: append-only, partitioned. Debit/credit accounts, amount_nano, tx_ref'
+        description 'Double-entry journal: append-only, partitioned monthly by created_at. Debit/credit accounts, amount_nano, tx_ref'
       }
 
       accountBalances = component 'account_balances' {
@@ -269,29 +281,40 @@ model {
         description 'Materialized CQRS projection from ledger events. Account types: PLATFORM_TREASURY, ESCROW:{deal_id}, OWNER_PENDING:{user_id}, COMMISSION:{deal_id}'
       }
 
+      tonTransactions = component 'ton_transactions' {
+        #financial #idempotent
+        description 'PK by tx_hash (idempotency key), direction IN/OUT, amount_nano, status (PENDING/CONFIRMED/FAILED), deal_id FK'
+      }
+
       auditLog = eventStore 'audit_log' {
         #financial #immutable #audit
         description 'WORM financial audit trail: all money-affecting operations with actor, timestamp, payload'
       }
 
+      // Event tables
+      dealEvents = eventStore 'deal_events' {
+        #immutable #audit
+        description 'Partitioned monthly, immutable event stream: event_id + created_at PK, event_type, from/to status'
+      }
+
+      postingChecks = component 'posting_checks' {
+        description 'Partitioned monthly by checked_at. Verification results: OK/DELETED/EDITED/API_ERROR'
+      }
+
       disputeEvidence = eventStore 'dispute_evidence' {
         #immutable
-        description 'Append-only evidence records: screenshots, hashes, timestamps per dispute'
+        description 'Append-only evidence records: screenshots, hashes (SHA-256), timestamps per dispute'
       }
 
       // Infrastructure tables
       notificationOutbox = queue 'notification_outbox' {
         #outbox
-        description 'Transactional outbox: idempotency_key, status (PENDING/PROCESSING/DELIVERED/FAILED)'
+        description 'Transactional outbox: idempotency_key UK, status (PENDING/PROCESSING/DELIVERED/FAILED), retry_count'
       }
 
       piiStore = component 'pii_store' {
         #pii
-        description 'Logical PII partition: ton_payout_address, encrypted with AES-256-GCM'
-      }
-
-      channelMemberships = component 'channel_memberships' {
-        description 'Team RBAC: (channel_id, user_id), role (OWNER/MANAGER), rights JSONB'
+        description 'PII partition: ton_payout_address encrypted with AES-256-GCM, key_version for rotation'
       }
     }
 
@@ -389,26 +412,36 @@ model {
   adMarketplace.miniApp.teamManagementUi -[sync]-> adMarketplace.backendApi.channelTeamService 'Invite, assign rights, revoke'
   adMarketplace.miniApp -[sync]-> adMarketplace.backendApi.authService 'Validate initData, get session'
 
-  // Backend API internal (sync)
+  // Backend API internal — Deal Domain (sync)
   adMarketplace.backendApi.dealController -[sync]-> adMarketplace.backendApi.dealTransitionService 'Trigger state transition'
   adMarketplace.backendApi.dealController -[sync]-> adMarketplace.backendApi.authService 'Verify actor permissions'
-  adMarketplace.backendApi.dealTransitionService -[sync]-> adMarketplace.backendApi.dealWorkflowEngine 'Orchestrate side-effects'
-  adMarketplace.backendApi.dealWorkflowEngine -[sync]-> adMarketplace.backendApi.escrowService 'Initiate deposit/release/refund'
+  adMarketplace.backendApi.authService -[sync]-> adMarketplace.backendApi.abacService 'Evaluate ABAC policy'
+  adMarketplace.backendApi.dealTransitionService -[sync]-> adMarketplace.backendApi.dealWorkflowEngine 'Orchestrate post-transition side-effects'
+
+  // Backend API internal — Financial Core (sync, strict isolation)
+  adMarketplace.backendApi.dealWorkflowEngine -[sync]-> adMarketplace.backendApi.escrowService 'Initiate deposit/release/refund via EscrowPort'
   adMarketplace.backendApi.dealWorkflowEngine -[sync]-> adMarketplace.backendApi.ledgerService 'Record financial entries'
   adMarketplace.backendApi.escrowService -[sync]-> adMarketplace.backendApi.tonPaymentGateway 'Generate address, submit tx'
   adMarketplace.backendApi.escrowService -[sync]-> adMarketplace.backendApi.confirmationPolicy 'Get required confirmations'
   adMarketplace.backendApi.escrowService -[sync]-> adMarketplace.backendApi.ledgerService 'Record hold/release/refund entries'
   adMarketplace.backendApi.ledgerService -[sync]-> adMarketplace.backendApi.commissionService 'Calculate commission on release'
   adMarketplace.backendApi.balanceProjection -[reads]-> adMarketplace.primaryDb.ledgerEntries 'Project balances from ledger'
-  adMarketplace.backendApi.authService -[reads]-> adMarketplace.primaryDb.channelMemberships 'Check channel team rights'
-  adMarketplace.backendApi.channelTeamService -[stores]-> adMarketplace.primaryDb.channelMemberships 'Manage team memberships'
   adMarketplace.backendApi.reconciliationService -[reads]-> adMarketplace.primaryDb.ledgerEntries 'Read ledger for reconciliation'
   adMarketplace.backendApi.reconciliationService -[reads]-> adMarketplace.primaryDb.tonTransactions 'Read TON txs for reconciliation'
   adMarketplace.backendApi.reconciliationService -[reads]-> adMarketplace.primaryDb.deals 'Read deal aggregates for reconciliation'
+
+  // Backend API internal — Marketplace (sync)
+  adMarketplace.backendApi.channelService -[stores]-> adMarketplace.primaryDb.channels 'Channel CRUD, statistics update'
+  adMarketplace.backendApi.searchService -[reads]-> adMarketplace.primaryDb.channels 'Full-text search + filters'
+
+  // Backend API internal — Identity (sync)
+  adMarketplace.backendApi.authService -[reads]-> adMarketplace.primaryDb.channelMemberships 'Check channel team rights'
+  adMarketplace.backendApi.abacService -[reads]-> adMarketplace.primaryDb.channelMemberships 'Evaluate ownership/membership'
+  adMarketplace.backendApi.channelTeamService -[stores]-> adMarketplace.primaryDb.channelMemberships 'Manage team memberships'
   adMarketplace.backendApi.piiVault -[stores]-> adMarketplace.primaryDb.piiStore 'Encrypt and store PII'
 
   // Backend API -> Data Stores (stores/reads)
-  adMarketplace.backendApi.dealTransitionService -[stores]-> adMarketplace.primaryDb.deals 'Update deal status'
+  adMarketplace.backendApi.dealTransitionService -[stores]-> adMarketplace.primaryDb.deals 'Update deal status + version (optimistic lock)'
   adMarketplace.backendApi.dealTransitionService -[stores]-> adMarketplace.primaryDb.dealEvents 'Append transition event'
   adMarketplace.backendApi.ledgerService -[stores]-> adMarketplace.primaryDb.ledgerEntries 'Append double-entry record'
   adMarketplace.backendApi.ledgerService -[stores]-> adMarketplace.primaryDb.auditLog 'Append audit trail'

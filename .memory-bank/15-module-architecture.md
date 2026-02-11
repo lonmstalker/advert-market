@@ -125,25 +125,25 @@ When splitting:
 
 ## Service-to-Module Mapping
 
-All 16 services from C4 Level 3 mapped to modules:
+All 20+ services from C4 Level 3 mapped to modules:
 
 | C4 Service | Module |
 |---|---|
-| AuthService, AbacService, PiiService | identity |
-| TeamService | identity |
-| LedgerService, EscrowService, CommissionService | financial |
-| BalanceProjection, ReconciliationService | financial |
-| TonPaymentGateway | financial |
-| ChannelService, SearchService | marketplace |
-| DealService, DealStateMachine | deal |
-| DisputeService | deal |
-| DeliveryScheduler, DeliveryVerifier | delivery |
-| NotificationService, OutboxPoller | communication |
-| TelegramBotHandler | communication |
+| Auth Service, ABAC Service, PII Vault | identity |
+| Channel Team Service | identity |
+| Ledger Service, Escrow Service, Commission Service | financial |
+| Balance Projection, Reconciliation Service | financial |
+| TON Payment Gateway, Confirmation Policy | financial |
+| Channel Service, Search Service | marketplace |
+| Deal Transition Service, Deal Workflow Engine | deal |
+| Dispute Service | deal |
+| Post Scheduler, Delivery Verifier | delivery |
+| Bot Notifier, Outbox Publisher | communication |
+| Webhook Handler, Bot Command Router, Canary Router | communication (Telegram Bot) |
 
 ## Implementation Spec Coverage
 
-All 29 specs from `14-implementation-specs/` are covered:
+All 36 specs from `14-implementation-specs/` are covered:
 
 | Spec | Module |
 |---|---|
@@ -170,3 +170,9 @@ All 29 specs from `14-implementation-specs/` are covered:
 | 27-rate-limiting | app (filter) |
 | 28-external-api-resilience | financial, delivery |
 | 29-channel-search | marketplace |
+| 30-payout-execution-flow | financial + delivery |
+| 31-overpayment-underpayment | financial |
+| 32-worker-monitoring-dlq | app (cross-cutting) |
+| 33-partition-automation | db |
+| 35-deal-workflow-engine | deal |
+| 36-logging-strategy | app (cross-cutting) |

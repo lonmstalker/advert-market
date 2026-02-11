@@ -16,7 +16,7 @@
 
 ```groovy
 dependencies {
-    implementation 'com.github.pengrad:java-telegram-bot-api:7.11.0'
+    implementation 'com.github.pengrad:java-telegram-bot-api:9.3.0'
 }
 ```
 
@@ -64,7 +64,7 @@ Endpoint `POST /api/v1/bot/webhook`:
 ### Notification Sender Pattern
 
 1. Acquire per-chat rate limiter
-2. Build `SendMessage(chatId, text)` with `ParseMode.HTML` and `disableWebPagePreview(true)`
+2. Build `SendMessage(chatId, text)` with `ParseMode.MarkdownV2` and `disableWebPagePreview(true)`. Escape user data via `MarkdownV2Util.escape()`
 3. Attach inline keyboard if buttons provided
 4. Execute via `TelegramBot.execute(request)`
 5. Log on failure: error code + description
@@ -74,25 +74,25 @@ Endpoint `POST /api/v1/bot/webhook`:
 
 ## Message Templates (All 15 Types)
 
-All messages use **HTML parse mode**. Variables: `{channel_name}`, `{amount}`, `{deal_id_short}` (first 8 chars of UUID).
+All messages use **MarkdownV2 parse mode**. User-provided data is escaped via `MarkdownV2Util.escape()`. Variables: `{channel_name}`, `{amount}`, `{deal_id_short}` (first 8 chars of UUID).
 
-| # | Type | Recipient | Template (RU) |
+| # | Type | Recipient | Template (RU, MarkdownV2) |
 |---|------|-----------|---------------|
-| 1 | NEW_OFFER | Owner | `<b>Новое предложение</b>` Канал: {channel_name} Сумма: {amount} TON |
-| 2 | OFFER_ACCEPTED | Advertiser | `<b>Предложение принято</b>` Внесите депозит {amount} TON |
-| 3 | OFFER_REJECTED | Advertiser | Предложение для {channel_name} отклонено |
-| 4 | ESCROW_FUNDED | Owner | `<b>Эскроу пополнен</b>` #{deal_id_short} Подготовьте креатив |
+| 1 | NEW_OFFER | Owner | *Новое предложение* Канал: {channel\_name} Сумма: {amount} TON |
+| 2 | OFFER_ACCEPTED | Advertiser | *Предложение принято* Внесите депозит {amount} TON |
+| 3 | OFFER_REJECTED | Advertiser | Предложение для {channel\_name} отклонено |
+| 4 | ESCROW_FUNDED | Owner | *Эскроу пополнен* \#{deal\_id\_short} Подготовьте креатив |
 | 5 | CREATIVE_SUBMITTED | Advertiser | Черновик креатива готов к проверке |
-| 6 | CREATIVE_APPROVED | Owner | Креатив одобрен! Публикуйте |
+| 6 | CREATIVE_APPROVED | Owner | Креатив одобрен\! Публикуйте |
 | 7 | REVISION_REQUESTED | Owner | Запрошена доработка креатива |
-| 8 | PUBLISHED | Advertiser | Реклама опубликована в {channel_name}! Верификация 24ч |
-| 9 | DELIVERY_VERIFIED | Both | `<b>Доставка подтверждена</b>` Выплата обрабатывается |
-| 10 | PAYOUT_SENT | Owner | `<b>Выплата {amount} TON</b>` TX: {tx_hash_short} |
-| 11 | DISPUTE_OPENED | Both | `<b>Открыт спор</b>` #{deal_id_short} |
+| 8 | PUBLISHED | Advertiser | Реклама опубликована в {channel\_name}\! Верификация 24ч |
+| 9 | DELIVERY_VERIFIED | Both | *Доставка подтверждена* Выплата обрабатывается |
+| 10 | PAYOUT_SENT | Owner | *Выплата {amount} TON* TX: {tx\_hash\_short} |
+| 11 | DISPUTE_OPENED | Both | *Открыт спор* \#{deal\_id\_short} |
 | 12 | DISPUTE_RESOLVED | Both | Спор разрешён: {outcome} |
-| 13 | DEAL_EXPIRED | Both | Сделка #{deal_id_short} истекла |
-| 14 | DEAL_CANCELLED | Other | Сделка #{deal_id_short} отменена |
-| 15 | RECONCILIATION_ALERT | Operator | `<b>ALERT: Расхождение при сверке</b>` Тип: {check_type} |
+| 13 | DEAL_EXPIRED | Both | Сделка \#{deal\_id\_short} истекла |
+| 14 | DEAL_CANCELLED | Other | Сделка \#{deal\_id\_short} отменена |
+| 15 | RECONCILIATION_ALERT | Operator | *ALERT: Расхождение при сверке* Тип: {check\_type} |
 
 Each message may include an inline keyboard button: `InlineKeyboardButton("Открыть сделку").url(dealUrl)`.
 
@@ -148,13 +148,61 @@ Implementation: per-chatId `RateLimiter` + global semaphore.
 
 ## Bot Commands
 
+### Command Registry
+
+| Command | Description | Scope |
+|---------|-------------|-------|
+| `/start` | Welcome + WebApp launch | All users |
+| `/start {startapp}` | Deep link routing | All users |
+| `/language` | Language selection | All users |
+| `/help` | Usage instructions | All users |
+| `/mydeals` | Quick link to active deals | All users |
+| `/balance` | Quick link to wallet | All users |
+| `/status` | System status (uptime, API health) | Operator only |
+| `/reconcile` | Trigger manual reconciliation | Operator only |
+
+Commands are registered via `setMyCommands` on bot startup (public commands only).
+
 ### /start
-- Upsert user in `users` table
-- Send welcome with WebApp button linking to `https://app.advertmarket.com`
+- Upsert user in `users` table (create if not exists)
+- Send welcome message with WebApp button linking to `https://app.advertmarket.com`
+- If first-time user: trigger onboarding flow in Mini App
+
+### /start {startapp}
+- Parse deep link parameter (see Deep Link Routing below)
+- Send message with inline WebApp button routing to specific screen
 
 ### /language
 - Inline keyboard: `[RU Русский] [EN English]`
-- Callback: save preference, confirm
+- Callback: save preference to user record, confirm with localized message
+
+### /help
+- Static message with commands list and FAQ links
+
+### /mydeals, /balance
+- Inline WebApp button linking directly to deals list / wallet page
+
+### /status (operator-only)
+- Verify `users.is_operator = true`
+- Return: API uptime, active deals count, pending outbox count, Kafka consumer lag summary
+
+### /reconcile (operator-only)
+- Verify `users.is_operator = true`
+- Publish trigger to `reconciliation.triggers` topic
+- Reply: "Reconciliation triggered"
+
+### Callback Query Handling
+
+Inline keyboard callbacks follow pattern: `{action}:{entity_id}`:
+
+| Callback Pattern | Action |
+|-----------------|--------|
+| `lang:ru` / `lang:en` | Set language preference |
+| `open_deal:{uuid_short}` | Open deal in WebApp |
+| `approve_creative:{uuid_short}` | Quick approve creative (transitions deal) |
+| `reject_creative:{uuid_short}` | Quick reject creative (transitions deal) |
+
+**Security**: All callback actions verify ABAC permissions before executing. State-changing callbacks re-check deal status to prevent stale actions.
 
 ---
 

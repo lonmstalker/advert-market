@@ -77,13 +77,14 @@ See [Actors and Personas](../02-actors-and-personas.md) for detailed capabilitie
 
 The **Ad Marketplace** system boundary contains:
 
+- 1 reverse proxy (Nginx — TLS, blue-green)
 - 1 frontend container (Mini App)
-- 1 backend container (Backend API)
+- 1 backend container (Backend API — Java 25 + Spring Boot 4)
 - 1 bot container (Telegram Bot)
-- 1 worker container (Workers)
-- 1 database (PostgreSQL)
-- 1 message broker (Kafka)
-- 1 cache (Redis)
+- 1 worker container (Workers — 7 Kafka consumers)
+- 1 database (PostgreSQL 18 — 14 tables, partitioned)
+- 1 message broker (Kafka 4.1 KRaft — 8 topics)
+- 1 cache (Redis 8.4 — balance cache, distributed locks, canary config)
 
 See [Containers](./02-containers.md) for C4 Level 2 detail.
 

@@ -13,36 +13,46 @@ flowchart TB
     end
 
     subgraph "App Host (VPS)"
-        BE[Backend Process<br/>JVM: Backend API + Workers]
-        BOT[Bot Process<br/>Telegram Bot webhook]
+        NGX[Nginx Reverse Proxy<br/>TLS termination, blue-green]
+        BLUE[App Blue<br/>JVM: Backend API + Bot + Workers<br/>port 8080]
+        GREEN[App Green<br/>JVM: Backend API + Bot + Workers<br/>port 8080]
     end
 
     subgraph "Managed Services"
         PG[(Managed PostgreSQL 18<br/>Single instance, all tables)]
-        RD[(Managed Redis 8<br/>Cache + locks)]
-        KF[Managed Kafka<br/>Min 3 brokers + Schema Registry]
+        RD[(Managed Redis 8.4<br/>Cache + locks + canary)]
+        KF[Managed Kafka 4.1<br/>KRaft, no ZooKeeper]
     end
 
-    MINI -->|REST| BE
-    BE --> PG
-    BE --> RD
-    BE --> KF
-    KF --> BE
-    KF --> BOT
+    MINI -->|HTTPS| NGX
+    NGX -->|Proxy| BLUE
+    NGX -.->|Deploy switch| GREEN
+    BLUE --> PG
+    BLUE --> RD
+    BLUE --> KF
+    KF --> BLUE
 ```
 
 ### Characteristics
 
 | Aspect | Detail |
 |--------|--------|
-| **Description** | Single-host deployment for pre-PMF phase |
-| **App Host** | Single VPS running Backend API + Workers in one JVM, Bot as separate process |
+| **Description** | Single-host blue-green deployment with canary feature flags |
+| **Nginx** | TLS termination, upstream switching (blue/green), `/internal` and `/actuator` access control |
+| **App Process** | Single JVM: Backend API + Telegram Bot + Workers (blue-green: two instances, one active) |
 | **Mini App** | Static SPA on nginx/CDN |
-| **PostgreSQL** | Managed single instance, all tables |
-| **Redis** | Managed single instance |
-| **Kafka** | Managed Kafka 4.1 KRaft cluster (min 3 brokers, no ZooKeeper) |
+| **PostgreSQL** | Managed single instance (PostgreSQL 18), all 14 tables |
+| **Redis** | Managed single instance (Redis 8.4) — balance cache + distributed locks + canary config + update dedup |
+| **Kafka** | Managed Kafka 4.1 KRaft (no ZooKeeper) |
 | **Cost** | Minimal — one VPS + managed services |
 | **Scaling** | Vertical (upgrade VPS) |
+
+### Blue-Green Deployment
+
+- Two app instances (blue + green) on the same host
+- Nginx switches upstream to the new instance after health check passes
+- Zero-downtime deploys: green starts → health check → nginx switch → blue stops
+- Canary routing via Redis: `SHA-256(user_id + salt) % 100` routes percentage to canary
 
 ### Trade-offs
 

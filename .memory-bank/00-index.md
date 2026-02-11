@@ -24,18 +24,19 @@
 | [03-feature-specs/06-dispute-resolution.md](./03-feature-specs/06-dispute-resolution.md) | Disputes: auto-rules + operator escalation |
 | [03-feature-specs/07-team-management.md](./03-feature-specs/07-team-management.md) | Channel team: OWNER/MANAGER, JSONB rights |
 | [03-feature-specs/08-notifications.md](./03-feature-specs/08-notifications.md) | Notification pipeline via Kafka and Bot |
+| [03-feature-specs/09-channel-statistics.md](./03-feature-specs/09-channel-statistics.md) | Channel stats collection, verification, freshness |
 
 ### Architecture
 
 | File | Description |
 |------|-------------|
 | [04-architecture/01-system-landscape.md](./04-architecture/01-system-landscape.md) | C4 L1: system + external dependencies |
-| [04-architecture/02-containers.md](./04-architecture/02-containers.md) | C4 L2: 7 containers and interactions |
-| [04-architecture/03-backend-api-components.md](./04-architecture/03-backend-api-components.md) | C4 L3: 16+ Backend API services |
-| [04-architecture/04-workers.md](./04-architecture/04-workers.md) | 7 async workers, callback pattern |
-| [04-architecture/05-data-stores.md](./04-architecture/05-data-stores.md) | PostgreSQL: 12+ tables, partitioning |
+| [04-architecture/02-containers.md](./04-architecture/02-containers.md) | C4 L2: 8 containers (incl. Nginx) and interactions |
+| [04-architecture/03-backend-api-components.md](./04-architecture/03-backend-api-components.md) | C4 L3: 20+ Backend API services |
+| [04-architecture/04-workers.md](./04-architecture/04-workers.md) | 7 async workers, callback pattern, DLQ strategy |
+| [04-architecture/05-data-stores.md](./04-architecture/05-data-stores.md) | PostgreSQL 18: 14 tables, partitioning |
 | [04-architecture/06-kafka-topology.md](./04-architecture/06-kafka-topology.md) | 8 Kafka topics, consumer groups |
-| [04-architecture/07-redis-usage.md](./04-architecture/07-redis-usage.md) | Balance cache + distributed locks |
+| [04-architecture/07-redis-usage.md](./04-architecture/07-redis-usage.md) | Balance cache, distributed locks, canary config, update dedup, heartbeats |
 
 ### Deal State Machine
 
@@ -72,7 +73,7 @@
 | File | Description |
 |------|-------------|
 | [15-module-architecture.md](./15-module-architecture.md) | 18 Gradle subprojects, dependency graph, service mapping |
-| [16-java-conventions.md](./16-java-conventions.md) | Java 21 conventions: testing, performance, quality, payment guarantees |
+| [16-java-conventions.md](./16-java-conventions.md) | Java 25 conventions: testing, performance, quality, payment guarantees |
 | [17-typescript-conventions.md](./17-typescript-conventions.md) | TypeScript/React conventions: testing, performance, financial UI |
 
 ### Frontend Pages
@@ -129,7 +130,13 @@
 | [14-implementation-specs/27-rate-limiting-strategy.md](./14-implementation-specs/27-rate-limiting-strategy.md) | Rate Limiting Strategy (API, auth, business, outbound) |
 | [14-implementation-specs/28-external-api-resilience.md](./14-implementation-specs/28-external-api-resilience.md) | External API Resilience (Circuit Breakers, Fallbacks) |
 | [14-implementation-specs/29-channel-search-impl.md](./14-implementation-specs/29-channel-search-impl.md) | Channel Search Implementation (jOOQ, indexes, cursor pagination) |
+| [14-implementation-specs/30-payout-execution-flow.md](./14-implementation-specs/30-payout-execution-flow.md) | Payout Execution Flow (release, commission, TON payout) |
+| [14-implementation-specs/31-overpayment-underpayment.md](./14-implementation-specs/31-overpayment-underpayment.md) | Overpayment & Underpayment Handling |
+| [14-implementation-specs/32-worker-monitoring-dlq.md](./14-implementation-specs/32-worker-monitoring-dlq.md) | Worker Monitoring, Health Checks & DLQ Strategy |
+| [14-implementation-specs/33-partition-automation.md](./14-implementation-specs/33-partition-automation.md) | Partition Auto-Creation & Archival |
+| [14-implementation-specs/35-deal-workflow-engine.md](./14-implementation-specs/35-deal-workflow-engine.md) | Deal Workflow Engine (post-transition side-effects) |
+| [14-implementation-specs/36-logging-strategy.md](./14-implementation-specs/36-logging-strategy.md) | Structured Logging, Redaction & Retention |
 
 ---
 
-*Generated from C4 architecture model (`architecture/banking/`). 74 files total.*
+*Generated from C4 architecture model (`architecture/banking/`). 81 files total.*
