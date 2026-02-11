@@ -157,7 +157,7 @@ CREATE TABLE deals (
     advertiser_id       BIGINT        NOT NULL REFERENCES users(id),
     owner_id            BIGINT        NOT NULL REFERENCES users(id),
     pricing_rule_id     BIGINT        REFERENCES channel_pricing_rules(id),
-    status              VARCHAR(30)   NOT NULL DEFAULT 'PENDING_REVIEW',
+    status              VARCHAR(30)   NOT NULL DEFAULT 'DRAFT',
     amount_nano         BIGINT        NOT NULL CHECK (amount_nano > 0),
     commission_rate_bp  INTEGER       NOT NULL DEFAULT 1000,
     commission_nano     BIGINT        NOT NULL CHECK (commission_nano >= 0),
@@ -179,8 +179,8 @@ CREATE TABLE deals (
 CREATE INDEX idx_deals_advertiser ON deals(advertiser_id, status);
 CREATE INDEX idx_deals_owner ON deals(owner_id, status);
 CREATE INDEX idx_deals_channel ON deals(channel_id);
-CREATE INDEX idx_deals_status ON deals(status) WHERE status NOT IN ('COMPLETED', 'CANCELLED', 'REFUNDED');
-CREATE INDEX idx_deals_deadline ON deals(deadline_at) WHERE deadline_at IS NOT NULL AND status NOT IN ('COMPLETED', 'CANCELLED', 'REFUNDED');
+CREATE INDEX idx_deals_status ON deals(status) WHERE status NOT IN ('COMPLETED_RELEASED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED', 'EXPIRED');
+CREATE INDEX idx_deals_deadline ON deals(deadline_at) WHERE deadline_at IS NOT NULL AND status NOT IN ('COMPLETED_RELEASED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED', 'EXPIRED');
 ```
 
 ### 7. deal_events (partitioned, immutable)

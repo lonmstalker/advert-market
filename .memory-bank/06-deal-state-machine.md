@@ -45,8 +45,10 @@ stateDiagram-v2
 
     CREATIVE_APPROVED --> SCHEDULED : Publication time set
     CREATIVE_APPROVED --> PUBLISHED : Immediate publication
+    CREATIVE_APPROVED --> EXPIRED : Publication timeout
 
     SCHEDULED --> PUBLISHED : Post Scheduler publishes
+    SCHEDULED --> EXPIRED : Schedule timeout
 
     PUBLISHED --> DELIVERY_VERIFYING : Verification starts (automatic)
 
@@ -55,11 +57,13 @@ stateDiagram-v2
 
     DISPUTED --> COMPLETED_RELEASED : Resolved in owner's favor (release)
     DISPUTED --> REFUNDED : Resolved in advertiser's favor (refund)
+    DISPUTED --> PARTIALLY_REFUNDED : Resolved with partial refund (time-based split)
 
     CANCELLED --> [*]
     EXPIRED --> [*]
     COMPLETED_RELEASED --> [*]
     REFUNDED --> [*]
+    PARTIALLY_REFUNDED --> [*]
 ```
 
 ## States
@@ -81,6 +85,7 @@ stateDiagram-v2
 | `DISPUTED` | Dispute opened, under review | Escrow frozen |
 | `CANCELLED` | Deal cancelled | Refund if previously funded |
 | `REFUNDED` | Escrow refunded after dispute | Escrow returned to advertiser |
+| `PARTIALLY_REFUNDED` | Partial refund after dispute (time-based split) | Split: partial payout to owner + partial refund to advertiser |
 | `EXPIRED` | Deal expired due to timeout | Refund if previously funded |
 
 ## Transitions
@@ -121,7 +126,9 @@ stateDiagram-v2
 | `CREATIVE_SUBMITTED` | `DISPUTED` | Dispute quality | Advertiser | Freeze escrow |
 | `CREATIVE_APPROVED` | `SCHEDULED` | Set publish time | Owner/Admin | Schedule via Post Scheduler |
 | `CREATIVE_APPROVED` | `PUBLISHED` | Publish now | Owner/Admin | Post Scheduler publishes |
+| `CREATIVE_APPROVED` | `EXPIRED` | Publication timeout | System (Deal Timeout Worker) | Trigger refund, notify both |
 | `SCHEDULED` | `PUBLISHED` | Auto-publish | System (Post Scheduler) | Verify via callback |
+| `SCHEDULED` | `EXPIRED` | Schedule timeout | System (Deal Timeout Worker) | Trigger refund, notify both |
 | `PUBLISHED` | `DELIVERY_VERIFYING` | Auto-start | System | Start 24h verification |
 
 ### Completion Transitions
@@ -132,6 +139,7 @@ stateDiagram-v2
 | `DELIVERY_VERIFYING` | `DISPUTED` | Verification failed | System | Freeze escrow, notify both |
 | `DISPUTED` | `COMPLETED_RELEASED` | Resolve for owner | Platform Operator | Release escrow, execute payout |
 | `DISPUTED` | `REFUNDED` | Resolve for advertiser | Platform Operator | Execute refund |
+| `DISPUTED` | `PARTIALLY_REFUNDED` | Resolve with partial refund | Platform Operator | Time-based split: partial payout + partial refund + commission on owner's share |
 
 ## Timeouts
 
@@ -144,7 +152,9 @@ Each state has a configurable deadline. The **Deal Timeout Worker** consumes `de
 | `AWAITING_PAYMENT` | 24 hours | → `EXPIRED` |
 | `FUNDED` | 72 hours | → `EXPIRED` + refund |
 | `CREATIVE_SUBMITTED` | 48 hours | → `EXPIRED` + refund |
-| `DELIVERY_VERIFYING` | 24 hours | → `COMPLETED_RELEASED` (auto-approve) |
+| `CREATIVE_APPROVED` | 48 hours | → `EXPIRED` + refund |
+| `SCHEDULED` | 24 hours | → `EXPIRED` + refund |
+| `DELIVERY_VERIFYING` | 24 hours | → `COMPLETED_RELEASED` (if verified) / `DISPUTED` (if API error) |
 
 ## Event Storage
 

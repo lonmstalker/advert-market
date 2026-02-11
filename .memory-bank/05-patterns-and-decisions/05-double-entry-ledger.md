@@ -24,37 +24,41 @@ SUM(all debits) = SUM(all credits)
 
 If this invariant is ever violated, the Reconciliation Service detects it.
 
-## ledger_entries Structure
+## ledger_entries Structure (matches DDL)
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | `UUID` | Entry ID |
+| `id` | `BIGSERIAL` | Entry ID (efficient for partitioned tables) |
 | `tx_ref` | `UUID` | Groups the debit+credit pair |
-| `account_id` | `VARCHAR` | Account identifier (e.g., `ESCROW:{deal_id}`) |
-| `direction` | `VARCHAR` | `DEBIT` or `CREDIT` |
-| `amount_nano` | `BIGINT` | Amount in nanoTON (always positive) |
+| `account_id` | `VARCHAR(100)` | Account identifier (e.g., `ESCROW:{deal_id}`) |
+| `entry_type` | `VARCHAR(30)` | Operation type (e.g., `ESCROW_DEPOSIT`) |
+| `debit_nano` | `BIGINT` | Debit amount in nanoTON (0 if credit entry) |
+| `credit_nano` | `BIGINT` | Credit amount in nanoTON (0 if debit entry) |
+| `description` | `VARCHAR(500)` | Human-readable description |
 | `deal_id` | `UUID` | Deal reference (nullable) |
-| `description` | `VARCHAR` | Human-readable description |
-| `created_at` | `TIMESTAMPTZ` | Entry timestamp |
+| `idempotency_key` | `VARCHAR(200)` | Prevents duplicate entries |
+| `created_at` | `TIMESTAMPTZ` | Entry timestamp (partition key) |
+
+> **Design note**: `debit_nano/credit_nano` columns (not `direction + amount_nano`) for simpler SQL aggregation: `SUM(debit_nano)`, `SUM(credit_nano)`. DB-level CHECK ensures exactly one is positive per row.
 
 ## Example: Escrow Deposit
 
 When an advertiser deposits 1000 TON (1,000,000,000,000 nanoTON):
 
-| tx_ref | account_id | direction | amount_nano | description |
-|--------|-----------|-----------|-------------|-------------|
-| `uuid-1` | `EXTERNAL_TON` | DEBIT | 1000000000000 | Deposit received from advertiser |
-| `uuid-1` | `ESCROW:deal-123` | CREDIT | 1000000000000 | Escrow funded for deal-123 |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| `uuid-1` | `EXTERNAL_TON` | 1000000000000 | 0 | ESCROW_DEPOSIT |
+| `uuid-1` | `ESCROW:deal-123` | 0 | 1000000000000 | ESCROW_DEPOSIT |
 
 ## Example: Escrow Release with Commission
 
 When delivery is verified and escrow is released (1000 TON deal, 10% commission):
 
-| tx_ref | account_id | direction | amount_nano | description |
-|--------|-----------|-----------|-------------|-------------|
-| `uuid-2` | `ESCROW:deal-123` | DEBIT | 1000000000000 | Escrow released |
-| `uuid-2` | `COMMISSION:deal-123` | CREDIT | 100000000000 | Platform commission (10%) |
-| `uuid-2` | `OWNER_PENDING:owner-456` | CREDIT | 900000000000 | Owner payout pending |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| `uuid-2` | `ESCROW:deal-123` | 1000000000000 | 0 | ESCROW_RELEASE |
+| `uuid-2` | `COMMISSION:deal-123` | 0 | 100000000000 | PLATFORM_COMMISSION |
+| `uuid-2` | `OWNER_PENDING:owner-456` | 0 | 900000000000 | OWNER_PAYOUT |
 
 Note: For 3-entry operations (split), the `tx_ref` groups all entries together. The invariant still holds: 1000 = 100 + 900.
 
@@ -62,10 +66,11 @@ Note: For 3-entry operations (split), the `tx_ref` groups all entries together. 
 
 When a dispute is resolved in favor of the advertiser:
 
-| tx_ref | account_id | direction | amount_nano | description |
-|--------|-----------|-----------|-------------|-------------|
-| `uuid-3` | `ESCROW:deal-123` | DEBIT | 1000000000000 | Escrow refunded |
-| `uuid-3` | `EXTERNAL_TON` | CREDIT | 1000000000000 | Refund to advertiser |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| `uuid-3` | `ESCROW:deal-123` | 1000000000000 | 0 | ESCROW_REFUND |
+| `uuid-3` | `EXTERNAL_TON` | 0 | 999995000000 | ESCROW_REFUND |
+| `uuid-3` | `NETWORK_FEES` | 0 | 5000000 | NETWORK_FEE_REFUND |
 
 ## Benefits
 

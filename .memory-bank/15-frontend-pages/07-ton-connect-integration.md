@@ -1,8 +1,11 @@
 # TON Connect интеграция
 
 > Сквозной документ: lifecycle TON-транзакций на фронтенде, хуки, утилиты, error handling.
-> Не дублирует UI-детали из [03-deals.md](03-deals.md) (3.8) и [04-wallet.md](04-wallet.md) (4.1-4.3) — ссылается на них.
+> Не дублирует UI-детали из [03-deals.md](03-deals.md) (3.8) и [04-wallet.md](04-wallet.md) (4.2) — ссылается на них.
 > Backend counterpart: [01-ton-sdk-integration.md](../14-implementation-specs/01-ton-sdk-integration.md).
+>
+> **Архитектурное решение**: платформенного кошелька нет. TON Connect используется только для оплаты сделок (escrow deposit).
+> Вывод средств (withdrawal) выполняется бэкендом без TON Connect.
 
 ---
 
@@ -46,13 +49,14 @@ Frontend                    TON Connect          Wallet App          Blockchain 
 
 Формат: **non-bounceable** (`UQ...`) — т.к. wallet может быть неинициализирован.
 
-### Три типа TON-операций
+### Два типа TON-операций
 
 | # | Операция | TON Connect? | Кто подписывает | Frontend trigger |
 |---|----------|:---:|---|---|
 | 1 | **Escrow Deposit** | Да | Пользователь | Payment Sheet (3.8) |
-| 2 | **Platform Deposit** | Да | Пользователь | Top-Up (4.2) |
-| 3 | **Withdrawal** | Нет | Backend | Withdraw (4.3) → POST API |
+| 2 | **Withdrawal** | Нет | Backend | Withdraw (4.2) → POST API |
+
+> **Убрано**: Platform Deposit (пополнение баланса платформы). Платформенного кошелька нет — все оплаты per-deal.
 
 ---
 
@@ -109,7 +113,7 @@ const explorerBaseUrl = import.meta.env.VITE_TON_NETWORK === 'mainnet'
 // Ссылка на адрес: `${explorerBaseUrl}/${address}`
 ```
 
-Используется в 4.5 (Transaction Detail) — кнопка "Открыть в TON Explorer".
+Используется в 4.4 (Transaction Detail) — кнопка "Открыть в TON Explorer".
 
 ---
 
@@ -194,19 +198,7 @@ function useDepositPolling(dealId: string, options: DepositPollingOptions) {
 - `refetchInterval: 10_000` (10s) на `dealKeys.detail(dealId)` или `dealKeys.deposit(dealId)`
 - Стартует по `enabled: true` (после успешного `sendTransaction`)
 - Останавливается при: статус `FUNDED`, таймаут 30 мин, `enabled: false`
-- Сохраняет `pollingStartedAt` в `sessionStorage` для resume (см. 7.8)
-
-### `useBalancePolling(options?)`
-
-Polling баланса после platform deposit.
-
-```typescript
-function useBalancePolling(options: { enabled: boolean; onUpdated?: () => void }) {
-  // refetchInterval: 10_000 на walletKeys.balance
-  // Сравнивает с предыдущим значением → при изменении: onUpdated()
-  // Таймаут: 30 мин
-}
-```
+- Сохраняет `pollingStartedAt` в `sessionStorage` для resume (см. 7.7)
 
 ### Утилиты
 
@@ -347,6 +339,16 @@ const DepositInfoSchema = z.object({
 | <= 1,000 TON | 3 | Progress bar "2/3 confirmations" |
 | > 1,000 TON | 5 + operator | Progress bar + info "Ожидает проверки оператором" |
 
+### Защита от двойной отправки
+
+| Уровень | Механизм | Описание |
+|---------|----------|----------|
+| **UI** | `isPending` от `useTonTransaction` | Дизейбл кнопки на время операции |
+| **Блокчейн** | TON wallet seqno | Wallet contract отклоняет replay (seqno mismatch) |
+| **Backend** | `tx_hash` PK в `ton_transactions` | Дублирующий deposit игнорируется |
+| **Backend** | Optimistic lock на `deals.version` | Повторный FUNDED — idempotent no-op |
+| **Backend** | Redis lock `lock:escrow:{deal_id}` | Предотвращает concurrent processing |
+
 ### Error states
 
 | Ошибка | Код | UI |
@@ -361,66 +363,9 @@ const DepositInfoSchema = z.object({
 
 ---
 
-## 7.5 Flow 2: Пополнение баланса (Platform Deposit)
+## 7.5 Flow 2: Вывод средств (Owner Withdrawal)
 
-> UI-детали: [04-wallet.md#4.2](04-wallet.md#42-пополнение-баланса)
-
-### Trigger
-
-Кнопка `t('wallet.topUp.submit')` на Top-Up (4.2).
-
-### Отличие от Escrow Deposit
-
-- **Адрес**: уникальный **на пользователя** (не на сделку). Backend генерирует через subwallet_id derivation от user ID.
-- **Сумма**: произвольная (ввод пользователя), не фиксированная.
-- **Нет статуса сделки** для polling — фронт следит за балансом.
-
-### Шаги
-
-```
-1. Фронт: GET /api/v1/wallet/deposit-address
-   → { depositAddress, userId }
-
-2. Пользователь вводит сумму
-
-3. Фронт: useTonTransaction().send({
-     address: depositAddress,
-     amountNano: parseUserTonInput(input).toString(),
-   })
-
-4. Promise resolved → toast t('wallet.toast.topUpProcessing')
-
-5. Navigate → /wallet
-
-6. useBalancePolling({ enabled: true })
-   Polling walletKeys.balance каждые 10s (staleTime: 0)
-
-7. Backend Deposit Watcher детектит → зачисляет на баланс
-
-8. Баланс изменился → toast t('wallet.toast.balanceUpdated')
-```
-
-### API контракт: `GET /api/v1/wallet/deposit-address`
-
-```typescript
-const DepositAddressSchema = z.object({
-  depositAddress: z.string(),    // non-bounceable UQ..., уникальный на пользователя
-});
-```
-
-### Error states
-
-Те же что в Flow 1 (error mapping через `mapTonConnectError`), плюс:
-
-| Ошибка | UI |
-|--------|----|
-| Баланс не изменился за 30 мин | Toast `t('wallet.error.topUpTimeout')` + support link |
-
----
-
-## 7.6 Flow 3: Вывод средств (Platform Withdrawal)
-
-> UI-детали: [04-wallet.md#4.3](04-wallet.md#43-вывод-средств)
+> UI-детали: [04-wallet.md#4.2](04-wallet.md#42-вывод-средств-только-владелец-канала)
 
 ### Особенность
 
@@ -434,38 +379,25 @@ const DepositAddressSchema = z.object({
 2. DialogModal подтверждения
 
 3. Фронт: POST /api/v1/wallet/withdraw
+   Headers: { Idempotency-Key: uuid }
    Body: { amountNano, destinationAddress }
-   → { txHash, status: 'PENDING', estimatedFee }
+   → { withdrawalId, status: 'PENDING', estimatedFeeNano }
 
 4. Toast t('wallet.toast.withdrawProcessing') → navigate /wallet
 
-5. useBalancePolling({ enabled: true })
+5. Backend подписывает, отправляет через ton4j
 
-6. Backend подписывает, отправляет через ton4j, Deposit Watcher подтверждает
-
-7. Баланс обновился → toast t('wallet.toast.withdrawCompleted')
+6. При следующем GET /wallet/summary — pendingPayoutNano уменьшился
 ```
 
-### API контракт: `POST /api/v1/wallet/withdraw`
+### Защита от двойного вывода
 
-**Request:**
-
-```typescript
-const WithdrawRequestSchema = z.object({
-  amountNano: z.string(),               // bigint as string, > 0, <= balance
-  destinationAddress: z.string(),        // valid TON address (EQ... или UQ...)
-});
-```
-
-**Response:**
-
-```typescript
-const WithdrawResponseSchema = z.object({
-  txHash: z.string().nullable(),         // null пока не отправлено
-  status: z.enum(['PENDING', 'SUBMITTED', 'CONFIRMED', 'FAILED']),
-  estimatedFeeNano: z.string(),
-});
-```
+| Уровень | Механизм | Описание |
+|---------|----------|----------|
+| **UI** | `isPending` от `useMutation` | Дизейбл кнопки на время запроса |
+| **API** | `Idempotency-Key` header | Backend дедуплицирует по ключу (Redis, TTL 24h) |
+| **Backend** | Redis lock `lock:payout:{user_id}` | Один вывод одновременно |
+| **Backend** | `OWNER_PENDING` balance check | Нельзя вывести больше, чем есть |
 
 ### Адрес назначения
 
@@ -485,16 +417,15 @@ const WithdrawResponseSchema = z.object({
 
 ---
 
-## 7.7 Состояние подключения кошелька
+## 7.6 Состояние подключения кошелька
 
 ### TonConnectButton
 
 | Место | Когда показывать | Компонент |
 |-------|-----------------|-----------|
 | Payment Sheet (3.8) | Кошелёк не подключён | Кнопка `t('wallet.connectWallet')` |
-| Top-Up (4.2) | Кошелёк не подключён | Кнопка `t('wallet.connectWallet')` |
 | Wallet Main (4.1) | Всегда | Badge: адрес (truncated) или кнопка подключения |
-| Withdraw (4.3) | Опционально | Pre-fill адреса если подключён |
+| Withdraw (4.2) | Опционально | Pre-fill адреса если подключён |
 
 ### Auto-reconnect
 
@@ -508,7 +439,7 @@ const WithdrawResponseSchema = z.object({
 
 ---
 
-## 7.8 Resume / Recovery
+## 7.7 Resume / Recovery
 
 ### Проблема
 
@@ -520,8 +451,8 @@ Telegram может убить Mini App, пока пользователь в к
 
 ```typescript
 type PendingTonIntent = {
-  type: 'escrow_deposit' | 'platform_deposit';
-  dealId?: string;           // для escrow
+  type: 'escrow_deposit';
+  dealId: string;
   sentAt: number;            // timestamp
   address: string;           // куда отправляли
   amountNano: string;
@@ -539,7 +470,6 @@ sessionStorage.setItem('ton_pending_intent', JSON.stringify(intent));
 1. Проверить sessionStorage на pending intent
 2. Если есть и sentAt < 30 мин назад:
    - escrow_deposit: запустить useDepositPolling(dealId)
-   - platform_deposit: запустить useBalancePolling()
 3. Если sentAt > 30 мин: удалить intent, показать toast "таймаут"
 ```
 
@@ -548,7 +478,7 @@ sessionStorage.setItem('ton_pending_intent', JSON.stringify(intent));
 В текущем `App.tsx` установлен `refetchOnWindowFocus: false`. Это корректно для общего случая, но для финансовых queries нужен override:
 
 ```typescript
-// В useDepositPolling / useBalancePolling
+// В useDepositPolling
 useQuery({
   queryKey: dealKeys.deposit(dealId),
   refetchOnWindowFocus: true,     // override глобального false
@@ -558,7 +488,7 @@ useQuery({
 
 ---
 
-## 7.9 Error handling (общее)
+## 7.8 Error handling (общее)
 
 ### Retry стратегия
 
@@ -586,7 +516,7 @@ useQuery({
 
 ---
 
-## 7.10 Тестирование
+## 7.9 Тестирование
 
 ### Testnet конфигурация
 
@@ -611,15 +541,11 @@ useQuery({
 - [ ] Отменить в кошельке → toast "Отклонено", кнопка активна
 - [ ] Закрыть Mini App во время ожидания → вернуться → polling продолжается
 
-**Flow 2: Platform Deposit**
-- [ ] Выбрать сумму (chip или ввод) → нажать "Пополнить"
-- [ ] Подтвердить в кошельке → navigate /wallet
-- [ ] Дождаться обновления баланса → toast "Баланс пополнен"
-
-**Flow 3: Withdrawal**
+**Flow 2: Withdrawal**
 - [ ] Ввести сумму + адрес → "Макс" заполняет максимум
 - [ ] Подтвердить → DialogModal → POST → navigate /wallet
-- [ ] Баланс уменьшился
+- [ ] pendingPayoutNano уменьшился
+- [ ] Повторный POST с тем же Idempotency-Key → не создаёт дубликат
 
 **Edge cases**
 - [ ] Network mismatch (mainnet wallet + testnet backend)
@@ -630,7 +556,7 @@ useQuery({
 
 ---
 
-## 7.11 Файловая структура
+## 7.10 Файловая структура
 
 ```
 src/features/ton/
@@ -638,23 +564,22 @@ src/features/ton/
     useTonTransaction.ts          # обёртка над sendTransaction
     useTonWalletStatus.ts         # статус подключения + адрес
     useDepositPolling.ts          # polling статуса escrow deposit
-    useBalancePolling.ts          # polling баланса после top-up
   lib/
     ton-amount.ts                 # formatTonAmount, toNanoString, parseUserTonInput
     ton-errors.ts                 # mapTonConnectError, getErrorI18nKey
     ton-intent.ts                 # PendingTonIntent: save/load/clear sessionStorage
     ton-explorer.ts               # getExplorerTxUrl, getExplorerAddressUrl
   types/
-    ton.ts                        # Zod schemas: DepositInfoSchema, DepositAddressSchema, etc.
+    ton.ts                        # Zod schemas: DepositInfoSchema, etc.
 ```
 
 Не конфликтует с:
 - `src/features/deals/` — PaymentSheet.tsx импортирует из `features/ton/`
-- `src/features/wallet/` — TopUpPage/WithdrawPage импортируют из `features/ton/`
+- `src/features/wallet/` — WithdrawPage импортирует `useTonWalletStatus` для pre-fill адреса
 
 ---
 
-## 7.12 Новые i18n ключи
+## 7.11 Новые i18n ключи
 
 Все в namespace `wallet.*` (уже определён в [06-shared-components.md](06-shared-components.md)):
 
@@ -666,26 +591,23 @@ wallet.status.operatorReview          # "Ожидает проверки опе�
 wallet.status.overpaid                # "Сумма больше — разница будет возвращена"
 wallet.toast.paymentSent
 wallet.toast.paymentConfirmed
-wallet.toast.topUpProcessing
-wallet.toast.balanceUpdated
 wallet.toast.withdrawProcessing
 wallet.toast.withdrawCompleted
 wallet.error.connectFirst
 wallet.error.walletRejected
 wallet.error.insufficientTon
 wallet.error.timeout
-wallet.error.networkMismatch          # NEW
+wallet.error.networkMismatch
 wallet.error.disconnected
-wallet.error.transactionFailed        # NEW (generic fallback)
-wallet.error.depositExpired           # NEW
-wallet.error.pollingTimeout           # NEW
-wallet.error.topUpTimeout             # NEW
-wallet.error.underpaid                # NEW: "Получено {received}, ожидалось {expected}"
-wallet.error.depositRejected          # NEW
+wallet.error.transactionFailed        # generic fallback
+wallet.error.depositExpired
+wallet.error.pollingTimeout
+wallet.error.underpaid                # "Получено {received}, ожидалось {expected}"
+wallet.error.depositRejected
 wallet.error.insufficientFunds
 wallet.error.invalidAddress
 wallet.error.withdrawLimit
-wallet.error.withdrawFailed           # NEW
+wallet.error.withdrawFailed
 ```
 
 ---
@@ -695,24 +617,26 @@ wallet.error.withdrawFailed           # NEW
 | Документ | Что использует |
 |----------|---------------|
 | [03-deals.md](03-deals.md) (3.8) | Flow 1, hooks, error mapping |
-| [04-wallet.md](04-wallet.md) (4.1, 4.2, 4.3) | Flow 2, Flow 3, wallet badge, balance polling |
+| [04-wallet.md](04-wallet.md) (4.1, 4.2) | Flow 2, wallet badge |
 | [06-shared-components.md](06-shared-components.md) | Error states (6.2), i18n namespace (6.1), toast patterns |
 | [01-ton-sdk-integration.md](../14-implementation-specs/01-ton-sdk-integration.md) | Backend: address generation, deposit watcher, tx lifecycle |
 | [02-escrow-flow.md](../07-financial-system/02-escrow-flow.md) | Backend: full escrow lifecycle |
 | [06-confirmation-policy.md](../07-financial-system/06-confirmation-policy.md) | Backend: tiered confirmations, operator review |
+| [07-idempotency-strategy.md](../05-patterns-and-decisions/07-idempotency-strategy.md) | Idempotency-Key для withdrawal |
 
 ---
 
 ## Верификация
 
-1. **Все 3 flow покрыты** — escrow deposit (7.4), platform deposit (7.5), withdrawal (7.6)
+1. **Оба flow покрыты** — escrow deposit (7.4), withdrawal (7.5)
 2. **Каждый flow**: trigger → предусловие → шаги → API контракт → промежуточные статусы → error states
 3. **Нет дублирования** — UI-детали в 03-deals.md и 04-wallet.md, здесь только lifecycle и интеграция
 4. **Confirmations как first-class** — промежуточные статусы (TX_DETECTED, CONFIRMING, AWAITING_OPERATOR_REVIEW)
 5. **Operator review покрыт** — UI для >1000 TON (7.4 таблица промежуточных статусов)
 6. **Underpayment/overpayment покрыт** — статусы UNDERPAID/OVERPAID + i18n
-7. **Resume/recovery покрыт** — sessionStorage intent (7.8)
-8. **Double-send prevention** — isPending debounce (7.9)
-9. **API контракты** — DepositInfoSchema, DepositAddressSchema, WithdrawRequest/Response (7.4-7.6)
+7. **Resume/recovery покрыт** — sessionStorage intent (7.7)
+8. **Double-send prevention** — матрица защиты по уровням (7.4, 7.5)
+9. **Idempotency-Key** — для withdrawal (7.5), не нужен для escrow deposit
 10. **Файловая структура** `src/features/ton/` не конфликтует с existing features
 11. **i18n ключи** из `wallet.*` namespace
+12. **Убран Platform Deposit** — платформенного кошелька нет

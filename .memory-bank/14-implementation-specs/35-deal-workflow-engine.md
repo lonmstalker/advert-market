@@ -29,16 +29,16 @@ DealController / WorkerCallbackController
 
 | To Status | Side-Effects |
 |-----------|-------------|
-| PENDING_REVIEW | Notify owner (NEW_OFFER), set deadline (48h) |
+| OFFER_PENDING | Notify owner (NEW_OFFER), set deadline (48h) |
+| NEGOTIATING | Notify other party (COUNTER_OFFER), set deadline (72h) |
 | ACCEPTED | Notify advertiser (OFFER_ACCEPTED), generate deposit address |
-| REJECTED | Notify advertiser (OFFER_REJECTED), clear deadline |
 | AWAITING_PAYMENT | Set deadline (24h) |
 | FUNDED | Notify owner (ESCROW_FUNDED), set deadline (72h), record ledger entries |
 | CREATIVE_SUBMITTED | Notify advertiser (CREATIVE_SUBMITTED), set deadline (48h) |
-| CREATIVE_APPROVED | Notify owner (CREATIVE_APPROVED), emit PUBLISH_POST command |
-| REVISION_REQUESTED | Notify owner (REVISION_REQUESTED), reset creative deadline |
+| CREATIVE_APPROVED | Notify owner (CREATIVE_APPROVED), set deadline (48h) |
+| SCHEDULED | Schedule via Post Scheduler, set deadline (24h) |
 | PUBLISHED | Notify advertiser (PUBLISHED), emit VERIFY_DELIVERY, set deadline (24h) |
-| COMPLETED_RELEASED | Release escrow, record ledger entries, emit payout command, notify both |
+| COMPLETED_RELEASED | Release escrow, record ledger entries (after TX confirmation), emit payout command, notify both |
 | DISPUTED | Notify both (DISPUTE_OPENED), set deadline (7 days) |
 | PARTIALLY_REFUNDED | Record partial refund ledger entries, emit partial payout + refund commands |
 | REFUNDED | Record refund ledger entries, emit refund command, notify both |

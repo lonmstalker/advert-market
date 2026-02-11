@@ -161,15 +161,15 @@ No floating point. No `BigDecimal`. Pure `long` arithmetic.
 
 For a completed deal:
 
-| Entry | Account | Debit | Credit |
-|-------|---------|-------|--------|
-| Deposit | `ADVERTISER_EXTERNAL` | amount | -- |
-| Deposit | `ESCROW:{deal_id}` | -- | amount |
-| Payout | `ESCROW:{deal_id}` | amount | -- |
-| Payout | `OWNER_PENDING:{owner_id}` | -- | owner_payout |
-| Commission | `COMMISSION:{deal_id}` | -- | commission |
-| Sweep | `COMMISSION:{deal_id}` | commission | -- |
-| Sweep | `PLATFORM_TREASURY` | -- | commission |
+| Entry | Account | debit_nano | credit_nano | entry_type |
+|-------|---------|------------|-------------|------------|
+| Deposit | `EXTERNAL_TON` | amount | 0 | ESCROW_DEPOSIT |
+| Deposit | `ESCROW:{deal_id}` | 0 | amount | ESCROW_DEPOSIT |
+| Release | `ESCROW:{deal_id}` | amount | 0 | ESCROW_RELEASE |
+| Payout | `OWNER_PENDING:{owner_id}` | 0 | owner_payout | OWNER_PAYOUT |
+| Commission | `COMMISSION:{deal_id}` | 0 | commission | PLATFORM_COMMISSION |
+| Sweep | `COMMISSION:{deal_id}` | commission | 0 | COMMISSION_SWEEP |
+| Sweep | `PLATFORM_TREASURY` | 0 | commission | COMMISSION_SWEEP |
 
 ---
 

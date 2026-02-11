@@ -78,6 +78,18 @@ The platform exposes two API surfaces: a **public REST API** for the Mini App an
 | `PUT` | `/api/v1/channels/{id}/team/{userId}` | Update rights | Owner |
 | `DELETE` | `/api/v1/channels/{id}/team/{userId}` | Remove member | Owner |
 
+### Wallet (Financial Summary & Withdrawal)
+
+> Платформенного кошелька нет. Все TON-операции привязаны к сделкам (per-deal escrow).
+> Wallet endpoints предоставляют **агрегированный обзор** финансов и вывод заработка.
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| `GET` | `/api/v1/wallet/summary` | Financial summary (aggregated) | Any authenticated |
+| `GET` | `/api/v1/wallet/transactions` | Transaction history | Any authenticated |
+| `GET` | `/api/v1/wallet/transactions/{txId}` | Transaction details | Transaction owner |
+| `POST` | `/api/v1/wallet/withdraw` | Request withdrawal | Channel Owner |
+
 ### Auth
 
 | Method | Path | Description | Auth |
@@ -333,6 +345,104 @@ Opaque Base64-encoded JSON:
 | Deal timeline | 50 | 100 |
 | Creative history | 10 | 20 |
 | Team members | 20 | 50 |
+| Wallet transactions | 20 | 50 |
+
+---
+
+## Wallet Endpoints
+
+### GET /api/v1/wallet/summary — Financial Summary
+
+Aggregated read-model projection from ledger entries. Fields vary by user role.
+
+**Response (200):**
+```json
+{
+  "earnedTotalNano": "900000000000",
+  "pendingPayoutNano": "450000000000",
+  "inEscrowNano": "200000000000",
+  "withdrawnTotalNano": "250000000000",
+  "spentTotalNano": "0",
+  "activeEscrowNano": "0",
+  "activeDealsCount": 2,
+  "completedDealsCount": 5
+}
+```
+
+| Field | Type | Description | Role |
+|-------|------|-------------|------|
+| `earnedTotalNano` | String (bigint) | Total earned all time | Channel Owner |
+| `pendingPayoutNano` | String (bigint) | Available for withdrawal (OWNER_PENDING) | Channel Owner |
+| `inEscrowNano` | String (bigint) | Locked in active deals | Both |
+| `withdrawnTotalNano` | String (bigint) | Total withdrawn all time | Channel Owner |
+| `spentTotalNano` | String (bigint) | Total spent all time | Advertiser |
+| `activeEscrowNano` | String (bigint) | Active escrow as advertiser | Advertiser |
+| `activeDealsCount` | Integer | Active deals count | Both |
+| `completedDealsCount` | Integer | Completed deals count | Both |
+
+Irrelevant fields for role return `"0"`.
+
+### GET /api/v1/wallet/transactions — Transaction History
+
+**Query parameters:** `cursor`, `limit`, `type` (filter), `from` (ISO 8601), `to` (ISO 8601)
+
+**Transaction types:** `escrow_deposit`, `payout`, `withdrawal`, `refund`, `commission`
+
+**Response (200):**
+```json
+{
+  "items": [
+    {
+      "id": "550e8400-...",
+      "type": "payout",
+      "amountNano": "900000000000",
+      "direction": "CREDIT",
+      "dealId": "660f9500-...",
+      "channelTitle": "Crypto News",
+      "txHash": "abc123...",
+      "status": "confirmed",
+      "createdAt": "2025-01-15T10:30:00Z"
+    }
+  ],
+  "nextCursor": "eyJ2IjoxLC...",
+  "hasNext": true
+}
+```
+
+### POST /api/v1/wallet/withdraw — Request Withdrawal
+
+**Required header:** `Idempotency-Key: {uuid}` — generated on form mount, regenerated after success.
+
+Backend deduplication: first request executes and stores `(key, response)` in Redis (TTL 24h). Duplicate returns stored response.
+
+**Request:**
+```json
+{
+  "amountNano": "450000000000",
+  "destinationAddress": "UQBv..."
+}
+```
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `amountNano` | String (bigint) | Yes | > 0, <= pendingPayoutNano |
+| `destinationAddress` | String | Yes | Valid TON address (EQ.../UQ...) |
+
+**Response (202):**
+```json
+{
+  "withdrawalId": "770a0600-...",
+  "status": "PENDING",
+  "estimatedFeeNano": "10000000"
+}
+```
+
+| Status | Description |
+|--------|-------------|
+| `PENDING` | Queued for processing |
+| `SUBMITTED` | Transaction sent to blockchain |
+| `CONFIRMED` | Transaction confirmed |
+| `FAILED` | Transaction failed |
 
 ---
 

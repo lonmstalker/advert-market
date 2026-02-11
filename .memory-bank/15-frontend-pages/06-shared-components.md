@@ -338,7 +338,7 @@ type EmptyStateProps = {
 | Каталог (нет результатов) | `🔍` | `catalog.empty.title` | `catalog.empty.description` | `catalog.empty.cta` | Reset filters |
 | Сделки (рекламодатель) | `📬` | `deals.empty.advertiser.title` | `deals.empty.advertiser.description` | `deals.empty.advertiser.cta` | `/catalog` |
 | Сделки (канал) | `📬` | `deals.empty.channel.title` | `deals.empty.channel.description` | `deals.empty.channel.cta` | `/profile/channels/new` |
-| Кошелёк | `📜` | `wallet.empty.title` | `wallet.empty.description` | `wallet.empty.cta` | `/wallet/top-up` |
+| Финансы | `📜` | `wallet.empty.title` | `wallet.empty.description` | `wallet.empty.cta` | каталог каналов |
 | История (с фильтрами) | `📜` | `wallet.history.empty.title` | `wallet.history.empty.description` | `wallet.history.empty.cta` | Reset filters |
 | Каналы профиля | `📡` | `profile.channels.empty.title` | `profile.channels.empty.description` | `profile.channels.empty.cta` | `/profile/channels/new` |
 | Команда канала | `👥` | `profile.team.empty.title` | `profile.team.empty.description` | `profile.team.empty.cta` | `team/invite` |
@@ -406,10 +406,9 @@ const routes = [
   { path: '/deals/:dealId/dispute', page: 'DisputePage' },
   { path: '/deals/:dealId/dispute/evidence', page: 'DisputeEvidencePage' },
 
-  // Кошелёк (Tab 3)
+  // Финансы (Tab 3)
   { path: '/wallet', page: 'WalletPage' },
-  { path: '/wallet/top-up', page: 'TopUpPage' },
-  { path: '/wallet/withdraw', page: 'WithdrawPage' },
+  { path: '/wallet/withdraw', page: 'WithdrawPage' },       // Channel Owner only
   { path: '/wallet/history', page: 'HistoryPage' },
   { path: '/wallet/history/:txId', page: 'TransactionDetailPage' },
 
@@ -426,7 +425,7 @@ const routes = [
 ];
 ```
 
-**Итого: 28 routes** (3 онбординг + 2 каталог + 10 сделки + 5 кошелёк + 8 профиль).
+**Итого: 27 routes** (3 онбординг + 2 каталог + 10 сделки + 4 финансы + 8 профиль).
 
 Все pages — `lazy()` для code splitting (кроме root layout).
 

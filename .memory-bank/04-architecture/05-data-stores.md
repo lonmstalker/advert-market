@@ -39,7 +39,7 @@ erDiagram
         BIGINT    advertiser_id   FK "→ users.id"
         BIGINT    channel_id      FK "→ channels.id"
         BIGINT    owner_id        FK "→ users.id"
-        VARCHAR   status          "16 states — see state machine"
+        VARCHAR   status          "17 states — see state machine (incl. PARTIALLY_REFUNDED)"
         INT       version         "optimistic locking"
         BIGINT    amount_nano
         VARCHAR   deposit_address
@@ -69,13 +69,15 @@ erDiagram
     %% ── Financial ────────────────────────────────────────────────
 
     ledger_entries {
-        UUID      id              PK "composite PK (id, created_at)"
-        UUID      tx_ref          "groups debit+credit pair"
+        BIGSERIAL id              PK "composite PK (id, created_at)"
+        UUID      tx_ref          "groups debit+credit entries"
         VARCHAR   account_id      "ESCROW:x, OWNER_PENDING:x, etc."
-        VARCHAR   direction       "DEBIT | CREDIT"
-        BIGINT    amount_nano
+        VARCHAR   entry_type      "ESCROW_DEPOSIT, OWNER_PAYOUT, etc."
+        BIGINT    debit_nano      "0 if credit entry"
+        BIGINT    credit_nano     "0 if debit entry"
         UUID      deal_id         FK "→ deals.id"
         VARCHAR   description
+        VARCHAR   idempotency_key UK
         TIMESTAMPTZ created_at    PK "partition key (monthly)"
     }
 
@@ -87,15 +89,20 @@ erDiagram
     }
 
     ton_transactions {
-        VARCHAR   tx_hash         PK "blockchain tx hash = idempotency key"
+        BIGSERIAL id              PK
+        VARCHAR   tx_hash         UK "blockchain tx hash = idempotency key"
         VARCHAR   direction       "IN | OUT"
+        VARCHAR   tx_type         "DEPOSIT | PAYOUT | REFUND | OVERPAYMENT_REFUND"
         BIGINT    amount_nano
+        BIGINT    fee_nano        "actual gas fee from on-chain TX"
         UUID      deal_id         FK "→ deals.id"
         VARCHAR   from_address
         VARCHAR   to_address
         INT       confirmations
         VARCHAR   status          "PENDING | CONFIRMED | FAILED"
+        INT       subwallet_id
         TIMESTAMPTZ created_at
+        TIMESTAMPTZ confirmed_at
     }
 
     audit_log {
@@ -253,15 +260,19 @@ CREATE TABLE deals (
 
 ```sql
 CREATE TABLE ledger_entries (
-    id              UUID NOT NULL,
-    tx_ref          UUID NOT NULL,        -- groups debit+credit pair
-    account_id      VARCHAR(200) NOT NULL, -- e.g., ESCROW:{deal_id}
-    direction       VARCHAR(6) NOT NULL,   -- DEBIT or CREDIT
-    amount_nano     BIGINT NOT NULL,
+    id              BIGSERIAL,
     deal_id         UUID,
+    account_id      VARCHAR(100) NOT NULL,
+    entry_type      VARCHAR(30)  NOT NULL,
+    debit_nano      BIGINT NOT NULL DEFAULT 0 CHECK (debit_nano >= 0),
+    credit_nano     BIGINT NOT NULL DEFAULT 0 CHECK (credit_nano >= 0),
+    tx_ref          UUID NOT NULL,
     description     VARCHAR(500),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id, created_at)
+    idempotency_key VARCHAR(200) NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (id, created_at),
+    CHECK (debit_nano > 0 OR credit_nano > 0),
+    CHECK (NOT (debit_nano > 0 AND credit_nano > 0))
 ) PARTITION BY RANGE (created_at);
 ```
 
@@ -271,10 +282,11 @@ CREATE TABLE ledger_entries (
 
 ```sql
 CREATE TABLE account_balances (
-    account_id      VARCHAR(200) PRIMARY KEY,
-    balance_nano    BIGINT NOT NULL DEFAULT 0,
-    last_entry_id   UUID,
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    account_id      VARCHAR(100) PRIMARY KEY,
+    balance_nano    BIGINT NOT NULL DEFAULT 0,  -- NO CHECK >= 0 (EXTERNAL_TON goes negative)
+    last_entry_id   BIGINT NOT NULL DEFAULT 0,
+    version         INTEGER NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ DEFAULT now()
 );
 ```
 
@@ -282,15 +294,20 @@ CREATE TABLE account_balances (
 
 ```sql
 CREATE TABLE ton_transactions (
-    tx_hash         VARCHAR(100) PRIMARY KEY, -- idempotency key
-    direction       VARCHAR(3) NOT NULL,       -- IN or OUT
-    amount_nano     BIGINT NOT NULL,
-    deal_id         UUID REFERENCES deals(id),
+    id              BIGSERIAL     PRIMARY KEY,
+    deal_id         UUID          REFERENCES deals(id),
+    tx_hash         VARCHAR(100)  UNIQUE,
+    direction       VARCHAR(3)    NOT NULL CHECK (direction IN ('IN', 'OUT')),
+    tx_type         VARCHAR(20)   CHECK (tx_type IN ('DEPOSIT', 'PAYOUT', 'REFUND', 'OVERPAYMENT_REFUND')),
+    amount_nano     BIGINT        NOT NULL CHECK (amount_nano > 0),
     from_address    VARCHAR(100),
     to_address      VARCHAR(100),
-    confirmations   INTEGER DEFAULT 0,
-    status          VARCHAR(20) NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    status          VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
+    confirmations   INTEGER       DEFAULT 0,
+    subwallet_id    INTEGER,
+    version         INTEGER       NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ   DEFAULT now(),
+    confirmed_at    TIMESTAMPTZ
 );
 ```
 

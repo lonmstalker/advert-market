@@ -4,21 +4,35 @@
 
 The ledger is the **source of truth** for all money movement in the platform. It is implemented as an append-only, double-entry journal stored in the `ledger_entries` table.
 
-## Table Schema
+## Table Schema (matches DDL)
 
 ```sql
 CREATE TABLE ledger_entries (
-    id              UUID NOT NULL,
-    tx_ref          UUID NOT NULL,          -- groups debit+credit pair
-    account_id      VARCHAR(200) NOT NULL,  -- e.g., ESCROW:{deal_id}
-    direction       VARCHAR(6) NOT NULL,    -- DEBIT or CREDIT
-    amount_nano     BIGINT NOT NULL,        -- always positive, in nanoTON
-    deal_id         UUID,                   -- FK to deals (nullable for treasury ops)
-    description     VARCHAR(500),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id, created_at)
+    id              BIGSERIAL,
+    deal_id         UUID,
+    account_id      VARCHAR(100) NOT NULL,
+    entry_type      VARCHAR(30)  NOT NULL,
+    debit_nano      BIGINT NOT NULL DEFAULT 0 CHECK (debit_nano >= 0),
+    credit_nano     BIGINT NOT NULL DEFAULT 0 CHECK (credit_nano >= 0),
+    tx_ref          UUID NOT NULL,             -- groups debit+credit entries
+    description     VARCHAR(500),              -- human-readable audit note
+    idempotency_key VARCHAR(200) NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (id, created_at),
+    CHECK (debit_nano > 0 OR credit_nano > 0),
+    CHECK (NOT (debit_nano > 0 AND credit_nano > 0))
 ) PARTITION BY RANGE (created_at);
 ```
+
+### Column Notes
+
+| Column | Description |
+|--------|-------------|
+| `id` | BIGSERIAL — efficient for partitioned tables (not UUID) |
+| `debit_nano` / `credit_nano` | Separate columns — better for SQL aggregation than `direction + amount_nano` |
+| `tx_ref` | Groups related entries; invariant: `SUM(debit_nano) = SUM(credit_nano)` per `tx_ref` |
+| `description` | Optional human-readable note for audit trail |
+| `idempotency_key` | Prevents duplicate entries on retry |
 
 ## Key Design Decisions
 
@@ -39,13 +53,20 @@ CREATE TABLE ledger_entries (
 - Groups related entries into a logical transaction
 - A simple deposit creates 2 entries with the same `tx_ref`
 - A release with commission creates 3 entries with the same `tx_ref`
-- Invariant: `SUM(debits) = SUM(credits)` per `tx_ref`
+- Invariant: `SUM(debit_nano) = SUM(credit_nano)` per `tx_ref`
 
 ### All Amounts in nanoTON
 
 - 1 TON = 10^9 nanoTON
 - BIGINT storage — no floating point, no rounding errors
-- All amounts are positive; direction is indicated by the `direction` column
+- Each row has either `debit_nano > 0` OR `credit_nano > 0`, never both
+
+### Debit/Credit Columns (not direction + amount)
+
+Chosen over `direction VARCHAR + amount_nano BIGINT` for:
+- Simpler SQL aggregation: `SUM(debit_nano)`, `SUM(credit_nano)`
+- No string parsing in queries
+- DB-level CHECK constraints ensure exactly one is positive
 
 ## Entry Patterns
 
@@ -53,40 +74,48 @@ CREATE TABLE ledger_entries (
 
 When advertiser deposits 500 TON:
 
-| id | tx_ref | account_id | direction | amount_nano | description |
-|----|--------|-----------|-----------|-------------|-------------|
-| uuid-a | uuid-tx1 | `EXTERNAL_TON` | DEBIT | 500000000000 | Deposit received for deal-123 |
-| uuid-b | uuid-tx1 | `ESCROW:deal-123` | CREDIT | 500000000000 | Escrow funded |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| uuid-tx1 | `EXTERNAL_TON` | 500_000_000_000 | 0 | ESCROW_DEPOSIT |
+| uuid-tx1 | `ESCROW:deal-123` | 0 | 500_000_000_000 | ESCROW_DEPOSIT |
 
 ### Pattern: Escrow Release (with commission)
 
 When escrow is released after delivery verification:
 
-| id | tx_ref | account_id | direction | amount_nano | description |
-|----|--------|-----------|-----------|-------------|-------------|
-| uuid-c | uuid-tx2 | `ESCROW:deal-123` | DEBIT | 500000000000 | Escrow released |
-| uuid-d | uuid-tx2 | `COMMISSION:deal-123` | CREDIT | 50000000000 | Commission 10% |
-| uuid-e | uuid-tx2 | `OWNER_PENDING:owner-456` | CREDIT | 450000000000 | Owner payout |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| uuid-tx2 | `ESCROW:deal-123` | 500_000_000_000 | 0 | ESCROW_RELEASE |
+| uuid-tx2 | `COMMISSION:deal-123` | 0 | 50_000_000_000 | PLATFORM_COMMISSION |
+| uuid-tx2 | `OWNER_PENDING:owner-456` | 0 | 450_000_000_000 | OWNER_PAYOUT |
 
-Invariant check: 500000000000 = 50000000000 + 450000000000
+Invariant check: 500_000_000_000 = 50_000_000_000 + 450_000_000_000
 
 ### Pattern: Refund
 
 When a dispute is resolved with refund:
 
-| id | tx_ref | account_id | direction | amount_nano | description |
-|----|--------|-----------|-----------|-------------|-------------|
-| uuid-f | uuid-tx3 | `ESCROW:deal-123` | DEBIT | 500000000000 | Escrow refunded |
-| uuid-g | uuid-tx3 | `EXTERNAL_TON` | CREDIT | 500000000000 | Refund to advertiser |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| uuid-tx3 | `ESCROW:deal-123` | 500_000_000_000 | 0 | ESCROW_REFUND |
+| uuid-tx3 | `EXTERNAL_TON` | 0 | 499_995_000_000 | ESCROW_REFUND |
+| uuid-tx3 | `NETWORK_FEES` | 0 | 5_000_000 | NETWORK_FEE_REFUND |
 
 ### Pattern: Commission Sweep to Treasury
 
 Periodic: move accumulated commission to platform treasury:
 
-| id | tx_ref | account_id | direction | amount_nano | description |
-|----|--------|-----------|-----------|-------------|-------------|
-| uuid-h | uuid-tx4 | `COMMISSION:deal-123` | DEBIT | 50000000000 | Commission swept |
-| uuid-i | uuid-tx4 | `PLATFORM_TREASURY` | CREDIT | 50000000000 | Treasury credit |
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| uuid-tx4 | `COMMISSION:deal-123` | 50_000_000_000 | 0 | COMMISSION_SWEEP |
+| uuid-tx4 | `PLATFORM_TREASURY` | 0 | 50_000_000_000 | COMMISSION_SWEEP |
+
+### Pattern: Network Fee (after TX confirmation)
+
+| tx_ref | account_id | debit_nano | credit_nano | entry_type |
+|--------|-----------|------------|-------------|------------|
+| uuid-tx5 | `PLATFORM_TREASURY` | 5_000_000 | 0 | NETWORK_FEE |
+| uuid-tx5 | `NETWORK_FEES` | 0 | 5_000_000 | NETWORK_FEE |
 
 ## Audit Log
 
@@ -94,19 +123,22 @@ Every ledger operation also records to `audit_log`:
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | `UUID` | Audit record ID |
-| `actor_type` | `VARCHAR` | `SYSTEM`, `USER`, `OPERATOR` |
+| `id` | `BIGSERIAL` | Audit record ID |
 | `actor_id` | `BIGINT` | Who triggered the operation |
-| `operation` | `VARCHAR` | `ESCROW_FUND`, `ESCROW_RELEASE`, `REFUND`, etc. |
-| `tx_ref` | `UUID` | Reference to ledger entries |
-| `deal_id` | `UUID` | Deal reference |
-| `payload` | `JSONB` | Full operation details |
+| `action` | `VARCHAR(100)` | `ESCROW_FUND`, `ESCROW_RELEASE`, `REFUND`, etc. |
+| `entity_type` | `VARCHAR(50)` | Entity type |
+| `entity_id` | `VARCHAR(100)` | Entity reference |
+| `tx_ref` | `UUID` | Reference to ledger entries (added in 006-financial-fixes) |
+| `old_value` | `JSONB` | Previous state |
+| `new_value` | `JSONB` | New state |
 | `created_at` | `TIMESTAMPTZ` | Timestamp |
 
 ## Related Documents
 
 - [Double-Entry Ledger Pattern](../05-patterns-and-decisions/05-double-entry-ledger.md)
 - [Account Types](./05-account-types.md) — all account identifiers
+- [Entry Type Catalog](./07-entry-type-catalog.md) — complete entry_type enumeration
+- [NETWORK_FEES Account](./08-network-fees-account.md) — gas fee tracking
 - [CQRS](../05-patterns-and-decisions/02-cqrs.md) — read model projection
 - [Escrow Flow](./02-escrow-flow.md) — how ledger entries flow in escrow operations
 - [Reconciliation](./04-reconciliation.md) — invariant verification

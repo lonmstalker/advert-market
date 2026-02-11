@@ -79,6 +79,15 @@ content_hash = "sha256:" + SHA256(hash_input.getBytes(UTF_8)).toHex()
 Each check retried 3 times with exponential backoff (2s, 4s, 8s).
 If all retries fail -> schedule recheck in 30 minutes.
 
+### 24h Timeout with Unresolved Checks
+
+If the 24h deadline is reached and verification checks could not complete (API errors, channel unreachable):
+- **DO NOT auto-approve** (COMPLETED_RELEASED) — this would release escrow without verification
+- **Transition to DISPUTED** with reason `VERIFICATION_INCONCLUSIVE`
+- Operator manually resolves after investigating
+
+> **Rationale**: Auto-approve on API error is a money-loss vector. Owner could delete post + block bot, and auto-approve would still release funds.
+
 ---
 
 ## Failure Detection

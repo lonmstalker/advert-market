@@ -89,11 +89,17 @@ Rate exceeded -> HTTP 429. Strategy: token bucket limiter on our side.
 Each deal gets a unique deposit address derived from a single platform mnemonic using different `subwallet_id`:
 
 ```
-subwallet_id = Math.abs(dealId.hashCode())
+subwallet_id = nextval('deal_subwallet_seq')   -- DB sequence, guaranteed unique
 wallet = WalletV4R2(publicKey, subwalletId) -> unique address per deal
 ```
 
-This avoids managing multiple private keys -- one mnemonic generates all addresses.
+This avoids managing multiple private keys — one mnemonic generates all addresses.
+
+**IMPORTANT**: Previous design used `Math.abs(dealId.hashCode())` which had two critical flaws:
+1. `Math.abs(Integer.MIN_VALUE)` returns negative (Java overflow)
+2. Birthday paradox: 32-bit space -> 50% collision at ~65K deals
+
+**Fix (006-financial-fixes.sql)**: DB sequence `deal_subwallet_seq` + `UNIQUE` constraint on `deals.subwallet_id`.
 
 ### Key Storage
 

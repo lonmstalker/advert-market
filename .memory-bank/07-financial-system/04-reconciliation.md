@@ -36,17 +36,17 @@ flowchart TB
 
 ### Check 1: Ledger Self-Balance
 
-**Invariant**: `SUM(all DEBIT amounts) = SUM(all CREDIT amounts)`
+**Invariant**: `SUM(all debits) = SUM(all credits)`
 
 ```sql
 SELECT
-    SUM(CASE WHEN direction = 'DEBIT' THEN amount_nano ELSE 0 END) AS total_debits,
-    SUM(CASE WHEN direction = 'CREDIT' THEN amount_nano ELSE 0 END) AS total_credits
+    COALESCE(SUM(debit_nano), 0)  AS total_debits,
+    COALESCE(SUM(credit_nano), 0) AS total_credits
 FROM ledger_entries;
 -- total_debits MUST equal total_credits
 ```
 
-Also per-transaction: for each `tx_ref`, debits = credits.
+Also per-transaction: for each `tx_ref`, `SUM(debit_nano) = SUM(credit_nano)`.
 
 ### Check 2: Ledger vs TON Blockchain
 
@@ -75,12 +75,14 @@ Verifies CQRS read model consistency:
 
 ```sql
 -- For each account, verify materialized balance matches ledger
-SELECT account_id,
-    (SELECT SUM(CASE WHEN direction='CREDIT' THEN amount_nano ELSE -amount_nano END)
-     FROM ledger_entries WHERE account_id = ab.account_id) AS calculated,
+SELECT
+    ab.account_id,
+    COALESCE(SUM(le.credit_nano) - SUM(le.debit_nano), 0) AS calculated,
     ab.balance_nano AS materialized
 FROM account_balances ab
-WHERE calculated != materialized;
+LEFT JOIN ledger_entries le ON le.account_id = ab.account_id
+GROUP BY ab.account_id, ab.balance_nano
+HAVING ab.balance_nano != COALESCE(SUM(le.credit_nano) - SUM(le.debit_nano), 0);
 -- Should return 0 rows
 ```
 

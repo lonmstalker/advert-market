@@ -65,8 +65,10 @@
 | [07-financial-system/02-escrow-flow.md](./07-financial-system/02-escrow-flow.md) | Escrow mechanics: address to payout |
 | [07-financial-system/03-commission-model.md](./07-financial-system/03-commission-model.md) | 10% commission, configurability |
 | [07-financial-system/04-reconciliation.md](./07-financial-system/04-reconciliation.md) | Three-way reconciliation: ledger vs TON vs deals |
-| [07-financial-system/05-account-types.md](./07-financial-system/05-account-types.md) | PLATFORM_TREASURY, ESCROW:{id}, OWNER_PENDING:{id} |
+| [07-financial-system/05-account-types.md](./07-financial-system/05-account-types.md) | PLATFORM_TREASURY, ESCROW, OWNER_PENDING, EXTERNAL_TON, NETWORK_FEES, OVERPAYMENT, LATE_DEPOSIT |
 | [07-financial-system/06-confirmation-policy.md](./07-financial-system/06-confirmation-policy.md) | Tiered policy: <=100 TON->1, <=1000->3, >1000->5+review |
+| [07-financial-system/07-entry-type-catalog.md](./07-financial-system/07-entry-type-catalog.md) | Complete entry_type enumeration for ledger_entries |
+| [07-financial-system/08-network-fees-account.md](./07-financial-system/08-network-fees-account.md) | NETWORK_FEES expense account for TON gas fees |
 
 ### Module Architecture & Conventions
 
@@ -83,7 +85,7 @@
 | [15-frontend-pages/01-onboarding.md](./15-frontend-pages/01-onboarding.md) | Onboarding: welcome, interest, tour (3 screens) |
 | [15-frontend-pages/02-catalog.md](./15-frontend-pages/02-catalog.md) | Catalog: channel list, filters, channel detail, create deal |
 | [15-frontend-pages/03-deals.md](./15-frontend-pages/03-deals.md) | Deals: list, detail, negotiate, brief, creative, review, schedule, payment, dispute |
-| [15-frontend-pages/04-wallet.md](./15-frontend-pages/04-wallet.md) | Wallet: balance, top-up, withdraw, history, transaction detail |
+| [15-frontend-pages/04-wallet.md](./15-frontend-pages/04-wallet.md) | Финансы: summary, withdraw (owner only), history, transaction detail |
 | [15-frontend-pages/05-profile.md](./15-frontend-pages/05-profile.md) | Profile: settings, channel registration, management, team |
 | [15-frontend-pages/06-shared-components.md](./15-frontend-pages/06-shared-components.md) | Shared: sheets, modals, toasts, skeletons, empty states, navigation, routing |
 
@@ -136,7 +138,13 @@
 | [14-implementation-specs/33-partition-automation.md](./14-implementation-specs/33-partition-automation.md) | Partition Auto-Creation & Archival |
 | [14-implementation-specs/35-deal-workflow-engine.md](./14-implementation-specs/35-deal-workflow-engine.md) | Deal Workflow Engine (post-transition side-effects) |
 | [14-implementation-specs/36-logging-strategy.md](./14-implementation-specs/36-logging-strategy.md) | Structured Logging, Redaction & Retention |
+| [14-implementation-specs/37-hot-wallet-management.md](./14-implementation-specs/37-hot-wallet-management.md) | Treasury wallet monitoring, balance alerts, replenishment |
+| [14-implementation-specs/38-network-fee-accounting.md](./14-implementation-specs/38-network-fee-accounting.md) | NETWORK_FEES account, gas fee ledger entries, reconciliation |
+| [14-implementation-specs/39-late-deposit-handling.md](./14-implementation-specs/39-late-deposit-handling.md) | Auto-refund for deposits to expired/cancelled deals |
+| [14-implementation-specs/40-payout-wallet-architecture.md](./14-implementation-specs/40-payout-wallet-architecture.md) | Subwallet -> recipient direct payout, commission sweep |
+| [14-implementation-specs/41-unclaimed-payouts.md](./14-implementation-specs/41-unclaimed-payouts.md) | Owner without TON address: notifications, 30-day timeout |
+| [14-implementation-specs/42-partial-refund-accounting.md](./14-implementation-specs/42-partial-refund-accounting.md) | Time-based split, PARTIALLY_REFUNDED state, commission rules |
 
 ---
 
-*Generated from C4 architecture model (`architecture/banking/`). 81 files total.*
+*Generated from C4 architecture model. 89 files total.*

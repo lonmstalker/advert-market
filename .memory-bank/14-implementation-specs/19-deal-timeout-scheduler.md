@@ -38,12 +38,14 @@ WHERE id = :deal_id;
 
 | State | Timeout | Action on Expiry |
 |-------|---------|-----------------|
-| PENDING_REVIEW | 48h | EXPIRE (no refund needed) |
+| OFFER_PENDING | 48h | EXPIRE (no refund needed) |
+| NEGOTIATING | 72h | EXPIRE (no refund needed) |
 | AWAITING_PAYMENT | 24h | EXPIRE (no refund needed) |
-| AWAITING_CREATIVE | 72h | EXPIRE + REFUND |
-| CREATIVE_REVIEW | 48h | Auto-approve creative |
-| AWAITING_PUBLICATION | 48h | EXPIRE + REFUND |
-| PUBLISHED | 24h | Auto-verify (if all checks pass) |
+| FUNDED | 72h | EXPIRE + REFUND |
+| CREATIVE_SUBMITTED | 48h | EXPIRE + REFUND |
+| CREATIVE_APPROVED | 48h | EXPIRE + REFUND |
+| SCHEDULED | 24h | EXPIRE + REFUND |
+| DELIVERY_VERIFYING | 24h | COMPLETED_RELEASED (if verified) / DISPUTED (if API error) |
 | DISPUTED | 7 days | Escalate to operator |
 
 ### Configuration
@@ -51,12 +53,14 @@ WHERE id = :deal_id;
 ```yaml
 deal:
   timeouts:
-    pending-review: 48h
+    offer-pending: 48h
+    negotiating: 72h
     awaiting-payment: 24h
-    awaiting-creative: 72h
-    creative-review: 48h
-    awaiting-publication: 48h
-    published: 24h
+    funded: 72h
+    creative-submitted: 48h
+    creative-approved: 48h
+    scheduled: 24h
+    delivery-verifying: 24h
     disputed: 168h  # 7 days
   scheduler:
     poll-interval: 30s
@@ -71,7 +75,7 @@ deal:
 SELECT id, status, deadline_at
 FROM deals
 WHERE deadline_at <= now()
-  AND status NOT IN ('COMPLETED', 'CANCELLED', 'REFUNDED', 'EXPIRED')
+  AND status NOT IN ('COMPLETED_RELEASED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED', 'EXPIRED')
 ORDER BY deadline_at ASC
 LIMIT :batchSize
 FOR UPDATE SKIP LOCKED;
