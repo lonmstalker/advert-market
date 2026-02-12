@@ -8,6 +8,7 @@ import com.advertmarket.shared.exception.InsufficientBalanceException;
 import com.advertmarket.shared.exception.InvalidStateTransitionException;
 import com.advertmarket.shared.i18n.LocalizationService;
 import com.advertmarket.shared.metric.MetricsFacade;
+import com.advertmarket.shared.metric.MetricNames;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Locale;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -74,6 +76,23 @@ public class GlobalExceptionHandler
                 ? code.httpStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR.value();
         return buildProblem(ex, code, status, locale);
+    }
+
+    /** Safety net for access denied propagated through @PreAuthorize. */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(
+            AccessDeniedException ex) {
+        log.debug("Access denied in controller advice: {}",
+                ex.getMessage());
+        metrics.incrementCounter(MetricNames.AUTH_ACCESS_DENIED);
+        var code = ErrorCode.AUTH_INSUFFICIENT_PERMISSIONS;
+        var problem = ProblemDetail.forStatus(code.httpStatus());
+        problem.setType(URI.create(code.typeUri()));
+        problem.setTitle("Access denied");
+        problem.setDetail(
+                "You do not have permission to perform this action");
+        addCommonProperties(problem, code.name());
+        return problem;
     }
 
     /** Handles all unexpected exceptions. */

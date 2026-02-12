@@ -59,6 +59,14 @@
         "taskDone": "✓ Так работает безопасный эскроу!"
       },
       "mockup": {
+        "dealTimeline": "Таймлайн сделки",
+        "statusCompleted": "завершён",
+        "statusActive": "текущий",
+        "statusPending": "ожидание",
+        "channelName1": "Crypto News Daily",
+        "channelName2": "Tech Digest",
+        "channelName3": "AI Weekly",
+        "reach": "15K",
         "searchPlaceholder": "Поиск каналов...",
         "popular": "Популярные",
         "subscribers": "{{count}} подписчиков",

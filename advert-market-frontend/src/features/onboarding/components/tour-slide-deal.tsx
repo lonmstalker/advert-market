@@ -208,7 +208,7 @@ export function TourSlideDeal() {
         <AnimatePresence mode="wait">
           {dealView === 'timeline' ? (
             <motion.div key="timeline" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <ChannelHeader emoji="📰" name="Crypto News Daily" detail="50.00 TON" />
+              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="50.00 TON" />
 
               <AnimatePresence mode="wait">
                 <motion.div
@@ -252,6 +252,8 @@ export function TourSlideDeal() {
               <AnimatePresence>
                 {dealState === 'approved' && (
                   <motion.div
+                    role="status"
+                    aria-live="polite"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}

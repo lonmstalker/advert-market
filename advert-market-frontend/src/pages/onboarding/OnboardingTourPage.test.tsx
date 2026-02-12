@@ -1,3 +1,4 @@
+import { act } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { useOnboardingStore } from '@/features/onboarding';
 import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
@@ -8,13 +9,17 @@ vi.mock('@telegram-apps/sdk-react', () => ({
 }));
 
 function completeTask(index: number) {
-  useOnboardingStore.getState().completeTourTask(index);
+  act(() => {
+    useOnboardingStore.getState().completeTourTask(index);
+  });
 }
 
 describe('OnboardingTourPage', () => {
   beforeEach(() => {
-    useOnboardingStore.getState().reset();
-    useOnboardingStore.getState().toggleInterest('advertiser');
+    act(() => {
+      useOnboardingStore.getState().reset();
+      useOnboardingStore.getState().toggleInterest('advertiser');
+    });
     sessionStorage.setItem('access_token', 'test-token');
   });
 
@@ -107,7 +112,9 @@ describe('OnboardingTourPage', () => {
   });
 
   it('redirects to /onboarding/interest when interests are empty', () => {
-    useOnboardingStore.getState().reset();
+    act(() => {
+      useOnboardingStore.getState().reset();
+    });
     renderPage();
     expect(screen.getByText('interest-page')).toBeInTheDocument();
   });

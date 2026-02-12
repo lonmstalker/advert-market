@@ -39,7 +39,7 @@ export function TourSlideCatalog() {
               <MockupSearchBar placeholder={t('onboarding.tour.mockup.searchPlaceholder')} />
               <Group header={t('onboarding.tour.mockup.popular')}>
                 <GroupItem
-                  text="Crypto News Daily"
+                  text={t('onboarding.tour.mockup.channelName1')}
                   description={t('onboarding.tour.mockup.subscribers', { count: '125K' })}
                   after={
                     <Text type="caption1" color="accent">
@@ -50,7 +50,7 @@ export function TourSlideCatalog() {
                   onClick={handleChannelClick}
                 />
                 <GroupItem
-                  text="Tech Digest"
+                  text={t('onboarding.tour.mockup.channelName2')}
                   description={t('onboarding.tour.mockup.subscribers', { count: '89K' })}
                   after={
                     <Text type="caption1" color="accent">
@@ -60,7 +60,7 @@ export function TourSlideCatalog() {
                   chevron
                 />
                 <GroupItem
-                  text="AI Weekly"
+                  text={t('onboarding.tour.mockup.channelName3')}
                   description={t('onboarding.tour.mockup.subscribers', { count: '67K' })}
                   after={
                     <Text type="caption1" color="accent">
@@ -81,7 +81,7 @@ export function TourSlideCatalog() {
             >
               <Group>
                 <GroupItem
-                  text="Crypto News Daily"
+                  text={t('onboarding.tour.mockup.channelName1')}
                   description={t('onboarding.tour.mockup.subscribers', { count: '125K' })}
                   before={
                     <div
@@ -117,16 +117,19 @@ export function TourSlideCatalog() {
                     </Text>
                   }
                 />
-                <GroupItem text={t('onboarding.tour.mockup.avgReach')} after={<Text type="body">15K</Text>} />
+                <GroupItem
+                  text={t('onboarding.tour.mockup.avgReach')}
+                  after={<Text type="body">{t('onboarding.tour.mockup.reach')}</Text>}
+                />
               </Group>
               <div style={{ marginTop: '8px' }}>
                 <Button text={t('onboarding.tour.mockup.createDeal')} type="primary" disabled />
               </div>
-              <div style={{ textAlign: 'center', marginTop: '8px' }}>
+              <output aria-live="polite" style={{ display: 'block', textAlign: 'center', marginTop: '8px' }}>
                 <Text type="caption1" color="accent">
                   {t('onboarding.tour.slide1.taskDone')}
                 </Text>
-              </div>
+              </output>
               <MockupTextButton text={t('onboarding.tour.mockup.backToList')} onClick={() => setShowDetail(false)} />
             </motion.div>
           )}

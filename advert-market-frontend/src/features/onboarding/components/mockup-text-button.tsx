@@ -11,6 +11,7 @@ export function MockupTextButton({ text, color = 'secondary', onClick }: MockupT
   return (
     <motion.button
       type="button"
+      className="focusable"
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
       style={{
@@ -22,7 +23,6 @@ export function MockupTextButton({ text, color = 'secondary', onClick }: MockupT
         WebkitTapHighlightColor: 'transparent',
         background: 'none',
         border: 'none',
-        outline: 'none',
       }}
     >
       <Text type="caption1" color={color}>

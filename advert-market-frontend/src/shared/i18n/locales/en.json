@@ -59,6 +59,14 @@
         "taskDone": "✓ That's how secure escrow works!"
       },
       "mockup": {
+        "dealTimeline": "Deal timeline",
+        "statusCompleted": "completed",
+        "statusActive": "active",
+        "statusPending": "pending",
+        "channelName1": "Crypto News Daily",
+        "channelName2": "Tech Digest",
+        "channelName3": "AI Weekly",
+        "reach": "15K",
         "searchPlaceholder": "Search channels...",
         "popular": "Popular",
         "subscribers": "{{count}} subscribers",

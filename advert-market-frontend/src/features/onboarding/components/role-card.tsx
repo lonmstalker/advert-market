@@ -22,6 +22,7 @@ export function RoleCard({ emoji, title, hint, isSelected, onToggle, children }:
     <motion.div {...pressScale}>
       <button
         type="button"
+        className="focusable"
         onClick={onToggle}
         style={{
           display: 'flex',
@@ -37,7 +38,6 @@ export function RoleCard({ emoji, title, hint, isSelected, onToggle, children }:
           width: '100%',
           transition: 'border-color 0.15s ease, background-color 0.15s ease',
           WebkitTapHighlightColor: 'transparent',
-          outline: 'none',
           overflow: 'hidden',
         }}
       >

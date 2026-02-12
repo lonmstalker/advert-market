@@ -93,7 +93,7 @@ export function TourSlideWallet() {
         <AnimatePresence mode="wait">
           {view === 'details' && (
             <motion.div key="details" exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
-              <ChannelHeader emoji="📰" name="Crypto News Daily" detail="50.00 TON" />
+              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="50.00 TON" />
 
               <Group header={t('onboarding.tour.mockup.paymentStatus')}>
                 <GroupItem
@@ -153,11 +153,11 @@ export function TourSlideWallet() {
                 />
               </div>
 
-              <div style={{ textAlign: 'center', marginTop: '4px' }}>
+              <output aria-live="polite" style={{ display: 'block', textAlign: 'center', marginTop: '4px' }}>
                 <Text type="caption1" color="accent">
                   {t('onboarding.tour.slide3.taskDone')}
                 </Text>
-              </div>
+              </output>
 
               <MockupTextButton
                 text={t('onboarding.tour.policy.link')}

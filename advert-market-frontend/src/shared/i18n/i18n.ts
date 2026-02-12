@@ -4,6 +4,10 @@ import en from './locales/en.json';
 import ru from './locales/ru.json';
 
 export function detectLanguage(): string {
+  // 0. Forced locale for E2E tests
+  const forced = import.meta.env.VITE_FORCE_LOCALE;
+  if (forced === 'en' || forced === 'ru') return forced;
+
   // 1. Telegram Mini App language
   try {
     const tg = window.Telegram?.WebApp;

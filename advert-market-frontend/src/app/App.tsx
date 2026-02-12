@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Spinner, ThemeProvider, ToastProvider } from '@telegram-tools/ui-kit';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
+import { MotionConfig } from 'motion/react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { AuthGuard, ErrorBoundary } from '@/shared/ui';
@@ -55,39 +56,41 @@ export function App() {
   const theme = useTelegramTheme();
 
   return (
-    <TonConnectUIProvider manifestUrl={TON_MANIFEST_URL}>
-      <ThemeProvider theme={theme}>
-        <ToastProvider>
-          <QueryClientProvider client={queryClient}>
-            <ErrorBoundary>
-              <BrowserRouter>
-                <DeepLinkHandler />
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/onboarding" element={<OnboardingLayout />}>
-                      <Route index element={<OnboardingPage />} />
-                      <Route path="interest" element={<OnboardingInterestPage />} />
-                      <Route path="tour" element={<OnboardingTourPage />} />
-                    </Route>
-
-                    <Route element={<AuthGuard />}>
-                      <Route element={<TabLayout />}>
-                        <Route path="/catalog" element={<CatalogPage />} />
-                        <Route path="/deals" element={<DealsPage />} />
-                        <Route path="/wallet" element={<WalletPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
+    <MotionConfig reducedMotion="user">
+      <TonConnectUIProvider manifestUrl={TON_MANIFEST_URL}>
+        <ThemeProvider theme={theme}>
+          <ToastProvider>
+            <QueryClientProvider client={queryClient}>
+              <ErrorBoundary>
+                <BrowserRouter>
+                  <DeepLinkHandler />
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      <Route path="/onboarding" element={<OnboardingLayout />}>
+                        <Route index element={<OnboardingPage />} />
+                        <Route path="interest" element={<OnboardingInterestPage />} />
+                        <Route path="tour" element={<OnboardingTourPage />} />
                       </Route>
-                    </Route>
 
-                    <Route path="*" element={<Navigate to="/catalog" replace />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </ErrorBoundary>
-          </QueryClientProvider>
-        </ToastProvider>
-      </ThemeProvider>
-    </TonConnectUIProvider>
+                      <Route element={<AuthGuard />}>
+                        <Route element={<TabLayout />}>
+                          <Route path="/catalog" element={<CatalogPage />} />
+                          <Route path="/deals" element={<DealsPage />} />
+                          <Route path="/wallet" element={<WalletPage />} />
+                          <Route path="/profile" element={<ProfilePage />} />
+                        </Route>
+                      </Route>
+
+                      <Route path="*" element={<Navigate to="/catalog" replace />} />
+                    </Routes>
+                  </Suspense>
+                </BrowserRouter>
+              </ErrorBoundary>
+            </QueryClientProvider>
+          </ToastProvider>
+        </ThemeProvider>
+      </TonConnectUIProvider>
+    </MotionConfig>
   );
 }
 

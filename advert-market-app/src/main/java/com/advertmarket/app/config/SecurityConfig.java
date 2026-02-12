@@ -1,11 +1,13 @@
 package com.advertmarket.app.config;
 
+import com.advertmarket.app.error.SecurityExceptionHandler;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,11 +20,13 @@ import org.springframework.web.cors.CorsConfiguration;
  */
 @Configuration
 @RequiredArgsConstructor
+@EnableMethodSecurity
 @EnableConfigurationProperties(CorsProperties.class)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsProperties corsProperties;
+    private final SecurityExceptionHandler securityExceptionHandler;
 
     /** Configures the HTTP security filter chain. */
     @Bean
@@ -66,6 +70,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/**")
                         .authenticated()
                         .anyRequest().denyAll())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(
+                                securityExceptionHandler)
+                        .accessDeniedHandler(
+                                securityExceptionHandler))
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class)
                 .build();

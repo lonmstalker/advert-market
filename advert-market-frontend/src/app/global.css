@@ -22,3 +22,9 @@ body {
 [class*="_type-secondary_"][class*="_button_"] {
   color: var(--color-accent-primary);
 }
+
+/* Focus-visible outline for custom interactive elements */
+.focusable:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}

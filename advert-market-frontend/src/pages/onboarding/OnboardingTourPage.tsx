@@ -167,6 +167,8 @@ export default function OnboardingTourPage() {
         <AnimatePresence>
           {!isLastSlide && !taskDone && (
             <motion.div
+              role="status"
+              aria-live="polite"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -183,6 +185,7 @@ export default function OnboardingTourPage() {
         <AnimatePresence>
           {showError && (
             <motion.div
+              role="alert"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -199,6 +202,7 @@ export default function OnboardingTourPage() {
         {!isLastSlide && (
           <button
             type="button"
+            className="focusable"
             onClick={handleSkip}
             disabled={mutation.isPending}
             style={{
@@ -208,7 +212,6 @@ export default function OnboardingTourPage() {
               WebkitTapHighlightColor: 'transparent',
               background: 'none',
               border: 'none',
-              outline: 'none',
             }}
           >
             <Text type="subheadline1" color="secondary" align="center">

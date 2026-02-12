@@ -1,11 +1,11 @@
 package com.advertmarket.identity.security;
 
 import com.advertmarket.shared.model.UserId;
+import com.advertmarket.shared.security.PrincipalAuthentication;
 import java.util.Collection;
 import java.util.List;
 import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
 /**
@@ -15,7 +15,7 @@ import org.springframework.security.core.GrantedAuthority;
  * for downstream authorization decisions.
  */
 @Getter
-public class TelegramAuthentication implements Authentication {
+public class TelegramAuthentication implements PrincipalAuthentication {
 
     private final @NonNull UserId userId;
     private final boolean operator;

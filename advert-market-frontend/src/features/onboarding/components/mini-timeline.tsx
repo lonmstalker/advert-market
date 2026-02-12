@@ -1,5 +1,6 @@
 import { Icon, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 type TimelineStep = {
   label: string;
@@ -15,9 +16,17 @@ type MiniTimelineProps = {
 };
 
 export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick }: MiniTimelineProps) {
+  const { t } = useTranslation();
+
+  const statusLabels: Record<string, string> = {
+    completed: t('onboarding.tour.mockup.statusCompleted'),
+    active: t('onboarding.tour.mockup.statusActive'),
+    pending: t('onboarding.tour.mockup.statusPending'),
+  };
+
   return (
     <ul
-      aria-label="Deal timeline"
+      aria-label={t('onboarding.tour.mockup.dealTimeline')}
       style={{ display: 'flex', flexDirection: 'column', gap: '0', padding: '8px 0', listStyle: 'none', margin: 0 }}
     >
       {steps.map((step, i) => {
@@ -110,8 +119,9 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
             <div style={{ flex: 1, minWidth: 0 }}>
               <button
                 type="button"
+                className="focusable"
                 aria-expanded={isExpanded}
-                aria-label={`${step.label} — ${step.status}`}
+                aria-label={`${step.label} — ${statusLabels[step.status] ?? step.status}`}
                 onClick={isClickable ? handleClick : undefined}
                 style={{
                   display: 'block',
@@ -123,7 +133,6 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
                   borderRadius: isActive ? '8px' : '0',
                   textAlign: 'left',
                   WebkitTapHighlightColor: 'transparent',
-                  outline: 'none',
                   marginBottom: isExpanded ? '0' : '8px',
                 }}
               >

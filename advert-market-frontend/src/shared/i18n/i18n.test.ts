@@ -5,6 +5,27 @@ describe('detectLanguage', () => {
   afterEach(() => {
     removeTelegramMock();
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it('returns forced locale "en" from VITE_FORCE_LOCALE', () => {
+    vi.stubEnv('VITE_FORCE_LOCALE', 'en');
+    installTelegramMock({
+      initDataUnsafe: { user: { language_code: 'ru' } },
+    });
+    expect(detectLanguage()).toBe('en');
+  });
+
+  it('returns forced locale "ru" from VITE_FORCE_LOCALE', () => {
+    vi.stubEnv('VITE_FORCE_LOCALE', 'ru');
+    vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US');
+    expect(detectLanguage()).toBe('ru');
+  });
+
+  it('ignores invalid VITE_FORCE_LOCALE value', () => {
+    vi.stubEnv('VITE_FORCE_LOCALE', 'de');
+    vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US');
+    expect(detectLanguage()).toBe('ru');
   });
 
   it('returns "ru" for Telegram user with language_code "ru"', () => {

@@ -17,6 +17,8 @@ public final class MetricNames {
             "auth.blocked.access";
     public static final @Fenum(FenumGroup.METRIC_NAME) String AUTH_RATE_LIMITER_REDIS_ERROR =
             "auth.rate_limiter.redis_error";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String AUTH_ACCESS_DENIED =
+            "auth.access.denied";
 
     // --- Account ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String ACCOUNT_DELETED =
@@ -67,6 +69,12 @@ public final class MetricNames {
     // --- System ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_PUBLISHED =
             "outbox.published";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_POLL_COUNT =
+            "outbox.poll.count";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_RECORDS_FAILED =
+            "outbox.records.failed";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_LAG =
+            "outbox.lag";
     public static final @Fenum(FenumGroup.METRIC_NAME) String LOCK_ACQUIRED =
             "lock.acquired";
     public static final @Fenum(FenumGroup.METRIC_NAME) String LOCK_TIMEOUT =
