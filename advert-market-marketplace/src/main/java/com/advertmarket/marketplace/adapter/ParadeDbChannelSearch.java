@@ -17,11 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.Field;
 import org.jooq.OrderField;
 import org.jooq.Record;
-import org.jooq.SelectConditionStep;
-import org.jooq.SortField;
+import org.jooq.Result;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +60,7 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         // n+1 pattern: fetch one extra to determine hasNext
         int fetchLimit = criteria.limit() + 1;
 
-        List<Record> records = dsl.select(
+        var records = dsl.select(
                         CHANNELS.ID,
                         CHANNELS.TITLE,
                         CHANNELS.USERNAME,
