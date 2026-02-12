@@ -1,7 +1,7 @@
 package com.advertmarket.communication.channel;
 
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAN_BOT_NOT_MEMBER;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
 import static com.advertmarket.shared.exception.ErrorCodes.RATE_LIMIT_EXCEEDED;
 import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
 import static com.advertmarket.shared.metric.MetricNames.CHANNEL_API_CALL;
@@ -197,7 +197,7 @@ public class TelegramChannelService implements TelegramChannelPort {
                     "Channel not found: " + channelId);
         }
         if (errorCode == HttpStatus.FORBIDDEN.value()) {
-            throw new DomainException(CHAN_BOT_NOT_MEMBER,
+            throw new DomainException(CHANNEL_BOT_NOT_MEMBER,
                     "Bot is not a member of channel " + channelId);
         }
         throw new DomainException(SERVICE_UNAVAILABLE,

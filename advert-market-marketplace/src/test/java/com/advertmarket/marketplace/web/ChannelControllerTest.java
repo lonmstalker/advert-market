@@ -95,7 +95,7 @@ class ChannelControllerTest {
     void shouldPropagateVerifyException() {
         when(registrationService.verify(any(), anyLong()))
                 .thenThrow(new DomainException(
-                        ErrorCodes.CHAN_BOT_NOT_MEMBER,
+                        ErrorCodes.CHANNEL_BOT_NOT_MEMBER,
                         "Bot is not a member"));
 
         assertThatThrownBy(() ->
@@ -106,7 +106,7 @@ class ChannelControllerTest {
                 .rootCause()
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
-                .isEqualTo(ErrorCodes.CHAN_BOT_NOT_MEMBER);
+                .isEqualTo(ErrorCodes.CHANNEL_BOT_NOT_MEMBER);
     }
 
     @Test

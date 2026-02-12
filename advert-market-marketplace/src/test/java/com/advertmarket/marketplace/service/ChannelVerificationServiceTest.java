@@ -1,10 +1,10 @@
 package com.advertmarket.marketplace.service;
 
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAN_BOT_INSUFFICIENT_RIGHTS;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAN_BOT_NOT_ADMIN;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAN_BOT_NOT_MEMBER;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAT_USER_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_INSUFFICIENT_RIGHTS;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -55,7 +55,7 @@ class ChannelVerificationServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw CHAN_BOT_NOT_MEMBER when bot is left")
+    @DisplayName("Should throw CHANNEL_BOT_NOT_MEMBER when bot is left")
     void shouldRejectBotNotMember() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
@@ -69,11 +69,11 @@ class ChannelVerificationServiceTest {
         assertThatThrownBy(() -> service.verify(USERNAME, USER_ID))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
-                .isEqualTo(CHAN_BOT_NOT_MEMBER);
+                .isEqualTo(CHANNEL_BOT_NOT_MEMBER);
     }
 
     @Test
-    @DisplayName("Should throw CHAN_BOT_NOT_ADMIN when bot is regular member")
+    @DisplayName("Should throw CHANNEL_BOT_NOT_ADMIN when bot is regular member")
     void shouldRejectBotNotAdmin() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
@@ -87,11 +87,11 @@ class ChannelVerificationServiceTest {
         assertThatThrownBy(() -> service.verify(USERNAME, USER_ID))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
-                .isEqualTo(CHAN_BOT_NOT_ADMIN);
+                .isEqualTo(CHANNEL_BOT_NOT_ADMIN);
     }
 
     @Test
-    @DisplayName("Should throw CHAN_BOT_INSUFFICIENT_RIGHTS when bot cannot post")
+    @DisplayName("Should throw CHANNEL_BOT_INSUFFICIENT_RIGHTS when bot cannot post")
     void shouldRejectBotInsufficientRights() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
@@ -107,11 +107,11 @@ class ChannelVerificationServiceTest {
         assertThatThrownBy(() -> service.verify(USERNAME, USER_ID))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
-                .isEqualTo(CHAN_BOT_INSUFFICIENT_RIGHTS);
+                .isEqualTo(CHANNEL_BOT_INSUFFICIENT_RIGHTS);
     }
 
     @Test
-    @DisplayName("Should throw CHAT_USER_NOT_ADMIN when user is regular member")
+    @DisplayName("Should throw CHANNEL_USER_NOT_ADMIN when user is regular member")
     void shouldRejectUserNotAdmin() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
@@ -125,7 +125,7 @@ class ChannelVerificationServiceTest {
         assertThatThrownBy(() -> service.verify(USERNAME, USER_ID))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
-                .isEqualTo(CHAT_USER_NOT_ADMIN);
+                .isEqualTo(CHANNEL_USER_NOT_ADMIN);
     }
 
     @Test

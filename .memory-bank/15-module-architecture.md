@@ -10,8 +10,8 @@ advert-market/
 ├── advert-market-shared/               # Shared kernel (value objects, events, exceptions)
 ├── advert-market-db/                   # jOOQ codegen + Liquibase migrations
 │
-├── advert-market-identity-api/         # Identity: DTOs, interfaces
-├── advert-market-identity/             # Identity: auth, ABAC, PII, team
+├── advert-market-identity-api/         # Identity: DTOs, port interfaces (5 ports, 5 DTOs)
+├── advert-market-identity/             # Identity: auth (JWT+HMAC), user profile, rate limiting
 │
 ├── advert-market-financial-api/        # Financial: commands, ports, events
 ├── advert-market-financial/            # Financial: ledger, escrow, TON, reconciliation
@@ -63,16 +63,36 @@ This split enables:
 
 ## Shared Kernel (`advert-market-shared`)
 
+53+ classes providing cross-cutting concerns, domain primitives, and infrastructure contracts.
+
 ```
 com.advertmarket.shared/
-├── event/       EventEnvelope (record), DomainEvent (sealed), EventType (enum)
-├── model/       Money, DealId, UserId, ChannelId, AccountId (typed ID records), DealStatus (enum)
-├── exception/   DomainException, EntityNotFoundException, InvalidStateTransitionException
-├── pagination/  CursorPage (record), CursorCodec
-└── util/        IdempotencyKey (record)
+├── error/       ErrorCode (enum, 45+ codes with HTTP status), ErrorCodes (@Fenum constants)
+├── exception/   DomainException, EntityNotFoundException, InvalidStateTransitionException,
+│                InsufficientBalanceException
+├── json/        JsonFacade (wrapper over ObjectMapper), JsonException
+├── event/       DomainEvent (marker interface), EventEnvelope (record), EventTypes (constants),
+│                TopicNames, ConsumerGroups, EventTypeRegistry,
+│                EventEnvelopeSerializer, EventEnvelopeDeserializer, EventDeserializationException
+├── model/       Money, DealId, UserId, ChannelId, AccountId (typed ID records),
+│                TonAddress, TxHash, SubwalletId (TON primitives),
+│                DealStatus, AccountType, EntryType, ActorType (enums),
+│                UserBlockCheckPort (interface)
+├── financial/   CommissionCalculator (integer arithmetic, basis points), CommissionResult
+├── lock/        DistributedLockPort (interface), RedisDistributedLock (SET NX + Lua unlock)
+├── outbox/      OutboxEntry, OutboxStatus, OutboxProperties, OutboxPoller (@Scheduled),
+│                OutboxPublisher (interface), OutboxRepository (interface)
+├── audit/       AuditEntry, AuditEvent, AuditActorType, AuditPort (interface)
+├── metric/      MetricsFacade (Micrometer wrapper), MetricNames (40+ @Fenum constants)
+├── security/    PrincipalAuthentication (interface), SecurityContextUtil
+├── pagination/  CursorPage (record), CursorCodec (Base64 URL-safe)
+├── deploy/      DeployProperties, CanaryProperties, UserBucket (SHA-256 stable bucketing)
+├── i18n/        LocalizationService (Spring MessageSource, default ru)
+├── util/        IdempotencyKey (record)
+└── FenumGroup   Checker Framework @Fenum group constants (TopicName, ErrorCode, MetricName, etc.)
 ```
 
-Zero external dependencies — pure Java library.
+Dependencies: Jackson, Guava, Commons Lang3, Checker Framework, Lombok, Spring Data Redis (Lettuce), Spring Framework, Micrometer.
 
 ## Database Module (`advert-market-db`)
 
@@ -129,8 +149,9 @@ All 20+ services from C4 Level 3 mapped to modules:
 
 | C4 Service | Module |
 |---|---|
-| Auth Service, ABAC Service, PII Vault | identity |
-| Channel Team Service | identity |
+| Auth Service (implemented), Login Rate Limiter (implemented) | identity |
+| User Profile Service (implemented) | identity |
+| ABAC Service, PII Vault, Channel Team Service | identity (planned) |
 | Ledger Service, Escrow Service, Commission Service | financial |
 | Balance Projection, Reconciliation Service | financial |
 | TON Payment Gateway, Confirmation Policy | financial |
@@ -149,13 +170,14 @@ All 36 specs from `14-implementation-specs/` are covered:
 |---|---|
 | 01-ton-sdk, 08-ton-center-api, 15-confirmation-policy | financial |
 | 02-telegram-bot, 22-notification-templates | communication |
-| 03-auth-flow, 07-pii-encryption, 13-abac | identity |
+| 03-auth-flow | identity (implemented) |
+| 07-pii-encryption, 13-abac | identity (planned, not yet implemented) |
 | 04-kafka-schemas, 18-kafka-consumer-errors | shared (schemas), each consumer module |
 | 05-ddl-migrations | db |
 | 06-project-scaffold | root + app |
-| 09-redis-locks | shared (util) + financial |
+| 09-redis-locks | shared (lock/) + financial |
 | 10-worker-callbacks | delivery |
-| 11-outbox-poller | communication |
+| 11-outbox-poller | shared (outbox/) — OutboxPoller, ports; implementations in communication |
 | 12-error-codes | shared |
 | 14-reconciliation-sql | financial |
 | 16-dispute-auto-resolution | deal |
@@ -167,7 +189,7 @@ All 36 specs from `14-implementation-specs/` are covered:
 | 24-postgresql-sharding | db |
 | 25-commission-rounding | financial |
 | 26-testing-strategy | integration-tests |
-| 27-rate-limiting | app (filter) |
+| 27-rate-limiting | identity (LoginRateLimiterPort + RedisLoginRateLimiter) |
 | 28-external-api-resilience | financial, delivery |
 | 29-channel-search | marketplace |
 | 30-payout-execution-flow | financial + delivery |

@@ -25,8 +25,9 @@ Authorization: ABAC -- no fixed roles, permissions from resource relationships.
 - Use `javax.crypto.Mac` with `HmacSHA256` algorithm
 - Secret key: `HMAC-SHA256("WebAppData".getBytes(), botToken.getBytes())`
 - Anti-replay window: configurable via `auth.anti-replay-window` (default 300 sec)
-- Parse `user` JSON field via Jackson `ObjectMapper`
-- Return `TelegramUser` record: `id`, `firstName`, `lastName`, `username`
+- Parse `user` JSON field via `JsonFacade` (not raw ObjectMapper)
+- Clock skew tolerance: ±30 seconds
+- Return `TelegramUserData` record: `id`, `firstName`, `lastName`, `username`, `languageCode`
 
 ---
 
@@ -78,10 +79,11 @@ Authorization: ABAC -- no fixed roles, permissions from resource relationships.
 ### JWT Filter Logic
 
 1. Extract `Authorization: Bearer <token>` header
-2. Parse and validate JWT via `JwtService.parseToken(token)`
-3. Check Redis blacklist by `jti`
-4. If valid: set `TelegramAuthentication` in `SecurityContextHolder`
-5. If invalid/blacklisted: return 401
+2. Parse and validate JWT via `JwtTokenProvider.parseToken(token)` → returns `TelegramAuthentication`
+3. Check Redis blacklist by `jti` (fail-closed: Redis error → treated as blacklisted)
+4. Check user block status via `UserBlockCheckPort.isBlocked(userId)`
+5. If valid and not blocked/blacklisted: set `TelegramAuthentication` in `SecurityContextHolder`
+6. If invalid/blacklisted/blocked: do NOT set authentication, always continue filter chain (Spring Security handles 401)
 
 ---
 
@@ -92,19 +94,33 @@ POST /api/v1/auth/login
 Content-Type: application/json
 Body: { "initData": "<telegram_init_data_string>" }
 
+Flow: rate limit check (IP-based) → initData validation → user upsert → JWT generation
+Metrics: auth.login.success
+
 -> 200 OK
 {
   "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
-  "expiresIn": 3600,
+  "expiresIn": 86400,
   "user": {
     "id": 123456789,
     "username": "johndoe",
     "displayName": "John Doe"
   }
 }
+-> 429 Too Many Requests (rate limit exceeded)
 ```
 
-### Profile Endpoints
+```
+POST /api/v1/auth/logout
+Authorization: Bearer <token>
+
+Flow: blacklist token JTI in Redis with TTL = remaining token lifetime
+Metrics: auth.logout
+
+-> 204 No Content
+```
+
+### Profile Endpoints (`ProfileController`)
 
 ```
 GET /api/v1/profile
@@ -113,10 +129,9 @@ Authorization: Bearer <token>
 -> 200 OK
 {
   "id": 123456789,
-  "telegramId": 123456789,
   "username": "johndoe",
   "displayName": "John Doe",
-  "languageCode": "en",
+  "languageCode": "ru",
   "onboardingCompleted": false,
   "interests": [],
   "createdAt": "2026-01-01T00:00:00Z"
@@ -132,13 +147,26 @@ Body: { "interests": ["tech", "gaming"] }
 -> 200 OK (same schema as GET /profile, onboardingCompleted=true)
 ```
 
-**User auto-registration**: on first login, upsert into `users` table.
+```
+DELETE /api/v1/profile
+Authorization: Bearer <token>
+
+Flow: soft delete user → revoke JWT token
+Metrics: account.deleted
+
+-> 204 No Content
+```
+
+**User auto-registration**: on first login, upsert into `users` table (re-activates soft-deleted accounts).
 
 ---
 
-## 5. ABAC Policy Enforcement
+## 5. ABAC Policy Enforcement (Planned)
 
-### Authorization Services
+> **Current state**: Only `AuthorizationService` (`@auth`) with `isOperator()` is implemented.
+> DealAuthorizationService, ChannelAuthorizationService, UserAttributeContext — planned, not yet implemented.
+
+### Authorization Services (Target Design)
 
 Three Spring `@Component` beans for authorization checks:
 
@@ -180,33 +208,54 @@ POST   /api/v1/channels/{id}/team      -> @PreAuthorize("@channelAuth.hasRight(#
 ## 6. Redis Token Blacklist
 
 ```
-Key: token:blacklist:{jti}
+Key: jwt:blacklist:{jti}
 Value: "1"
-TTL: remaining JWT lifetime
+TTL: remaining JWT lifetime (tokenExpSeconds - now)
 ```
 
-- `blacklist(jti, expiresAt)` -- SET with TTL = Duration.between(now, expiresAt)
-- `isBlacklisted(jti)` -- EXISTS check
+- `blacklist(jti, ttlSeconds)` -- SET with TTL
+- `isBlacklisted(jti)` -- EXISTS check, **fail-closed** (Redis error → treated as blacklisted)
+
+### Login Rate Limiter
+
+```
+Key: rate:login:{clientIp}
+Value: attempt count (auto-incremented)
+TTL: windowSeconds (set on first INCR via Lua script)
+```
+
+- Atomic Lua script: `INCR + conditional EXPIRE`
+- Fail-closed on Redis errors (throws SERVICE_UNAVAILABLE)
+- Config: `app.auth.rate-limiter.maxAttempts`, `app.auth.rate-limiter.windowSeconds`
 
 ---
 
 ## 7. Configuration
 
 ```yaml
-auth:
-  jwt:
-    secret: ${JWT_SECRET}
-    expiry: 24h
-  anti-replay-window: 300  # seconds
+app:
+  auth:
+    jwt:
+      secret: ${JWT_SECRET}           # >= 32 bytes for HS256
+      expiration: 86400               # seconds (24h)
+    anti-replay-window-seconds: 300   # initData max age
+    rate-limiter:
+      max-attempts: 10                # per window per IP
+      window-seconds: 60              # sliding window
 telegram:
   bot:
-    token: ${TELEGRAM_BOT_TOKEN}
+    token: ${TELEGRAM_BOT_TOKEN}      # used for HMAC key derivation
 ```
+
+### @ConfigurationProperties Records
+
+- `AuthProperties` (`app.auth`): `jwt.secret`, `jwt.expiration`, `antiReplayWindowSeconds`
+- `RateLimiterProperties` (`app.auth.rate-limiter`): `maxAttempts`, `windowSeconds`
 
 | Variable | Description |
 |----------|-------------|
 | `JWT_SECRET` | >= 32 byte random string for HS256 |
-| `TELEGRAM_BOT_TOKEN` | Bot token for HMAC key derivation |
+| `TELEGRAM_BOT_TOKEN` | Bot token for HMAC key derivation (from communication module) |
 
 ---
 

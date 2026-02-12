@@ -1,12 +1,12 @@
 # Error Code Catalog
 
-## Response Format: RFC 7807
+## Response Format: RFC 9457 (previously RFC 7807)
 
-All error responses follow RFC 7807 Problem Details:
+All error responses follow RFC 9457 Problem Details:
 
 ```json
 {
-  "type": "https://api.advertmarket.com/errors/DEAL_NOT_FOUND",
+  "type": "urn:advertmarket:error:DEAL_NOT_FOUND",
   "title": "Deal not found",
   "status": 404,
   "detail": "Deal with id 550e8400-e29b-41d4-a716-446655440000 not found",
@@ -19,89 +19,102 @@ All error responses follow RFC 7807 Problem Details:
 
 ---
 
-## Auth Errors (AUTH_*)
+## Auth Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
-| `AUTH_INVALID_INIT_DATA` | 401 | Invalid Telegram initData |
-| `AUTH_EXPIRED_INIT_DATA` | 401 | initData expired (anti-replay) |
 | `AUTH_INVALID_TOKEN` | 401 | Invalid or malformed JWT |
 | `AUTH_TOKEN_EXPIRED` | 401 | JWT expired |
-| `AUTH_TOKEN_REVOKED` | 401 | JWT blacklisted |
-| `AUTH_INSUFFICIENT_RIGHTS` | 403 | No permission for this action |
-| `AUTH_NOT_PARTICIPANT` | 403 | Not a deal participant |
-| `AUTH_NOT_OPERATOR` | 403 | Operator access required |
+| `AUTH_INIT_DATA_INVALID` | 401 | Invalid Telegram initData (HMAC or anti-replay) |
+| `AUTH_TOKEN_BLACKLISTED` | 401 | JWT revoked via blacklist |
+| `AUTH_INSUFFICIENT_PERMISSIONS` | 403 | No permission for this action |
+| `USER_BLOCKED` | 403 | User account is blocked |
+| `ACCOUNT_DELETED` | 403 | User account soft-deleted |
 
 ---
 
-## Deal Errors (DEAL_*)
+## Deal Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
 | `DEAL_NOT_FOUND` | 404 | Deal not found |
-| `DEAL_INVALID_TRANSITION` | 409 | Invalid state transition |
 | `DEAL_ALREADY_EXISTS` | 409 | Duplicate deal for channel |
-| `DEAL_EXPIRED` | 410 | Deal has expired |
-| `DEAL_LOCKED` | 409 | Deal is being processed |
+| `DEAL_TERMS_MISMATCH` | 422 | Deal terms do not match |
+| `DEAL_DEADLINE_EXPIRED` | 410 | Deal deadline has expired |
+| `DEAL_CANCELLED` | 410 | Deal has been cancelled |
 
 ---
 
-## Financial Errors (FIN_*)
+## Financial Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
-| `FIN_INSUFFICIENT_BALANCE` | 422 | Insufficient escrow balance |
-| `FIN_ESCROW_ALREADY_FUNDED` | 409 | Escrow already funded |
-| `FIN_PAYOUT_IN_PROGRESS` | 409 | Payout already in progress |
-| `FIN_REFUND_IN_PROGRESS` | 409 | Refund already in progress |
-| `FIN_AMOUNT_MISMATCH` | 422 | Deposit amount mismatch |
-| `FIN_INVALID_AMOUNT` | 422 | Amount must be positive |
-| `FIN_TX_NOT_FOUND` | 404 | Transaction not found |
+| `INSUFFICIENT_BALANCE` | 422 | Insufficient escrow balance |
+| `DEPOSIT_TIMEOUT` | 408 | Deposit confirmation timeout |
+| `DEPOSIT_AMOUNT_MISMATCH` | 422 | Deposit amount mismatch |
+| `DEPOSIT_REJECTED` | 422 | Deposit rejected |
+| `PAYOUT_FAILED` | 502 | Payout execution failed |
+| `REFUND_FAILED` | 502 | Refund execution failed |
+| `LEDGER_INCONSISTENCY` | 500 | Ledger integrity violation |
+| `COMMISSION_CALCULATION_ERROR` | 500 | Commission calculation failed (overflow or invalid rate) |
 
 ---
 
-## Channel Errors (CHAN_*)
+## Channel Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
-| `CHAN_NOT_FOUND` | 404 | Channel not found |
-| `CHAN_NOT_ACTIVE` | 422 | Channel is deactivated |
-| `CHAN_ALREADY_REGISTERED` | 409 | Channel already registered |
-| `CHAN_MEMBER_EXISTS` | 409 | User already a team member |
-| `CHAN_MEMBER_NOT_FOUND` | 404 | Team member not found |
-| `CHAN_CANNOT_REMOVE_OWNER` | 422 | Cannot remove channel owner |
+| `CHANNEL_NOT_FOUND` | 404 | Channel not found |
+| `CHANNEL_ALREADY_REGISTERED` | 409 | Channel already registered |
+| `CHANNEL_INACCESSIBLE` | 502 | Cannot access channel via Telegram API |
+| `CHANNEL_NOT_OWNED` | 403 | User is not the channel owner |
+| `CHANNEL_STATS_UNAVAILABLE` | 503 | Channel statistics unavailable |
+| `CHANNEL_BOT_NOT_MEMBER` | 403 | Bot is not a member of the channel |
+| `CHANNEL_BOT_NOT_ADMIN` | 403 | Bot is not an admin of the channel |
+| `CHANNEL_BOT_INSUFFICIENT_RIGHTS` | 403 | Bot lacks required admin rights |
+| `CHANNEL_USER_NOT_ADMIN` | 403 | User is not a channel admin |
 
 ---
 
-## Dispute Errors (DISP_*)
+## Dispute Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
-| `DISP_ALREADY_OPEN` | 409 | Dispute already open for this deal |
-| `DISP_NOT_FOUND` | 404 | Dispute not found |
-| `DISP_ALREADY_RESOLVED` | 409 | Dispute already resolved |
-| `DISP_INVALID_EVIDENCE` | 422 | Invalid evidence format |
+| `DISPUTE_NOT_FOUND` | 404 | Dispute not found |
+| `DISPUTE_ALREADY_EXISTS` | 409 | Dispute already open for this deal |
+| `DISPUTE_RESOLUTION_FAILED` | 500 | Dispute resolution failed |
 
 ---
 
-## Creative Errors (CRTV_*)
+## Creative Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
-| `CRTV_BRIEF_REQUIRED` | 422 | Creative brief is required |
-| `CRTV_DRAFT_INVALID` | 422 | Creative draft validation failed |
-| `CRTV_TEXT_TOO_LONG` | 422 | Text exceeds maximum length |
-| `CRTV_MEDIA_LIMIT` | 422 | Too many media attachments |
+| `CREATIVE_NOT_FOUND` | 404 | Creative not found |
+| `CREATIVE_INVALID_FORMAT` | 422 | Invalid creative format |
+| `CREATIVE_TOO_LARGE` | 413 | Creative exceeds size limit |
+| `CREATIVE_REJECTED` | 422 | Creative rejected |
 
 ---
 
-## Validation Errors (VAL_*)
+## Delivery Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
-| `VAL_INVALID_INPUT` | 400 | Input validation failed |
-| `VAL_MISSING_FIELD` | 400 | Required field missing |
-| `VAL_INVALID_FORMAT` | 400 | Invalid field format |
+| `DELIVERY_VERIFICATION_FAILED` | 502 | Delivery verification failed |
+| `DELIVERY_POST_DELETED` | 410 | Post was deleted |
+| `DELIVERY_CONTENT_MODIFIED` | 409 | Post content was modified |
+| `DELIVERY_TIMEOUT` | 408 | Delivery verification timeout |
+
+---
+
+## Validation Errors
+
+| Code | HTTP | Title |
+|------|------|-------|
+| `VALIDATION_FAILED` | 400 | Input validation failed |
+| `INVALID_PARAMETER` | 400 | Invalid parameter value |
+| `MISSING_REQUIRED_FIELD` | 400 | Required field missing |
 
 For validation errors, include `violations` array:
 ```json
@@ -117,43 +130,45 @@ For validation errors, include `violations` array:
 
 ---
 
-## System Errors (SYS_*)
+## Entity Errors
 
 | Code | HTTP | Title |
 |------|------|-------|
-| `SYS_INTERNAL_ERROR` | 500 | Internal server error |
-| `SYS_SERVICE_UNAVAILABLE` | 503 | Service temporarily unavailable |
-| `SYS_TON_API_ERROR` | 502 | TON API communication error |
-| `SYS_TELEGRAM_API_ERROR` | 502 | Telegram API communication error |
-| `SYS_RATE_LIMITED` | 429 | Too many requests |
+| `ENTITY_NOT_FOUND` | 404 | Generic entity not found |
+| `USER_NOT_FOUND` | 404 | User not found |
+| `WALLET_NOT_FOUND` | 404 | Wallet not found |
+| `INVALID_STATE_TRANSITION` | 409 | Invalid state machine transition |
+| `NOTIFICATION_DELIVERY_FAILED` | 502 | Notification delivery failed |
 
 ---
 
-## Java Enum Structure
+## System Errors
 
-```java
-public enum ErrorCode {
-    AUTH_INVALID_INIT_DATA(401),
-    AUTH_EXPIRED_INIT_DATA(401),
-    AUTH_INVALID_TOKEN(401),
-    AUTH_TOKEN_EXPIRED(401),
-    AUTH_TOKEN_REVOKED(401),
-    AUTH_INSUFFICIENT_RIGHTS(403),
-    // ... all codes
-    ;
+| Code | HTTP | Title |
+|------|------|-------|
+| `INTERNAL_ERROR` | 500 | Internal server error |
+| `SERVICE_UNAVAILABLE` | 503 | Service temporarily unavailable |
+| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
 
-    private final int httpStatus;
+---
 
-    ErrorCode(int httpStatus) {
-        this.httpStatus = httpStatus;
-    }
+## Infrastructure Errors
 
-    // title and detail resolved via MessageSource
-    public String messageKey() {
-        return "error." + name().toLowerCase();
-    }
-}
-```
+| Code | HTTP | Title |
+|------|------|-------|
+| `EVENT_DESERIALIZATION_ERROR` | 500 | Event deserialization failed |
+| `JSON_ERROR` | 500 | JSON processing error |
+| `LOCK_ACQUISITION_FAILED` | 409 | Distributed lock acquisition failed |
+| `OUTBOX_PUBLISH_FAILED` | 500 | Outbox publish failed |
+
+---
+
+## Java Implementation
+
+Two complementary classes in `advert-market-shared`:
+
+- **`ErrorCode`** (enum) — maps code → HTTP status, provides `titleKey()`, `detailKey()`, `typeUri()`, `resolve(String)`. URI format: `urn:advertmarket:error:{CODE}`.
+- **`ErrorCodes`** (constants class) — `@Fenum(FenumGroup.ERROR_CODE)` annotated `String` constants for compile-time type safety via Checker Framework. Used in `DomainException` constructors.
 
 ---
 

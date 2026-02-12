@@ -25,16 +25,27 @@ flowchart TB
         CP[Confirmation Policy<br/>Tiered confirmations]
     end
 
-    subgraph "Infrastructure"
-        AS[Auth Service<br/>HMAC + RBAC + sessions]
+    subgraph "Identity (Implemented)"
+        AS[Auth Service<br/>HMAC-SHA256 + JWT + anti-replay]
+        US[User Service<br/>Profile, onboarding, soft delete]
+        RL[Login Rate Limiter<br/>Redis Lua, IP-based]
+        TB[Token Blacklist<br/>Redis, fail-closed]
+        AZ[Authorization Service<br/>isOperator check]
+    end
+
+    subgraph "Identity (Planned)"
+        ABAC[ABAC Service<br/>Full attribute-based authz]
         CTS[Channel Team Service<br/>Team management]
         PII[PII Vault<br/>AES-256-GCM encryption]
+    end
+
+    subgraph "Infrastructure"
         OP[Outbox Publisher<br/>TX outbox → Kafka]
         WCC[Worker Callback Controller<br/>POST /internal/v1/worker-events]
     end
 
     DC --> DTS --> DWE
-    DC --> AS
+    DC --> AZ
     DWE --> ES --> LS
     DWE --> LS
     ES --> TPG
@@ -42,7 +53,8 @@ flowchart TB
     LS --> CS
     BP -->|reads| LS
     WCC --> DTS
-    AS -->|reads| CTS
+    AS --> RL
+    AS --> TB
 ```
 
 ## Deal Domain Services
@@ -171,23 +183,70 @@ flowchart TB
 | **Reads** | `channels` |
 | **Indexes** | GIN index on `to_tsvector(title || description)`, composite index on `(topic, subscriber_count, price_per_post_nano)` |
 
-## Identity & Infrastructure Services
+## Identity Services (Implemented)
 
-### Auth Service
+### Auth Service (`AuthServiceImpl`)
 
 | Attribute | Value |
 |-----------|-------|
 | **Type** | Service |
-| **Tags** | `#mvp` |
+| **Tags** | `#mvp`, `#implemented` |
 | **Module** | identity |
-| **Role** | Telegram initData HMAC + anti-replay + session tokens. Delegates permission checks to ABAC Service |
-| **Reads** | `users` |
+| **Role** | Telegram initData HMAC-SHA256 validation + JWT (HS256, JJWT) issuance + anti-replay window + token revocation |
+| **Endpoints** | `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` |
+| **Dependencies** | TelegramInitDataValidator, JwtTokenProvider, UserRepository, TokenBlacklistPort, LoginRateLimiterPort, MetricsFacade |
+| **Stores to** | `users` (upsert on login) |
+| **Metrics** | `auth.login.success`, `auth.logout` |
+
+### User Service (`UserServiceImpl`)
+
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Service |
+| **Tags** | `#mvp`, `#implemented` |
+| **Module** | identity |
+| **Role** | User profile CRUD: get profile, complete onboarding (interests), soft delete account |
+| **Endpoints** | `GET /api/v1/profile`, `PUT /api/v1/profile/onboarding`, `DELETE /api/v1/profile` |
+| **Dependencies** | UserRepository, MetricsFacade, AuthService (logout on delete) |
+| **Metrics** | `account.deleted` |
+
+### Login Rate Limiter (`RedisLoginRateLimiter`)
+
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Infrastructure adapter |
+| **Tags** | `#implemented` |
+| **Module** | identity |
+| **Role** | IP-based rate limiting via Redis atomic Lua script (INCR + EXPIRE). Fail-closed on Redis errors |
+| **Config** | `app.auth.rate-limiter.maxAttempts`, `app.auth.rate-limiter.windowSeconds` |
+
+### Token Blacklist (`RedisTokenBlacklist`)
+
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Infrastructure adapter |
+| **Tags** | `#implemented` |
+| **Module** | identity |
+| **Role** | JWT revocation tracking in Redis with TTL matching token expiration. Fail-closed: Redis errors → token treated as blacklisted |
+
+### Authorization Service
+
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Service |
+| **Tags** | `#implemented`, `#minimal` |
+| **Module** | identity |
+| **Role** | Simple `isOperator()` check via SecurityContextUtil. Used in `@PreAuthorize("@auth.isOperator()")` SpEL |
+| **Note** | Will evolve into full ABAC service |
+
+## Identity Services (Planned)
 
 ### ABAC Service
 
 | Attribute | Value |
 |-----------|-------|
 | **Type** | Service |
+| **Tags** | `#planned` |
 | **Module** | identity |
 | **Role** | Attribute-Based Access Control: evaluates permissions from subject + resource + action + context attributes. No fixed user roles — permissions derived from resource relationships |
 | **Reads** | `channel_memberships`, `deals` (for ownership check) |
@@ -198,6 +257,7 @@ flowchart TB
 | Attribute | Value |
 |-----------|-------|
 | **Type** | Service |
+| **Tags** | `#planned` |
 | **Module** | identity |
 | **Role** | Channel team management: invite, rights delegation, revocation |
 | **Stores to** | `channel_memberships` |
@@ -207,7 +267,7 @@ flowchart TB
 | Attribute | Value |
 |-----------|-------|
 | **Type** | Service |
-| **Tags** | `#pii` |
+| **Tags** | `#planned`, `#pii` |
 | **Role** | Isolated PII storage with AES-256-GCM field-level encryption |
 | **Stores to** | `pii_store` |
 

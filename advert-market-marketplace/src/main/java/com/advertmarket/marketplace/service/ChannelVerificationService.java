@@ -1,10 +1,10 @@
 package com.advertmarket.marketplace.service;
 
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAN_BOT_INSUFFICIENT_RIGHTS;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAN_BOT_NOT_ADMIN;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAN_BOT_NOT_MEMBER;
-import static com.advertmarket.shared.exception.ErrorCodes.CHAT_USER_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_INSUFFICIENT_RIGHTS;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
 
 import com.advertmarket.communication.api.channel.ChatInfo;
 import com.advertmarket.communication.api.channel.ChatMemberInfo;
@@ -142,16 +142,16 @@ public class ChannelVerificationService {
     private static void validateBot(@NonNull ChatMemberInfo bot) {
         if (bot.status() == ChatMemberStatus.LEFT
                 || bot.status() == ChatMemberStatus.KICKED) {
-            throw new DomainException(CHAN_BOT_NOT_MEMBER,
+            throw new DomainException(CHANNEL_BOT_NOT_MEMBER,
                     "Bot is not a member of the channel");
         }
         if (bot.status() != ChatMemberStatus.CREATOR
                 && bot.status() != ChatMemberStatus.ADMINISTRATOR) {
-            throw new DomainException(CHAN_BOT_NOT_ADMIN,
+            throw new DomainException(CHANNEL_BOT_NOT_ADMIN,
                     "Bot is not an admin of the channel");
         }
         if (!bot.canPostMessages() || !bot.canEditMessages()) {
-            throw new DomainException(CHAN_BOT_INSUFFICIENT_RIGHTS,
+            throw new DomainException(CHANNEL_BOT_INSUFFICIENT_RIGHTS,
                     "Bot lacks required permissions");
         }
     }
@@ -159,7 +159,7 @@ public class ChannelVerificationService {
     private static void validateUser(@NonNull ChatMemberInfo user) {
         if (user.status() != ChatMemberStatus.CREATOR
                 && user.status() != ChatMemberStatus.ADMINISTRATOR) {
-            throw new DomainException(CHAT_USER_NOT_ADMIN,
+            throw new DomainException(CHANNEL_USER_NOT_ADMIN,
                     "User is not an admin of the channel");
         }
     }

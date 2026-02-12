@@ -114,7 +114,7 @@ class TelegramChannelServiceTest {
         }
 
         @Test
-        @DisplayName("Throws CHAN_BOT_NOT_MEMBER on 403 error")
+        @DisplayName("Throws CHANNEL_BOT_NOT_MEMBER on 403 error")
         void throwsBotNotMemberOn403() {
             when(cache.getChatInfo(123L))
                     .thenReturn(Optional.empty());
@@ -129,7 +129,7 @@ class TelegramChannelServiceTest {
                     .satisfies(ex -> assertThat(
                             ((DomainException) ex).getErrorCode())
                             .isEqualTo(
-                                    ErrorCodes.CHAN_BOT_NOT_MEMBER));
+                                    ErrorCodes.CHANNEL_BOT_NOT_MEMBER));
         }
 
         @Test

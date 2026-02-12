@@ -69,14 +69,14 @@ public final class ErrorCodes {
             "CHANNEL_NOT_OWNED";
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_STATS_UNAVAILABLE =
             "CHANNEL_STATS_UNAVAILABLE";
-    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAN_BOT_NOT_MEMBER =
-            "CHAN_BOT_NOT_MEMBER";
-    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAN_BOT_NOT_ADMIN =
-            "CHAN_BOT_NOT_ADMIN";
-    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAN_BOT_INSUFFICIENT_RIGHTS =
-            "CHAN_BOT_INSUFFICIENT_RIGHTS";
-    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAT_USER_NOT_ADMIN =
-            "CHAT_USER_NOT_ADMIN";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_BOT_NOT_MEMBER =
+            "CHANNEL_BOT_NOT_MEMBER";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_BOT_NOT_ADMIN =
+            "CHANNEL_BOT_NOT_ADMIN";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_BOT_INSUFFICIENT_RIGHTS =
+            "CHANNEL_BOT_INSUFFICIENT_RIGHTS";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_USER_NOT_ADMIN =
+            "CHANNEL_USER_NOT_ADMIN";
 
     // --- Dispute ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String DISPUTE_NOT_FOUND =
