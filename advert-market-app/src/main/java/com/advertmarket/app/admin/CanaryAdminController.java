@@ -5,6 +5,8 @@ import com.advertmarket.shared.deploy.CanaryProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -87,7 +89,10 @@ public class CanaryAdminController {
             log.warn("CANARY_ADMIN_TOKEN is not configured, denying access");
             return false;
         }
-        return ("Bearer " + adminToken).equals(authorization);
+        return MessageDigest.isEqual(
+                ("Bearer " + adminToken)
+                        .getBytes(StandardCharsets.UTF_8),
+                authorization.getBytes(StandardCharsets.UTF_8));
     }
 
     /** Current canary deployment status. */

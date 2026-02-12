@@ -24,6 +24,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public class JwtTokenProvider {
 
     private static final String CLAIM_IS_OPERATOR = "is_operator";
+    private static final String ISSUER = "advert-market";
+    private static final String AUDIENCE = "advert-market-api";
 
     private final SecretKey signingKey;
     private final long expirationSeconds;
@@ -52,6 +54,8 @@ public class JwtTokenProvider {
             boolean isOperator) {
         Instant now = Instant.now();
         return Jwts.builder()
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
                 .subject(String.valueOf(userId.value()))
                 .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))
@@ -74,6 +78,8 @@ public class JwtTokenProvider {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(signingKey)
+                    .requireIssuer(ISSUER)
+                    .requireAudience(AUDIENCE)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
@@ -92,7 +98,7 @@ public class JwtTokenProvider {
         } catch (JwtException | IllegalArgumentException e) {
             throw new DomainException(
                     "AUTH_INVALID_TOKEN",
-                    "Invalid JWT token: " + e.getMessage());
+                    "Invalid JWT token");
         }
     }
 

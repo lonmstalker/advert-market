@@ -1,6 +1,5 @@
 package com.advertmarket.identity.security;
 
-import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.shared.exception.DomainException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,7 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final TokenBlacklistPort tokenBlacklistPort;
 
     @Override
     protected void doFilterInternal(
@@ -46,14 +44,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             TelegramAuthentication auth =
                     jwtTokenProvider.parseToken(token);
-
-            if (tokenBlacklistPort.isBlacklisted(auth.getJti())) {
-                log.debug("Token blacklisted: jti={}",
-                        auth.getJti());
-                filterChain.doFilter(request, response);
-                return;
-            }
-
             SecurityContextHolder.getContext()
                     .setAuthentication(auth);
         } catch (DomainException e) {

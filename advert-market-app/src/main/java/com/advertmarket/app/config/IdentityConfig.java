@@ -1,7 +1,6 @@
 package com.advertmarket.app.config;
 
 import com.advertmarket.communication.bot.internal.config.TelegramBotProperties;
-import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
@@ -40,9 +39,7 @@ public class IdentityConfig {
     /** Creates the JWT authentication filter. */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(
-            JwtTokenProvider jwtTokenProvider,
-            TokenBlacklistPort tokenBlacklistPort) {
-        return new JwtAuthenticationFilter(
-                jwtTokenProvider, tokenBlacklistPort);
+            JwtTokenProvider jwtTokenProvider) {
+        return new JwtAuthenticationFilter(jwtTokenProvider);
     }
 }

@@ -7,13 +7,12 @@ import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Authentication token for Telegram Mini App users.
  *
  * <p>Principal is a {@link UserId}. Carries the {@code isOperator} flag
- * as a granted authority.
+ * for downstream authorization decisions.
  */
 @Getter
 public class TelegramAuthentication implements Authentication {
@@ -21,7 +20,6 @@ public class TelegramAuthentication implements Authentication {
     private final @NonNull UserId userId;
     private final boolean operator;
     private final @NonNull String jti;
-    private final Collection<? extends GrantedAuthority> authorities;
 
     /**
      * Creates a new authenticated token.
@@ -37,14 +35,11 @@ public class TelegramAuthentication implements Authentication {
         this.userId = userId;
         this.operator = isOperator;
         this.jti = jti;
-        this.authorities = isOperator
-                ? List.of(new SimpleGrantedAuthority("ROLE_OPERATOR"))
-                : List.of();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return List.of();
     }
 
     @Override

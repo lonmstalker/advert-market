@@ -48,7 +48,6 @@ class JwtTokenProviderTest {
         TelegramAuthentication auth = provider.parseToken(token);
 
         assertThat(auth.isOperator()).isTrue();
-        assertThat(auth.getAuthorities()).hasSize(1);
     }
 
     @Test

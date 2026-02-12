@@ -29,6 +29,7 @@ public class TelegramInitDataValidator {
 
     private static final String HMAC_SHA256 = "HmacSHA256";
     private static final String WEB_APP_DATA = "WebAppData";
+    private static final int MAX_CLOCK_SKEW_SECONDS = 30;
 
     private final byte[] secretKey;
     private final int antiReplayWindowSeconds;
@@ -115,10 +116,12 @@ public class TelegramInitDataValidator {
         }
 
         long now = Instant.now().getEpochSecond();
-        if (now - authDate > antiReplayWindowSeconds) {
+        long drift = now - authDate;
+        if (drift > antiReplayWindowSeconds
+                || drift < -MAX_CLOCK_SKEW_SECONDS) {
             throw new DomainException(
                     "AUTH_INIT_DATA_INVALID",
-                    "initData auth_date is too old");
+                    "initData auth_date is outside acceptable window");
         }
     }
 

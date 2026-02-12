@@ -36,7 +36,6 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtTokenProvider.generateToken(
                 userId, isOperator);
 
-        String displayName = buildDisplayName(userData);
         String un = userData.username();
         String username = un != null ? un : "";
 
@@ -46,15 +45,7 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 jwtTokenProvider.getExpirationSeconds(),
                 new LoginResponse.UserSummary(
-                        userData.id(), username, displayName));
-    }
-
-    private static String buildDisplayName(
-            TelegramUserData userData) {
-        String lastName = userData.lastName();
-        if (lastName != null && !lastName.isBlank()) {
-            return userData.firstName() + " " + lastName;
-        }
-        return userData.firstName();
+                        userData.id(), username,
+                        userData.displayName()));
     }
 }

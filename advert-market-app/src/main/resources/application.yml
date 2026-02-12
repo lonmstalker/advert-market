@@ -57,7 +57,7 @@ spring:
 app:
   auth:
     jwt:
-      secret: ${JWT_SECRET:change-me-in-production-min-32-bytes!!}
+      secret: ${JWT_SECRET}
       expiration: 3600
     anti-replay-window-seconds: 300
   telegram:

@@ -92,6 +92,18 @@ class TelegramInitDataValidatorTest {
     }
 
     @Test
+    @DisplayName("Should reject initData with future auth_date")
+    void shouldRejectFutureAuthDate() {
+        long futureAuthDate = Instant.now().getEpochSecond() + 120;
+        String initData = buildValidInitData(futureAuthDate);
+
+        assertThatThrownBy(() -> validator.validate(initData))
+                .isInstanceOf(DomainException.class)
+                .extracting("errorCode")
+                .isEqualTo("AUTH_INIT_DATA_INVALID");
+    }
+
+    @Test
     @DisplayName("Should reject initData without hash")
     void shouldRejectMissingHash() {
         String initData = "auth_date=" + Instant.now().getEpochSecond()

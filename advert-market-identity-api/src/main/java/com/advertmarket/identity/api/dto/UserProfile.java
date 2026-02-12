@@ -7,8 +7,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * Full user profile.
  *
- * @param id                  user identifier (same as telegramId)
- * @param telegramId          Telegram user ID
+ * @param id                  user identifier (Telegram user ID)
  * @param username            Telegram username
  * @param displayName         computed from first + last name
  * @param languageCode        IETF language tag
@@ -18,7 +17,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  */
 public record UserProfile(
         long id,
-        long telegramId,
         @NonNull String username,
         @NonNull String displayName,
         @NonNull String languageCode,

@@ -30,6 +30,7 @@ public class JooqUserRepository implements UserRepository {
 
     @Override
     public boolean upsert(@NonNull TelegramUserData data) {
+        OffsetDateTime now = OffsetDateTime.now();
         Record result = dsl.insertInto(table("users"))
                 .set(field("id"), data.id())
                 .set(field("first_name"), data.firstName())
@@ -38,8 +39,7 @@ public class JooqUserRepository implements UserRepository {
                 .set(field("language_code"),
                         data.languageCode() != null
                                 ? data.languageCode() : "ru")
-                .set(field("updated_at"),
-                        OffsetDateTime.now())
+                .set(field("updated_at"), now)
                 .onConflict(field("id"))
                 .doUpdate()
                 .set(field("first_name"), data.firstName())
@@ -48,8 +48,7 @@ public class JooqUserRepository implements UserRepository {
                 .set(field("language_code"),
                         data.languageCode() != null
                                 ? data.languageCode() : "ru")
-                .set(field("updated_at"),
-                        OffsetDateTime.now())
+                .set(field("updated_at"), now)
                 .returning(field("is_operator"))
                 .fetchOne();
 
@@ -106,10 +105,9 @@ public class JooqUserRepository implements UserRepository {
         String displayName = lastName != null
                 && !lastName.isBlank()
                 ? firstName + " " + lastName
-                : firstName;
+                : firstName != null ? firstName : "";
 
         return new UserProfile(
-                id,
                 id,
                 username != null ? username : "",
                 displayName,

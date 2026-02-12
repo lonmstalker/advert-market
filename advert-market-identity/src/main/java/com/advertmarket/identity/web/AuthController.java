@@ -3,11 +3,13 @@ package com.advertmarket.identity.web;
 import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
 import com.advertmarket.identity.api.port.AuthService;
+import com.advertmarket.identity.service.LoginRateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final LoginRateLimiter loginRateLimiter;
 
     /**
      * Authenticates a user via Telegram initData and returns a JWT.
@@ -49,8 +52,14 @@ public class AuthController {
             responseCode = "401",
             description = "Invalid or expired initData"
     )
+    @ApiResponse(
+            responseCode = "429",
+            description = "Too many login attempts"
+    )
     public LoginResponse login(
-            @Valid @RequestBody LoginRequest request) {
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
+        loginRateLimiter.checkRate(httpRequest.getRemoteAddr());
         return authService.login(request);
     }
 }

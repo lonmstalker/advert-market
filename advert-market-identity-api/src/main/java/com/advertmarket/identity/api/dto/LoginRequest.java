@@ -1,6 +1,7 @@
 package com.advertmarket.identity.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * Request body for Telegram Mini App authentication.
@@ -8,6 +9,6 @@ import jakarta.validation.constraints.NotBlank;
  * @param initData the raw Telegram initData query string
  */
 public record LoginRequest(
-        @NotBlank String initData
+        @NotBlank @Size(max = 4096) String initData
 ) {
 }

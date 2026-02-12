@@ -25,7 +25,7 @@ class UserServiceImplTest {
 
     private static final UserId USER_ID = new UserId(42L);
     private static final UserProfile PROFILE = new UserProfile(
-            42L, 42L, "johndoe", "John Doe", "en",
+            42L, "johndoe", "John Doe", "en",
             false, List.of(), Instant.parse("2026-01-01T00:00:00Z"));
 
     @BeforeEach
@@ -58,7 +58,7 @@ class UserServiceImplTest {
     void shouldCompleteOnboarding() {
         List<String> interests = List.of("tech", "gaming");
         UserProfile updatedProfile = new UserProfile(
-                42L, 42L, "johndoe", "John Doe", "en",
+                42L, "johndoe", "John Doe", "en",
                 true, interests,
                 Instant.parse("2026-01-01T00:00:00Z"));
         when(userRepository.findById(USER_ID))
