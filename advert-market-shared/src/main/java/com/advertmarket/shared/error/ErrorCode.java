@@ -85,7 +85,8 @@ public enum ErrorCode {
 
     // --- Infrastructure ---
     EVENT_DESERIALIZATION_ERROR(500),
-    JSON_ERROR(500);
+    JSON_ERROR(500),
+    LOCK_ACQUISITION_FAILED(409);
 
     private static final Map<String, ErrorCode> LOOKUP =
             Arrays.stream(values())

@@ -2,6 +2,12 @@ package com.advertmarket.shared.error;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.shared.exception.ErrorCodes;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -65,6 +71,27 @@ class ErrorCodeTest {
     @Test
     @DisplayName("Has expected number of error codes")
     void hasExpectedCount() {
-        assertThat(ErrorCode.values()).hasSize(48);
+        assertThat(ErrorCode.values()).hasSize(49);
+    }
+
+    @Test
+    @DisplayName("Every ErrorCode enum has a matching ErrorCodes constant")
+    void errorCodesParityWithEnum() {
+        Set<String> enumNames = Arrays.stream(ErrorCode.values())
+                .map(Enum::name)
+                .collect(Collectors.toSet());
+
+        Set<String> constantNames = Arrays.stream(
+                        ErrorCodes.class.getDeclaredFields())
+                .filter(f -> Modifier.isPublic(f.getModifiers())
+                        && Modifier.isStatic(f.getModifiers())
+                        && Modifier.isFinal(f.getModifiers())
+                        && f.getType() == String.class)
+                .map(Field::getName)
+                .collect(Collectors.toSet());
+
+        assertThat(constantNames)
+                .as("ErrorCodes constants must match ErrorCode enum 1:1")
+                .isEqualTo(enumNames);
     }
 }
