@@ -31,6 +31,9 @@ CREATE TABLE channels (
     price_per_post_nano BIGINT,
     is_active           BOOLEAN       DEFAULT TRUE,
     owner_id            BIGINT        NOT NULL REFERENCES users(id),
+    engagement_rate     DECIMAL(5,2),
+    avg_views           INTEGER       DEFAULT 0,
+    language            VARCHAR(10)   DEFAULT 'ru',
     version             INTEGER       NOT NULL DEFAULT 0,
     created_at          TIMESTAMPTZ   DEFAULT now(),
     updated_at          TIMESTAMPTZ   DEFAULT now()

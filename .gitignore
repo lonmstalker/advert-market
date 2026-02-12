@@ -33,3 +33,9 @@ Thumbs.db
 
 # jOOQ generated (regenerated from Liquibase changelogs)
 advert-market-db/src/main/generated/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Screenshots (UI review artifacts)
+**/screenshots/

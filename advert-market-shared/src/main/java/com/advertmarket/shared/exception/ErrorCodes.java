@@ -77,6 +77,8 @@ public final class ErrorCodes {
             "CHANNEL_BOT_INSUFFICIENT_RIGHTS";
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_USER_NOT_ADMIN =
             "CHANNEL_USER_NOT_ADMIN";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String PRICING_RULE_NOT_FOUND =
+            "PRICING_RULE_NOT_FOUND";
 
     // --- Dispute ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String DISPUTE_NOT_FOUND =

@@ -43,7 +43,7 @@ export function TourSlideCatalog() {
                   description={t('onboarding.tour.mockup.subscribers', { count: '125K' })}
                   after={
                     <Text type="caption1" color="accent">
-                      50 TON
+                      5 TON
                     </Text>
                   }
                   chevron
@@ -54,7 +54,7 @@ export function TourSlideCatalog() {
                   description={t('onboarding.tour.mockup.subscribers', { count: '89K' })}
                   after={
                     <Text type="caption1" color="accent">
-                      30 TON
+                      3 TON
                     </Text>
                   }
                   chevron
@@ -64,7 +64,7 @@ export function TourSlideCatalog() {
                   description={t('onboarding.tour.mockup.subscribers', { count: '67K' })}
                   after={
                     <Text type="caption1" color="accent">
-                      25 TON
+                      4.5 TON
                     </Text>
                   }
                   chevron
@@ -105,7 +105,7 @@ export function TourSlideCatalog() {
                   text={t('onboarding.tour.mockup.postPrice')}
                   after={
                     <Text type="body" color="accent">
-                      50 TON
+                      5 TON
                     </Text>
                   }
                 />

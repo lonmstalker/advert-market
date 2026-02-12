@@ -14,7 +14,9 @@ const OnboardingInterestPage = lazy(() => import('@/pages/onboarding/OnboardingI
 const OnboardingTourPage = lazy(() => import('@/pages/onboarding/OnboardingTourPage'));
 
 const CatalogPage = lazy(() => import('@/pages/catalog/CatalogPage'));
+const ChannelDetailPage = lazy(() => import('@/pages/catalog/ChannelDetailPage'));
 const DealsPage = lazy(() => import('@/pages/deals/DealsPage'));
+const CreateDealPage = lazy(() => import('@/pages/deals/CreateDealPage'));
 const WalletPage = lazy(() => import('@/pages/wallet/WalletPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 
@@ -79,6 +81,8 @@ export function App() {
                           <Route path="/wallet" element={<WalletPage />} />
                           <Route path="/profile" element={<ProfilePage />} />
                         </Route>
+                        <Route path="/catalog/channels/:channelId" element={<ChannelDetailPage />} />
+                        <Route path="/deals/new" element={<CreateDealPage />} />
                       </Route>
 
                       <Route path="*" element={<Navigate to="/catalog" replace />} />

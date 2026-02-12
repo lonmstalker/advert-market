@@ -93,7 +93,7 @@ export function TourSlideWallet() {
         <AnimatePresence mode="wait">
           {view === 'details' && (
             <motion.div key="details" exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
-              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="50.00 TON" />
+              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="5.00 TON" />
 
               <Group header={t('onboarding.tour.mockup.paymentStatus')}>
                 <GroupItem
@@ -103,12 +103,12 @@ export function TourSlideWallet() {
                   onClick={handleEscrowClick}
                   chevron
                 />
-                <GroupItem text={t('onboarding.tour.mockup.dealAmount')} after={<Text type="body">50.00 TON</Text>} />
+                <GroupItem text={t('onboarding.tour.mockup.dealAmount')} after={<Text type="body">5.00 TON</Text>} />
                 <GroupItem
                   text={t('onboarding.tour.mockup.platformFee')}
                   after={
                     <Text type="body" color="secondary">
-                      2.50 TON
+                      0.25 TON
                     </Text>
                   }
                 />
@@ -116,7 +116,7 @@ export function TourSlideWallet() {
                   text={t('onboarding.tour.mockup.ownerPayout')}
                   after={
                     <Text type="body" color="success">
-                      47.50 TON
+                      4.75 TON
                     </Text>
                   }
                 />

@@ -11,7 +11,7 @@ export function DeepLinkHandler() {
       if (!startParam) return;
 
       if (startParam.startsWith('channel_')) {
-        navigate(`/catalog/${startParam.replace('channel_', '')}`, { replace: true });
+        navigate(`/catalog/channels/${startParam.replace('channel_', '')}`, { replace: true });
       } else if (startParam.startsWith('deal_')) {
         navigate(`/deals/${startParam.replace('deal_', '')}`, { replace: true });
       }

@@ -176,9 +176,46 @@
   },
   "catalog": {
     "title": "Catalog",
+    "search": {
+      "placeholder": "Search channels..."
+    },
+    "filters": {
+      "button": "Filters",
+      "title": "Filters",
+      "topic": "Topic",
+      "topicAll": "All topics",
+      "subscribers": "Subscribers",
+      "pricePerPost": "Price per post",
+      "from": "From",
+      "to": "To",
+      "sortLabel": "Sort by",
+      "sortDefault": "Default",
+      "sort": {
+        "relevance": "Relevance",
+        "subscribers": "Subscribers",
+        "price_asc": "Price ↑",
+        "price_desc": "Price ↓",
+        "er": "Engagement"
+      },
+      "show": "Show {{count}}",
+      "showButton": "Show",
+      "reset": "Reset"
+    },
+    "channel": {
+      "subscribers": "{{count}} subscribers",
+      "subscribersStat": "Subscribers",
+      "avgReach": "Avg. reach",
+      "er": "Engagement",
+      "stats": "Statistics",
+      "pricing": "Pricing",
+      "createDeal": "Create deal",
+      "edit": "Edit",
+      "share": "Share"
+    },
     "empty": {
-      "title": "Channels coming soon",
-      "description": "A catalog of Telegram channels for advertising will appear here"
+      "title": "Nothing found",
+      "description": "Try changing your search parameters or reset filters",
+      "cta": "Reset filters"
     }
   },
   "deals": {
@@ -186,6 +223,19 @@
     "empty": {
       "title": "No active deals",
       "description": "Your advertising deals will appear here"
+    },
+    "create": {
+      "title": "Create deal",
+      "postType": "Post type",
+      "selectPostType": "Select type",
+      "price": "Price",
+      "message": "Message",
+      "messagePlaceholder": "Describe your placement requirements...",
+      "submit": "Send offer",
+      "error": {
+        "alreadyExists": "A deal with this channel already exists",
+        "failed": "Failed to create deal"
+      }
     }
   },
   "wallet": {

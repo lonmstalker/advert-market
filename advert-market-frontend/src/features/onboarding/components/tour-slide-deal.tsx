@@ -208,7 +208,7 @@ export function TourSlideDeal() {
         <AnimatePresence mode="wait">
           {dealView === 'timeline' ? (
             <motion.div key="timeline" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="50.00 TON" />
+              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="5.00 TON" />
 
               <AnimatePresence mode="wait">
                 <motion.div
