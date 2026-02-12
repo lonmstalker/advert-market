@@ -3,7 +3,10 @@
     "welcome": {
       "title": "Welcome to Ad Market",
       "subtitle": "Marketplace for Telegram channel advertising",
-      "start": "Get Started"
+      "start": "Get Started",
+      "feature1": "Channel catalog with filters",
+      "feature2": "Escrow payments via TON",
+      "feature3": "Deal tracking and reports"
     },
     "interest": {
       "title": "Who are you?",
@@ -16,7 +19,8 @@
     },
     "tour": {
       "skip": "Skip",
-      "finish": "Done",
+      "next": "Next",
+      "finish": "Get Started",
       "slide1": {
         "title": "Find Channels",
         "description": "Channel catalog with filters by topic, audience, and price"

@@ -13,14 +13,21 @@ describe('OnboardingPage', () => {
     );
   }
 
-  it('renders welcome title', () => {
+  it('renders product name', () => {
     renderPage();
-    expect(screen.getByText('Welcome to Ad Market')).toBeInTheDocument();
+    expect(screen.getByText('Ad Market')).toBeInTheDocument();
   });
 
   it('renders welcome subtitle', () => {
     renderPage();
     expect(screen.getByText('Marketplace for Telegram channel advertising')).toBeInTheDocument();
+  });
+
+  it('renders feature highlights', () => {
+    renderPage();
+    expect(screen.getByText('Channel catalog with filters')).toBeInTheDocument();
+    expect(screen.getByText('Escrow payments via TON')).toBeInTheDocument();
+    expect(screen.getByText('Deal tracking and reports')).toBeInTheDocument();
   });
 
   it('renders Get Started button', () => {
