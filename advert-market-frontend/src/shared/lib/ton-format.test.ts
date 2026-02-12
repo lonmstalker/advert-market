@@ -99,5 +99,31 @@ describe('ton-format', () => {
     it('throws on whitespace-only string', () => {
       expect(() => parseTonToNano('   ')).toThrow('Empty input');
     });
+
+    it('throws on non-numeric string', () => {
+      expect(() => parseTonToNano('abc')).toThrow('Invalid TON format');
+    });
+
+    it('throws on double dot', () => {
+      expect(() => parseTonToNano('1.2.3')).toThrow('Invalid TON format');
+    });
+
+    it('throws on dot only', () => {
+      expect(() => parseTonToNano('.')).toThrow('Invalid TON format');
+    });
+
+    it('throws on leading dot without digit', () => {
+      expect(() => parseTonToNano('.5')).toThrow('Invalid TON format');
+    });
+
+    it('throws on double negative', () => {
+      expect(() => parseTonToNano('--5')).toThrow('Invalid TON format');
+    });
+  });
+
+  describe('toBigInt (via formatTon)', () => {
+    it('throws on float number input', () => {
+      expect(() => formatTon(1.5)).toThrow('Expected integer nanoTON, got float');
+    });
   });
 });

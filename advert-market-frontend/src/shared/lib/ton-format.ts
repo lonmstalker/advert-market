@@ -2,7 +2,10 @@ export const NANO_PER_TON = 1_000_000_000n;
 
 function toBigInt(value: bigint | number | string): bigint {
   if (typeof value === 'bigint') return value;
-  if (typeof value === 'number') return BigInt(Math.trunc(value));
+  if (typeof value === 'number') {
+    if (!Number.isInteger(value)) throw new Error(`Expected integer nanoTON, got float: ${value}`);
+    return BigInt(value);
+  }
   return BigInt(value);
 }
 
@@ -29,9 +32,12 @@ export function formatTon(nanoTon: bigint | number | string): string {
   return `${formatTonCompact(nanoTon)} TON`;
 }
 
+const TON_FORMAT = /^-?\d+(\.\d{1,9})?$/;
+
 export function parseTonToNano(ton: string): bigint {
   const trimmed = ton.trim();
   if (!trimmed) throw new Error('Empty input');
+  if (!TON_FORMAT.test(trimmed)) throw new Error(`Invalid TON format: ${trimmed}`);
 
   const dotIndex = trimmed.indexOf('.');
   if (dotIndex === -1) {

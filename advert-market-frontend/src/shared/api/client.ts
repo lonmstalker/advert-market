@@ -25,7 +25,18 @@ type RequestOptions<T> = {
   _isRetrying?: boolean;
 };
 
+let reLoginPromise: Promise<boolean> | null = null;
+
 async function attemptReLogin(): Promise<boolean> {
+  if (reLoginPromise) return reLoginPromise;
+
+  reLoginPromise = doReLogin().finally(() => {
+    reLoginPromise = null;
+  });
+  return reLoginPromise;
+}
+
+async function doReLogin(): Promise<boolean> {
   const initData = getInitData();
   if (!initData) return false;
 
@@ -119,7 +130,7 @@ export const api = {
     return request<T>('PUT', path, { body, schema: options?.schema });
   },
 
-  delete<T>(path: string) {
-    return request<T>('DELETE', path);
+  delete(path: string) {
+    return request<void>('DELETE', path);
   },
 };

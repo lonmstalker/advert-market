@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Spinner, ThemeProvider, ToastProvider } from '@telegram-tools/ui-kit';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { AuthGuard, ErrorBoundary } from '@/shared/ui';
 import { DeepLinkHandler } from './deep-link-handler';
@@ -28,13 +28,27 @@ const queryClient = new QueryClient({
 
 const TON_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
 
-function useTelegramTheme(): 'light' | 'dark' {
+function getTheme(): 'light' | 'dark' {
   try {
-    const colorScheme = window.Telegram?.WebApp?.colorScheme;
-    return colorScheme === 'dark' ? 'dark' : 'light';
+    return window.Telegram?.WebApp?.colorScheme === 'dark' ? 'dark' : 'light';
   } catch {
     return 'light';
   }
+}
+
+function useTelegramTheme(): 'light' | 'dark' {
+  const [theme, setTheme] = useState(getTheme);
+
+  useEffect(() => {
+    const webApp = window.Telegram?.WebApp;
+    if (!webApp?.onEvent) return;
+
+    const handler = () => setTheme(getTheme());
+    webApp.onEvent('themeChanged', handler);
+    return () => webApp.offEvent('themeChanged', handler);
+  }, []);
+
+  return theme;
 }
 
 export function App() {

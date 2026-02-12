@@ -22,7 +22,10 @@ export function formatRelativeTime(date: string | Date, locale = 'en'): string {
   const diffMs = now - target.getTime();
   const diffSec = Math.floor(diffMs / 1000);
 
-  if (diffSec < 60) return locale.startsWith('ru') ? 'только что' : 'just now';
+  if (diffSec < 60) {
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+    return rtf.format(0, 'second');
+  }
 
   const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 

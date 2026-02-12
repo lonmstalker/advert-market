@@ -10,7 +10,7 @@ describe('date-format', () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date('2025-06-15T12:00:30Z'));
 
-      expect(formatRelativeTime(new Date('2025-06-15T12:00:00Z'))).toBe('just now');
+      expect(formatRelativeTime(new Date('2025-06-15T12:00:00Z'))).toBe('now');
     });
 
     it('returns minutes for 5 minutes ago', () => {
@@ -54,7 +54,7 @@ describe('date-format', () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date('2025-06-15T12:00:30Z'));
 
-      expect(formatRelativeTime('2025-06-15T12:00:00Z')).toBe('just now');
+      expect(formatRelativeTime('2025-06-15T12:00:00Z')).toBe('now');
     });
   });
 

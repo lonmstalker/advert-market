@@ -6,6 +6,7 @@ import { withTranslation } from 'react-i18next';
 
 type ErrorBoundaryProps = WithTranslation & {
   children: ReactNode;
+  resetKey?: string;
 };
 
 type ErrorBoundaryState = {
@@ -22,6 +23,12 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info.componentStack);
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   handleRetry = () => {

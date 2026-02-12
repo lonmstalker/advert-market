@@ -1,4 +1,4 @@
-import { init } from '@telegram-apps/sdk-react';
+import { init, miniApp, viewport } from '@telegram-apps/sdk-react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from '@/app/App';
@@ -14,6 +14,8 @@ if (import.meta.env.DEV) {
 // Initialize Telegram Mini Apps SDK — sets up event listeners and bridge
 try {
   init();
+  miniApp.ready();
+  viewport.expand();
 } catch {
   // Outside Telegram — SDK init fails, app continues with limited functionality
 }

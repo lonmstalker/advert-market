@@ -4,6 +4,7 @@ import {
   hapticFeedbackSelectionChanged,
   isHapticFeedbackSupported,
 } from '@telegram-apps/sdk-react';
+import { useMemo } from 'react';
 
 type ImpactStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
 type NotificationType = 'error' | 'success' | 'warning';
@@ -23,33 +24,36 @@ function isSupported(): boolean {
 }
 
 export function useHaptic(): HapticFeedback {
-  return {
-    impactOccurred(style: ImpactStyle) {
-      if (isSupported()) {
-        try {
-          hapticFeedbackImpactOccurred(style);
-        } catch {
-          /* no-op outside TG */
+  return useMemo(
+    () => ({
+      impactOccurred(style: ImpactStyle) {
+        if (isSupported()) {
+          try {
+            hapticFeedbackImpactOccurred(style);
+          } catch {
+            /* no-op outside TG */
+          }
         }
-      }
-    },
-    notificationOccurred(type: NotificationType) {
-      if (isSupported()) {
-        try {
-          hapticFeedbackNotificationOccurred(type);
-        } catch {
-          /* no-op outside TG */
+      },
+      notificationOccurred(type: NotificationType) {
+        if (isSupported()) {
+          try {
+            hapticFeedbackNotificationOccurred(type);
+          } catch {
+            /* no-op outside TG */
+          }
         }
-      }
-    },
-    selectionChanged() {
-      if (isSupported()) {
-        try {
-          hapticFeedbackSelectionChanged();
-        } catch {
-          /* no-op outside TG */
+      },
+      selectionChanged() {
+        if (isSupported()) {
+          try {
+            hapticFeedbackSelectionChanged();
+          } catch {
+            /* no-op outside TG */
+          }
         }
-      }
-    },
-  };
+      },
+    }),
+    [],
+  );
 }
