@@ -11,6 +11,9 @@ import java.security.NoSuchAlgorithmException;
  */
 public final class UserBucket {
 
+    private static final int BYTE_MASK = 0xFF;
+    private static final int BUCKET_COUNT = 100;
+
     private UserBucket() {
     }
 
@@ -25,16 +28,17 @@ public final class UserBucket {
         try {
             var digest = MessageDigest.getInstance("SHA-256");
             var input = userKey + ":" + (salt != null ? salt : "");
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            // Use first 4 bytes as unsigned int, mod 100
-            int value = ((hash[0] & 0xFF) << 24)
-                    | ((hash[1] & 0xFF) << 16)
-                    | ((hash[2] & 0xFF) << 8)
-                    | (hash[3] & 0xFF);
-            return Math.abs(value % 100);
+            byte[] hash = digest.digest(
+                    input.getBytes(StandardCharsets.UTF_8));
+            int value = 0;
+            for (int i = 0; i < Integer.BYTES; i++) {
+                value = (value << Byte.SIZE)
+                        | (hash[i] & BYTE_MASK);
+            }
+            return Math.abs(value % BUCKET_COUNT);
         } catch (NoSuchAlgorithmException e) {
-            // SHA-256 is guaranteed by the JVM spec
-            throw new AssertionError("SHA-256 not available", e);
+            throw new AssertionError(
+                    "SHA-256 not available", e);
         }
     }
 
@@ -46,11 +50,12 @@ public final class UserBucket {
      * @param canaryPercent  canary traffic percentage [0..100]
      * @return true if user should go to canary
      */
-    public static boolean isCanary(long userKey, String salt, int canaryPercent) {
+    public static boolean isCanary(long userKey, String salt,
+            int canaryPercent) {
         if (canaryPercent <= 0) {
             return false;
         }
-        if (canaryPercent >= 100) {
+        if (canaryPercent >= BUCKET_COUNT) {
             return true;
         }
         return compute(userKey, salt) < canaryPercent;

@@ -20,7 +20,8 @@ public class CanaryRouter {
 
     static final String REDIS_KEY = "canary:percent";
     static final String SALT_KEY = "canary:salt";
-    private static final long CACHE_TTL_MS = 5_000; // 5 seconds
+    static final int MAX_CANARY_PERCENT = 100;
+    private static final long CACHE_TTL_MS = 5_000;
 
     private final StringRedisTemplate redis;
     private final Counter stableCounter;
@@ -70,9 +71,11 @@ public class CanaryRouter {
      * Set canary percent (for admin API). Writes to Redis.
      */
     public void setCanaryPercent(int percent) {
-        if (percent < 0 || percent > 100) {
+        if (percent < 0 || percent > MAX_CANARY_PERCENT) {
             throw new IllegalArgumentException(
-                    "Canary percent must be between 0 and 100, got: " + percent);
+                    "Canary percent must be between 0 and "
+                            + MAX_CANARY_PERCENT + ", got: "
+                            + percent);
         }
         redis.opsForValue().set(REDIS_KEY, String.valueOf(percent));
         cachedPercent.set(percent);

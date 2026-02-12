@@ -308,6 +308,16 @@
       <message key="name.invalidPattern"
              value="Interface type name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    <module name="MagicNumber">
+      <property name="ignoreNumbers" value="-1, 0, 1, 2"/>
+      <property name="ignoreHashCodeMethod" value="true"/>
+      <property name="ignoreAnnotation" value="true"/>
+      <property name="ignoreFieldDeclaration" value="true"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="checks" value="MagicNumber"/>
+      <property name="query" value="//ENUM_CONSTANT_DEF//*"/>
+    </module>
     <module name="NoFinalizer"/>
     <module name="GenericWhitespace">
       <message key="ws.followed"

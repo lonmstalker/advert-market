@@ -7,6 +7,7 @@ import com.pengrad.telegrambot.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 /**
@@ -56,30 +57,35 @@ public class BotErrorHandler {
         if (msg == null) {
             return null;
         }
-        // Check for common code patterns in the message
-        if (msg.contains("429")) {
-            return 429;
+        if (msg.contains(String.valueOf(
+                HttpStatus.TOO_MANY_REQUESTS.value()))) {
+            return HttpStatus.TOO_MANY_REQUESTS.value();
         }
-        if (msg.contains("403")) {
-            return 403;
+        if (msg.contains(String.valueOf(
+                HttpStatus.FORBIDDEN.value()))) {
+            return HttpStatus.FORBIDDEN.value();
         }
-        if (msg.contains("400")) {
-            return 400;
+        if (msg.contains(String.valueOf(
+                HttpStatus.BAD_REQUEST.value()))) {
+            return HttpStatus.BAD_REQUEST.value();
         }
         return null;
     }
 
     private static BotErrorCategory classifyByCode(int code) {
-        if (code == 429) {
+        if (code == HttpStatus.TOO_MANY_REQUESTS.value()) {
             return BotErrorCategory.RATE_LIMITED;
         }
-        if (code == 403) {
+        if (code == HttpStatus.FORBIDDEN.value()) {
             return BotErrorCategory.USER_BLOCKED;
         }
-        if (code >= 400 && code < 500) {
+        if (code >= HttpStatus.BAD_REQUEST.value()
+                && code < HttpStatus.INTERNAL_SERVER_ERROR
+                        .value()) {
             return BotErrorCategory.CLIENT_ERROR;
         }
-        if (code >= 500) {
+        if (code >= HttpStatus.INTERNAL_SERVER_ERROR
+                .value()) {
             return BotErrorCategory.SERVER_ERROR;
         }
         return BotErrorCategory.UNKNOWN;

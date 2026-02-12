@@ -1,5 +1,7 @@
 package com.advertmarket.shared.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Objects;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -40,8 +42,16 @@ public record DealId(@NonNull UUID value) {
      * @return deal identifier
      * @throws IllegalArgumentException if not a valid UUID
      */
+    @JsonCreator
     public static @NonNull DealId of(@NonNull String value) {
         return new DealId(UUID.fromString(value));
+    }
+
+    /** Returns the UUID value for JSON serialization. */
+    @JsonValue
+    @Override
+    public @NonNull UUID value() {
+        return value;
     }
 
     @Override

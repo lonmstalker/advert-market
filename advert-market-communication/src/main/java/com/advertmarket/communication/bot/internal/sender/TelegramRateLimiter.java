@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TelegramRateLimiter implements RateLimiterPort {
 
+    private static final long ACQUIRE_TIMEOUT_SECONDS = 5;
+
     private final Semaphore globalSemaphore;
     private final int globalPermits;
     private final int perChatPermits;
@@ -39,7 +41,8 @@ public class TelegramRateLimiter implements RateLimiterPort {
     public void acquire(long chatId) {
         try {
             if (!globalSemaphore.tryAcquire(
-                    5, TimeUnit.SECONDS)) {
+                    ACQUIRE_TIMEOUT_SECONDS,
+                    TimeUnit.SECONDS)) {
                 log.warn("Global rate limit timeout for chat={}",
                         chatId);
                 return;
@@ -47,7 +50,8 @@ public class TelegramRateLimiter implements RateLimiterPort {
             var chatSemaphore = perChatSemaphores.get(chatId,
                     _ -> new Semaphore(perChatPermits));
             if (!chatSemaphore.tryAcquire(
-                    5, TimeUnit.SECONDS)) {
+                    ACQUIRE_TIMEOUT_SECONDS,
+                    TimeUnit.SECONDS)) {
                 log.warn("Per-chat rate limit timeout for chat={}",
                         chatId);
                 globalSemaphore.release();

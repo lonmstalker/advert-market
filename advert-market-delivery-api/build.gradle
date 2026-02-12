@@ -5,4 +5,7 @@ plugins {
 dependencies {
     api platform(project(':platform-bom'))
     api project(':advert-market-shared')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
 }

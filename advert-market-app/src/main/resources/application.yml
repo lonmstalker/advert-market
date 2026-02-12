@@ -37,15 +37,20 @@ spring:
       enable-auto-commit: false
       properties:
         session.timeout.ms: 30000
+        partition.assignment.strategy: org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+        max.poll.records: 100
     listener:
-      ack-mode: manual
+      ack-mode: manual_immediate
       concurrency: 1
+  mvc:
+    problemdetails:
+      enabled: true
   jackson:
     default-property-inclusion: non_null
     serialization:
       write-dates-as-timestamps: false
   messages:
-    basename: messages/bot,messages/notifications
+    basename: messages/bot,messages/notifications,messages/errors
     encoding: UTF-8
     fallback-to-system-locale: false
 

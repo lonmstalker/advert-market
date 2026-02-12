@@ -7,6 +7,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -60,8 +61,8 @@ public class TelegramWebhookController {
             if (!webhookSecret.isEmpty()
                     && !webhookSecret.equals(secretToken)) {
                 log.warn("Webhook secret mismatch");
-                return ResponseEntity
-                        .status(401).<Void>build();
+                return ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED).<Void>build();
             }
 
             // 2. Parse update

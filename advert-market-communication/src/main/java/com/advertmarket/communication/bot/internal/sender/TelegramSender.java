@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 /**
@@ -247,23 +248,27 @@ public class TelegramSender {
     private long extractRetryAfter(BaseResponse response) {
         if (response.parameters() != null
                 && response.parameters().retryAfter() != null) {
-            return response.parameters().retryAfter() * 1000L;
+            return TimeUnit.SECONDS.toMillis(
+                    response.parameters().retryAfter());
         }
         return backoffMs(0);
     }
 
     /** Classifies a Telegram API error code. */
     static BotErrorCategory classifyError(int code) {
-        if (code == 429) {
+        if (code == HttpStatus.TOO_MANY_REQUESTS.value()) {
             return BotErrorCategory.RATE_LIMITED;
         }
-        if (code == 403) {
+        if (code == HttpStatus.FORBIDDEN.value()) {
             return BotErrorCategory.USER_BLOCKED;
         }
-        if (code >= 400 && code < 500) {
+        if (code >= HttpStatus.BAD_REQUEST.value()
+                && code < HttpStatus.INTERNAL_SERVER_ERROR
+                        .value()) {
             return BotErrorCategory.CLIENT_ERROR;
         }
-        if (code >= 500) {
+        if (code >= HttpStatus.INTERNAL_SERVER_ERROR
+                .value()) {
             return BotErrorCategory.SERVER_ERROR;
         }
         return BotErrorCategory.UNKNOWN;

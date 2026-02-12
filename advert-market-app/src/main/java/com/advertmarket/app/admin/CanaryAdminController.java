@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,7 +43,8 @@ public class CanaryAdminController {
     public ResponseEntity<CanaryStatus> getCanary(
             @RequestHeader("Authorization") String authorization) {
         if (!authenticate(authorization)) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(
+                    HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(new CanaryStatus(
                 canaryRouter.getCanaryPercent(),
@@ -60,7 +62,8 @@ public class CanaryAdminController {
             @RequestHeader("Authorization") String authorization,
             @RequestBody CanaryUpdate update) {
         if (!authenticate(authorization)) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(
+                    HttpStatus.UNAUTHORIZED).build();
         }
 
         if (update.percent() != null) {

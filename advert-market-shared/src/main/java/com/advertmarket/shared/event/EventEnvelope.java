@@ -1,9 +1,11 @@
 package com.advertmarket.shared.event;
 
+import com.advertmarket.shared.FenumGroup;
 import com.advertmarket.shared.model.DealId;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import org.checkerframework.checker.fenum.qual.Fenum;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -17,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public record EventEnvelope<T extends DomainEvent>(
         @NonNull UUID eventId,
-        @NonNull String eventType,
+        @Fenum(FenumGroup.EVENT_TYPE) @NonNull String eventType,
         @Nullable DealId dealId,
         @NonNull Instant timestamp,
         int version,
@@ -52,7 +54,7 @@ public record EventEnvelope<T extends DomainEvent>(
      * @return new event envelope
      */
     public static <T extends DomainEvent> EventEnvelope<T> create(
-            @NonNull String eventType,
+            @Fenum(FenumGroup.EVENT_TYPE) @NonNull String eventType,
             @Nullable DealId dealId,
             @NonNull T payload) {
         return new EventEnvelope<>(

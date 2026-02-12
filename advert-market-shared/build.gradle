@@ -10,9 +10,12 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
     compileOnly 'io.micrometer:micrometer-core'
     compileOnly 'org.springframework:spring-context'
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
 
     testImplementation 'io.micrometer:micrometer-core'
     testImplementation 'org.springframework:spring-context'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
