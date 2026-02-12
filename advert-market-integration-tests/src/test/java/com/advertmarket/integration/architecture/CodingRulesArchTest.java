@@ -5,6 +5,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 
+import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaMethod;
@@ -216,5 +217,89 @@ class CodingRulesArchTest {
 
     private static boolean isPrimitive(JavaClass type) {
         return PRIMITIVE_NAMES.contains(type.getName());
+    }
+
+    // --- Review-driven rules (commit 94b0011) ---
+
+    @Test
+    @DisplayName("Shared module must not use Spring stereotype annotations")
+    void sharedModuleShouldNotHaveSpringStereotypes() {
+        noClasses()
+                .that().resideInAPackage("com.advertmarket.shared..")
+                .should().beAnnotatedWith(
+                        "org.springframework.stereotype.Component")
+                .orShould().beAnnotatedWith(
+                        "org.springframework.stereotype.Service")
+                .orShould().beAnnotatedWith(
+                        "org.springframework.stereotype.Repository")
+                .because("shared module classes must be registered "
+                        + "as @Bean in app module @Configuration, "
+                        + "not auto-scanned via @Component")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("No @Value annotation — use @ConfigurationProperties")
+    void noValueAnnotation() {
+        noFields()
+                .should().beAnnotatedWith(
+                        "org.springframework.beans.factory.annotation.Value")
+                .because("use @ConfigurationProperties records "
+                        + "with @PropertyDoc instead of @Value")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("@ConfigurationProperties must have @PropertyGroupDoc")
+    void configurationPropertiesMustHavePropertyGroupDoc() {
+        classes()
+                .that().areAnnotatedWith(
+                        "org.springframework.boot.context.properties.ConfigurationProperties")
+                .should(havePropertyGroupDocAnnotation())
+                .because("all @ConfigurationProperties records "
+                        + "must have @PropertyGroupDoc for "
+                        + "generated documentation")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("No direct MeterRegistry — use MetricsFacade")
+    void noDirectMeterRegistryUsage() {
+        noClasses()
+                .that().resideInAnyPackage(
+                        "com.advertmarket.identity..",
+                        "com.advertmarket.financial..",
+                        "com.advertmarket.marketplace..",
+                        "com.advertmarket.deal..",
+                        "com.advertmarket.delivery..",
+                        "com.advertmarket.communication..")
+                .should().dependOnClassesThat()
+                .haveFullyQualifiedName(
+                        "io.micrometer.core.instrument.MeterRegistry")
+                .because("use MetricsFacade from shared module "
+                        + "instead of MeterRegistry directly")
+                .check(classes);
+    }
+
+    private static ArchCondition<JavaClass> havePropertyGroupDocAnnotation() {
+        return new ArchCondition<>(
+                "have @PropertyGroupDoc annotation") {
+            @Override
+            public void check(JavaClass clazz,
+                    ConditionEvents events) {
+                boolean found = clazz.getAnnotations()
+                        .stream()
+                        .map(JavaAnnotation::getRawType)
+                        .map(JavaClass::getSimpleName)
+                        .anyMatch("PropertyGroupDoc"::equals);
+                if (!found) {
+                    events.add(SimpleConditionEvent.violated(
+                            clazz,
+                            clazz.getSimpleName()
+                                    + " is missing "
+                                    + "@PropertyGroupDoc"));
+                }
+            }
+        };
     }
 }

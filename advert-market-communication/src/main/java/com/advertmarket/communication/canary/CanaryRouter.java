@@ -37,8 +37,8 @@ public class CanaryRouter {
             MetricsFacade metrics) {
         this.redis = redis;
         this.metrics = metrics;
-        metrics.registry().gauge(
-                "canary.percent.current", cachedPercent);
+        metrics.registerGauge(
+                MetricNames.CANARY_PERCENT_CURRENT, cachedPercent);
     }
 
     /**

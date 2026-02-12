@@ -47,6 +47,13 @@ public class MetricsFacade {
         getOrCreateTimer(name, tags).record(runnable);
     }
 
+    /** Registers a gauge backed by the given {@link Number}. */
+    public <T extends Number> void registerGauge(
+            @Fenum(FenumGroup.METRIC_NAME) @NonNull String name,
+            @NonNull T number) {
+        registry.gauge(name, number);
+    }
+
     /** Returns the underlying registry for advanced use cases. */
     @NonNull
     public MeterRegistry registry() {

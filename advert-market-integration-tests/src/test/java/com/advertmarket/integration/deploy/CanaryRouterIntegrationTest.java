@@ -7,6 +7,7 @@ import com.advertmarket.communication.canary.CanaryRouter;
 import com.advertmarket.shared.metric.MetricsFacade;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -18,6 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Integration test for CanaryRouter with real Redis.
  */
 @Testcontainers
+@DisplayName("CanaryRouter integration with Redis")
 class CanaryRouterIntegrationTest {
 
     @Container
@@ -40,17 +42,20 @@ class CanaryRouterIntegrationTest {
     }
 
     @Test
+    @DisplayName("Default canary percent is zero")
     void defaultPercent_isZero() {
         assertThat(canaryRouter.getCanaryPercent()).isZero();
     }
 
     @Test
+    @DisplayName("Set and get canary percent")
     void setAndGetPercent() {
         canaryRouter.setCanaryPercent(25);
         assertThat(canaryRouter.getCanaryPercent()).isEqualTo(25);
     }
 
     @Test
+    @DisplayName("Percent is persisted in Redis")
     void percentPersistedInRedis() {
         canaryRouter.setCanaryPercent(42);
         String stored = redisTemplate.opsForValue().get("canary:percent");
@@ -58,6 +63,7 @@ class CanaryRouterIntegrationTest {
     }
 
     @Test
+    @DisplayName("New instance reads percent from Redis")
     void percentReadFromRedis_onNewInstance() {
         redisTemplate.opsForValue().set("canary:percent", "15");
         // New instance should read from Redis
@@ -66,6 +72,7 @@ class CanaryRouterIntegrationTest {
     }
 
     @Test
+    @DisplayName("Salt is persisted in Redis")
     void saltPersistedInRedis() {
         canaryRouter.setSalt("v2-rollout");
         String stored = redisTemplate.opsForValue().get("canary:salt");
@@ -73,6 +80,7 @@ class CanaryRouterIntegrationTest {
     }
 
     @Test
+    @DisplayName("Salt change redistributes user buckets")
     void saltChange_redistributesBuckets() {
         canaryRouter.setCanaryPercent(50);
         canaryRouter.setSalt("salt-a");
@@ -91,6 +99,7 @@ class CanaryRouterIntegrationTest {
     }
 
     @Test
+    @DisplayName("Invalid percent throws IllegalArgumentException")
     void invalidPercent_throwsException() {
         assertThatThrownBy(() -> canaryRouter.setCanaryPercent(-1))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -99,6 +108,7 @@ class CanaryRouterIntegrationTest {
     }
 
     @Test
+    @DisplayName("Zero percent routes all users to stable")
     void zeroPercent_neverCanary() {
         canaryRouter.setCanaryPercent(0);
         for (long userId = 1; userId <= 100; userId++) {
@@ -107,6 +117,7 @@ class CanaryRouterIntegrationTest {
     }
 
     @Test
+    @DisplayName("Hundred percent routes all users to canary")
     void hundredPercent_alwaysCanary() {
         canaryRouter.setCanaryPercent(100);
         for (long userId = 1; userId <= 100; userId++) {

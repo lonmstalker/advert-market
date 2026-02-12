@@ -57,6 +57,31 @@ class LayerArchTest {
     }
 
     @Test
+    @DisplayName("Service and web classes must not use "
+            + "StringRedisTemplate directly")
+    void serviceClassesShouldNotUseRedisDirectly() {
+        noClasses()
+                .that().resideInAnyPackage(
+                        "..service..", "..web..", "..command..")
+                .and().resideInAnyPackage(
+                        "com.advertmarket.identity..",
+                        "com.advertmarket.financial..",
+                        "com.advertmarket.marketplace..",
+                        "com.advertmarket.deal..",
+                        "com.advertmarket.delivery..",
+                        "com.advertmarket.communication..")
+                .and().resideOutsideOfPackage("..internal..")
+                .should().dependOnClassesThat()
+                .haveFullyQualifiedName(
+                        "org.springframework.data.redis.core"
+                                + ".StringRedisTemplate")
+                .because("Redis access must go through port "
+                        + "interfaces; use adapter/internal "
+                        + "classes for StringRedisTemplate")
+                .check(classes);
+    }
+
+    @Test
     @DisplayName("API modules must not depend on Spring web or security")
     void apiModulesShouldNotDependOnSpringWeb() {
         noClasses()

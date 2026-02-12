@@ -75,6 +75,8 @@ public final class MetricNames {
             "delivery.failed";
 
     // --- Canary ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CANARY_PERCENT_CURRENT =
+            "canary.percent.current";
     public static final @Fenum(FenumGroup.METRIC_NAME) String CANARY_ROUTE_DECISION =
             "canary.route.decision";
 
