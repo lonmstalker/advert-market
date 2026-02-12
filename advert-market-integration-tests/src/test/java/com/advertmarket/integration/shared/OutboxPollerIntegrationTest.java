@@ -3,9 +3,8 @@ package com.advertmarket.integration.shared;
 import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATION_OUTBOX;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.advertmarket.app.config.outbox.JooqOutboxRepository;
+import com.advertmarket.app.outbox.JooqOutboxRepository;
 import com.advertmarket.shared.event.TopicNames;
-import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxPoller;

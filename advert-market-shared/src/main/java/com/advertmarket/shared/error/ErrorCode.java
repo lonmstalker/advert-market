@@ -49,6 +49,9 @@ public enum ErrorCode {
     CHANNEL_INACCESSIBLE(502),
     CHANNEL_NOT_OWNED(403),
     CHANNEL_STATS_UNAVAILABLE(503),
+    CHAN_BOT_NOT_MEMBER(403),
+    CHAN_BOT_NOT_ADMIN(403),
+    CHAN_BOT_INSUFFICIENT_RIGHTS(403),
 
     // --- Dispute ---
     DISPUTE_NOT_FOUND(404),
@@ -80,6 +83,7 @@ public enum ErrorCode {
     // --- Compatibility with existing exception error codes ---
     INVALID_STATE_TRANSITION(409),
     ENTITY_NOT_FOUND(404),
+    USER_NOT_FOUND(404),
     WALLET_NOT_FOUND(404),
     NOTIFICATION_DELIVERY_FAILED(502),
 

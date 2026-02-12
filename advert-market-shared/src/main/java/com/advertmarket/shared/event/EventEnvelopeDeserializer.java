@@ -3,7 +3,7 @@ package com.advertmarket.shared.event;
 import com.advertmarket.shared.json.JsonException;
 import com.advertmarket.shared.json.JsonFacade;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -13,24 +13,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * payload class from {@link EventTypeRegistry}, then uses
  * Jackson parametric type to deserialize the full envelope.
  */
+@RequiredArgsConstructor
 public class EventEnvelopeDeserializer {
 
-    private final JsonFacade json;
-    private final EventTypeRegistry registry;
-
-    /**
-     * Creates a deserializer.
-     *
-     * @param json JSON facade
-     * @param registry event type registry
-     */
-    public EventEnvelopeDeserializer(
-            @NonNull JsonFacade json,
-            @NonNull EventTypeRegistry registry) {
-        this.json = Objects.requireNonNull(json, "json");
-        this.registry = Objects.requireNonNull(
-                registry, "registry");
-    }
+    private final @NonNull JsonFacade json;
+    private final @NonNull EventTypeRegistry registry;
 
     /**
      * Deserializes JSON bytes into an {@link EventEnvelope}.
@@ -40,8 +27,7 @@ public class EventEnvelopeDeserializer {
      * @throws EventDeserializationException on failure
      */
     @NonNull
-    public EventEnvelope<?> deserialize(byte[] data) {
-        Objects.requireNonNull(data, "data");
+    public EventEnvelope<?> deserialize(byte @NonNull [] data) {
         try {
             return doParse(json.readTree(data));
         } catch (JsonException e) {
@@ -59,7 +45,6 @@ public class EventEnvelopeDeserializer {
      */
     @NonNull
     public EventEnvelope<?> deserialize(@NonNull String jsonStr) {
-        Objects.requireNonNull(jsonStr, "jsonStr");
         try {
             return doParse(json.readTree(jsonStr));
         } catch (JsonException e) {

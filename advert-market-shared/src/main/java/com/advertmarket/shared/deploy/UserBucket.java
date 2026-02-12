@@ -3,6 +3,7 @@ package com.advertmarket.shared.deploy;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Stable bucketing for canary routing.
@@ -24,7 +25,7 @@ public final class UserBucket {
      * @param salt    optional salt to redistribute buckets; empty string for no salt
      * @return bucket in [0, 99]
      */
-    public static int compute(long userKey, String salt) {
+    public static int compute(long userKey, @Nullable String salt) {
         try {
             var digest = MessageDigest.getInstance("SHA-256");
             var input = userKey + ":" + (salt != null ? salt : "");
@@ -35,7 +36,7 @@ public final class UserBucket {
                 value = (value << Byte.SIZE)
                         | (hash[i] & BYTE_MASK);
             }
-            return Math.abs(value % BUCKET_COUNT);
+            return Math.floorMod(value, BUCKET_COUNT);
         } catch (NoSuchAlgorithmException e) {
             throw new AssertionError(
                     "SHA-256 not available", e);
@@ -50,7 +51,7 @@ public final class UserBucket {
      * @param canaryPercent  canary traffic percentage [0..100]
      * @return true if user should go to canary
      */
-    public static boolean isCanary(long userKey, String salt,
+    public static boolean isCanary(long userKey, @Nullable String salt,
             int canaryPercent) {
         if (canaryPercent <= 0) {
             return false;

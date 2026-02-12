@@ -59,6 +59,14 @@ public final class MetricNames {
             "channel.registered";
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_FETCHED =
             "channel.stats.fetched";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_API_CALL =
+            "channel.api.call";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_CACHE_HIT =
+            "channel.cache.hit";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_CACHE_MISS =
+            "channel.cache.miss";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_CACHE_STALE =
+            "channel.cache.stale";
 
     // --- Delivery ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String DELIVERY_VERIFIED =

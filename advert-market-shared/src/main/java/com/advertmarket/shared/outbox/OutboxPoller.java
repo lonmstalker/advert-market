@@ -4,6 +4,8 @@ import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -57,11 +59,15 @@ public class OutboxPoller {
             justification = "id() is never null for entries fetched from DB")
     private void publishEntry(OutboxEntry entry) {
         try {
-            publisher.publish(entry).join();
+            publisher.publish(entry)
+                    .orTimeout(
+                            properties.initialBackoff().toMillis(),
+                            TimeUnit.MILLISECONDS)
+                    .join();
             repository.markDelivered(entry.id());
             metrics.incrementCounter(MetricNames.OUTBOX_PUBLISHED);
         } catch (RuntimeException ex) {
-            handleFailure(entry, ex);
+            handleFailure(entry, unwrapException(ex));
         }
     }
 
@@ -69,7 +75,7 @@ public class OutboxPoller {
             value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
             justification = "id() is never null for entries fetched from DB")
     private void handleFailure(
-            OutboxEntry entry, RuntimeException ex) {
+            OutboxEntry entry, Throwable ex) {
         int newRetryCount = entry.retryCount() + 1;
         if (newRetryCount >= properties.maxRetries()) {
             log.error(
@@ -83,5 +89,13 @@ public class OutboxPoller {
                     ex.getMessage());
             repository.incrementRetry(entry.id());
         }
+    }
+
+    private static Throwable unwrapException(RuntimeException ex) {
+        Throwable cause = ex.getCause();
+        if (cause instanceof TimeoutException) {
+            return cause;
+        }
+        return cause != null ? cause : ex;
     }
 }

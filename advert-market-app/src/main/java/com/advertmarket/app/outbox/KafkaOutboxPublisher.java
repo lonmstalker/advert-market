@@ -1,4 +1,4 @@
-package com.advertmarket.app.config.outbox;
+package com.advertmarket.app.outbox;
 
 import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxPublisher;

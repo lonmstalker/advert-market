@@ -1,7 +1,8 @@
 package com.advertmarket.shared.exception;
 
-import java.util.Locale;
+import com.advertmarket.shared.FenumGroup;
 import lombok.Getter;
+import org.checkerframework.checker.fenum.qual.Fenum;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -14,16 +15,17 @@ public class EntityNotFoundException extends DomainException {
     private final @NonNull String entityId;
 
     /**
-     * Creates an entity-not-found exception.
+     * Creates an entity-not-found exception with an explicit error code.
      *
+     * @param errorCode catalog error code (e.g., ErrorCodes.DEAL_NOT_FOUND)
      * @param entityType the type of entity (e.g., "Deal")
      * @param entityId the entity identifier
      */
     public EntityNotFoundException(
+            @Fenum(FenumGroup.ERROR_CODE) @NonNull String errorCode,
             @NonNull String entityType,
             @NonNull String entityId) {
-        super(entityType.toUpperCase(Locale.ROOT)
-                        + "_NOT_FOUND",
+        super(errorCode,
                 entityType + " not found: " + entityId);
         this.entityType = entityType;
         this.entityId = entityId;

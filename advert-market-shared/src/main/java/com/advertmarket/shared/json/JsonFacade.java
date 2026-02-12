@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import java.io.IOException;
-import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -16,19 +16,10 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * <p>Eliminates the need for try-catch blocks around every
  * Jackson call. All methods throw {@link JsonException} on failure.
  */
+@RequiredArgsConstructor
 public class JsonFacade {
 
-    private final ObjectMapper objectMapper;
-
-    /**
-     * Creates a facade wrapping the given mapper.
-     *
-     * @param objectMapper Jackson object mapper
-     */
-    public JsonFacade(@NonNull ObjectMapper objectMapper) {
-        this.objectMapper = Objects.requireNonNull(
-                objectMapper, "objectMapper");
-    }
+    private final @NonNull ObjectMapper objectMapper;
 
     /**
      * Serializes a value to JSON bytes.
@@ -36,7 +27,7 @@ public class JsonFacade {
      * @param value the value to serialize
      * @return JSON byte array
      */
-    public byte[] toBytes(@NonNull Object value) {
+    public byte @NonNull [] toBytes(@NonNull Object value) {
         try {
             return objectMapper.writeValueAsBytes(value);
         } catch (JsonProcessingException e) {

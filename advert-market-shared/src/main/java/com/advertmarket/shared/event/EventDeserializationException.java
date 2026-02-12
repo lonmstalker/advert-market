@@ -2,6 +2,7 @@ package com.advertmarket.shared.event;
 
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Non-retryable exception for event deserialization failures.
@@ -17,7 +18,7 @@ public class EventDeserializationException extends DomainException {
      *
      * @param message description of the deserialization failure
      */
-    public EventDeserializationException(String message) {
+    public EventDeserializationException(@NonNull String message) {
         super(ErrorCodes.EVENT_DESERIALIZATION_ERROR, message);
     }
 
@@ -27,8 +28,8 @@ public class EventDeserializationException extends DomainException {
      * @param message description of the deserialization failure
      * @param cause the underlying cause
      */
-    public EventDeserializationException(String message,
-            Throwable cause) {
+    public EventDeserializationException(
+            @NonNull String message, @NonNull Throwable cause) {
         super(ErrorCodes.EVENT_DESERIALIZATION_ERROR, message, cause);
     }
 }

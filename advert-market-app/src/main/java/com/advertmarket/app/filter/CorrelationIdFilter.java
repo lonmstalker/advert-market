@@ -1,4 +1,4 @@
-package com.advertmarket.app.config;
+package com.advertmarket.app.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

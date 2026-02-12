@@ -69,6 +69,12 @@ public final class ErrorCodes {
             "CHANNEL_NOT_OWNED";
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_STATS_UNAVAILABLE =
             "CHANNEL_STATS_UNAVAILABLE";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAN_BOT_NOT_MEMBER =
+            "CHAN_BOT_NOT_MEMBER";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAN_BOT_NOT_ADMIN =
+            "CHAN_BOT_NOT_ADMIN";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAN_BOT_INSUFFICIENT_RIGHTS =
+            "CHAN_BOT_INSUFFICIENT_RIGHTS";
 
     // --- Dispute ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String DISPUTE_NOT_FOUND =
@@ -109,6 +115,8 @@ public final class ErrorCodes {
     // --- Entities ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String ENTITY_NOT_FOUND =
             "ENTITY_NOT_FOUND";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String USER_NOT_FOUND =
+            "USER_NOT_FOUND";
     public static final @Fenum(FenumGroup.ERROR_CODE) String WALLET_NOT_FOUND =
             "WALLET_NOT_FOUND";
     public static final @Fenum(FenumGroup.ERROR_CODE) String NOTIFICATION_DELIVERY_FAILED =

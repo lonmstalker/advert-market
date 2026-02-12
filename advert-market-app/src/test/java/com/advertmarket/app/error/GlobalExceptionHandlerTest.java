@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.exception.InsufficientBalanceException;
 import com.advertmarket.shared.exception.InvalidStateTransitionException;
 import com.advertmarket.shared.i18n.LocalizationService;
@@ -43,7 +44,8 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("EntityNotFoundException returns 404")
     void entityNotFound_returns404() {
-        var ex = new EntityNotFoundException("Deal", "abc-123");
+        var ex = new EntityNotFoundException(
+                ErrorCodes.DEAL_NOT_FOUND, "Deal", "abc-123");
 
         var problem = handler.handleEntityNotFound(ex, locale);
 
@@ -133,7 +135,8 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("ProblemDetail includes timestamp property")
     void problemDetail_includesTimestamp() {
-        var ex = new EntityNotFoundException("Deal", "1");
+        var ex = new EntityNotFoundException(
+                ErrorCodes.DEAL_NOT_FOUND, "Deal", "1");
 
         var problem = handler.handleEntityNotFound(ex, locale);
 

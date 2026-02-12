@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 class EntityNotFoundExceptionTest {
 
     @Test
-    @DisplayName("Error code is derived from entity type")
-    void errorCode_derivedFromEntityType() {
+    @DisplayName("Uses explicit error code from ErrorCodes catalog")
+    void errorCode_fromCatalog() {
         var ex = new EntityNotFoundException(
-                "Deal", "abc-123");
+                ErrorCodes.DEAL_NOT_FOUND, "Deal", "abc-123");
 
         assertThat(ex.getErrorCode())
                 .isEqualTo("DEAL_NOT_FOUND");
@@ -23,9 +23,22 @@ class EntityNotFoundExceptionTest {
     }
 
     @Test
+    @DisplayName("Generic ENTITY_NOT_FOUND code works")
+    void entityNotFound_genericCode() {
+        var ex = new EntityNotFoundException(
+                ErrorCodes.ENTITY_NOT_FOUND, "Widget", "99");
+
+        assertThat(ex.getErrorCode())
+                .isEqualTo("ENTITY_NOT_FOUND");
+        assertThat(ex.getMessage())
+                .isEqualTo("Widget not found: 99");
+    }
+
+    @Test
     @DisplayName("Is a DomainException")
     void isDomainException() {
-        var ex = new EntityNotFoundException("User", "42");
+        var ex = new EntityNotFoundException(
+                ErrorCodes.USER_NOT_FOUND, "User", "42");
         assertThat(ex).isInstanceOf(DomainException.class);
     }
 }

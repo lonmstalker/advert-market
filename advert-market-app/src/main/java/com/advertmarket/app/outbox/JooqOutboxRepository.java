@@ -1,4 +1,4 @@
-package com.advertmarket.app.config.outbox;
+package com.advertmarket.app.outbox;
 
 import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATION_OUTBOX;
 

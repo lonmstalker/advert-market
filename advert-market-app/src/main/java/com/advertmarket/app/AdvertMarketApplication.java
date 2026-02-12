@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AdvertMarketApplication {
 
     /** Application entry point. */
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(AdvertMarketApplication.class, args);
     }
 }

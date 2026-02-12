@@ -4,6 +4,7 @@ import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ public class LocalizationService {
      */
     @NonNull
     public String msg(@NonNull String key, @NonNull Locale locale,
-            Object... args) {
+            Object @NonNull ... args) {
         try {
             return messageSource.getMessage(key, args, locale);
         } catch (NoSuchMessageException e) {
@@ -46,8 +47,8 @@ public class LocalizationService {
      * @return the resolved message, or the key itself on miss
      */
     @NonNull
-    public String msg(@NonNull String key, String langCode,
-            Object... args) {
+    public String msg(@NonNull String key, @Nullable String langCode,
+            Object @NonNull ... args) {
         Locale locale = StringUtils.isNotBlank(langCode)
                 ? Locale.of(langCode)
                 : DEFAULT_LOCALE;

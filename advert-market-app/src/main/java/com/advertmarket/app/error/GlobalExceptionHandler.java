@@ -1,6 +1,6 @@
 package com.advertmarket.app.error;
 
-import com.advertmarket.app.config.CorrelationIdFilter;
+import com.advertmarket.app.filter.CorrelationIdFilter;
 import com.advertmarket.shared.error.ErrorCode;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;

@@ -5,6 +5,7 @@ import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.api.port.UserService;
 import com.advertmarket.shared.exception.EntityNotFoundException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
@@ -27,7 +28,8 @@ public class UserServiceImpl implements UserService {
     public UserProfile getProfile(@NonNull UserId userId) {
         UserProfile profile = userRepository.findById(userId);
         if (profile == null) {
-            throw new EntityNotFoundException("User",
+            throw new EntityNotFoundException(
+                    ErrorCodes.USER_NOT_FOUND, "User",
                     String.valueOf(userId.value()));
         }
         return profile;
@@ -43,7 +45,8 @@ public class UserServiceImpl implements UserService {
 
         UserProfile profile = userRepository.findById(userId);
         if (profile == null) {
-            throw new EntityNotFoundException("User",
+            throw new EntityNotFoundException(
+                    ErrorCodes.USER_NOT_FOUND, "User",
                     String.valueOf(userId.value()));
         }
         return profile;

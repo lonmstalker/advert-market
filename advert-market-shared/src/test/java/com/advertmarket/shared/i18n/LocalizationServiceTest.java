@@ -7,10 +7,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Locale;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 
+@DisplayName("LocalizationService — message resolution and locale handling")
 class LocalizationServiceTest {
 
     private final MessageSource messageSource =
@@ -19,6 +21,7 @@ class LocalizationServiceTest {
             new LocalizationService(messageSource);
 
     @Test
+    @DisplayName("Resolves message by key and language code")
     void msg_resolvesMessage() {
         when(messageSource.getMessage(
                 eq("bot.welcome"), any(), eq(Locale.of("ru"))))
@@ -28,6 +31,7 @@ class LocalizationServiceTest {
     }
 
     @Test
+    @DisplayName("Resolves message with arguments")
     void msg_resolvesWithArgs() {
         Object[] args = {"Test"};
         when(messageSource.getMessage(
@@ -39,6 +43,7 @@ class LocalizationServiceTest {
     }
 
     @Test
+    @DisplayName("Falls back to key when message not found")
     void msg_fallsBackToKeyOnMiss() {
         when(messageSource.getMessage(
                 eq("missing.key"), any(), eq(Locale.of("ru"))))
@@ -48,6 +53,7 @@ class LocalizationServiceTest {
     }
 
     @Test
+    @DisplayName("Defaults to Russian for null language code")
     void msg_defaultsToRussianForNullLang() {
         when(messageSource.getMessage(
                 eq("bot.test"), any(), eq(Locale.of("ru"))))
@@ -57,6 +63,7 @@ class LocalizationServiceTest {
     }
 
     @Test
+    @DisplayName("Defaults to Russian for blank language code")
     void msg_defaultsToRussianForBlankLang() {
         when(messageSource.getMessage(
                 eq("bot.test"), any(), eq(Locale.of("ru"))))

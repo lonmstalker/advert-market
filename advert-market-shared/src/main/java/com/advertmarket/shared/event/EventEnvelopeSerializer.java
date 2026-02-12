@@ -1,24 +1,16 @@
 package com.advertmarket.shared.event;
 
 import com.advertmarket.shared.json.JsonFacade;
-import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Serializes {@link EventEnvelope} instances to JSON.
  */
+@RequiredArgsConstructor
 public class EventEnvelopeSerializer {
 
-    private final JsonFacade json;
-
-    /**
-     * Creates a serializer with the given JSON facade.
-     *
-     * @param json JSON facade
-     */
-    public EventEnvelopeSerializer(@NonNull JsonFacade json) {
-        this.json = Objects.requireNonNull(json, "json");
-    }
+    private final @NonNull JsonFacade json;
 
     /**
      * Serializes an envelope to JSON bytes.
@@ -26,9 +18,8 @@ public class EventEnvelopeSerializer {
      * @param envelope the event envelope
      * @return JSON byte array
      */
-    public byte[] serialize(
+    public byte @NonNull [] serialize(
             @NonNull EventEnvelope<?> envelope) {
-        Objects.requireNonNull(envelope, "envelope");
         return json.toBytes(envelope);
     }
 
@@ -41,7 +32,6 @@ public class EventEnvelopeSerializer {
     @NonNull
     public String serializeToString(
             @NonNull EventEnvelope<?> envelope) {
-        Objects.requireNonNull(envelope, "envelope");
         return json.toJson(envelope);
     }
 }

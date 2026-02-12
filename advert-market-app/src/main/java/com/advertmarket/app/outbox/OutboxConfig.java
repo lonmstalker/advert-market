@@ -1,4 +1,4 @@
-package com.advertmarket.app.config.outbox;
+package com.advertmarket.app.outbox;
 
 import com.advertmarket.shared.outbox.OutboxProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

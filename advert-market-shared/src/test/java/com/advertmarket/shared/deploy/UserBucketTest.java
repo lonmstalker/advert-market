@@ -3,13 +3,16 @@ package com.advertmarket.shared.deploy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("UserBucket — stable bucketing for canary routing")
 class UserBucketTest {
 
     @Test
+    @DisplayName("Same input always produces the same bucket")
     void compute_sameInput_alwaysSameBucket() {
         long userId = 123456789L;
         int bucket1 = UserBucket.compute(userId, "salt1");
@@ -18,6 +21,7 @@ class UserBucketTest {
     }
 
     @Test
+    @DisplayName("Bucket is always in range [0, 99]")
     void compute_bucketInRange() {
         for (long userId = 0; userId < 10_000; userId++) {
             int bucket = UserBucket.compute(userId, "");
@@ -26,6 +30,7 @@ class UserBucketTest {
     }
 
     @Test
+    @DisplayName("Distribution is reasonably uniform across buckets")
     void compute_distributionIsReasonablyUniform() {
         var counts = new HashMap<Integer, Integer>();
         int total = 100_000;
@@ -45,8 +50,8 @@ class UserBucketTest {
     }
 
     @Test
+    @DisplayName("Different salt redistributes buckets for most users")
     void compute_differentSalt_differentBucket() {
-        // Not guaranteed for every user, but statistically most users change bucket
         int changed = 0;
         for (long userId = 0; userId < 1000; userId++) {
             int b1 = UserBucket.compute(userId, "salt-a");
@@ -55,11 +60,11 @@ class UserBucketTest {
                 changed++;
             }
         }
-        // At least 90% of users should get a different bucket
         assertThat(changed).isGreaterThan(900);
     }
 
     @Test
+    @DisplayName("isCanary returns false for 0%")
     void isCanary_zeroPercent_alwaysFalse() {
         for (long userId = 0; userId < 1000; userId++) {
             assertThat(UserBucket.isCanary(userId, "", 0)).isFalse();
@@ -67,6 +72,7 @@ class UserBucketTest {
     }
 
     @Test
+    @DisplayName("isCanary returns true for 100%")
     void isCanary_hundredPercent_alwaysTrue() {
         for (long userId = 0; userId < 1000; userId++) {
             assertThat(UserBucket.isCanary(userId, "", 100)).isTrue();
@@ -75,6 +81,7 @@ class UserBucketTest {
 
     @ParameterizedTest
     @ValueSource(ints = {1, 5, 10, 25, 50})
+    @DisplayName("Canary percentage matches approximate ratio")
     void isCanary_percentMatchesApproximateRatio(int percent) {
         int canaryCount = 0;
         int total = 100_000;
@@ -85,15 +92,14 @@ class UserBucketTest {
         }
 
         double actualPercent = (canaryCount * 100.0) / total;
-        // Allow +/-2% absolute deviation
         assertThat(actualPercent)
                 .as("Expected ~%d%% canary, got %.1f%%", percent, actualPercent)
                 .isBetween(percent - 2.0, percent + 2.0);
     }
 
     @Test
+    @DisplayName("Canary status is sticky per user")
     void isCanary_stickyPerUser_doesNotFlap() {
-        // A user's canary status must be stable across multiple calls
         long userId = 999999L;
         boolean first = UserBucket.isCanary(userId, "stable", 50);
         for (int i = 0; i < 100; i++) {
@@ -104,16 +110,19 @@ class UserBucketTest {
     }
 
     @Test
+    @DisplayName("Negative percent always returns false")
     void isCanary_negativePercent_alwaysFalse() {
         assertThat(UserBucket.isCanary(123L, "", -1)).isFalse();
     }
 
     @Test
+    @DisplayName("Over 100% always returns true")
     void isCanary_overHundredPercent_alwaysTrue() {
         assertThat(UserBucket.isCanary(123L, "", 101)).isTrue();
     }
 
     @Test
+    @DisplayName("Null salt treated as empty string")
     void compute_nullSalt_treatedAsEmpty() {
         int b1 = UserBucket.compute(123L, null);
         int b2 = UserBucket.compute(123L, "");

@@ -2,6 +2,7 @@ package com.advertmarket.shared.json;
 
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Unchecked exception for JSON serialization/deserialization errors.
@@ -17,7 +18,7 @@ public class JsonException extends DomainException {
      *
      * @param message description of the failure
      */
-    public JsonException(String message) {
+    public JsonException(@NonNull String message) {
         super(ErrorCodes.JSON_ERROR, message);
     }
 
@@ -27,7 +28,8 @@ public class JsonException extends DomainException {
      * @param message description of the failure
      * @param cause the underlying cause
      */
-    public JsonException(String message, Throwable cause) {
+    public JsonException(
+            @NonNull String message, @NonNull Throwable cause) {
         super(ErrorCodes.JSON_ERROR, message, cause);
     }
 }
