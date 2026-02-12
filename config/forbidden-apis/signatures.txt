@@ -1,0 +1,19 @@
+## Financial safety: BigDecimal(double) loses precision
+java.math.BigDecimal#<init>(double)
+
+## Thread safety: parallelStream() and parallel() use shared ForkJoinPool
+java.util.Collection#parallelStream()
+java.util.stream.BaseStream#parallel()
+
+## Use Duration overload: Thread.sleep(Duration) instead of Thread.sleep(long)
+java.lang.Thread#sleep(long)
+
+## Use java.time API instead of legacy date/time classes
+java.util.Date
+java.util.Calendar
+java.util.GregorianCalendar
+
+## Use SLF4J for logging, not System.out/err
+java.io.PrintStream#println(java.lang.String) @ Use SLF4J logger instead of System.out/err
+java.io.PrintStream#println(java.lang.Object) @ Use SLF4J logger instead of System.out/err
+java.io.PrintStream#print(java.lang.String) @ Use SLF4J logger instead of System.out/err

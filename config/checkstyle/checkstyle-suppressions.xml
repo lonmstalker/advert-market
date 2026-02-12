@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+          "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+          "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- GlobalExceptionHandler catches Exception by design (fallback handler) -->
+    <suppress checks="IllegalCatch"
+              files="GlobalExceptionHandler\.java"/>
+
+    <!-- TelegramWebhookController: Telegram update parsing safety net -->
+    <suppress checks="IllegalCatch"
+              files="TelegramWebhookController\.java"/>
+
+    <!-- UpdateProcessor: executor thread safety net (2 broad catches) -->
+    <suppress checks="IllegalCatch"
+              files="UpdateProcessor\.java"/>
+
+    <!-- BotDispatcher: command dispatch safety net -->
+    <suppress checks="IllegalCatch"
+              files="BotDispatcher\.java"/>
+
+    <!-- CanaryRouter: Redis fallback on failure -->
+    <suppress checks="IllegalCatch"
+              files="CanaryRouter\.java"/>
+
+    <!-- TelegramNotificationService: send failure handling -->
+    <suppress checks="IllegalCatch"
+              files="TelegramNotificationService\.java"/>
+
+    <!-- Test files: magic numbers and text block formatting are natural -->
+    <suppress checks="MagicNumber"
+              files=".*Tests?\.java$"/>
+    <suppress checks="TextBlockGoogleStyleFormatting"
+              files=".*Tests?\.java$"/>
+</suppressions>

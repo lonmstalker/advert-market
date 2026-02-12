@@ -4,6 +4,7 @@ plugins {
     id 'com.github.node-gradle.node' version '7.1.0' apply false
     id 'com.github.spotbugs' version '6.4.8' apply false
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0' apply false
+    id 'de.thetaphi.forbiddenapis' version '3.10' apply false
 }
 
 allprojects {
@@ -87,18 +88,25 @@ subprojects {
             maxWarnings = 0
         }
         tasks.withType(Checkstyle).configureEach {
+            configProperties['org.checkstyle.google.suppressionfilter.config'] =
+                    rootProject.file('config/checkstyle/checkstyle-suppressions.xml').absolutePath
+        }
+        tasks.withType(Checkstyle).configureEach {
             reports {
                 xml.required = true
                 html.required = true
             }
         }
 
-        // --- SpotBugs ---
+        // --- SpotBugs + FindSecBugs ---
         apply plugin: 'com.github.spotbugs'
         spotbugs {
             effort = 'MAX'
             reportLevel = 'MEDIUM'
             excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
+        }
+        dependencies {
+            spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0'
         }
         tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
             reports {
@@ -108,6 +116,19 @@ subprojects {
         }
         // Disable SpotBugs for test source sets (reflection, throws Exception, etc.)
         tasks.matching { it.name == 'spotbugsTest' }.configureEach {
+            enabled = false
+        }
+
+        // --- forbidden-apis ---
+        apply plugin: 'de.thetaphi.forbiddenapis'
+        forbiddenApis {
+            bundledSignatures = ['jdk-deprecated']
+            signaturesFiles = rootProject.files('config/forbidden-apis/signatures.txt')
+            failOnMissingClasses = false
+            ignoreSignaturesOfMissingClasses = true
+        }
+        // Disable forbidden-apis for test source sets
+        tasks.matching { it.name == 'forbiddenApisTest' }.configureEach {
             enabled = false
         }
 

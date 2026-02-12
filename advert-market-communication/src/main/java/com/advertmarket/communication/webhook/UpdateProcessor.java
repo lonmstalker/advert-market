@@ -102,6 +102,7 @@ public class UpdateProcessor {
      * @param update the Telegram update
      * @return user id or fallback to update_id
      */
+    // CHECKSTYLE.OFF: CyclomaticComplexity|NPathComplexity
     static long extractUserId(Update update) {
         if (update.message() != null
                 && update.message().from() != null) {
@@ -129,4 +130,5 @@ public class UpdateProcessor {
         }
         return update.updateId();
     }
+    // CHECKSTYLE.ON: CyclomaticComplexity|NPathComplexity
 }

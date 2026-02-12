@@ -35,7 +35,7 @@
   <module name="SuppressionFilter">
     <property name="file" value="${org.checkstyle.google.suppressionfilter.config}"
            default="checkstyle-suppressions.xml" />
-    <property name="optional" value="true"/>
+    <property name="optional" value="false"/>
   </module>
 
   <!-- https://checkstyle.org/filters/suppresswithnearbytextfilter.html -->
@@ -465,6 +465,52 @@
     </module>
     <module name="EmptyCatchBlock">
       <property name="commentFormat" value="\w+"/>
+    </module>
+
+    <!-- Phase 1: safe checks (zero violations in existing code) -->
+    <module name="InnerAssignment"/>
+    <module name="ModifiedControlVariable">
+      <property name="skipEnhancedForLoopVariable" value="true"/>
+    </module>
+    <module name="HiddenField">
+      <property name="ignoreConstructorParameter" value="true"/>
+      <property name="ignoreSetter" value="true"/>
+      <property name="ignoreAbstractMethods" value="true"/>
+    </module>
+    <module name="MissingNullCaseInSwitch"/>
+
+    <!-- Phase 2a: broad-catch / broad-throws detection -->
+    <module name="IllegalCatch">
+      <property name="illegalClassNames"
+                value="java.lang.Exception, java.lang.Throwable,
+                       java.lang.RuntimeException, java.lang.Error"/>
+    </module>
+    <module name="IllegalThrows">
+      <property name="ignoreOverriddenMethods" value="true"/>
+    </module>
+
+    <!-- Phase 2b: complexity & API hygiene -->
+    <module name="CyclomaticComplexity">
+      <property name="max" value="10"/>
+      <property name="switchBlockAsSingleDecisionPoint" value="true"/>
+    </module>
+    <module name="BooleanExpressionComplexity">
+      <property name="max" value="3"/>
+    </module>
+    <module name="NPathComplexity">
+      <property name="max" value="200"/>
+    </module>
+    <module name="MethodLength">
+      <property name="max" value="80"/>
+      <property name="countEmpty" value="false"/>
+    </module>
+    <module name="ParameterNumber">
+      <property name="max" value="7"/>
+      <property name="ignoreOverriddenMethods" value="true"/>
+      <property name="tokens" value="METHOD_DEF, CTOR_DEF"/>
+    </module>
+    <module name="IllegalType">
+      <property name="tokens" value="METHOD_DEF, PARAMETER_DEF"/>
     </module>
     <module name="CommentsIndentation">
       <property name="tokens" value="SINGLE_LINE_COMMENT, BLOCK_COMMENT_BEGIN"/>

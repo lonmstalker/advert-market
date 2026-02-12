@@ -20,4 +20,27 @@
         <Bug pattern="EI_EXPOSE_REP"/>
         <Class name="~.*Properties$"/>
     </Match>
+
+    <!-- === FindSecBugs exclusions === -->
+
+    <!-- HTTP_RESPONSE_SPLITTING: headers are sanitized in CorrelationIdFilter -->
+    <Match>
+        <Bug pattern="HTTP_RESPONSE_SPLITTING"/>
+        <Class name="~.*Controller$"/>
+    </Match>
+
+    <!-- PREDICTABLE_RANDOM: UUID.randomUUID() is not used for crypto -->
+    <Match>
+        <Bug pattern="PREDICTABLE_RANDOM"/>
+    </Match>
+
+    <!-- SPRING_CSRF_UNRESTRICTED_REQUEST_MAPPING: REST API uses JWT, no CSRF -->
+    <Match>
+        <Bug pattern="SPRING_CSRF_UNRESTRICTED_REQUEST_MAPPING"/>
+    </Match>
+
+    <!-- SPRING_ENDPOINT: REST endpoints are protected by Spring Security -->
+    <Match>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
 </FindBugsFilter>
