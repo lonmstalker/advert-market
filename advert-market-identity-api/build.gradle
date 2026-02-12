@@ -5,4 +5,7 @@ plugins {
 dependencies {
     api platform(project(':platform-bom'))
     api project(':advert-market-shared')
+
+    compileOnly 'com.fasterxml.jackson.core:jackson-annotations'
+    compileOnly 'jakarta.validation:jakarta.validation-api'
 }

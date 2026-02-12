@@ -1,11 +1,12 @@
 package com.advertmarket.shared.model;
 
+import java.io.Serializable;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Telegram user identifier (always positive).
  */
-public record UserId(long value) {
+public record UserId(long value) implements Serializable {
 
     /**
      * Creates a user identifier.

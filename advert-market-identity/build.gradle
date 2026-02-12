@@ -20,8 +20,11 @@ dependencies {
 
     implementation 'com.github.pengrad:java-telegram-bot-api'
 
+    compileOnly 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.testcontainers:postgresql'
-    testImplementation 'org.testcontainers:junit-jupiter'
+    testRuntimeOnly 'io.micrometer:micrometer-core'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
 }

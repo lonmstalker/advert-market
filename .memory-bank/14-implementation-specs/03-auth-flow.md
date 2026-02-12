@@ -89,19 +89,47 @@ Authorization: ABAC -- no fixed roles, permissions from resource relationships.
 
 ```
 POST /api/v1/auth/login
-Content-Type: application/x-www-form-urlencoded
-Body: initData=<telegram_init_data_string>
+Content-Type: application/json
+Body: { "initData": "<telegram_init_data_string>" }
 
 -> 200 OK
 {
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "expires_at": "2025-01-16T10:30:00Z",
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "expiresIn": 3600,
   "user": {
     "id": 123456789,
     "username": "johndoe",
-    "is_operator": false
+    "displayName": "John Doe"
   }
 }
+```
+
+### Profile Endpoints
+
+```
+GET /api/v1/profile
+Authorization: Bearer <token>
+
+-> 200 OK
+{
+  "id": 123456789,
+  "telegramId": 123456789,
+  "username": "johndoe",
+  "displayName": "John Doe",
+  "languageCode": "en",
+  "onboardingCompleted": false,
+  "interests": [],
+  "createdAt": "2026-01-01T00:00:00Z"
+}
+```
+
+```
+PUT /api/v1/profile/onboarding
+Authorization: Bearer <token>
+Content-Type: application/json
+Body: { "interests": ["tech", "gaming"] }
+
+-> 200 OK (same schema as GET /profile, onboardingCompleted=true)
 ```
 
 **User auto-registration**: on first login, upsert into `users` table.

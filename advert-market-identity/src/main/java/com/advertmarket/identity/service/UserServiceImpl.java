@@ -1,0 +1,48 @@
+package com.advertmarket.identity.service;
+
+import com.advertmarket.identity.api.dto.OnboardingRequest;
+import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.identity.api.port.UserService;
+import com.advertmarket.shared.exception.EntityNotFoundException;
+import com.advertmarket.shared.model.UserId;
+import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.stereotype.Service;
+
+/**
+ * Default implementation of {@link UserService}.
+ */
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+
+    @Override
+    @NonNull
+    public UserProfile getProfile(@NonNull UserId userId) {
+        UserProfile profile = userRepository.findById(userId);
+        if (profile == null) {
+            throw new EntityNotFoundException("User",
+                    String.valueOf(userId.value()));
+        }
+        return profile;
+    }
+
+    @Override
+    @NonNull
+    public UserProfile completeOnboarding(
+            @NonNull UserId userId,
+            @NonNull OnboardingRequest request) {
+        userRepository.completeOnboarding(
+                userId, request.interests());
+
+        UserProfile profile = userRepository.findById(userId);
+        if (profile == null) {
+            throw new EntityNotFoundException("User",
+                    String.valueOf(userId.value()));
+        }
+        return profile;
+    }
+}

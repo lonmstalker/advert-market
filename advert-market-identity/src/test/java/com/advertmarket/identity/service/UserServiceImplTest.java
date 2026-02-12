@@ -1,0 +1,76 @@
+package com.advertmarket.identity.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.advertmarket.identity.api.dto.OnboardingRequest;
+import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.shared.exception.EntityNotFoundException;
+import com.advertmarket.shared.model.UserId;
+import java.time.Instant;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("UserServiceImpl — profile and onboarding operations")
+class UserServiceImplTest {
+
+    private UserRepository userRepository;
+    private UserServiceImpl userService;
+
+    private static final UserId USER_ID = new UserId(42L);
+    private static final UserProfile PROFILE = new UserProfile(
+            42L, 42L, "johndoe", "John Doe", "en",
+            false, List.of(), Instant.parse("2026-01-01T00:00:00Z"));
+
+    @BeforeEach
+    void setUp() {
+        userRepository = mock(UserRepository.class);
+        userService = new UserServiceImpl(userRepository);
+    }
+
+    @Test
+    @DisplayName("Should return user profile by ID")
+    void shouldReturnProfile() {
+        when(userRepository.findById(USER_ID)).thenReturn(PROFILE);
+
+        UserProfile result = userService.getProfile(USER_ID);
+
+        assertThat(result).isEqualTo(PROFILE);
+    }
+
+    @Test
+    @DisplayName("Should throw EntityNotFoundException when user not found")
+    void shouldThrowWhenUserNotFound() {
+        when(userRepository.findById(USER_ID)).thenReturn(null);
+
+        assertThatThrownBy(() -> userService.getProfile(USER_ID))
+                .isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Should complete onboarding and return updated profile")
+    void shouldCompleteOnboarding() {
+        List<String> interests = List.of("tech", "gaming");
+        UserProfile updatedProfile = new UserProfile(
+                42L, 42L, "johndoe", "John Doe", "en",
+                true, interests,
+                Instant.parse("2026-01-01T00:00:00Z"));
+        when(userRepository.findById(USER_ID))
+                .thenReturn(updatedProfile);
+
+        UserProfile result = userService.completeOnboarding(
+                USER_ID, new OnboardingRequest(interests));
+
+        verify(userRepository).completeOnboarding(
+                USER_ID, interests);
+        assertThat(result.onboardingCompleted()).isTrue();
+        assertThat(result.interests())
+                .containsExactly("tech", "gaming");
+    }
+}

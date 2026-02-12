@@ -4,15 +4,17 @@
 
 -- 1. users
 CREATE TABLE users (
-    id              BIGINT        PRIMARY KEY,
-    username        VARCHAR(255),
-    first_name      VARCHAR(255)  NOT NULL,
-    last_name       VARCHAR(255),
-    language_code   VARCHAR(5)    DEFAULT 'ru',
-    is_operator     BOOLEAN       DEFAULT FALSE,
-    version         INTEGER       NOT NULL DEFAULT 0,
-    created_at      TIMESTAMPTZ   DEFAULT now(),
-    updated_at      TIMESTAMPTZ   DEFAULT now()
+    id                    BIGINT        PRIMARY KEY,
+    username              VARCHAR(255),
+    first_name            VARCHAR(255)  NOT NULL,
+    last_name             VARCHAR(255),
+    language_code         VARCHAR(5)    DEFAULT 'ru',
+    is_operator           BOOLEAN       DEFAULT FALSE,
+    onboarding_completed  BOOLEAN       DEFAULT FALSE,
+    interests             TEXT[]        DEFAULT '{}',
+    version               INTEGER       NOT NULL DEFAULT 0,
+    created_at            TIMESTAMPTZ   DEFAULT now(),
+    updated_at            TIMESTAMPTZ   DEFAULT now()
 );
 
 -- 2. channels
