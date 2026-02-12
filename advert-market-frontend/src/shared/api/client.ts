@@ -18,15 +18,27 @@ function getInitData(): string {
   }
 }
 
-async function request<T>(
-  method: string,
-  path: string,
-  options?: {
-    body?: unknown;
-    schema?: z.ZodType<T>;
-    params?: Record<string, string | number | undefined>;
-  },
-): Promise<T> {
+type RequestOptions<T> = {
+  body?: unknown;
+  schema?: z.ZodType<T>;
+  params?: Record<string, string | number | undefined>;
+  _isRetrying?: boolean;
+};
+
+async function attemptReLogin(): Promise<boolean> {
+  const initData = getInitData();
+  if (!initData) return false;
+
+  try {
+    const { login } = await import('@/features/auth/api/auth-api');
+    await login(initData);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function request<T>(method: string, path: string, options?: RequestOptions<T>): Promise<T> {
   const url = new URL(`${API_PREFIX}${path}`, BASE_URL || window.location.origin);
 
   if (options?.params) {
@@ -62,6 +74,14 @@ async function request<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401 && !options?._isRetrying) {
+      sessionStorage.removeItem('access_token');
+      const reLoginOk = await attemptReLogin();
+      if (reLoginOk) {
+        return request(method, path, { ...options, _isRetrying: true });
+      }
+    }
+
     const errorBody: unknown = await response.json().catch(() => null);
     const parsed = problemDetailSchema.safeParse(errorBody);
     throw new ApiError(

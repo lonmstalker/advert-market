@@ -3,7 +3,7 @@ import { Spinner, ThemeProvider, ToastProvider } from '@telegram-tools/ui-kit';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
-import { AuthGuard } from '@/shared/ui';
+import { AuthGuard, ErrorBoundary } from '@/shared/ui';
 import { DeepLinkHandler } from './deep-link-handler';
 import { OnboardingLayout } from './layouts/onboarding-layout';
 import { TabLayout } from './layouts/tab-layout';
@@ -45,29 +45,31 @@ export function App() {
       <ThemeProvider theme={theme}>
         <ToastProvider>
           <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
-              <DeepLinkHandler />
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/onboarding" element={<OnboardingLayout />}>
-                    <Route index element={<OnboardingPage />} />
-                    <Route path="interest" element={<OnboardingInterestPage />} />
-                    <Route path="tour" element={<OnboardingTourPage />} />
-                  </Route>
-
-                  <Route element={<AuthGuard />}>
-                    <Route element={<TabLayout />}>
-                      <Route path="/catalog" element={<CatalogPage />} />
-                      <Route path="/deals" element={<DealsPage />} />
-                      <Route path="/wallet" element={<WalletPage />} />
-                      <Route path="/profile" element={<ProfilePage />} />
+            <ErrorBoundary>
+              <BrowserRouter>
+                <DeepLinkHandler />
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/onboarding" element={<OnboardingLayout />}>
+                      <Route index element={<OnboardingPage />} />
+                      <Route path="interest" element={<OnboardingInterestPage />} />
+                      <Route path="tour" element={<OnboardingTourPage />} />
                     </Route>
-                  </Route>
 
-                  <Route path="*" element={<Navigate to="/catalog" replace />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
+                    <Route element={<AuthGuard />}>
+                      <Route element={<TabLayout />}>
+                        <Route path="/catalog" element={<CatalogPage />} />
+                        <Route path="/deals" element={<DealsPage />} />
+                        <Route path="/wallet" element={<WalletPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                      </Route>
+                    </Route>
+
+                    <Route path="*" element={<Navigate to="/catalog" replace />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </ErrorBoundary>
           </QueryClientProvider>
         </ToastProvider>
       </ThemeProvider>

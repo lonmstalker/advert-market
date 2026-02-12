@@ -194,6 +194,13 @@
       "description": "Your settings and channel management will be here"
     }
   },
+  "error": {
+    "boundary": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred. Please try again.",
+      "retry": "Try again"
+    }
+  },
   "errors": {
     "network": "No internet connection",
     "server": "Server error, please try again later",
