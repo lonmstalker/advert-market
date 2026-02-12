@@ -52,6 +52,7 @@ public enum ErrorCode {
     CHAN_BOT_NOT_MEMBER(403),
     CHAN_BOT_NOT_ADMIN(403),
     CHAN_BOT_INSUFFICIENT_RIGHTS(403),
+    CHAT_USER_NOT_ADMIN(403),
 
     // --- Dispute ---
     DISPUTE_NOT_FOUND(404),

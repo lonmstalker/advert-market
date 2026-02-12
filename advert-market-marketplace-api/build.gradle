@@ -5,4 +5,7 @@ plugins {
 dependencies {
     api platform(project(':platform-bom'))
     api project(':advert-market-shared')
+
+    compileOnly 'jakarta.validation:jakarta.validation-api'
+    compileOnly 'io.swagger.core.v3:swagger-annotations-jakarta'
 }

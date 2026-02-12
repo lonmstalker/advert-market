@@ -81,6 +81,28 @@ public class TelegramChannelService implements TelegramChannelPort {
 
     @Override
     @NonNull
+    public ChatInfo getChatByUsername(@NonNull String username) {
+        var chatId = "@" + username;
+        try {
+            var response = sender.execute(new GetChat(chatId));
+            if (!response.isOk()) {
+                mapTelegramError(response.errorCode(),
+                        response.description(), 0);
+            }
+            var chatInfo = mapChatFullInfo(response.chat());
+            cache.putChatInfo(chatInfo.id(), chatInfo);
+            metrics.incrementCounter(CHANNEL_API_CALL,
+                    "method", "getChatByUsername", "ok", "true");
+            return chatInfo;
+        } catch (CallNotPermittedException e) {
+            throw new DomainException(SERVICE_UNAVAILABLE,
+                    "Telegram API circuit breaker open for @"
+                            + username);
+        }
+    }
+
+    @Override
+    @NonNull
     public ChatMemberInfo getChatMember(long channelId,
             long userId) {
         acquireOrThrow(channelId);

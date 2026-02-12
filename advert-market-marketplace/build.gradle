@@ -7,6 +7,7 @@ dependencies {
     api platform(project(':platform-bom'))
     api project(':advert-market-marketplace-api')
     implementation project(':advert-market-identity-api')
+    implementation project(':advert-market-communication-api')
     implementation project(':advert-market-shared')
     implementation project(':advert-market-db')
 
@@ -15,7 +16,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.testcontainers:postgresql'
-    testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
 }

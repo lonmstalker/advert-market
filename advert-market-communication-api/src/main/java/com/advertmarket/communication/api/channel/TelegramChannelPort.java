@@ -22,6 +22,15 @@ public interface TelegramChannelPort {
     ChatInfo getChat(long channelId);
 
     /**
+     * Retrieves chat information by public username (e.g. "mychannel").
+     *
+     * @param username the public channel username (without @)
+     * @return chat info
+     */
+    @NonNull
+    ChatInfo getChatByUsername(@NonNull String username);
+
+    /**
      * Retrieves membership info for a specific user in a channel.
      *
      * @param channelId the Telegram chat identifier

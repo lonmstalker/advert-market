@@ -75,6 +75,8 @@ public final class ErrorCodes {
             "CHAN_BOT_NOT_ADMIN";
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHAN_BOT_INSUFFICIENT_RIGHTS =
             "CHAN_BOT_INSUFFICIENT_RIGHTS";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHAT_USER_NOT_ADMIN =
+            "CHAT_USER_NOT_ADMIN";
 
     // --- Dispute ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String DISPUTE_NOT_FOUND =
