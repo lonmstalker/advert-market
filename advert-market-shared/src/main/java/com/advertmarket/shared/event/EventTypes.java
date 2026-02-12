@@ -73,6 +73,10 @@ public final class EventTypes {
     public static final @Fenum(FenumGroup.EVENT_TYPE) String
             RECONCILIATION_START = "RECONCILIATION_START";
 
+    /** Audit log event. */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            AUDIT_EVENT = "AUDIT_EVENT";
+
     private EventTypes() {
     }
 }

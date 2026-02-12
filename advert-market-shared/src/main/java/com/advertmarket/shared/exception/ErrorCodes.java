@@ -136,6 +136,10 @@ public final class ErrorCodes {
     public static final @Fenum(FenumGroup.ERROR_CODE) String LOCK_ACQUISITION_FAILED =
             "LOCK_ACQUISITION_FAILED";
 
+    // --- Outbox ---
+    public static final @Fenum(FenumGroup.ERROR_CODE) String OUTBOX_PUBLISH_FAILED =
+            "OUTBOX_PUBLISH_FAILED";
+
     private ErrorCodes() {
     }
 }

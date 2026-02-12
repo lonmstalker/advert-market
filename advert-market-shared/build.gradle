@@ -10,6 +10,7 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
     compileOnly 'io.micrometer:micrometer-core'
     compileOnly 'org.springframework:spring-context'
+    compileOnly 'org.springframework.data:spring-data-redis'
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
 
     // API: exposed in public interfaces (PrincipalAuthentication extends Authentication)
@@ -17,9 +18,11 @@ dependencies {
 
     testImplementation 'io.micrometer:micrometer-core'
     testImplementation 'org.springframework:spring-context'
+    testImplementation 'org.springframework.data:spring-data-redis'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

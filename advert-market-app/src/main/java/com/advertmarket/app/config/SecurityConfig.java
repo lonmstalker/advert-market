@@ -2,6 +2,7 @@ package com.advertmarket.app.config;
 
 import com.advertmarket.app.error.SecurityExceptionHandler;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
+import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -45,7 +46,7 @@ public class SecurityConfig {
                             "X-Telegram-Init-Data",
                             "X-Correlation-Id"));
                     config.setAllowCredentials(false);
-                    config.setMaxAge(3600L);
+                    config.setMaxAge(Duration.ofHours(1).toSeconds());
                     return config;
                 }))
                 .csrf(AbstractHttpConfigurer::disable)
