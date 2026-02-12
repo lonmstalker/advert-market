@@ -160,12 +160,11 @@ public class JsonFacade {
      * @param <T> target type
      * @return the converted object
      */
-    @SuppressWarnings("unchecked")
     @NonNull
     public <T> T convertValue(@NonNull Object fromValue,
             @NonNull JavaType toType) {
         try {
-            return (T) objectMapper.convertValue(
+            return objectMapper.convertValue(
                     fromValue, toType);
         } catch (IllegalArgumentException e) {
             throw new JsonException(

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.UserId;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -80,7 +81,7 @@ class JwtAuthenticationFilterTest {
                 .thenReturn("Bearer " + token);
         when(jwtTokenProvider.parseToken(token))
                 .thenThrow(new DomainException(
-                        "AUTH_INVALID_TOKEN", "bad token"));
+                        ErrorCodes.AUTH_INVALID_TOKEN, "bad token"));
 
         filter.doFilterInternal(request, response, filterChain);
 

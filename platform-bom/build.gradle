@@ -35,6 +35,10 @@ dependencies {
         // Database
         api 'org.postgresql:postgresql:42.7.9'
         api 'org.jooq:jooq:3.20.11'
+        api 'org.jooq:jooq-codegen:3.20.11'
+        api 'org.jooq:jooq-meta:3.20.11'
+        api 'org.jooq:jooq-meta-extensions:3.20.11'
+        api 'org.jooq:jooq-meta-extensions-liquibase:3.20.11'
 
         // Utilities
         api 'com.google.guava:guava:33.5.0-jre'

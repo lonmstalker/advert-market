@@ -1,6 +1,8 @@
-package com.advertmarket.identity.service;
+package com.advertmarket.identity.adapter;
 
+import com.advertmarket.identity.api.port.LoginRateLimiterPort;
 import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LoginRateLimiter {
+public class RedisLoginRateLimiter implements LoginRateLimiterPort {
 
     private static final String KEY_PREFIX = "rate:login:";
     private static final int MAX_ATTEMPTS = 10;
@@ -23,12 +25,7 @@ public class LoginRateLimiter {
 
     private final StringRedisTemplate redisTemplate;
 
-    /**
-     * Checks whether the client IP has exceeded the login rate limit.
-     *
-     * @param clientIp the client IP address
-     * @throws DomainException if rate limit exceeded
-     */
+    @Override
     public void checkRate(@NonNull String clientIp) {
         try {
             String key = KEY_PREFIX + clientIp;
@@ -38,7 +35,7 @@ public class LoginRateLimiter {
             }
             if (count != null && count > MAX_ATTEMPTS) {
                 throw new DomainException(
-                        "RATE_LIMIT_EXCEEDED",
+                        ErrorCodes.RATE_LIMIT_EXCEEDED,
                         "Too many login attempts");
             }
         } catch (DataAccessException e) {

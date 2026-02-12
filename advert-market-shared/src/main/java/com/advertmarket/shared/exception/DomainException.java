@@ -1,8 +1,10 @@
 package com.advertmarket.shared.exception;
 
+import com.advertmarket.shared.FenumGroup;
 import java.util.Map;
 import java.util.Objects;
 import lombok.Getter;
+import org.checkerframework.checker.fenum.qual.Fenum;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -12,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Getter
 public class DomainException extends RuntimeException {
 
-    private final @NonNull String errorCode;
+    private final @Fenum(FenumGroup.ERROR_CODE) @NonNull String errorCode;
     private final @Nullable Map<String, Object> context;
 
     /**
@@ -22,7 +24,7 @@ public class DomainException extends RuntimeException {
      * @param message human-readable message
      */
     public DomainException(
-            @NonNull String errorCode,
+            @Fenum(FenumGroup.ERROR_CODE) @NonNull String errorCode,
             @NonNull String message) {
         super(message);
         this.errorCode = Objects.requireNonNull(
@@ -38,7 +40,7 @@ public class DomainException extends RuntimeException {
      * @param context structured error context
      */
     public DomainException(
-            @NonNull String errorCode,
+            @Fenum(FenumGroup.ERROR_CODE) @NonNull String errorCode,
             @NonNull String message,
             @Nullable Map<String, Object> context) {
         super(message);
@@ -56,7 +58,7 @@ public class DomainException extends RuntimeException {
      * @param cause the underlying cause
      */
     public DomainException(
-            @NonNull String errorCode,
+            @Fenum(FenumGroup.ERROR_CODE) @NonNull String errorCode,
             @NonNull String message,
             @NonNull Throwable cause) {
         super(message, cause);

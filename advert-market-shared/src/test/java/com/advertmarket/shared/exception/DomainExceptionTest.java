@@ -15,9 +15,10 @@ class DomainExceptionTest {
     @DisplayName("Basic constructor sets errorCode and message")
     void basicConstructor_setsFields() {
         var ex = new DomainException(
-                "ERR_001", "Something failed");
+                ErrorCodes.ENTITY_NOT_FOUND, "Something failed");
 
-        assertThat(ex.getErrorCode()).isEqualTo("ERR_001");
+        assertThat(ex.getErrorCode())
+                .isEqualTo("ENTITY_NOT_FOUND");
         assertThat(ex.getMessage())
                 .isEqualTo("Something failed");
         assertThat(ex.getContext()).isNull();
@@ -30,7 +31,7 @@ class DomainExceptionTest {
         context.put("key", "value");
 
         var ex = new DomainException(
-                "ERR_002", "With context", context);
+                ErrorCodes.JSON_ERROR, "With context", context);
 
         assertThat(ex.getContext())
                 .containsEntry("key", "value");
@@ -45,7 +46,8 @@ class DomainExceptionTest {
     void causeConstructor_preservesCause() {
         var cause = new RuntimeException("root cause");
         var ex = new DomainException(
-                "ERR_003", "Caused", cause);
+                ErrorCodes.EVENT_DESERIALIZATION_ERROR,
+                "Caused", cause);
 
         assertThat(ex.getCause()).isEqualTo(cause);
         assertThat(ex.getContext()).isNull();
@@ -55,7 +57,7 @@ class DomainExceptionTest {
     @DisplayName("Null context is allowed")
     void nullContext_isAllowed() {
         var ex = new DomainException(
-                "ERR_004", "No context",
+                ErrorCodes.INSUFFICIENT_BALANCE, "No context",
                 (Map<String, Object>) null);
 
         assertThat(ex.getContext()).isNull();

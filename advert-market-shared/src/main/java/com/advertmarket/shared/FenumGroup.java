@@ -18,6 +18,12 @@ public final class FenumGroup {
     /** Event type discriminator group. */
     public static final String EVENT_TYPE = "EventType";
 
+    /** Domain exception error code group. */
+    public static final String ERROR_CODE = "ErrorCode";
+
+    /** Micrometer metric name group. */
+    public static final String METRIC_NAME = "MetricName";
+
     private FenumGroup() {
     }
 }

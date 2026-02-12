@@ -2,7 +2,9 @@ package com.advertmarket.identity.security;
 
 import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.UserId;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -13,12 +15,13 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 import javax.crypto.SecretKey;
+import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Generates and parses JWT tokens using JJWT (HS256).
  */
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+@SuppressFBWarnings(
         value = "CT_CONSTRUCTOR_THROW",
         justification = "Bean constructor validates configuration")
 public class JwtTokenProvider {
@@ -28,6 +31,11 @@ public class JwtTokenProvider {
     private static final String AUDIENCE = "advert-market-api";
 
     private final SecretKey signingKey;
+    /**
+     * -- GETTER --
+     * Returns the configured token lifetime in seconds.
+     */
+    @Getter
     private final long expirationSeconds;
 
     /**
@@ -93,17 +101,12 @@ public class JwtTokenProvider {
                     new UserId(userId), isOperator, jti);
         } catch (ExpiredJwtException e) {
             throw new DomainException(
-                    "AUTH_TOKEN_EXPIRED",
+                    ErrorCodes.AUTH_TOKEN_EXPIRED,
                     "JWT token has expired");
         } catch (JwtException | IllegalArgumentException e) {
             throw new DomainException(
-                    "AUTH_INVALID_TOKEN",
+                    ErrorCodes.AUTH_INVALID_TOKEN,
                     "Invalid JWT token");
         }
-    }
-
-    /** Returns the configured token lifetime in seconds. */
-    public long getExpirationSeconds() {
-        return expirationSeconds;
     }
 }

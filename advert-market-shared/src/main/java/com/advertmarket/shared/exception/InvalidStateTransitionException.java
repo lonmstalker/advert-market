@@ -25,7 +25,7 @@ public class InvalidStateTransitionException
             @NonNull String entityType,
             @NonNull String from,
             @NonNull String to) {
-        super("INVALID_STATE_TRANSITION",
+        super(ErrorCodes.INVALID_STATE_TRANSITION,
                 String.format(
                         "Cannot transition %s from %s to %s",
                         entityType, from, to));

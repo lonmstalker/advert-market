@@ -1,8 +1,6 @@
 package com.advertmarket.identity.adapter;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.val;
+import static com.advertmarket.db.generated.tables.Users.USERS;
 
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
@@ -31,38 +29,37 @@ public class JooqUserRepository implements UserRepository {
     @Override
     public boolean upsert(@NonNull TelegramUserData data) {
         OffsetDateTime now = OffsetDateTime.now();
-        Record result = dsl.insertInto(table("users"))
-                .set(field("id"), data.id())
-                .set(field("first_name"), data.firstName())
-                .set(field("last_name"), data.lastName())
-                .set(field("username"), data.username())
-                .set(field("language_code"),
-                        data.languageCode() != null
-                                ? data.languageCode() : "ru")
-                .set(field("updated_at"), now)
-                .onConflict(field("id"))
+        String lang = data.languageCode() != null
+                ? data.languageCode() : "ru";
+
+        Record result = dsl.insertInto(USERS)
+                .set(USERS.ID, data.id())
+                .set(USERS.FIRST_NAME, data.firstName())
+                .set(USERS.LAST_NAME, data.lastName())
+                .set(USERS.USERNAME, data.username())
+                .set(USERS.LANGUAGE_CODE, lang)
+                .set(USERS.UPDATED_AT, now)
+                .onConflict(USERS.ID)
                 .doUpdate()
-                .set(field("first_name"), data.firstName())
-                .set(field("last_name"), data.lastName())
-                .set(field("username"), data.username())
-                .set(field("language_code"),
-                        data.languageCode() != null
-                                ? data.languageCode() : "ru")
-                .set(field("updated_at"), now)
-                .returning(field("is_operator"))
+                .set(USERS.FIRST_NAME, data.firstName())
+                .set(USERS.LAST_NAME, data.lastName())
+                .set(USERS.USERNAME, data.username())
+                .set(USERS.LANGUAGE_CODE, lang)
+                .set(USERS.UPDATED_AT, now)
+                .returning(USERS.IS_OPERATOR)
                 .fetchOne();
 
         return result != null
                 && Boolean.TRUE.equals(
-                result.get(field("is_operator"), Boolean.class));
+                result.get(USERS.IS_OPERATOR));
     }
 
     @Override
     @Nullable
     public UserProfile findById(@NonNull UserId userId) {
         Record record = dsl.select()
-                .from(table("users"))
-                .where(field("id").eq(userId.value()))
+                .from(USERS)
+                .where(USERS.ID.eq(userId.value()))
                 .fetchOne();
 
         if (record == null) {
@@ -75,32 +72,26 @@ public class JooqUserRepository implements UserRepository {
     @Override
     public void completeOnboarding(@NonNull UserId userId,
             @NonNull List<String> interests) {
-        dsl.update(table("users"))
-                .set(field("onboarding_completed"), true)
-                .set(field("interests"),
+        dsl.update(USERS)
+                .set(USERS.ONBOARDING_COMPLETED, true)
+                .set(USERS.INTERESTS,
                         interests.toArray(String[]::new))
-                .set(field("updated_at"),
+                .set(USERS.UPDATED_AT,
                         OffsetDateTime.now())
-                .where(field("id").eq(userId.value()))
+                .where(USERS.ID.eq(userId.value()))
                 .execute();
     }
 
     private static UserProfile mapToProfile(Record record) {
-        long id = record.get(field("id"), Long.class);
-        String firstName = record.get(
-                field("first_name"), String.class);
-        String lastName = record.get(
-                field("last_name"), String.class);
-        String username = record.get(
-                field("username"), String.class);
-        String languageCode = record.get(
-                field("language_code"), String.class);
+        long id = record.get(USERS.ID);
+        String firstName = record.get(USERS.FIRST_NAME);
+        String lastName = record.get(USERS.LAST_NAME);
+        String username = record.get(USERS.USERNAME);
+        String languageCode = record.get(USERS.LANGUAGE_CODE);
         Boolean onboardingCompleted = record.get(
-                field("onboarding_completed"), Boolean.class);
-        String[] interests = record.get(
-                field("interests"), String[].class);
-        OffsetDateTime createdAt = record.get(
-                field("created_at"), OffsetDateTime.class);
+                USERS.ONBOARDING_COMPLETED);
+        String[] interests = record.get(USERS.INTERESTS);
+        OffsetDateTime createdAt = record.get(USERS.CREATED_AT);
 
         String displayName = lastName != null
                 && !lastName.isBlank()

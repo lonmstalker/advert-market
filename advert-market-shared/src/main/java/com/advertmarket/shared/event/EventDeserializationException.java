@@ -1,6 +1,7 @@
 package com.advertmarket.shared.event;
 
 import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 
 /**
  * Non-retryable exception for event deserialization failures.
@@ -17,7 +18,7 @@ public class EventDeserializationException extends DomainException {
      * @param message description of the deserialization failure
      */
     public EventDeserializationException(String message) {
-        super("EVENT_DESERIALIZATION_ERROR", message);
+        super(ErrorCodes.EVENT_DESERIALIZATION_ERROR, message);
     }
 
     /**
@@ -28,6 +29,6 @@ public class EventDeserializationException extends DomainException {
      */
     public EventDeserializationException(String message,
             Throwable cause) {
-        super("EVENT_DESERIALIZATION_ERROR", message, cause);
+        super(ErrorCodes.EVENT_DESERIALIZATION_ERROR, message, cause);
     }
 }

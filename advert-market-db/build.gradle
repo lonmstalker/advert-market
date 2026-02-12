@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'nu.studer.jooq'
 }
 
 dependencies {
@@ -8,4 +9,65 @@ dependencies {
     api 'org.jooq:jooq'
     implementation 'org.liquibase:liquibase-core'
     implementation 'org.postgresql:postgresql'
+
+    jooqGenerator platform(project(':platform-bom'))
+    jooqGenerator 'org.jooq:jooq-meta-extensions'
+}
+
+jooq {
+    version = '3.20.11'
+    configurations {
+        main {
+            generationTool {
+                generator {
+                    name = 'org.jooq.codegen.JavaGenerator'
+                    database {
+                        name = 'org.jooq.meta.extensions.ddl.DDLDatabase'
+                        properties {
+                            property {
+                                key = 'scripts'
+                                value = "src/main/resources/db/jooq-codegen/schema.sql"
+                            }
+                            property {
+                                key = 'defaultNameCase'
+                                value = 'lower'
+                            }
+                            property {
+                                key = 'parseDialect'
+                                value = 'POSTGRES'
+                            }
+                        }
+                        excludes = '.*_p_\\d{4}_\\d{2}'
+                    }
+                    generate {
+                        records = true
+                        pojos = false
+                        daos = false
+                        fluentSetters = true
+                        javaTimeTypes = true
+                    }
+                    target {
+                        packageName = 'com.advertmarket.db.generated'
+                        directory = "$projectDir/src/main/generated"
+                    }
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.java.srcDirs += "$projectDir/src/main/generated"
+
+// Exclude generated jOOQ code from SpotBugs
+tasks.matching { it.name == 'spotbugsMain' }.configureEach {
+    classes = files(classes.files.findAll {
+        !it.path.contains('generated')
+    })
+}
+
+// Exclude generated jOOQ code from forbidden-apis
+tasks.matching { it.name == 'forbiddenApisMain' }.configureEach {
+    classesDirs = files(classesDirs.files.findAll {
+        !it.path.contains('generated')
+    })
 }

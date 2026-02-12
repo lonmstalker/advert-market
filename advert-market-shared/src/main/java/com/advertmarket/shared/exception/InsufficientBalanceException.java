@@ -28,7 +28,7 @@ public class InsufficientBalanceException
             @NonNull AccountId accountId,
             @NonNull Money requested,
             @NonNull Money available) {
-        super("INSUFFICIENT_BALANCE",
+        super(ErrorCodes.INSUFFICIENT_BALANCE,
                 String.format(
                         "Insufficient balance on %s:"
                                 + " requested %s,"

@@ -3,7 +3,7 @@ package com.advertmarket.identity.web;
 import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
 import com.advertmarket.identity.api.port.AuthService;
-import com.advertmarket.identity.service.LoginRateLimiter;
+import com.advertmarket.identity.api.port.LoginRateLimiterPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final LoginRateLimiter loginRateLimiter;
+    private final LoginRateLimiterPort loginRateLimiter;
 
     /**
      * Authenticates a user via Telegram initData and returns a JWT.

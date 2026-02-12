@@ -5,6 +5,7 @@ plugins {
     id 'com.github.spotbugs' version '6.4.8' apply false
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0' apply false
     id 'de.thetaphi.forbiddenapis' version '3.10' apply false
+    id 'nu.studer.jooq' version '9.0' apply false
 }
 
 allprojects {

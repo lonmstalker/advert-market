@@ -6,6 +6,7 @@ import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.port.AuthService;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.security.JwtTokenProvider;
+import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
         String un = userData.username();
         String username = un != null ? un : "";
 
-        metricsFacade.incrementCounter("auth.login.success");
+        metricsFacade.incrementCounter(MetricNames.AUTH_LOGIN_SUCCESS);
 
         return new LoginResponse(
                 token,

@@ -31,5 +31,5 @@ Thumbs.db
 # Testcontainers
 .testcontainers*
 
-# jOOQ generated (regenerated from DB)
-advert-market-db/src/generated/
+# jOOQ generated (regenerated from Liquibase changelogs)
+advert-market-db/src/main/generated/
