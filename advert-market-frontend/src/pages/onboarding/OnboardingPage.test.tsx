@@ -23,11 +23,19 @@ describe('OnboardingPage', () => {
     expect(screen.getByText('Marketplace for Telegram channel advertising')).toBeInTheDocument();
   });
 
-  it('renders feature highlights', () => {
+  it('renders feature cards with icons and descriptions', () => {
     renderPage();
-    expect(screen.getByText('Channel catalog with filters')).toBeInTheDocument();
-    expect(screen.getByText('Escrow payments via TON')).toBeInTheDocument();
-    expect(screen.getByText('Deal tracking and reports')).toBeInTheDocument();
+    expect(screen.getByText('Channel Catalog')).toBeInTheDocument();
+    expect(screen.getByText('150K+ subscribers')).toBeInTheDocument();
+    expect(screen.getByText('TON Escrow')).toBeInTheDocument();
+    expect(screen.getByText('Protected payments')).toBeInTheDocument();
+    expect(screen.getByText('Deal Tracking')).toBeInTheDocument();
+    expect(screen.getByText('16-state pipeline')).toBeInTheDocument();
+  });
+
+  it('renders time hint', () => {
+    renderPage();
+    expect(screen.getByText('Takes 30 seconds')).toBeInTheDocument();
   });
 
   it('renders Get Started button', () => {

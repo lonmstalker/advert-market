@@ -40,4 +40,33 @@ describe('useOnboardingStore', () => {
     useOnboardingStore.getState().reset();
     expect(useOnboardingStore.getState().interests.size).toBe(0);
   });
+
+  it('completeTourTask adds task to tourTasksCompleted', () => {
+    useOnboardingStore.getState().completeTourTask(0);
+    expect(useOnboardingStore.getState().tourTasksCompleted.has(0)).toBe(true);
+  });
+
+  it('completeTourTask handles multiple tasks', () => {
+    useOnboardingStore.getState().completeTourTask(0);
+    useOnboardingStore.getState().completeTourTask(1);
+    useOnboardingStore.getState().completeTourTask(2);
+    const { tourTasksCompleted } = useOnboardingStore.getState();
+    expect(tourTasksCompleted.has(0)).toBe(true);
+    expect(tourTasksCompleted.has(1)).toBe(true);
+    expect(tourTasksCompleted.has(2)).toBe(true);
+    expect(tourTasksCompleted.size).toBe(3);
+  });
+
+  it('completeTourTask is idempotent', () => {
+    useOnboardingStore.getState().completeTourTask(0);
+    useOnboardingStore.getState().completeTourTask(0);
+    expect(useOnboardingStore.getState().tourTasksCompleted.size).toBe(1);
+  });
+
+  it('reset clears tourTasksCompleted', () => {
+    useOnboardingStore.getState().completeTourTask(0);
+    useOnboardingStore.getState().completeTourTask(1);
+    useOnboardingStore.getState().reset();
+    expect(useOnboardingStore.getState().tourTasksCompleted.size).toBe(0);
+  });
 });

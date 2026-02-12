@@ -4,12 +4,15 @@ type Interest = 'advertiser' | 'owner';
 
 type OnboardingState = {
   interests: Set<Interest>;
+  tourTasksCompleted: Set<number>;
   toggleInterest: (interest: Interest) => void;
+  completeTourTask: (slideIndex: number) => void;
   reset: () => void;
 };
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({
   interests: new Set<Interest>(),
+  tourTasksCompleted: new Set<number>(),
   toggleInterest: (interest) =>
     set((state) => {
       const next = new Set(state.interests);
@@ -20,5 +23,11 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
       }
       return { interests: next };
     }),
-  reset: () => set({ interests: new Set<Interest>() }),
+  completeTourTask: (slideIndex) =>
+    set((state) => {
+      const next = new Set(state.tourTasksCompleted);
+      next.add(slideIndex);
+      return { tourTasksCompleted: next };
+    }),
+  reset: () => set({ interests: new Set<Interest>(), tourTasksCompleted: new Set<number>() }),
 }));

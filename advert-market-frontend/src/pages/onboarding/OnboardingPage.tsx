@@ -2,19 +2,9 @@ import { Button, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { pressScale, staggerChildren } from '@/shared/ui';
-
-const features = [
-  { emoji: '🔍', key: 'onboarding.welcome.feature1' },
-  { emoji: '🔒', key: 'onboarding.welcome.feature2' },
-  { emoji: '📊', key: 'onboarding.welcome.feature3' },
-] as const;
-
-const featureItem = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.25 },
-};
+import { FeatureCard } from '@/features/onboarding/components/feature-card';
+import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo';
+import { DocumentIcon, pressScale, SearchIcon, staggerChildren, WalletIcon } from '@/shared/ui';
 
 export default function OnboardingPage() {
   const { t } = useTranslation();
@@ -25,7 +15,7 @@ export default function OnboardingPage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 40px)',
         padding: '0 24px',
       }}
     >
@@ -40,23 +30,7 @@ export default function OnboardingPage() {
           gap: '12px',
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '24px',
-            backgroundColor: 'var(--color-background-base)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '8px',
-          }}
-        >
-          <span style={{ fontSize: '40px', lineHeight: 1 }}>📢</span>
-        </motion.div>
+        <OnboardingLogo />
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -86,29 +60,26 @@ export default function OnboardingPage() {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px',
+            gap: '8px',
             marginTop: '24px',
             width: '100%',
-            maxWidth: '280px',
           }}
         >
-          {features.map(({ emoji, key }) => (
-            <motion.div
-              key={key}
-              {...featureItem}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                textAlign: 'left',
-              }}
-            >
-              <span style={{ fontSize: '20px', lineHeight: 1, flexShrink: 0 }}>{emoji}</span>
-              <Text type="subheadline1" color="secondary">
-                {t(key)}
-              </Text>
-            </motion.div>
-          ))}
+          <FeatureCard
+            icon={<SearchIcon width={20} height={20} />}
+            title={t('onboarding.welcome.featureCard1.title')}
+            hint={t('onboarding.welcome.featureCard1.hint')}
+          />
+          <FeatureCard
+            icon={<WalletIcon width={20} height={20} />}
+            title={t('onboarding.welcome.featureCard2.title')}
+            hint={t('onboarding.welcome.featureCard2.hint')}
+          />
+          <FeatureCard
+            icon={<DocumentIcon width={20} height={20} />}
+            title={t('onboarding.welcome.featureCard3.title')}
+            hint={t('onboarding.welcome.featureCard3.hint')}
+          />
         </motion.div>
       </div>
 
@@ -119,6 +90,16 @@ export default function OnboardingPage() {
             type="primary"
             onClick={() => navigate('/onboarding/interest')}
           />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          style={{ textAlign: 'center', marginTop: '12px' }}
+        >
+          <Text type="caption1" color="secondary">
+            {t('onboarding.welcome.timeHint')}
+          </Text>
         </motion.div>
       </div>
     </div>

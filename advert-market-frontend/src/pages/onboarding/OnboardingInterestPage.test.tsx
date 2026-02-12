@@ -21,10 +21,10 @@ describe('OnboardingInterestPage', () => {
   it('renders title and subtitle', () => {
     renderPage();
     expect(screen.getByText('Who are you?')).toBeInTheDocument();
-    expect(screen.getByText('Choose your role on the platform')).toBeInTheDocument();
+    expect(screen.getByText('This will personalize your experience')).toBeInTheDocument();
   });
 
-  it('renders 2 interest cards', () => {
+  it('renders 2 role cards', () => {
     renderPage();
     expect(screen.getByText('Advertiser')).toBeInTheDocument();
     expect(screen.getByText('Channel Owner')).toBeInTheDocument();
@@ -35,10 +35,25 @@ describe('OnboardingInterestPage', () => {
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
   });
 
-  it('Continue button becomes enabled after selecting an interest', async () => {
+  it('Continue button becomes enabled after selecting a role', async () => {
     const { user } = renderPage();
     await user.click(screen.getByRole('button', { name: /advertiser/i }));
     expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled();
+  });
+
+  it('shows preview items when role is selected', async () => {
+    const { user } = renderPage();
+    await user.click(screen.getByRole('button', { name: /advertiser/i }));
+    expect(screen.getByText('Find channels')).toBeInTheDocument();
+    expect(screen.getByText('Create deals')).toBeInTheDocument();
+    expect(screen.getByText('Track results')).toBeInTheDocument();
+  });
+
+  it('shows both roles hint when both selected', async () => {
+    const { user } = renderPage();
+    await user.click(screen.getByRole('button', { name: /advertiser/i }));
+    await user.click(screen.getByRole('button', { name: /channel owner/i }));
+    expect(screen.getByText("Great! You'll see features for both roles")).toBeInTheDocument();
   });
 
   it('Continue button becomes disabled after toggling off', async () => {
