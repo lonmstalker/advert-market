@@ -25,4 +25,7 @@ dependencies {
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'com.tngtech.archunit:archunit-junit5'
     testImplementation 'io.micrometer:micrometer-core'
+    testImplementation 'org.liquibase:liquibase-core'
+    testImplementation 'org.postgresql:postgresql'
+    testImplementation 'org.jooq:jooq'
 }

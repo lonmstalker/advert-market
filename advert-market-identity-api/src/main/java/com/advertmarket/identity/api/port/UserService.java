@@ -32,4 +32,11 @@ public interface UserService {
     UserProfile completeOnboarding(
             @NonNull UserId userId,
             @NonNull OnboardingRequest request);
+
+    /**
+     * Soft-deletes the user account and clears PII.
+     *
+     * @param userId user identifier
+     */
+    void deleteAccount(@NonNull UserId userId);
 }

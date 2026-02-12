@@ -15,6 +15,12 @@ public final class ErrorCodes {
             "AUTH_TOKEN_EXPIRED";
     public static final @Fenum(FenumGroup.ERROR_CODE) String AUTH_INVALID_TOKEN =
             "AUTH_INVALID_TOKEN";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String AUTH_TOKEN_BLACKLISTED =
+            "AUTH_TOKEN_BLACKLISTED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String USER_BLOCKED =
+            "USER_BLOCKED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String ACCOUNT_DELETED =
+            "ACCOUNT_DELETED";
 
     // --- Rate Limiting ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String RATE_LIMIT_EXCEEDED =

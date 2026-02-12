@@ -110,6 +110,19 @@ class CodingRulesArchTest {
     }
 
     @Test
+    @DisplayName("DTO records in api.dto packages must have @Schema annotation")
+    void dtoRecordsShouldHaveSchemaAnnotation() {
+        classes()
+                .that().resideInAnyPackage("..api.dto..")
+                .and().areRecords()
+                .should().beAnnotatedWith(
+                        "io.swagger.v3.oas.annotations.media.Schema")
+                .because("all DTO records must have @Schema"
+                        + " for OpenAPI documentation")
+                .check(classes);
+    }
+
+    @Test
     @DisplayName("Port interface methods must annotate return types with @NonNull or @Nullable")
     void portMethodReturnTypesMustHaveNullnessAnnotation() {
         methods()

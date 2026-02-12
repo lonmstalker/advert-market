@@ -1,5 +1,6 @@
 package com.advertmarket.identity.api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -15,13 +16,21 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * @param interests           selected interest tags
  * @param createdAt           registration timestamp
  */
+@Schema(description = "Full user profile")
 public record UserProfile(
+        @Schema(description = "Telegram user ID", example = "42")
         long id,
+        @Schema(description = "Telegram username", example = "johndoe")
         @NonNull String username,
+        @Schema(description = "Display name", example = "John Doe")
         @NonNull String displayName,
+        @Schema(description = "IETF language tag", example = "en")
         @NonNull String languageCode,
+        @Schema(description = "Whether onboarding is completed")
         boolean onboardingCompleted,
+        @Schema(description = "Selected interest tags")
         @NonNull List<String> interests,
+        @Schema(description = "Registration timestamp")
         @NonNull Instant createdAt
 ) {
 

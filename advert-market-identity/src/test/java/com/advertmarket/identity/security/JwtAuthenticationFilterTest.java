@@ -5,8 +5,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
+import com.advertmarket.shared.model.UserBlockCheckPort;
 import com.advertmarket.shared.model.UserId;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +24,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class JwtAuthenticationFilterTest {
 
     private JwtTokenProvider jwtTokenProvider;
+    private TokenBlacklistPort tokenBlacklistPort;
+    private UserBlockCheckPort userBlockCheckPort;
     private JwtAuthenticationFilter filter;
     private HttpServletRequest request;
     private HttpServletResponse response;
@@ -30,7 +34,11 @@ class JwtAuthenticationFilterTest {
     @BeforeEach
     void setUp() {
         jwtTokenProvider = mock(JwtTokenProvider.class);
-        filter = new JwtAuthenticationFilter(jwtTokenProvider);
+        tokenBlacklistPort = mock(TokenBlacklistPort.class);
+        userBlockCheckPort = mock(UserBlockCheckPort.class);
+        filter = new JwtAuthenticationFilter(
+                jwtTokenProvider, tokenBlacklistPort,
+                userBlockCheckPort);
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
         filterChain = mock(FilterChain.class);
@@ -52,6 +60,9 @@ class JwtAuthenticationFilterTest {
         when(request.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn("Bearer " + token);
         when(jwtTokenProvider.parseToken(token)).thenReturn(auth);
+        when(tokenBlacklistPort.isBlacklisted("jti-123"))
+                .thenReturn(false);
+        when(userBlockCheckPort.isBlocked(42L)).thenReturn(false);
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -82,6 +93,47 @@ class JwtAuthenticationFilterTest {
         when(jwtTokenProvider.parseToken(token))
                 .thenThrow(new DomainException(
                         ErrorCodes.AUTH_INVALID_TOKEN, "bad token"));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext()
+                .getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("Should not set auth when token is blacklisted")
+    void shouldNotSetAuthWhenTokenBlacklisted() throws Exception {
+        String token = "valid.jwt.token";
+        TelegramAuthentication auth = new TelegramAuthentication(
+                new UserId(42L), false, "jti-revoked");
+
+        when(request.getHeader(HttpHeaders.AUTHORIZATION))
+                .thenReturn("Bearer " + token);
+        when(jwtTokenProvider.parseToken(token)).thenReturn(auth);
+        when(tokenBlacklistPort.isBlacklisted("jti-revoked"))
+                .thenReturn(true);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext()
+                .getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("Should not set auth when user is blocked")
+    void shouldNotSetAuthWhenUserBlocked() throws Exception {
+        String token = "valid.jwt.token";
+        TelegramAuthentication auth = new TelegramAuthentication(
+                new UserId(99L), false, "jti-123");
+
+        when(request.getHeader(HttpHeaders.AUTHORIZATION))
+                .thenReturn("Bearer " + token);
+        when(jwtTokenProvider.parseToken(token)).thenReturn(auth);
+        when(tokenBlacklistPort.isBlacklisted("jti-123"))
+                .thenReturn(false);
+        when(userBlockCheckPort.isBlocked(99L)).thenReturn(true);
 
         filter.doFilterInternal(request, response, filterChain);
 

@@ -1,5 +1,6 @@
 package com.advertmarket.communication.bot.internal.block;
 
+import com.advertmarket.shared.model.UserBlockCheckPort;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,13 +10,13 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * Redis-backed implementation of {@link UserBlockPort}.
+ * Redis-backed implementation of {@link UserBlockPort} and {@link UserBlockCheckPort}.
  */
 @RequiredArgsConstructor
 @Slf4j
 @Component
 @EnableConfigurationProperties(UserBlockProperties.class)
-public class RedisUserBlockService implements UserBlockPort {
+public class RedisUserBlockService implements UserBlockPort, UserBlockCheckPort {
 
     private final StringRedisTemplate redis;
     private final UserBlockProperties properties;

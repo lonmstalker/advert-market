@@ -37,4 +37,11 @@ public interface UserRepository {
      */
     void completeOnboarding(@NonNull UserId userId,
             @NonNull List<String> interests);
+
+    /**
+     * Soft-deletes a user by clearing PII and setting the deleted flag.
+     *
+     * @param userId user identifier
+     */
+    void softDelete(@NonNull UserId userId);
 }

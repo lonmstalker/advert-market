@@ -17,4 +17,11 @@ public interface AuthService {
      */
     @NonNull
     LoginResponse login(@NonNull LoginRequest request);
+
+    /**
+     * Logs out a user by blacklisting the current JWT.
+     *
+     * @param jti the JWT unique identifier to revoke
+     */
+    void logout(@NonNull String jti);
 }

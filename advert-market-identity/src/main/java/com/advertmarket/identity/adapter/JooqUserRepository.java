@@ -45,6 +45,8 @@ public class JooqUserRepository implements UserRepository {
                 .set(USERS.LAST_NAME, data.lastName())
                 .set(USERS.USERNAME, data.username())
                 .set(USERS.LANGUAGE_CODE, lang)
+                .set(USERS.IS_DELETED, false)
+                .setNull(USERS.DELETED_AT)
                 .set(USERS.UPDATED_AT, now)
                 .returning(USERS.IS_OPERATOR)
                 .fetchOne();
@@ -60,6 +62,8 @@ public class JooqUserRepository implements UserRepository {
         Record record = dsl.select()
                 .from(USERS)
                 .where(USERS.ID.eq(userId.value()))
+                .and(USERS.IS_DELETED.isFalse()
+                        .or(USERS.IS_DELETED.isNull()))
                 .fetchOne();
 
         if (record == null) {
@@ -67,6 +71,19 @@ public class JooqUserRepository implements UserRepository {
         }
 
         return mapToProfile(record);
+    }
+
+    @Override
+    public void softDelete(@NonNull UserId userId) {
+        dsl.update(USERS)
+                .set(USERS.IS_DELETED, true)
+                .set(USERS.DELETED_AT, OffsetDateTime.now())
+                .set(USERS.FIRST_NAME, "Deleted")
+                .setNull(USERS.LAST_NAME)
+                .setNull(USERS.USERNAME)
+                .set(USERS.UPDATED_AT, OffsetDateTime.now())
+                .where(USERS.ID.eq(userId.value()))
+                .execute();
     }
 
     @Override

@@ -10,20 +10,23 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
 import com.advertmarket.identity.api.dto.TelegramUserData;
+import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.security.JwtTokenProvider;
+import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("AuthServiceImpl — login flow")
+@DisplayName("AuthServiceImpl — login and logout flow")
 class AuthServiceImplTest {
 
     private TelegramInitDataValidator initDataValidator;
     private UserRepository userRepository;
     private JwtTokenProvider jwtTokenProvider;
+    private TokenBlacklistPort tokenBlacklistPort;
     private MetricsFacade metricsFacade;
     private AuthServiceImpl authService;
 
@@ -32,10 +35,12 @@ class AuthServiceImplTest {
         initDataValidator = mock(TelegramInitDataValidator.class);
         userRepository = mock(UserRepository.class);
         jwtTokenProvider = mock(JwtTokenProvider.class);
+        tokenBlacklistPort = mock(TokenBlacklistPort.class);
         metricsFacade = mock(MetricsFacade.class);
         authService = new AuthServiceImpl(
                 initDataValidator, userRepository,
-                jwtTokenProvider, metricsFacade);
+                jwtTokenProvider, tokenBlacklistPort,
+                metricsFacade);
     }
 
     @Test
@@ -62,7 +67,8 @@ class AuthServiceImplTest {
         assertThat(response.user().displayName())
                 .isEqualTo("John Doe");
         verify(userRepository).upsert(userData);
-        verify(metricsFacade).incrementCounter("auth.login.success");
+        verify(metricsFacade).incrementCounter(
+                MetricNames.AUTH_LOGIN_SUCCESS);
     }
 
     @Test
@@ -108,5 +114,17 @@ class AuthServiceImplTest {
                 .isEqualTo("operator-token");
         verify(jwtTokenProvider).generateToken(
                 new UserId(99L), true);
+    }
+
+    @Test
+    @DisplayName("Should blacklist token and increment metric on logout")
+    void shouldLogout() {
+        when(jwtTokenProvider.getExpirationSeconds())
+                .thenReturn(3600L);
+
+        authService.logout("jti-to-revoke");
+
+        verify(tokenBlacklistPort).blacklist("jti-to-revoke", 3600L);
+        verify(metricsFacade).incrementCounter(MetricNames.AUTH_LOGOUT);
     }
 }

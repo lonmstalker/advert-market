@@ -5,6 +5,8 @@ import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.api.port.UserService;
 import com.advertmarket.shared.exception.EntityNotFoundException;
+import com.advertmarket.shared.metric.MetricNames;
+import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final MetricsFacade metricsFacade;
 
     @Override
     @NonNull
@@ -44,5 +47,11 @@ public class UserServiceImpl implements UserService {
                     String.valueOf(userId.value()));
         }
         return profile;
+    }
+
+    @Override
+    public void deleteAccount(@NonNull UserId userId) {
+        userRepository.softDelete(userId);
+        metricsFacade.incrementCounter(MetricNames.ACCOUNT_DELETED);
     }
 }

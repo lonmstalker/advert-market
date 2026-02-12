@@ -30,7 +30,7 @@ public class SecurityConfig {
                                 SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/auth/**",
+                                "/api/v1/auth/login",
                                 "/api/v1/bot/webhook",
                                 "/internal/v1/**",
                                 "/actuator/health/**",

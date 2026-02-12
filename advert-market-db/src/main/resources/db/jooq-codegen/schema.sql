@@ -13,6 +13,8 @@ CREATE TABLE users (
     is_operator           BOOLEAN       DEFAULT FALSE,
     onboarding_completed  BOOLEAN       DEFAULT FALSE,
     interests             TEXT ARRAY    DEFAULT ARRAY[],
+    is_deleted            BOOLEAN       DEFAULT FALSE,
+    deleted_at            TIMESTAMPTZ,
     version               INTEGER       NOT NULL DEFAULT 0,
     created_at            TIMESTAMPTZ   DEFAULT now(),
     updated_at            TIMESTAMPTZ   DEFAULT now()

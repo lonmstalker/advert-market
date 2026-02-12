@@ -10,6 +10,8 @@ import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.exception.EntityNotFoundException;
+import com.advertmarket.shared.metric.MetricNames;
+import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
 import java.time.Instant;
 import java.util.List;
@@ -17,10 +19,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("UserServiceImpl — profile and onboarding operations")
+@DisplayName("UserServiceImpl — profile, onboarding, and account deletion")
 class UserServiceImplTest {
 
     private UserRepository userRepository;
+    private MetricsFacade metricsFacade;
     private UserServiceImpl userService;
 
     private static final UserId USER_ID = new UserId(42L);
@@ -31,7 +34,9 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        userService = new UserServiceImpl(userRepository);
+        metricsFacade = mock(MetricsFacade.class);
+        userService = new UserServiceImpl(
+                userRepository, metricsFacade);
     }
 
     @Test
@@ -72,5 +77,15 @@ class UserServiceImplTest {
         assertThat(result.onboardingCompleted()).isTrue();
         assertThat(result.interests())
                 .containsExactly("tech", "gaming");
+    }
+
+    @Test
+    @DisplayName("Should soft-delete account and increment metric")
+    void shouldDeleteAccount() {
+        userService.deleteAccount(USER_ID);
+
+        verify(userRepository).softDelete(USER_ID);
+        verify(metricsFacade).incrementCounter(
+                MetricNames.ACCOUNT_DELETED);
     }
 }
