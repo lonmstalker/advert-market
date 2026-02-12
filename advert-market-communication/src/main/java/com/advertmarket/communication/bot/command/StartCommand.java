@@ -7,7 +7,10 @@ import com.advertmarket.communication.bot.internal.dispatch.BotCommand;
 import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.shared.i18n.LocalizationService;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +22,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class StartCommand implements BotCommand {
+
+    private static final Pattern SAFE_PARAM =
+            Pattern.compile("[a-zA-Z0-9_-]+");
 
     private static final Map<String, String> DEEP_LINK_ROUTES =
             Map.of(
@@ -100,6 +106,9 @@ public class StartCommand implements BotCommand {
     }
 
     static String resolveRoute(String param) {
+        if (!SAFE_PARAM.matcher(param).matches()) {
+            return "/";
+        }
         for (var entry : DEEP_LINK_ROUTES.entrySet()) {
             if (param.startsWith(entry.getKey() + "_")) {
                 String id = param.substring(
@@ -107,6 +116,7 @@ public class StartCommand implements BotCommand {
                 return entry.getValue() + id;
             }
         }
-        return "/?ref=" + param;
+        return "/?ref=" + URLEncoder.encode(
+                param, StandardCharsets.UTF_8);
     }
 }

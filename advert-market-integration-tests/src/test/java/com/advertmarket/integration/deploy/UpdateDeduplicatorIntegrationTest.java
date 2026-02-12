@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.communication.webhook.DeduplicationProperties;
 import com.advertmarket.communication.webhook.UpdateDeduplicator;
+import com.advertmarket.shared.metric.MetricsFacade;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,7 @@ class UpdateDeduplicatorIntegrationTest {
         deduplicator = new UpdateDeduplicator(
                 redisTemplate,
                 new DeduplicationProperties(Duration.ofHours(24)),
-                new SimpleMeterRegistry());
+                new MetricsFacade(new SimpleMeterRegistry()));
     }
 
     @Test

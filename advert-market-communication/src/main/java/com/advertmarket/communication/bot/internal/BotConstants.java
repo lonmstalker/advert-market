@@ -1,5 +1,8 @@
 package com.advertmarket.communication.bot.internal;
 
+import com.advertmarket.shared.FenumGroup;
+import org.checkerframework.checker.fenum.qual.Fenum;
+
 /**
  * Shared constants for the Telegram bot framework.
  */
@@ -22,18 +25,19 @@ public final class BotConstants {
     // --- Metric names ---
 
     /** Counter for Telegram API call outcomes. */
-    public static final String METRIC_API_CALL = "telegram.api.call";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String METRIC_API_CALL =
+            "telegram.api.call";
 
     /** Counter per handler error with category tag. */
-    public static final String METRIC_HANDLER_ERROR =
+    public static final @Fenum(FenumGroup.METRIC_NAME) String METRIC_HANDLER_ERROR =
             "telegram.handler.error";
 
     /** Counter for webhook-level errors. */
-    public static final String METRIC_WEBHOOK_ERROR =
+    public static final @Fenum(FenumGroup.METRIC_NAME) String METRIC_WEBHOOK_ERROR =
             "telegram.webhook.error";
 
     /** Counter for handler processing errors. */
-    public static final String METRIC_HANDLER_ERRORS =
+    public static final @Fenum(FenumGroup.METRIC_NAME) String METRIC_HANDLER_ERRORS =
             "telegram.handler.errors";
 
     // --- Callback prefixes ---

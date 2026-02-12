@@ -1,8 +1,9 @@
 package com.advertmarket.communication.canary;
 
 import com.advertmarket.shared.deploy.UserBucket;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
+import com.advertmarket.shared.metric.MetricNames;
+import com.advertmarket.shared.metric.MetricsFacade;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +25,7 @@ public class CanaryRouter {
     private static final long CACHE_TTL_MS = 5_000;
 
     private final StringRedisTemplate redis;
-    private final Counter stableCounter;
-    private final Counter canaryCounter;
+    private final MetricsFacade metrics;
 
     // Local cache to avoid hitting Redis on every request
     private final AtomicInteger cachedPercent = new AtomicInteger(0);
@@ -33,15 +33,12 @@ public class CanaryRouter {
     private final AtomicLong lastFetchTime = new AtomicLong(0);
 
     /** Creates the canary router backed by Redis. */
-    public CanaryRouter(StringRedisTemplate redis, MeterRegistry meterRegistry) {
+    public CanaryRouter(StringRedisTemplate redis,
+            MetricsFacade metrics) {
         this.redis = redis;
-        this.stableCounter = Counter.builder("canary.route.decision")
-                .tag("route", "stable")
-                .register(meterRegistry);
-        this.canaryCounter = Counter.builder("canary.route.decision")
-                .tag("route", "canary")
-                .register(meterRegistry);
-        meterRegistry.gauge("canary.percent.current", cachedPercent);
+        this.metrics = metrics;
+        metrics.registry().gauge(
+                "canary.percent.current", cachedPercent);
     }
 
     /**
@@ -51,11 +48,9 @@ public class CanaryRouter {
         refreshCacheIfNeeded();
         int percent = cachedPercent.get();
         boolean canary = UserBucket.isCanary(userId, cachedSalt, percent);
-        if (canary) {
-            canaryCounter.increment();
-        } else {
-            stableCounter.increment();
-        }
+        metrics.incrementCounter(
+                MetricNames.CANARY_ROUTE_DECISION,
+                "route", canary ? "canary" : "stable");
         return canary;
     }
 
@@ -107,14 +102,20 @@ public class CanaryRouter {
             return;
         }
         try {
-            String percentStr = redis.opsForValue().get(REDIS_KEY);
-            if (percentStr != null) {
-                cachedPercent.set(Integer.parseInt(percentStr));
+            List<String> values = redis.opsForValue()
+                    .multiGet(List.of(REDIS_KEY, SALT_KEY));
+            if (values != null && values.size() == 2) {
+                String percentStr = values.get(0);
+                if (percentStr != null) {
+                    cachedPercent.set(
+                            Integer.parseInt(percentStr));
+                }
+                String salt = values.get(1);
+                cachedSalt = salt != null ? salt : "";
             }
-            String salt = redis.opsForValue().get(SALT_KEY);
-            cachedSalt = salt != null ? salt : "";
         } catch (Exception e) {
-            log.warn("Failed to refresh canary config from Redis, using cached values", e);
+            log.warn("Failed to refresh canary config from "
+                    + "Redis, using cached values", e);
         }
         lastFetchTime.set(now);
     }

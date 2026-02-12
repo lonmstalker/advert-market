@@ -172,9 +172,10 @@ class IdentityWorkflowIntegrationTest {
         TelegramAuthentication before = runFilter(token);
         assertThat(before).isNotNull();
         String jti = before.getJti();
+        long tokenExpSeconds = before.getTokenExpSeconds();
 
         // When: logout (blacklist the token)
-        authService.logout(jti);
+        authService.logout(jti, tokenExpSeconds);
 
         // Then: same token is rejected
         TelegramAuthentication after = runFilter(token);
@@ -235,8 +236,8 @@ class IdentityWorkflowIntegrationTest {
         // When: delete account + blacklist token
         userService.deleteAccount(new UserId(42L));
         TelegramAuthentication auth = runFilter(token);
-        String jti = jwtTokenProvider.parseToken(token).getJti();
-        authService.logout(jti);
+        String jti = auth.getJti();
+        authService.logout(jti, auth.getTokenExpSeconds());
 
         // Then: profile is gone (soft-deleted)
         assertThat(userRepository.findById(new UserId(42L))).isNull();

@@ -74,6 +74,18 @@ public final class MetricNames {
     public static final @Fenum(FenumGroup.METRIC_NAME) String DELIVERY_FAILED =
             "delivery.failed";
 
+    // --- Canary ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CANARY_ROUTE_DECISION =
+            "canary.route.decision";
+
+    // --- Telegram Webhook ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WEBHOOK_LATENCY =
+            "telegram.webhook.latency";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String DEDUP_ACQUIRED =
+            "telegram.update.dedup.acquired";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String DEDUP_DUPLICATE =
+            "telegram.update.duplicates";
+
     // --- System ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_PUBLISHED =
             "outbox.published";

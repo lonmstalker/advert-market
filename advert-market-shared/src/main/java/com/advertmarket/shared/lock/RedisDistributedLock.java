@@ -3,17 +3,16 @@ package com.advertmarket.shared.lock;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
 
 /**
  * Redis-backed implementation of {@link DistributedLockPort}.
@@ -23,9 +22,7 @@ import org.springframework.stereotype.Component;
  * in an empty optional (lock not acquired) with a WARN log.
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
-@ConditionalOnBean(StringRedisTemplate.class)
 public class RedisDistributedLock implements DistributedLockPort {
 
     private static final String KEY_PREFIX = "lock:";
@@ -65,11 +62,11 @@ public class RedisDistributedLock implements DistributedLockPort {
                     .setIfAbsent(redisKey, token, ttl);
             if (Boolean.TRUE.equals(acquired)) {
                 metrics.incrementCounter(MetricNames.LOCK_ACQUIRED,
-                        "key", key);
+                        "namespace", extractNamespace(key));
                 return Optional.of(token);
             }
             metrics.incrementCounter(MetricNames.LOCK_TIMEOUT,
-                    "key", key);
+                    "namespace", extractNamespace(key));
             return Optional.empty();
         } catch (DataAccessException ex) {
             log.warn("Redis error acquiring lock '{}': {}",
@@ -87,10 +84,15 @@ public class RedisDistributedLock implements DistributedLockPort {
         String redisKey = KEY_PREFIX + key;
         try {
             redisTemplate.execute(UNLOCK_SCRIPT,
-                    java.util.List.of(redisKey), token);
+                    List.of(redisKey), token);
         } catch (DataAccessException ex) {
             log.warn("Redis error releasing lock '{}': {}",
                     key, ex.getMessage());
         }
+    }
+
+    private static String extractNamespace(String key) {
+        int idx = key.indexOf(':');
+        return idx > 0 ? key.substring(0, idx) : key;
     }
 }

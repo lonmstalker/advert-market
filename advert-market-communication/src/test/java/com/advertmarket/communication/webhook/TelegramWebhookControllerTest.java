@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.communication.bot.internal.config.TelegramBotProperties;
 import com.advertmarket.communication.bot.internal.config.TelegramBotProperties.Webhook;
 import com.pengrad.telegrambot.model.Update;
+import com.advertmarket.shared.metric.MetricsFacade;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +32,7 @@ class TelegramWebhookControllerTest {
         when(botProps.webhook()).thenReturn(webhook);
         controller = new TelegramWebhookController(
                 botProps, deduplicator, processor,
-                new SimpleMeterRegistry());
+                new MetricsFacade(new SimpleMeterRegistry()));
     }
 
     @Test
@@ -79,21 +80,13 @@ class TelegramWebhookControllerTest {
     }
 
     @Test
-    @DisplayName("Accepts request when webhook secret is empty")
-    void handleWebhook_emptySecret_acceptsAll() {
-        var botProps = mock(TelegramBotProperties.class);
-        var webhook = new Webhook("", "");
-        when(botProps.webhook()).thenReturn(webhook);
-        var ctrl = new TelegramWebhookController(
-                botProps, deduplicator, processor,
-                new SimpleMeterRegistry());
-        when(deduplicator.tryAcquire(anyInt())).thenReturn(true);
-
-        var response = ctrl.handleWebhook(
+    @DisplayName("Returns 401 when null token does not match secret")
+    void handleWebhook_nullToken_returns401() {
+        var response = controller.handleWebhook(
                 null, "{\"update_id\": 1}");
 
         assertThat(response.getStatusCode().value())
-                .isEqualTo(200);
+                .isEqualTo(401);
     }
 
     @Test

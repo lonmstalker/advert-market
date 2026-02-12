@@ -65,8 +65,17 @@ public class AuthController {
     public LoginResponse login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest) {
-        loginRateLimiter.checkRate(httpRequest.getRemoteAddr());
+        loginRateLimiter.checkRate(resolveClientIp(httpRequest));
         return authService.login(request);
+    }
+
+    private static String resolveClientIp(
+            HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            return xff.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     /**
@@ -88,6 +97,7 @@ public class AuthController {
     public void logout() {
         var auth = (TelegramAuthentication) SecurityContextHolder
                 .getContext().getAuthentication();
-        authService.logout(auth.getJti());
+        authService.logout(auth.getJti(),
+                auth.getTokenExpSeconds());
     }
 }

@@ -1,6 +1,8 @@
 package com.advertmarket.identity.adapter;
 
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,9 @@ public class RedisTokenBlacklist implements TokenBlacklistPort {
         } catch (DataAccessException e) {
             log.error("Redis error blacklisting token jti={}",
                     jti, e);
+            throw new DomainException(
+                    ErrorCodes.SERVICE_UNAVAILABLE,
+                    "Failed to blacklist token");
         }
     }
 }

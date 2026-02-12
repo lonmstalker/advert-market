@@ -18,6 +18,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  */
 public final class CursorCodec {
 
+    private static final int MAX_CURSOR_LENGTH = 1024;
+
     private CursorCodec() {
     }
 
@@ -61,6 +63,11 @@ public final class CursorCodec {
             @NonNull String cursor) {
         if (cursor.isEmpty()) {
             return Map.of();
+        }
+        if (cursor.length() > MAX_CURSOR_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Cursor exceeds max length: "
+                            + cursor.length());
         }
         byte[] bytes = Base64.getUrlDecoder().decode(cursor);
         String queryString =

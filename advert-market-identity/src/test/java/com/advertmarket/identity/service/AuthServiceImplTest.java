@@ -3,6 +3,8 @@ package com.advertmarket.identity.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.longThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +18,7 @@ import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -119,12 +122,12 @@ class AuthServiceImplTest {
     @Test
     @DisplayName("Should blacklist token and increment metric on logout")
     void shouldLogout() {
-        when(jwtTokenProvider.getExpirationSeconds())
-                .thenReturn(3600L);
+        long expSeconds = TimeUnit.MILLISECONDS.toSeconds(
+                System.currentTimeMillis()) + 3600L;
+        authService.logout("jti-to-revoke", expSeconds);
 
-        authService.logout("jti-to-revoke");
-
-        verify(tokenBlacklistPort).blacklist("jti-to-revoke", 3600L);
+        verify(tokenBlacklistPort).blacklist(
+                eq("jti-to-revoke"), longThat(ttl -> ttl > 0));
         verify(metricsFacade).incrementCounter(MetricNames.AUTH_LOGOUT);
     }
 }

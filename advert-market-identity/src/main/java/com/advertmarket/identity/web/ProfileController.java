@@ -94,6 +94,7 @@ public class ProfileController {
         userService.deleteAccount(userId);
         var auth = (TelegramAuthentication) SecurityContextHolder
                 .getContext().getAuthentication();
-        authService.logout(auth.getJti());
+        authService.logout(auth.getJti(),
+                auth.getTokenExpSeconds());
     }
 }

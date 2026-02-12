@@ -10,6 +10,7 @@ import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;
@@ -53,9 +54,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(@NonNull String jti) {
-        tokenBlacklistPort.blacklist(
-                jti, jwtTokenProvider.getExpirationSeconds());
+    public void logout(@NonNull String jti, long tokenExpSeconds) {
+        long remainingTtl = tokenExpSeconds
+                - TimeUnit.MILLISECONDS.toSeconds(
+                        System.currentTimeMillis());
+        if (remainingTtl > 0) {
+            tokenBlacklistPort.blacklist(jti, remainingTtl);
+        }
         metricsFacade.incrementCounter(MetricNames.AUTH_LOGOUT);
     }
 }

@@ -15,6 +15,7 @@ import com.pengrad.telegrambot.response.BaseResponse;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -237,7 +238,7 @@ public class TelegramSender {
     }
 
     private long backoffMs(int attempt) {
-        List<java.time.Duration> intervals =
+        List<Duration> intervals =
                 retryProperties.backoffIntervals();
         if (attempt < intervals.size()) {
             return intervals.get(attempt).toMillis();

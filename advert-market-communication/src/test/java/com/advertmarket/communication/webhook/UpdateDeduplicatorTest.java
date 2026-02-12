@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.shared.metric.MetricsFacade;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +32,8 @@ class UpdateDeduplicatorTest {
         var props = new DeduplicationProperties(
                 Duration.ofHours(24));
         deduplicator = new UpdateDeduplicator(
-                redis, props, new SimpleMeterRegistry());
+                redis, props,
+                new MetricsFacade(new SimpleMeterRegistry()));
     }
 
     @Test
@@ -68,10 +70,11 @@ class UpdateDeduplicatorTest {
     @DisplayName("Increments acquired counter on success")
     void tryAcquire_incrementsCounter() {
         var registry = new SimpleMeterRegistry();
+        var metrics = new MetricsFacade(registry);
         var props = new DeduplicationProperties(
                 Duration.ofHours(24));
         var dedup = new UpdateDeduplicator(
-                redis, props, registry);
+                redis, props, metrics);
         when(valueOps.setIfAbsent(anyString(), eq("1"),
                 any(Duration.class))).thenReturn(true);
 

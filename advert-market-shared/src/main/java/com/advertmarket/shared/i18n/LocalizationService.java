@@ -7,12 +7,10 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
-import org.springframework.stereotype.Component;
 
 /**
  * Thin wrapper over Spring {@link MessageSource} for convenience.
  */
-@Component
 @RequiredArgsConstructor
 public class LocalizationService {
 
@@ -49,9 +47,14 @@ public class LocalizationService {
     @NonNull
     public String msg(@NonNull String key, @Nullable String langCode,
             Object @NonNull ... args) {
-        Locale locale = StringUtils.isNotBlank(langCode)
-                ? Locale.of(langCode)
-                : DEFAULT_LOCALE;
+        Locale locale;
+        try {
+            locale = StringUtils.isNotBlank(langCode)
+                    ? Locale.of(langCode)
+                    : DEFAULT_LOCALE;
+        } catch (IllegalArgumentException e) {
+            locale = DEFAULT_LOCALE;
+        }
         return msg(key, locale, args);
     }
 }

@@ -20,21 +20,25 @@ public class TelegramAuthentication implements PrincipalAuthentication {
     private final @NonNull UserId userId;
     private final boolean operator;
     private final @NonNull String jti;
+    private final long tokenExpSeconds;
 
     /**
      * Creates a new authenticated token.
      *
-     * @param userId     the authenticated user
-     * @param isOperator whether the user is a platform operator
-     * @param jti        the JWT unique identifier
+     * @param userId          the authenticated user
+     * @param isOperator      whether the user is a platform operator
+     * @param jti             the JWT unique identifier
+     * @param tokenExpSeconds token expiration as epoch seconds
      */
     public TelegramAuthentication(
             @NonNull UserId userId,
             boolean isOperator,
-            @NonNull String jti) {
+            @NonNull String jti,
+            long tokenExpSeconds) {
         this.userId = userId;
         this.operator = isOperator;
         this.jti = jti;
+        this.tokenExpSeconds = tokenExpSeconds;
     }
 
     @Override

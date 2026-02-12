@@ -5,15 +5,16 @@ import static com.advertmarket.communication.bot.internal.BotConstants.MDC_UPDAT
 import static com.advertmarket.communication.bot.internal.BotConstants.MDC_USER_ID;
 import static com.advertmarket.communication.bot.internal.BotConstants.METRIC_HANDLER_ERRORS;
 
+import com.advertmarket.communication.bot.internal.builder.MarkdownV2Util;
 import com.advertmarket.communication.bot.internal.dispatch.BotDispatcher;
 import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.communication.canary.CanaryRouter;
+import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.model.Update;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -29,22 +30,20 @@ public class UpdateProcessor {
     private final CanaryRouter canaryRouter;
     private final BotDispatcher dispatcher;
     private final TelegramSender sender;
-    private final Counter handlerErrors;
+    private final MetricsFacade metrics;
     private final ExecutorService executor;
 
     /** Creates the update processor with canary routing. */
     public UpdateProcessor(CanaryRouter canaryRouter,
             BotDispatcher dispatcher,
             TelegramSender sender,
-            MeterRegistry meterRegistry,
+            MetricsFacade metrics,
             @Qualifier("botUpdateExecutor")
             ExecutorService executor) {
         this.canaryRouter = canaryRouter;
         this.dispatcher = dispatcher;
         this.sender = sender;
-        this.handlerErrors = Counter.builder(METRIC_HANDLER_ERRORS)
-                .description("Update handler errors")
-                .register(meterRegistry);
+        this.metrics = metrics;
         this.executor = executor;
     }
 
@@ -60,13 +59,13 @@ public class UpdateProcessor {
     private void processUpdate(Update update) {
         long userId = extractUserId(update);
         try {
-            org.slf4j.MDC.put(MDC_USER_ID,
+            MDC.put(MDC_USER_ID,
                     String.valueOf(userId));
-            org.slf4j.MDC.put(MDC_UPDATE_ID,
+            MDC.put(MDC_UPDATE_ID,
                     String.valueOf(update.updateId()));
 
             boolean canary = canaryRouter.isCanary(userId);
-            org.slf4j.MDC.put(MDC_CANARY,
+            MDC.put(MDC_CANARY,
                     String.valueOf(canary));
 
             log.info("Processing update_id={} user_id={} "
@@ -76,20 +75,21 @@ public class UpdateProcessor {
             dispatcher.dispatch(new UpdateContext(update));
 
         } catch (Exception e) {
-            handlerErrors.increment();
+            metrics.incrementCounter(METRIC_HANDLER_ERRORS);
             log.error("Error processing update_id={}",
                     update.updateId(), e);
             trySendError(userId, update.updateId());
         } finally {
-            org.slf4j.MDC.clear();
+            MDC.clear();
         }
     }
 
     private void trySendError(long userId, int updateId) {
         try {
             sender.send(userId,
-                    "\u26a0 An error occurred. " // NON-NLS
-                    + "Please try again later.");
+                    MarkdownV2Util.escape(
+                            "⚠ An error occurred. "
+                            + "Please try again later."));
         } catch (Exception ex) {
             log.debug("Could not send error message for "
                     + "update_id={}", updateId, ex);

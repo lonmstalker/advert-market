@@ -25,7 +25,16 @@ import org.springframework.validation.annotation.Validated;
 )
 @Validated
 public record TelegramResilienceProperties(
+        @PropertyDoc(
+                description = "Circuit breaker settings",
+                required = Requirement.OPTIONAL
+        )
         @Valid @DefaultValue CircuitBreaker circuitBreaker,
+
+        @PropertyDoc(
+                description = "Bulkhead settings for concurrent call limiting",
+                required = Requirement.OPTIONAL
+        )
         @Valid @DefaultValue Bulkhead bulkhead
 ) {
 

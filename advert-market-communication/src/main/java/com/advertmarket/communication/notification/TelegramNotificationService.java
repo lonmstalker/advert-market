@@ -46,12 +46,14 @@ public class TelegramNotificationService
 
     private String substituteVariables(String template,
             Map<String, String> variables) {
-        String result = template;
+        String escaped = MarkdownV2Util.escape(template);
         for (var entry : variables.entrySet()) {
-            result = result.replace(
-                    "{" + entry.getKey() + "}",
+            String escapedKey = MarkdownV2Util.escape(
+                    "{" + entry.getKey() + "}");
+            escaped = escaped.replace(
+                    escapedKey,
                     MarkdownV2Util.escape(entry.getValue()));
         }
-        return result;
+        return escaped;
     }
 }

@@ -25,10 +25,13 @@ public record UpdateContext(Update update) {
         return userId();
     }
 
+    /** Sentinel value when no user can be extracted from the update. */
+    public static final long UNKNOWN_USER_ID = -1L;
+
     /** Returns the user id extracted from this update. */
     public long userId() {
         var user = user();
-        return user != null ? user.id() : update.updateId();
+        return user != null ? user.id() : UNKNOWN_USER_ID;
     }
 
     /** Returns the {@link User} from this update, or null. */

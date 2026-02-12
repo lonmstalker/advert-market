@@ -56,7 +56,10 @@ public class RedisLoginRateLimiter implements LoginRateLimiterPort {
         } catch (DataAccessException e) {
             metricsFacade.incrementCounter(
                     MetricNames.AUTH_RATE_LIMITER_REDIS_ERROR);
-            log.warn("Rate limiter Redis error, allowing request", e);
+            log.error("Rate limiter Redis error, failing closed", e);
+            throw new DomainException(
+                    ErrorCodes.SERVICE_UNAVAILABLE,
+                    "Rate limiting unavailable");
         }
     }
 }

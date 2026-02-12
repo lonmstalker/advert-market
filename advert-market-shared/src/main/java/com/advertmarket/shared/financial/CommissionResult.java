@@ -1,6 +1,7 @@
 package com.advertmarket.shared.financial;
 
 import com.advertmarket.shared.model.Money;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -12,4 +13,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public record CommissionResult(
         @NonNull Money commission,
         @NonNull Money ownerPayout) {
+
+    public CommissionResult {
+        Objects.requireNonNull(commission, "commission");
+        Objects.requireNonNull(ownerPayout, "ownerPayout");
+    }
 }

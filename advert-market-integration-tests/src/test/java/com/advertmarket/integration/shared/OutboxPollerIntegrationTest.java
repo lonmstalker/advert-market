@@ -136,7 +136,7 @@ class OutboxPollerIntegrationTest {
                 CompletableFuture.completedFuture(null);
         OutboxProperties properties = new OutboxProperties(
                 Duration.ofMillis(100), 50, 3,
-                Duration.ofSeconds(1));
+                Duration.ofSeconds(1), Duration.ofSeconds(5));
         OutboxPoller poller = new OutboxPoller(
                 repository, publisher, properties, metrics);
 

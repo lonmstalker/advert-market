@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +24,14 @@ public class RedisUserBlockService implements UserBlockPort, UserBlockCheckPort 
 
     @Override
     public boolean isBlocked(long userId) {
-        return Boolean.TRUE.equals(
-                redis.hasKey(properties.keyPrefix() + userId));
+        try {
+            return Boolean.TRUE.equals(
+                    redis.hasKey(properties.keyPrefix() + userId));
+        } catch (DataAccessException e) {
+            log.warn("Redis error checking block for userId={}",
+                    userId, e);
+            return false;
+        }
     }
 
     @Override

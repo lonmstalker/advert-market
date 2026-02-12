@@ -21,7 +21,8 @@ public interface AuthService {
     /**
      * Logs out a user by blacklisting the current JWT.
      *
-     * @param jti the JWT unique identifier to revoke
+     * @param jti             the JWT unique identifier to revoke
+     * @param tokenExpSeconds token expiration as epoch seconds
      */
-    void logout(@NonNull String jti);
+    void logout(@NonNull String jti, long tokenExpSeconds);
 }

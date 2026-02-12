@@ -64,12 +64,13 @@ class UpdateContextTest {
     }
 
     @Test
-    @DisplayName("Falls back to update ID when no user found")
-    void userId_fallbackToUpdateId() throws Exception {
+    @DisplayName("Falls back to UNKNOWN_USER_ID when no user found")
+    void userId_fallbackToUnknown() throws Exception {
         var update = new Update();
         setField(update, "update_id", 99999);
         var ctx = new UpdateContext(update);
-        assertThat(ctx.userId()).isEqualTo(99999);
+        assertThat(ctx.userId())
+                .isEqualTo(UpdateContext.UNKNOWN_USER_ID);
     }
 
     @Test

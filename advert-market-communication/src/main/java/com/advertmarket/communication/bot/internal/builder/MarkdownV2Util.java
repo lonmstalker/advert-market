@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public final class MarkdownV2Util {
 
     private static final Pattern SPECIAL_CHARS =
-            Pattern.compile("([_*\\[\\]()~`>#+\\-=|{}.!])");
+            Pattern.compile("([_*\\[\\]()~`>#+\\-=|{}.!\\\\])");
 
     private MarkdownV2Util() {
     }

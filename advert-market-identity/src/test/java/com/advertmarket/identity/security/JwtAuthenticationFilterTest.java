@@ -55,7 +55,7 @@ class JwtAuthenticationFilterTest {
     void shouldSetAuthenticationForValidToken() throws Exception {
         String token = "valid.jwt.token";
         TelegramAuthentication auth = new TelegramAuthentication(
-                new UserId(42L), false, "jti-123");
+                new UserId(42L), false, "jti-123", 0L);
 
         when(request.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn("Bearer " + token);
@@ -106,7 +106,7 @@ class JwtAuthenticationFilterTest {
     void shouldNotSetAuthWhenTokenBlacklisted() throws Exception {
         String token = "valid.jwt.token";
         TelegramAuthentication auth = new TelegramAuthentication(
-                new UserId(42L), false, "jti-revoked");
+                new UserId(42L), false, "jti-revoked", 0L);
 
         when(request.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn("Bearer " + token);
@@ -126,7 +126,7 @@ class JwtAuthenticationFilterTest {
     void shouldNotSetAuthWhenUserBlocked() throws Exception {
         String token = "valid.jwt.token";
         TelegramAuthentication auth = new TelegramAuthentication(
-                new UserId(99L), false, "jti-123");
+                new UserId(99L), false, "jti-123", 0L);
 
         when(request.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn("Bearer " + token);

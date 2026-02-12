@@ -34,21 +34,28 @@ public final class CommissionCalculator {
             @NonNull Money amount, int rateBp) {
         if (amount.isZero()) {
             throw new DomainException(
-                    ErrorCodes.COMMISSION_CALCULATION_ERROR,
+                    ErrorCodes.VALIDATION_FAILED,
                     "Amount must be positive");
         }
         if (rateBp < 0 || rateBp > MAX_RATE_BP) {
             throw new DomainException(
-                    ErrorCodes.COMMISSION_CALCULATION_ERROR,
+                    ErrorCodes.VALIDATION_FAILED,
                     "Rate must be in [0, " + MAX_RATE_BP
                             + "] bp, got: " + rateBp);
         }
 
-        long commissionNano = Math.multiplyExact(
-                amount.nanoTon(), rateBp) / BP_DIVISOR;
-        Money commission = Money.ofNano(commissionNano);
-        Money ownerPayout = amount.subtract(commission);
+        try {
+            long commissionNano = Math.multiplyExact(
+                    amount.nanoTon(), rateBp) / BP_DIVISOR;
+            Money commission = Money.ofNano(commissionNano);
+            Money ownerPayout = amount.subtract(commission);
 
-        return new CommissionResult(commission, ownerPayout);
+            return new CommissionResult(commission, ownerPayout);
+        } catch (ArithmeticException ex) {
+            throw new DomainException(
+                    ErrorCodes.COMMISSION_CALCULATION_ERROR,
+                    "Commission calculation overflow for amount="
+                            + amount + " rateBp=" + rateBp);
+        }
     }
 }

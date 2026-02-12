@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.advertmarket.communication.canary.CanaryRouter;
+import com.advertmarket.shared.metric.MetricsFacade;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class CanaryRouterIntegrationTest {
         // Clear canary keys between tests
         redisTemplate.delete("canary:percent");
         redisTemplate.delete("canary:salt");
-        canaryRouter = new CanaryRouter(redisTemplate, new SimpleMeterRegistry());
+        canaryRouter = new CanaryRouter(redisTemplate, new MetricsFacade(new SimpleMeterRegistry()));
     }
 
     @Test
@@ -60,7 +61,7 @@ class CanaryRouterIntegrationTest {
     void percentReadFromRedis_onNewInstance() {
         redisTemplate.opsForValue().set("canary:percent", "15");
         // New instance should read from Redis
-        var newRouter = new CanaryRouter(redisTemplate, new SimpleMeterRegistry());
+        var newRouter = new CanaryRouter(redisTemplate, new MetricsFacade(new SimpleMeterRegistry()));
         assertThat(newRouter.getCanaryPercent()).isEqualTo(15);
     }
 

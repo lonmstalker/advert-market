@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
 import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -96,9 +97,12 @@ public class JwtTokenProvider {
             boolean isOperator = Boolean.TRUE.equals(
                     claims.get(CLAIM_IS_OPERATOR, Boolean.class));
             String jti = claims.getId();
+            long expSeconds = TimeUnit.MILLISECONDS.toSeconds(
+                    claims.getExpiration().getTime());
 
             return new TelegramAuthentication(
-                    new UserId(userId), isOperator, jti);
+                    new UserId(userId), isOperator, jti,
+                    expSeconds);
         } catch (ExpiredJwtException e) {
             throw new DomainException(
                     ErrorCodes.AUTH_TOKEN_EXPIRED,

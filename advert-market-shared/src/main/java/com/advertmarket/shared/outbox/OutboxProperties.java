@@ -39,7 +39,13 @@ public record OutboxProperties(
                 description = "Initial backoff duration before first retry",
                 required = Requirement.OPTIONAL
         )
-        Duration initialBackoff
+        Duration initialBackoff,
+
+        @PropertyDoc(
+                description = "Timeout for publishing a single outbox entry to Kafka",
+                required = Requirement.OPTIONAL
+        )
+        Duration publishTimeout
 ) {
 
     private static final int DEFAULT_POLL_INTERVAL_MS = 500;
@@ -59,6 +65,9 @@ public record OutboxProperties(
         }
         if (initialBackoff == null) {
             initialBackoff = Duration.ofSeconds(1);
+        }
+        if (publishTimeout == null) {
+            publishTimeout = Duration.ofSeconds(5);
         }
     }
 }

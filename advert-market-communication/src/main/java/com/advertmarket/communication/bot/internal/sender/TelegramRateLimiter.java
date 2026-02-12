@@ -43,23 +43,25 @@ public class TelegramRateLimiter implements RateLimiterPort {
             if (!globalSemaphore.tryAcquire(
                     ACQUIRE_TIMEOUT_SECONDS,
                     TimeUnit.SECONDS)) {
-                log.warn("Global rate limit timeout for chat={}",
-                        chatId);
-                return;
+                throw new RateLimitTimeoutException(
+                        "Global rate limit timeout for chat="
+                                + chatId);
             }
             var chatSemaphore = perChatSemaphores.get(chatId,
                     _ -> new Semaphore(perChatPermits));
             if (!chatSemaphore.tryAcquire(
                     ACQUIRE_TIMEOUT_SECONDS,
                     TimeUnit.SECONDS)) {
-                log.warn("Per-chat rate limit timeout for chat={}",
-                        chatId);
                 globalSemaphore.release();
+                throw new RateLimitTimeoutException(
+                        "Per-chat rate limit timeout for chat="
+                                + chatId);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("Rate limiter interrupted for chat={}",
-                    chatId);
+            throw new RateLimitTimeoutException(
+                    "Rate limiter interrupted for chat="
+                            + chatId);
         }
     }
 

@@ -12,7 +12,7 @@ class OutboxPropertiesTest {
     @Test
     @DisplayName("Applies default values when nulls provided")
     void defaultValues() {
-        var props = new OutboxProperties(null, 0, 0, null);
+        var props = new OutboxProperties(null, 0, 0, null, null);
 
         assertThat(props.pollInterval())
                 .isEqualTo(Duration.ofMillis(500));
@@ -20,6 +20,8 @@ class OutboxPropertiesTest {
         assertThat(props.maxRetries()).isEqualTo(3);
         assertThat(props.initialBackoff())
                 .isEqualTo(Duration.ofSeconds(1));
+        assertThat(props.publishTimeout())
+                .isEqualTo(Duration.ofSeconds(5));
     }
 
     @Test
@@ -27,7 +29,7 @@ class OutboxPropertiesTest {
     void explicitValues() {
         var props = new OutboxProperties(
                 Duration.ofSeconds(2), 100, 5,
-                Duration.ofSeconds(3));
+                Duration.ofSeconds(3), Duration.ofSeconds(10));
 
         assertThat(props.pollInterval())
                 .isEqualTo(Duration.ofSeconds(2));
@@ -35,6 +37,8 @@ class OutboxPropertiesTest {
         assertThat(props.maxRetries()).isEqualTo(5);
         assertThat(props.initialBackoff())
                 .isEqualTo(Duration.ofSeconds(3));
+        assertThat(props.publishTimeout())
+                .isEqualTo(Duration.ofSeconds(10));
     }
 
     @Test
@@ -42,7 +46,7 @@ class OutboxPropertiesTest {
     void negativeBatchSize_fallsBackToDefault() {
         var props = new OutboxProperties(
                 Duration.ofSeconds(1), -1, 1,
-                Duration.ofMillis(500));
+                Duration.ofMillis(500), null);
 
         assertThat(props.batchSize()).isEqualTo(50);
     }

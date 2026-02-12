@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ class RedisDistributedLockTest {
         assertThat(result).isPresent();
         verify(metrics).incrementCounter(
                 eq(MetricNames.LOCK_ACQUIRED),
-                eq("key"), eq("deal:123"));
+                eq("namespace"), eq("deal"));
     }
 
     @Test
@@ -71,7 +72,7 @@ class RedisDistributedLockTest {
         assertThat(result).isEmpty();
         verify(metrics).incrementCounter(
                 eq(MetricNames.LOCK_TIMEOUT),
-                eq("key"), eq("deal:123"));
+                eq("namespace"), eq("deal"));
     }
 
     @Test
@@ -121,7 +122,7 @@ class RedisDistributedLockTest {
         lock.unlock("deal:123", "token-abc");
 
         verify(redisTemplate).execute(
-                any(), eq(java.util.List.of("lock:deal:123")),
+                any(), eq(List.of("lock:deal:123")),
                 eq("token-abc"));
     }
 

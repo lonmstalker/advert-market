@@ -4,13 +4,12 @@ import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 /**
  * Polls the outbox table and publishes pending entries.
@@ -20,9 +19,7 @@ import org.springframework.stereotype.Component;
  * app module).
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
-@ConditionalOnBean({OutboxRepository.class, OutboxPublisher.class})
 public class OutboxPoller {
 
     private final OutboxRepository repository;
@@ -53,21 +50,24 @@ public class OutboxPoller {
         }
     }
 
-    @SuppressWarnings("IllegalCatch")
     @SuppressFBWarnings(
             value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
             justification = "id() is never null for entries fetched from DB")
     private void publishEntry(OutboxEntry entry) {
         try {
             publisher.publish(entry)
-                    .orTimeout(
-                            properties.initialBackoff().toMillis(),
-                            TimeUnit.MILLISECONDS)
-                    .join();
+                    .get(properties.publishTimeout().toMillis(),
+                            TimeUnit.MILLISECONDS);
             repository.markDelivered(entry.id());
             metrics.incrementCounter(MetricNames.OUTBOX_PUBLISHED);
-        } catch (RuntimeException ex) {
-            handleFailure(entry, unwrapException(ex));
+        } catch (TimeoutException ex) {
+            handleFailure(entry, ex);
+        } catch (ExecutionException ex) {
+            handleFailure(entry,
+                    ex.getCause() != null ? ex.getCause() : ex);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            handleFailure(entry, ex);
         }
     }
 
@@ -91,11 +91,4 @@ public class OutboxPoller {
         }
     }
 
-    private static Throwable unwrapException(RuntimeException ex) {
-        Throwable cause = ex.getCause();
-        if (cause instanceof TimeoutException) {
-            return cause;
-        }
-        return cause != null ? cause : ex;
-    }
 }

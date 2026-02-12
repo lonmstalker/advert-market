@@ -10,12 +10,10 @@ import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.fenum.qual.Fenum;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.stereotype.Component;
 
 /**
  * Facade over Micrometer {@link MeterRegistry} with cached counters and timers.
  */
-@Component
 @RequiredArgsConstructor
 public class MetricsFacade {
 

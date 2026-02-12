@@ -40,7 +40,16 @@ public record TelegramBotProperties(
         )
         @NotBlank String botUsername,
 
+        @PropertyDoc(
+                description = "Webhook configuration",
+                required = Requirement.OPTIONAL
+        )
         @Valid @DefaultValue Webhook webhook,
+
+        @PropertyDoc(
+                description = "Telegram Web App configuration",
+                required = Requirement.REQUIRED
+        )
         @Valid WebApp webapp
 ) {
 
@@ -62,7 +71,7 @@ public record TelegramBotProperties(
                     required = Requirement.OPTIONAL,
                     sensitive = true
             )
-            @DefaultValue("") String secret
+            @NotBlank String secret
     ) {
     }
 

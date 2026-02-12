@@ -44,7 +44,7 @@ class AuthorizationServiceTest {
 
     private void setAuth(boolean operator) {
         var auth = new TelegramAuthentication(
-                new UserId(1L), operator, "jti");
+                new UserId(1L), operator, "jti", 0L);
         SecurityContextHolder.getContext()
                 .setAuthentication(auth);
     }
