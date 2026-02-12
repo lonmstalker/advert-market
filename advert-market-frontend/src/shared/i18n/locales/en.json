@@ -1,0 +1,82 @@
+{
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to Ad Market",
+      "subtitle": "Marketplace for Telegram channel advertising",
+      "start": "Get Started"
+    },
+    "interest": {
+      "title": "Who are you?",
+      "subtitle": "Choose your role on the platform",
+      "advertiser": "Advertiser",
+      "advertiserHint": "I place ads in channels",
+      "owner": "Channel Owner",
+      "ownerHint": "I sell ads in my channel",
+      "continue": "Continue"
+    },
+    "tour": {
+      "skip": "Skip",
+      "finish": "Done",
+      "slide1": {
+        "title": "Find Channels",
+        "description": "Channel catalog with filters by topic, audience, and price"
+      },
+      "slide2": {
+        "title": "Secure Deals",
+        "description": "Escrow payments via TON — funds are protected until conditions are met"
+      },
+      "slide3": {
+        "title": "Manage Placements",
+        "description": "Track deal status, approve creatives, and get reports"
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back"
+  },
+  "catalog": {
+    "title": "Catalog",
+    "empty": {
+      "title": "Channels coming soon",
+      "description": "A catalog of Telegram channels for advertising will appear here"
+    }
+  },
+  "deals": {
+    "title": "Deals",
+    "empty": {
+      "title": "No active deals",
+      "description": "Your advertising deals will appear here"
+    }
+  },
+  "wallet": {
+    "title": "Wallet",
+    "empty": {
+      "title": "History is empty",
+      "description": "Your transaction history will appear here"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "empty": {
+      "title": "Profile Settings",
+      "description": "Your settings and channel management will be here"
+    }
+  },
+  "errors": {
+    "network": "No internet connection",
+    "server": "Server error, please try again later",
+    "unauthorized": "Session expired, please log in again",
+    "notFound": "Page not found"
+  },
+  "tabs": {
+    "catalog": "Catalog",
+    "deals": "Deals",
+    "wallet": "Wallet",
+    "profile": "Profile"
+  }
+}

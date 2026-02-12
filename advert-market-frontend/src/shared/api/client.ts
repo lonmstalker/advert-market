@@ -1,9 +1,9 @@
-import type { z } from 'zod/v4';
 import { retrieveRawInitData } from '@telegram-apps/sdk-react';
+import type { z } from 'zod/v4';
 import type { PaginationParams } from './types';
 import { ApiError, problemDetailSchema } from './types';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const BASE_URL = import.meta.env.VITE_MOCK_API === 'true' ? '' : import.meta.env.VITE_API_BASE_URL || '';
 const API_PREFIX = '/api/v1';
 
 function getAuthToken(): string | null {

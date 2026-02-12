@@ -4,94 +4,94 @@
  */
 
 export interface paths {
-    "/auth/telegram": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Authenticate via Telegram initData */
-        post: operations["authenticateTelegram"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/auth/telegram': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    /** Authenticate via Telegram initData */
+    post: operations['authenticateTelegram'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        TelegramAuthRequest: {
-            /** @description Telegram Mini App initData string */
-            initData: string;
-        };
-        AuthResponse: {
-            accessToken: string;
-            expiresIn: number;
-            user: components["schemas"]["UserInfo"];
-        };
-        UserInfo: {
-            /** Format: int64 */
-            id: number;
-            username: string;
-            displayName: string;
-        };
-        ProblemDetail: {
-            type: string;
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-        };
-        PaginatedResponse: {
-            items: unknown[];
-            nextCursor?: string | null;
-            hasNext: boolean;
-        };
+  schemas: {
+    TelegramAuthRequest: {
+      /** @description Telegram Mini App initData string */
+      initData: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    AuthResponse: {
+      accessToken: string;
+      expiresIn: number;
+      user: components['schemas']['UserInfo'];
+    };
+    UserInfo: {
+      /** Format: int64 */
+      id: number;
+      username: string;
+      displayName: string;
+    };
+    ProblemDetail: {
+      type: string;
+      title: string;
+      status: number;
+      detail?: string;
+      instance?: string;
+    };
+    PaginatedResponse: {
+      items: unknown[];
+      nextCursor?: string | null;
+      hasNext: boolean;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    authenticateTelegram: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TelegramAuthRequest"];
-            };
-        };
-        responses: {
-            /** @description JWT token issued */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthResponse"];
-                };
-            };
-            /** @description Invalid initData */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetail"];
-                };
-            };
-        };
+  authenticateTelegram: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TelegramAuthRequest'];
+      };
+    };
+    responses: {
+      /** @description JWT token issued */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthResponse'];
+        };
+      };
+      /** @description Invalid initData */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
 }

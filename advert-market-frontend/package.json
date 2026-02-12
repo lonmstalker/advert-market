@@ -11,9 +11,10 @@
     "lint:fix": "biome check --fix src/",
     "format": "biome format --write src/",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test": "vitest run --project=unit",
+    "test:watch": "vitest --project=unit",
+    "test:coverage": "vitest run --project=unit --coverage",
+    "test:storybook": "vitest run --project=storybook",
     "api:types": "openapi-typescript ../api/openapi.yml -o src/shared/api/schema.gen.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -59,5 +60,10 @@
     "vite": "^7.3.1",
     "vite-plugin-mkcert": "^1.17.9",
     "vitest": "^4.0.18"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

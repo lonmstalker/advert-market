@@ -1,11 +1,21 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Spinner, ThemeProvider, ToastProvider } from '@telegram-tools/ui-kit';
-import { useLaunchParams } from '@telegram-apps/sdk-react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { AuthGuard } from '@/shared/ui';
+import { DeepLinkHandler } from './deep-link-handler';
+import { OnboardingLayout } from './layouts/onboarding-layout';
+import { TabLayout } from './layouts/tab-layout';
 
-const HomePage = lazy(() => import('@/pages/home/HomePage'));
+const OnboardingPage = lazy(() => import('@/pages/onboarding/OnboardingPage'));
+const OnboardingInterestPage = lazy(() => import('@/pages/onboarding/OnboardingInterestPage'));
+const OnboardingTourPage = lazy(() => import('@/pages/onboarding/OnboardingTourPage'));
+
+const CatalogPage = lazy(() => import('@/pages/catalog/CatalogPage'));
+const DealsPage = lazy(() => import('@/pages/deals/DealsPage'));
+const WalletPage = lazy(() => import('@/pages/wallet/WalletPage'));
+const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,9 +28,17 @@ const queryClient = new QueryClient({
 
 const TON_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
 
+function useTelegramTheme(): 'light' | 'dark' {
+  try {
+    const colorScheme = window.Telegram?.WebApp?.colorScheme;
+    return colorScheme === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
 export function App() {
-  const lp = useLaunchParams(true);
-  const theme = lp.themeParams?.isDark ? 'dark' : 'light';
+  const theme = useTelegramTheme();
 
   return (
     <TonConnectUIProvider manifestUrl={TON_MANIFEST_URL}>
@@ -28,9 +46,25 @@ export function App() {
         <ToastProvider>
           <QueryClientProvider client={queryClient}>
             <BrowserRouter>
+              <DeepLinkHandler />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/" element={<HomePage />} />
+                  <Route path="/onboarding" element={<OnboardingLayout />}>
+                    <Route index element={<OnboardingPage />} />
+                    <Route path="interest" element={<OnboardingInterestPage />} />
+                    <Route path="tour" element={<OnboardingTourPage />} />
+                  </Route>
+
+                  <Route element={<AuthGuard />}>
+                    <Route element={<TabLayout />}>
+                      <Route path="/catalog" element={<CatalogPage />} />
+                      <Route path="/deals" element={<DealsPage />} />
+                      <Route path="/wallet" element={<WalletPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                    </Route>
+                  </Route>
+
+                  <Route path="*" element={<Navigate to="/catalog" replace />} />
                 </Routes>
               </Suspense>
             </BrowserRouter>
