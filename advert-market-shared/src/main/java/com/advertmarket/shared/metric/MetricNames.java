@@ -15,6 +15,8 @@ public final class MetricNames {
             "auth.logout";
     public static final @Fenum(FenumGroup.METRIC_NAME) String AUTH_BLOCKED_ACCESS =
             "auth.blocked.access";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String AUTH_RATE_LIMITER_REDIS_ERROR =
+            "auth.rate_limiter.redis_error";
 
     // --- Account ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String ACCOUNT_DELETED =

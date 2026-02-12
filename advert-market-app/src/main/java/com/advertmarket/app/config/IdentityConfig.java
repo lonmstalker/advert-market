@@ -3,6 +3,7 @@ package com.advertmarket.app.config;
 import com.advertmarket.communication.bot.internal.config.TelegramBotProperties;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.config.AuthProperties;
+import com.advertmarket.identity.config.RateLimiterProperties;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.identity.service.TelegramInitDataValidator;
@@ -16,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
  * Wires identity beans that need cross-module dependencies.
  */
 @Configuration
-@EnableConfigurationProperties(AuthProperties.class)
+@EnableConfigurationProperties({AuthProperties.class, RateLimiterProperties.class})
 public class IdentityConfig {
 
     /** Creates the JWT token provider. */

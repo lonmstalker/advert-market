@@ -1,4 +1,4 @@
-# Identity — Agent Instructions
+ 2. # Identity — Agent Instructions
 
 Auth flow implementation: JWT, Telegram initData, user management.
 

@@ -22,6 +22,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.DriverManager;
 import liquibase.Liquibase;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -80,20 +81,25 @@ class IdentityWorkflowIntegrationTest {
 
     @BeforeAll
     static void initDatabase() throws Exception {
+        try (var conn = DriverManager.getConnection(
+                postgres.getJdbcUrl(),
+                postgres.getUsername(),
+                postgres.getPassword())) {
+            var database = DatabaseFactory.getInstance()
+                    .findCorrectDatabaseImplementation(
+                            new JdbcConnection(conn));
+            try (var liquibase = new Liquibase(
+                    "db/changelog/db.changelog-master.yaml",
+                    new ClassLoaderResourceAccessor(),
+                    database)) {
+                liquibase.update("");
+            }
+        }
+
         dsl = DSL.using(
                 postgres.getJdbcUrl(),
                 postgres.getUsername(),
                 postgres.getPassword());
-
-        var conn = dsl.configuration().connectionProvider().acquire();
-        var database = DatabaseFactory.getInstance()
-                .findCorrectDatabaseImplementation(
-                        new JdbcConnection(conn));
-        var liquibase = new Liquibase(
-                "db/changelog/db.changelog-master.yaml",
-                new ClassLoaderResourceAccessor(),
-                database);
-        liquibase.update("");
     }
 
     @BeforeEach

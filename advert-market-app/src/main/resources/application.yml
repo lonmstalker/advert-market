@@ -1,6 +1,7 @@
 server:
   port: 8080
   shutdown: graceful
+  forward-headers-strategy: native
 
 spring:
   application:
@@ -55,11 +56,18 @@ spring:
     fallback-to-system-locale: false
 
 app:
+  cors:
+    allowed-origins:
+      - "https://localhost:3000"
+      - "https://web.telegram.org"
   auth:
     jwt:
       secret: ${JWT_SECRET}
       expiration: 3600
     anti-replay-window-seconds: 300
+    rate-limiter:
+      max-attempts: 10
+      window-seconds: 60
   telegram:
     bot-token: ${TELEGRAM_BOT_TOKEN:}
     bot-username: ${TELEGRAM_BOT_USERNAME:AdvertMarketBot}

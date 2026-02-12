@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.advertmarket.identity.adapter.RedisLoginRateLimiter;
+import com.advertmarket.identity.config.RateLimiterProperties;
 import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.metric.MetricsFacade;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +40,9 @@ class RedisLoginRateLimiterIntegrationTest {
         redisTemplate = new StringRedisTemplate(factory);
         // Clean state between tests
         redisTemplate.delete("rate:login:127.0.0.1");
-        rateLimiter = new RedisLoginRateLimiter(redisTemplate);
+        rateLimiter = new RedisLoginRateLimiter(redisTemplate,
+                new RateLimiterProperties(10, 60),
+                new MetricsFacade(new SimpleMeterRegistry()));
     }
 
     @Test

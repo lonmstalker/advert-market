@@ -39,9 +39,9 @@ export default function OnboardingTourPage() {
 
   const mutation = useMutation({
     mutationFn: () => completeOnboarding([...interests]),
-    onSuccess: () => {
+    onSuccess: (updatedProfile) => {
       hasCompleted.current = true;
-      queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
+      queryClient.setQueryData(['auth', 'profile'], updatedProfile);
       navigate('/catalog', { replace: true });
       reset();
     },
