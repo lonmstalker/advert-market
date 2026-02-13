@@ -48,38 +48,41 @@ public class TelegramWebhookController {
             @RequestBody String body) {
 
         return metrics.recordTimer(MetricNames.WEBHOOK_LATENCY,
-                () -> {
-            // 1. Validate secret
-            if (!webhookSecret.equals(secretToken)) {
-                log.warn("Webhook secret mismatch");
-                return ResponseEntity.status(
-                        HttpStatus.UNAUTHORIZED).<Void>build();
-            }
+                () -> processWebhook(secretToken, body));
+    }
 
-            // 2. Parse update
-            Update update;
-            try {
-                update = BotUtils.parseUpdate(body);
-            } catch (Exception e) {
-                log.error("Failed to parse Telegram update", e);
-                return ResponseEntity
-                        .badRequest().<Void>build();
-            }
+    private ResponseEntity<Void> processWebhook(
+            String secretToken, String body) {
+        // 1. Validate secret
+        if (!webhookSecret.equals(secretToken)) {
+            log.warn("Webhook secret mismatch");
+            return ResponseEntity.status(
+                    HttpStatus.UNAUTHORIZED).<Void>build();
+        }
 
-            // 3. Deduplicate by update_id
-            int updateId = update.updateId();
-            if (!deduplicator.tryAcquire(updateId)) {
-                metrics.incrementCounter(
-                        MetricNames.DEDUP_DUPLICATE);
-                log.debug("Duplicate update_id={}, skipping",
-                        updateId);
-                return ResponseEntity.ok().<Void>build();
-            }
+        // 2. Parse update
+        Update update;
+        try {
+            update = BotUtils.parseUpdate(body);
+        } catch (Exception e) {
+            log.error("Failed to parse Telegram update", e);
+            return ResponseEntity
+                    .badRequest().<Void>build();
+        }
 
-            // 4. Fast ack - process async
-            processor.processAsync(update);
-
+        // 3. Deduplicate by update_id
+        int updateId = update.updateId();
+        if (!deduplicator.tryAcquire(updateId)) {
+            metrics.incrementCounter(
+                    MetricNames.DEDUP_DUPLICATE);
+            log.debug("Duplicate update_id={}, skipping",
+                    updateId);
             return ResponseEntity.ok().<Void>build();
-        });
+        }
+
+        // 4. Fast ack - process async
+        processor.processAsync(update);
+
+        return ResponseEntity.ok().<Void>build();
     }
 }

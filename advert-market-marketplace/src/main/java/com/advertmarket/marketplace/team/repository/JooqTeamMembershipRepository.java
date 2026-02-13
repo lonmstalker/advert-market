@@ -87,15 +87,14 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
                 .returning()
                 .fetchSingle();
 
-        String username = dsl.select(USERS.USERNAME)
+        var userInfo = dsl.select(USERS.USERNAME, USERS.FIRST_NAME)
                 .from(USERS)
                 .where(USERS.ID.eq(userId))
-                .fetchOne(USERS.USERNAME);
-
-        String firstName = dsl.select(USERS.FIRST_NAME)
-                .from(USERS)
-                .where(USERS.ID.eq(userId))
-                .fetchOne(USERS.FIRST_NAME);
+                .fetchOne();
+        String username = userInfo != null ? userInfo.get(USERS.USERNAME) : null;
+        String firstName = userInfo != null
+                ? userInfo.get(USERS.FIRST_NAME)
+                : "";
 
         return new TeamMemberDto(
                 record.getUserId(),
@@ -163,7 +162,7 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
                 .and(CHANNEL_MEMBERSHIPS.ROLE.eq(
                         ChannelMembershipRole.MANAGER.name()))
-                .fetchOne(0, int.class);
+                .fetchSingle(0, int.class);
     }
 
     @Override

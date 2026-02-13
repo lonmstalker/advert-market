@@ -9,8 +9,8 @@ import static org.mockito.Mockito.when;
 
 import com.advertmarket.communication.bot.internal.config.TelegramBotProperties;
 import com.advertmarket.communication.bot.internal.config.TelegramBotProperties.Webhook;
-import com.pengrad.telegrambot.model.Update;
 import com.advertmarket.shared.metric.MetricsFacade;
+import com.pengrad.telegrambot.model.Update;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

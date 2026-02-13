@@ -35,6 +35,7 @@ public record ChannelListItem(
         @NonNull OffsetDateTime updatedAt
 ) {
 
+    /** Defensively copies categories. */
     public ChannelListItem {
         categories = List.copyOf(categories);
     }

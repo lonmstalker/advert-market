@@ -22,17 +22,20 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @Configuration
 public class SharedInfrastructureConfig {
 
+    /** Creates the Micrometer metrics facade. */
     @Bean
     public MetricsFacade metricsFacade(MeterRegistry registry) {
         return new MetricsFacade(registry);
     }
 
+    /** Creates the i18n localization service. */
     @Bean
     public LocalizationService localizationService(
             MessageSource messageSource) {
         return new LocalizationService(messageSource);
     }
 
+    /** Creates the Redis-backed distributed lock. */
     @Bean
     @ConditionalOnBean(StringRedisTemplate.class)
     public DistributedLockPort distributedLock(
@@ -41,6 +44,7 @@ public class SharedInfrastructureConfig {
         return new RedisDistributedLock(redisTemplate, metrics);
     }
 
+    /** Creates the transactional outbox poller. */
     @Bean
     @ConditionalOnBean({OutboxRepository.class,
             OutboxPublisher.class})

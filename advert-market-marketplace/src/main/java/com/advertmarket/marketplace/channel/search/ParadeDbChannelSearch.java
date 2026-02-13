@@ -256,6 +256,7 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
                 fields.add(CHANNELS.SUBSCRIBER_COUNT.desc());
                 fields.add(CHANNELS.ID.desc());
             }
+            default -> {}
         }
         return fields;
     }

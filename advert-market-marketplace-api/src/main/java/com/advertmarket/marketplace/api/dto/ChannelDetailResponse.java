@@ -45,6 +45,7 @@ public record ChannelDetailResponse(
         @NonNull OffsetDateTime updatedAt
 ) {
 
+    /** Defensively copies categories and pricing rules. */
     public ChannelDetailResponse {
         categories = List.copyOf(categories);
         pricingRules = List.copyOf(pricingRules);

@@ -30,6 +30,9 @@ import org.springframework.web.cors.CorsConfiguration;
 @EnableConfigurationProperties({CorsProperties.class, InternalApiProperties.class})
 public class SecurityConfig {
 
+    private static final long HSTS_MAX_AGE_SECONDS =
+            Duration.ofDays(365).toSeconds();
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsProperties corsProperties;
     private final SecurityExceptionHandler securityExceptionHandler;
@@ -84,7 +87,7 @@ public class SecurityConfig {
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
-                                .maxAgeInSeconds(31536000)))
+                                .maxAgeInSeconds(HSTS_MAX_AGE_SECONDS)))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS))

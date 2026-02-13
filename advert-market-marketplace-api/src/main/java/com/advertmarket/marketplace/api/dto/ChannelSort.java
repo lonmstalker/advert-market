@@ -21,6 +21,7 @@ public enum ChannelSort {
         this.descending = descending;
     }
 
+    /** Returns the database field name. */
     public String fieldName() {
         return fieldName;
     }

@@ -51,6 +51,7 @@ public class ChannelController {
     @Operation(summary = "Search channels",
             description = "Public channel catalog with filters and BM25 search")
     @ApiResponse(responseCode = "200", description = "Search results")
+    @SuppressWarnings("checkstyle:ParameterNumber")
     public CursorPage<ChannelListItem> search(
             @RequestParam(name = "query", required = false) String query,
             @RequestParam(name = "category", required = false) String category,

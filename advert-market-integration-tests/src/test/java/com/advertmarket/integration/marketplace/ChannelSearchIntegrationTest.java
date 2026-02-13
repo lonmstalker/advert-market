@@ -185,6 +185,7 @@ class ChannelSearchIntegrationTest {
 
     // --- helpers ---
 
+    @SuppressWarnings("checkstyle:ParameterNumber")
     private static ChannelSearchCriteria criteria(
             String category, Integer minSub, Integer maxSub,
             Long minPrice, Long maxPrice, ChannelSort sort,

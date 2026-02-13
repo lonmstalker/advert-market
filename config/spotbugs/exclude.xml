@@ -20,6 +20,11 @@
         <Bug pattern="EI_EXPOSE_REP"/>
         <Class name="~.*Properties$"/>
     </Match>
+    <!-- DTO/Request/Response records expose components by design -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="~.*\.api\.dto\..*"/>
+    </Match>
 
     <!-- === FindSecBugs exclusions === -->
 
@@ -42,5 +47,31 @@
     <!-- SPRING_ENDPOINT: REST endpoints are protected by Spring Security -->
     <Match>
         <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
+
+    <!-- MapStruct generated mappers pass nullable record fields to constructors -->
+    <Match>
+        <Bug pattern="NP_NULL_PARAM_DEREF"/>
+        <Class name="~.*MapperImpl$"/>
+    </Match>
+
+    <!-- Criteria fields are null-checked before use in search methods -->
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+        <Class name="com.advertmarket.marketplace.channel.search.ParadeDbChannelSearch"/>
+    </Match>
+
+    <!-- categories() null-check handled via ternary operator -->
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+        <Class name="com.advertmarket.marketplace.channel.service.ChannelRegistrationService"/>
+        <Method name="register"/>
+    </Match>
+
+    <!-- COUNT(*) always returns exactly one row; fetchSingle is safe -->
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+        <Class name="com.advertmarket.marketplace.team.repository.JooqTeamMembershipRepository"/>
+        <Method name="countManagers"/>
     </Match>
 </FindBugsFilter>

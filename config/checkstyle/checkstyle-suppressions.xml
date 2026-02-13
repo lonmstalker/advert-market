@@ -32,9 +32,17 @@
     <suppress checks=".*"
               files="[/\\]generated[/\\]"/>
 
+    <!-- ArchUnit reflection: reflect() throws unchecked exceptions -->
+    <suppress checks="IllegalCatch"
+              files="CodingRulesArchTest\.java"/>
+
     <!-- Test files: magic numbers and text block formatting are natural -->
     <suppress checks="MagicNumber"
               files=".*Tests?\.java$"/>
     <suppress checks="TextBlockGoogleStyleFormatting"
               files=".*Tests?\.java$"/>
+
+    <!-- Test file: HMAC helper wraps checked exceptions -->
+    <suppress checks="IllegalCatch"
+              files="TelegramInitDataValidatorTest\.java"/>
 </suppressions>

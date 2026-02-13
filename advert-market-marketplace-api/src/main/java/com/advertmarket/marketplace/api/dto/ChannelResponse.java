@@ -34,6 +34,7 @@ public record ChannelResponse(
         @NonNull OffsetDateTime createdAt
 ) {
 
+    /** Defensively copies categories. */
     public ChannelResponse {
         categories = List.copyOf(categories);
     }

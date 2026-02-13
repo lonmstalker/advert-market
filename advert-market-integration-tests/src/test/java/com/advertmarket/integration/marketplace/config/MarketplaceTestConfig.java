@@ -23,6 +23,9 @@ import javax.sql.DataSource;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultConfiguration;
+import org.jooq.impl.DefaultExecuteListenerProvider;
+import org.springframework.boot.jooq.autoconfigure.ExceptionTranslatorExecuteListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -54,9 +57,15 @@ public class MarketplaceTestConfig {
     private static final int RATE_LIMIT_MAX_ATTEMPTS = 10;
     private static final int RATE_LIMIT_WINDOW_SECONDS = 60;
 
+    /** Creates DSLContext with Spring exception translation. */
     @Bean
     DSLContext dslContext(DataSource dataSource) {
-        return DSL.using(dataSource, SQLDialect.POSTGRES);
+        var config = new DefaultConfiguration()
+                .set(dataSource)
+                .set(SQLDialect.POSTGRES)
+                .set(new DefaultExecuteListenerProvider(
+                        ExceptionTranslatorExecuteListener.DEFAULT));
+        return DSL.using(config);
     }
 
     @Bean

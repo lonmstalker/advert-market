@@ -1,7 +1,7 @@
 package com.advertmarket.communication.channel;
 
-import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.RATE_LIMIT_EXCEEDED;
 import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
 import static com.advertmarket.shared.metric.MetricNames.CHANNEL_API_CALL;

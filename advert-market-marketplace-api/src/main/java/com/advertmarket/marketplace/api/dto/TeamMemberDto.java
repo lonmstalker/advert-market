@@ -30,6 +30,7 @@ public record TeamMemberDto(
         @NonNull OffsetDateTime createdAt
 ) {
 
+    /** Defensively copies rights. */
     public TeamMemberDto {
         rights = Set.copyOf(rights);
     }

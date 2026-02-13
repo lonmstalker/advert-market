@@ -31,6 +31,7 @@ dependencies {
     testImplementation 'org.liquibase:liquibase-core'
     testImplementation 'org.postgresql:postgresql'
     testImplementation 'org.jooq:jooq'
+    testImplementation 'org.springframework.boot:spring-boot-starter-jooq'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-webflux'
     testImplementation 'org.springframework.boot:spring-boot-starter-security'

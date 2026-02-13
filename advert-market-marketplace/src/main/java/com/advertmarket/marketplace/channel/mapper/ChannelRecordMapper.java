@@ -14,10 +14,12 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ChannelRecordMapper {
 
+    /** Maps record to response DTO. */
     @Mapping(target = "categories", source = "categories")
     ChannelResponse toResponse(ChannelsRecord record,
                                List<String> categories);
 
+    /** Maps record to detail DTO. */
     @Mapping(target = "categories", source = "categories")
     @Mapping(target = "pricingRules", source = "pricingRules")
     ChannelDetailResponse toDetail(ChannelsRecord record,

@@ -14,6 +14,7 @@ public record CommissionResult(
         @NonNull Money commission,
         @NonNull Money ownerPayout) {
 
+    /** Validates non-null commission and payout. */
     public CommissionResult {
         Objects.requireNonNull(commission, "commission");
         Objects.requireNonNull(ownerPayout, "ownerPayout");

@@ -30,6 +30,7 @@ public record PricingRuleDto(
         int sortOrder
 ) {
 
+    /** Defensively copies post types. */
     public PricingRuleDto {
         postTypes = Set.copyOf(postTypes);
     }

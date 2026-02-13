@@ -28,3 +28,8 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
 }
+
+// JJWT 0.13.0 API only accepts java.util.Date (no Instant overloads)
+forbiddenApisMain {
+    exclude '**/JwtTokenProvider.class'
+}

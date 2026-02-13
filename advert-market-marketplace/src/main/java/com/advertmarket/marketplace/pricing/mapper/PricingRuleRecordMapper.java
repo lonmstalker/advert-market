@@ -13,6 +13,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PricingRuleRecordMapper {
 
+    /** Maps record to DTO. */
     @Mapping(target = "postTypes", source = "postTypes")
     PricingRuleDto toDto(ChannelPricingRulesRecord record,
                          Set<PostType> postTypes);

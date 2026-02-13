@@ -39,6 +39,7 @@ public class ReferenceDataController {
 
     private final CategoryRepository categoryRepository;
 
+    /** Lists active categories. */
     @Operation(summary = "List all active categories")
     @GetMapping("/categories")
     @NonNull
@@ -46,6 +47,7 @@ public class ReferenceDataController {
         return categoryRepository.findAllActive();
     }
 
+    /** Lists all post types with localized labels. */
     @Operation(summary = "List all post types with labels")
     @GetMapping("/post-types")
     @NonNull

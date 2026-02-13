@@ -8,6 +8,7 @@ import com.advertmarket.shared.exception.ErrorCodes;
  */
 public class RateLimitTimeoutException extends DomainException {
 
+    /** Creates exception with the given message. */
     public RateLimitTimeoutException(String message) {
         super(ErrorCodes.RATE_LIMIT_EXCEEDED, message);
     }

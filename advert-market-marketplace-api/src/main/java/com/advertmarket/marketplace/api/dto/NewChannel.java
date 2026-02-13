@@ -29,6 +29,7 @@ public record NewChannel(
         long ownerId
 ) {
 
+    /** Defensively copies categories. */
     public NewChannel {
         categories = List.copyOf(categories);
     }
