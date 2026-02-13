@@ -231,7 +231,21 @@
       "openInTelegram": "Открыть канал в Telegram",
       "completedDeals": "{{count}} завершённых сделок",
       "respondsIn": "Отвечает за ~{{time}}",
-      "newChannel": "Новый канал"
+      "newChannel": "Новый канал",
+      "verified": "Верифицирован",
+      "durationHours": "{{hours}}ч",
+      "postType": {
+        "NATIVE": "Нативный пост",
+        "STORY": "Сторис",
+        "REPOST": "Репост",
+        "FORWARD": "Пересылка",
+        "INTEGRATION": "Интеграция",
+        "REVIEW": "Обзор",
+        "MENTION": "Упоминание",
+        "GIVEAWAY": "Розыгрыш",
+        "PINNED": "Закреп",
+        "POLL": "Опрос"
+      }
     },
     "summary": "{{count}} каналов · \u2300 {{avgCpm}}/1K · {{minSubs}}\u2013{{maxSubs}} подп.",
     "empty": {

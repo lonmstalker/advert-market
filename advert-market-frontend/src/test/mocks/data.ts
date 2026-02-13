@@ -253,9 +253,10 @@ export const mockChannelDetails: Record<
     createdAt: '2025-06-01T10:00:00Z',
     avgReach: 45000,
     pricingRules: [
-      { id: 1, postType: 'NATIVE', priceNano: 5_000_000_000, description: 'Пост в стиле канала с интеграцией продукта, остаётся навсегда' },
-      { id: 2, postType: 'STORY', priceNano: 4_000_000_000, durationHours: 24, description: 'Кружок или фото в историях канала' },
-      { id: 3, postType: 'REPOST', priceNano: 3_000_000_000, durationHours: 48, description: 'Пересылка вашего поста с комментарием' },
+      { id: 1, postType: 'NATIVE', priceNano: 5_000_000_000, durationHours: 24, description: 'Пост в стиле канала с интеграцией продукта' },
+      { id: 2, postType: 'NATIVE', priceNano: 8_000_000_000, durationHours: 48, description: 'Нативный пост с удержанием 48ч' },
+      { id: 3, postType: 'STORY', priceNano: 4_000_000_000, durationHours: 24, description: 'Кружок или фото в историях канала' },
+      { id: 4, postType: 'REPOST', priceNano: 3_000_000_000, durationHours: 72, description: 'Пересылка вашего поста с комментарием' },
     ],
     topics: [
       { slug: 'crypto', name: 'Криптовалюта' },
@@ -268,8 +269,9 @@ export const mockChannelDetails: Record<
     createdAt: '2025-07-10T12:00:00Z',
     avgReach: 28000,
     pricingRules: [
-      { id: 4, postType: 'NATIVE', priceNano: 3_000_000_000, description: 'Обзор продукта в формате статьи' },
-      { id: 5, postType: 'STORY', priceNano: 2_500_000_000, durationHours: 24 },
+      { id: 5, postType: 'NATIVE', priceNano: 3_000_000_000, durationHours: 24, description: 'Обзор продукта в формате статьи' },
+      { id: 6, postType: 'NATIVE', priceNano: 5_000_000_000, durationHours: 48 },
+      { id: 7, postType: 'STORY', priceNano: 2_500_000_000, durationHours: 24 },
     ],
     topics: [{ slug: 'tech', name: 'Технологии' }],
   },
@@ -279,8 +281,8 @@ export const mockChannelDetails: Record<
     createdAt: '2025-08-05T09:00:00Z',
     avgReach: 22000,
     pricingRules: [
-      { id: 6, postType: 'NATIVE', priceNano: 4_500_000_000, description: 'Развёрнутый обзор AI-инструмента с примерами' },
-      { id: 7, postType: 'INTEGRATION', priceNano: 6_500_000_000, description: 'Упоминание продукта внутри тематической статьи' },
+      { id: 8, postType: 'NATIVE', priceNano: 4_500_000_000, durationHours: 24, description: 'Развёрнутый обзор AI-инструмента с примерами' },
+      { id: 9, postType: 'INTEGRATION', priceNano: 6_500_000_000, description: 'Упоминание продукта внутри тематической статьи' },
     ],
     topics: [
       { slug: 'tech', name: 'Технологии' },
@@ -293,9 +295,10 @@ export const mockChannelDetails: Record<
     createdAt: '2025-05-20T14:00:00Z',
     avgReach: 85000,
     pricingRules: [
-      { id: 8, postType: 'NATIVE', priceNano: 8_000_000_000, description: 'Аналитический пост с упоминанием продукта' },
-      { id: 9, postType: 'STORY', priceNano: 6_000_000_000, durationHours: 24 },
-      { id: 10, postType: 'REVIEW', priceNano: 12_000_000_000, description: 'Подробный обзор с личным мнением автора' },
+      { id: 10, postType: 'NATIVE', priceNano: 8_000_000_000, durationHours: 24, description: 'Аналитический пост с упоминанием продукта' },
+      { id: 11, postType: 'NATIVE', priceNano: 14_000_000_000, durationHours: 72, description: 'Нативный пост с удержанием 72ч' },
+      { id: 12, postType: 'STORY', priceNano: 6_000_000_000, durationHours: 24 },
+      { id: 13, postType: 'REVIEW', priceNano: 12_000_000_000, description: 'Подробный обзор с личным мнением автора' },
     ],
     topics: [
       { slug: 'finance', name: 'Финансы' },

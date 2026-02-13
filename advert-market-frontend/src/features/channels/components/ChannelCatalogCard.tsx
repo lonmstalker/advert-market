@@ -25,6 +25,14 @@ function erColor(rate: number): string {
   return 'var(--color-foreground-tertiary)';
 }
 
+const LANG_FLAGS: Record<string, string> = {
+  ru: '\u{1F1F7}\u{1F1FA}',
+  en: '\u{1F1EC}\u{1F1E7}',
+  uk: '\u{1F1FA}\u{1F1E6}',
+  uz: '\u{1F1FA}\u{1F1FF}',
+  kz: '\u{1F1F0}\u{1F1FF}',
+};
+
 function MetricPill({ value, label, valueColor }: { value: string; label: string; valueColor?: string }) {
   return (
     <span
@@ -108,6 +116,8 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
     ? computeCpm(channel.pricePerPostNano, channel.avgViews)
     : null;
 
+  const langFlag = channel.language ? LANG_FLAGS[channel.language] ?? channel.language.toUpperCase() : null;
+
   return (
     <motion.div
       {...listItem}
@@ -126,11 +136,23 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <ChannelAvatar title={channel.title} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Text type="body" weight="bold">
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-              {channel.title}
-            </span>
-          </Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Text type="body" weight="bold">
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                {channel.title}
+              </span>
+            </Text>
+            {channel.isVerified && (
+              <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1 }} title={t('catalog.channel.verified')}>
+                {'\u2705'}
+              </span>
+            )}
+            {langFlag && (
+              <span style={{ fontSize: 12, flexShrink: 0, lineHeight: 1 }}>
+                {langFlag}
+              </span>
+            )}
+          </div>
           {channel.username && (
             <Text type="caption1" color="secondary">
               @{channel.username}

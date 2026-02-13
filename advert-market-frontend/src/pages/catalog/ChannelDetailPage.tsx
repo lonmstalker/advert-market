@@ -42,6 +42,14 @@ const POST_TYPE_ICONS: Record<string, string> = {
   POLL: '\u{1F4CA}',
 };
 
+const LANG_FLAGS: Record<string, string> = {
+  ru: '\u{1F1F7}\u{1F1FA}',
+  en: '\u{1F1EC}\u{1F1E7}',
+  uk: '\u{1F1FA}\u{1F1E6}',
+  uz: '\u{1F1FA}\u{1F1FF}',
+  kz: '\u{1F1F0}\u{1F1FF}',
+};
+
 function getPostTypeIcon(postType: string): string {
   return POST_TYPE_ICONS[postType.toUpperCase()] ?? '\u{1F4E2}';
 }
@@ -157,9 +165,21 @@ export default function ChannelDetailPage() {
               <span style={{ color: 'var(--color-static-white)', fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
             </div>
             <div>
-              <Text type="title1" weight="bold">
-                {channel.title}
-              </Text>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <Text type="title1" weight="bold">
+                  {channel.title}
+                </Text>
+                {channel.isVerified && (
+                  <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1 }} title={t('catalog.channel.verified')}>
+                    {'\u2705'}
+                  </span>
+                )}
+                {channel.language && LANG_FLAGS[channel.language] && (
+                  <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1 }}>
+                    {LANG_FLAGS[channel.language]}
+                  </span>
+                )}
+              </div>
               {channel.username && (
                 <Text type="subheadline1" color="secondary">
                   @{channel.username}
@@ -193,7 +213,7 @@ export default function ChannelDetailPage() {
               {...pressScale}
               onClick={handleShare}
               style={{
-                background: 'var(--color-background-secondary)',
+                background: 'var(--color-accent-primary)',
                 border: 'none',
                 borderRadius: 20,
                 padding: '6px 16px',
@@ -206,9 +226,9 @@ export default function ChannelDetailPage() {
               aria-label={t('catalog.channel.share')}
             >
               <span style={{ fontSize: 14 }}>{'\u{1F4E4}'}</span>
-              <Text type="caption1" color="link">
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-static-white)' }}>
                 {t('catalog.channel.share')}
-              </Text>
+              </span>
             </motion.button>
           </div>
         </motion.div>
@@ -275,14 +295,15 @@ export default function ChannelDetailPage() {
         {/* Open in Telegram button */}
         {channel.username && (
           <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-            <button
+            <motion.button
+              {...pressScale}
               type="button"
               onClick={handleOpenTelegram}
               style={{
                 width: '100%',
-                padding: '12px 16px',
-                background: 'var(--color-background-base)',
-                border: '1px solid var(--color-border-separator)',
+                padding: '14px 16px',
+                background: 'var(--color-accent-primary)',
+                border: 'none',
                 borderRadius: 12,
                 cursor: 'pointer',
                 display: 'flex',
@@ -293,11 +314,11 @@ export default function ChannelDetailPage() {
               }}
             >
               <span style={{ fontSize: 16 }}>{'\u{1F4F1}'}</span>
-              <Text type="body" color="link">
+              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-static-white)' }}>
                 {t('catalog.channel.openInTelegram')}
-              </Text>
-              <span style={{ fontSize: 12, color: 'var(--color-foreground-tertiary)' }}>{'\u{2192}'}</span>
-            </button>
+              </span>
+              <span style={{ fontSize: 14, color: 'var(--color-static-white)', opacity: 0.7 }}>{'\u{2192}'}</span>
+            </motion.button>
           </motion.div>
         )}
 
@@ -310,15 +331,44 @@ export default function ChannelDetailPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {channel.pricingRules.map((rule) => {
                 const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
+                const localizedType = t(`catalog.channel.postType.${rule.postType}`, { defaultValue: rule.postType });
+                const durationLabel = rule.durationHours
+                  ? t('catalog.channel.durationHours', { hours: rule.durationHours })
+                  : null;
                 return (
                   <div key={rule.id} style={pricingCardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: 18, flexShrink: 0 }}>{getPostTypeIcon(rule.postType)}</span>
-                      <Text type="body">
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                          {rule.postType}
-                        </span>
-                      </Text>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 18, flexShrink: 0, marginTop: 2 }}>{getPostTypeIcon(rule.postType)}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Text type="body">
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                              {localizedType}
+                            </span>
+                          </Text>
+                          {durationLabel && (
+                            <span
+                              style={{
+                                padding: '2px 6px',
+                                borderRadius: 6,
+                                background: 'var(--color-background-secondary)',
+                                fontSize: 11,
+                                fontWeight: 500,
+                                color: 'var(--color-foreground-secondary)',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {durationLabel}
+                            </span>
+                          )}
+                        </div>
+                        {rule.description && (
+                          <Text type="caption1" color="tertiary" style={{ marginTop: 2 }}>
+                            {rule.description}
+                          </Text>
+                        )}
+                      </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <Text type="callout" weight="bold">

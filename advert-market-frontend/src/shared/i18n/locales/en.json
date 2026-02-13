@@ -230,7 +230,21 @@
       "openInTelegram": "Open channel in Telegram",
       "completedDeals": "{{count}} completed deals",
       "respondsIn": "Responds in ~{{time}}",
-      "newChannel": "New channel"
+      "newChannel": "New channel",
+      "verified": "Verified",
+      "durationHours": "{{hours}}h",
+      "postType": {
+        "NATIVE": "Native post",
+        "STORY": "Story",
+        "REPOST": "Repost",
+        "FORWARD": "Forward",
+        "INTEGRATION": "Integration",
+        "REVIEW": "Review",
+        "MENTION": "Mention",
+        "GIVEAWAY": "Giveaway",
+        "PINNED": "Pinned post",
+        "POLL": "Poll"
+      }
     },
     "summary": "{{count}} channels \u00b7 \u2300 {{avgCpm}}/1K \u00b7 {{minSubs}}\u2013{{maxSubs}} subs",
     "empty": {

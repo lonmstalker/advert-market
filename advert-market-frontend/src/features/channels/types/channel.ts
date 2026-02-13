@@ -5,7 +5,7 @@ import { z } from 'zod/v4';
 export const categorySchema = z.object({
   id: z.number(),
   slug: z.string(),
-  localizedName: z.record(z.string()),
+  localizedName: z.record(z.string(), z.string()),
   sortOrder: z.number(),
 });
 

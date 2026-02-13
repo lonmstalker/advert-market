@@ -149,15 +149,8 @@ export default function CatalogPage() {
             display: 'flex',
             gap: 8,
             alignItems: 'center',
-            background: 'var(--color-background-base)',
-            border: '1px solid var(--color-border-separator)',
-            borderRadius: 12,
-            padding: '0 12px',
           }}
         >
-          <span style={{ fontSize: 18, color: 'var(--color-foreground-tertiary)', flexShrink: 0, lineHeight: 1 }}>
-            {'\u{1F50D}'}
-          </span>
           <div style={{ flex: 1 }}>
             <Input value={searchInput} onChange={setSearchInput} placeholder={t('catalog.search.placeholder')} />
           </div>
