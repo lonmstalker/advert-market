@@ -112,8 +112,8 @@ GET /api/v1/channels?owner=me
 ### API
 
 ```
-POST /api/v1/channels         # \u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f
-GET  /api/v1/channels/topics   # \u0422\u0435\u043c\u0430\u0442\u0438\u043a\u0438 (enum)
+POST /api/v1/channels # Registration
+GET /api/v1/channels/topics # Topics (enum)
 ```
 
 ### UI - Two-Step Form
@@ -167,7 +167,7 @@ GET  /api/v1/channels/topics   # \u0422\u0435\u043c\u0430\u0442\u0438\u043a\u043
     name: string;
     postType: 'STANDARD' | 'PINNED' | 'STORY' | 'REPOST' | 'NATIVE';
     priceNano: bigint;
-    description?: string;  // \u0447\u0442\u043e \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u043e
+    description?: string;  // what's included
     limits: {
       maxTextLength: number;   // <= Telegram limit
       maxButtons: number;      // <= Telegram limit
@@ -314,7 +314,7 @@ PUT /api/v1/profile/notifications
 ```
 GET /api/v1/channels/:channelId
 GET /api/v1/channels/:channelId/team
-PUT /api/v1/channels/:channelId       # Toggle \u043b\u0438\u0441\u0442\u0438\u043d\u0433\u0430
+PUT /api/v1/channels/:channelId # Toggle listing
 ```
 
 **Query keys:** `channelKeys.detail(channelId)`, `channelKeys.team(channelId)`
@@ -484,7 +484,7 @@ POST /api/v1/channels/:channelId/team
 
 ```typescript
 {
-  username: string;  // \u0438\u043b\u0438 userId
+  username: string;  // or userId
   rights: {
     publish: boolean;
     moderate: boolean;
@@ -521,9 +521,9 @@ POST /api/v1/channels/:channelId/team
 ### API
 
 ```
-GET    /api/v1/channels/:channelId/team           # \u041d\u0430\u0439\u0442\u0438 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u0430
-PUT    /api/v1/channels/:channelId/team/:userId    # \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u0440\u0430\u0432\u0430
-DELETE /api/v1/channels/:channelId/team/:userId    # \u0423\u0434\u0430\u043b\u0438\u0442\u044c
+GET /api/v1/channels/:channelId/team # Find member
+PUT /api/v1/channels/:channelId/team/:userId # Update permissions
+DELETE /api/v1/channels/:channelId/team/:userId # Delete
 ```
 
 ### UI
@@ -574,9 +574,9 @@ src/pages/profile/
 
 src/features/channels/
   components/
-    PricingRulesBuilder.tsx     # \u0414\u0438\u043d\u0430\u043c\u0438\u0447\u0435\u0441\u043a\u0438\u0439 builder \u0446\u0435\u043d \u0441 \u043b\u0438\u043c\u0438\u0442\u0430\u043c\u0438 (reused in new + edit)
+    PricingRulesBuilder.tsx # Dynamic price builder with limits (reused in new + edit)
     TeamMemberListItem.tsx
-    RightToggles.tsx            # \u0413\u0440\u0443\u043f\u043f\u0430 Toggle-\u043e\u0432 \u043f\u0440\u0430\u0432 (reused in invite + member)
+    RightToggles.tsx # Group of rights Toggles (reused in invite + member)
   hooks/
     useChannelRights.ts         # ABAC hook (isOwner, hasRight) — shared with catalog
 ```

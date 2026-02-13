@@ -278,10 +278,10 @@ services:
 ### Health Check During Shutdown
 
 ```
-\u0428\u0430\u0433 1: /actuator/health \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 503 (OUT_OF_SERVICE)
-\u0428\u0430\u0433 2: Load balancer (nginx) \u043f\u0435\u0440\u0435\u0441\u0442\u0430\u0451\u0442 \u043d\u0430\u043f\u0440\u0430\u0432\u043b\u044f\u0442\u044c \u0442\u0440\u0430\u0444\u0438\u043a
-\u0428\u0430\u0433 3: In-flight requests \u0437\u0430\u0432\u0435\u0440\u0448\u0430\u044e\u0442\u0441\u044f
-\u0428\u0430\u0433 4: Remaining shutdown steps execute
+Step 1: /actuator/health returns 503 (OUT_OF_SERVICE)
+Step 2: Load balancer (nginx) stops sending traffic
+Step 3: In-flight requests complete
+Step 4: Remaining shutdown steps execute
 ```
 
 ### Pre-Stop Hook (Kubernetes, future)

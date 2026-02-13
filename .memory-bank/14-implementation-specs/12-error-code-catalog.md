@@ -189,29 +189,29 @@ src/main/resources/
 RU sample content is intentionally stored with `\uXXXX` escapes to satisfy the English-only documentation policy while preserving locale semantics.
 
 ```properties
-error.auth_invalid_init_data.title=\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 Telegram
-error.auth_invalid_init_data.detail=\u041f\u043e\u0434\u043f\u0438\u0441\u044c initData \u043d\u0435 \u043f\u0440\u043e\u0448\u043b\u0430 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0443
-error.auth_expired_init_data.title=\u0414\u0430\u043d\u043d\u044b\u0435 initData \u0443\u0441\u0442\u0430\u0440\u0435\u043b\u0438
-error.auth_expired_init_data.detail=\u0412\u0440\u0435\u043c\u044f \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f initData \u0438\u0441\u0442\u0435\u043a\u043b\u043e, \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u044e
-error.auth_invalid_token.title=\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u0442\u043e\u043a\u0435\u043d
-error.auth_invalid_token.detail=JWT \u0442\u043e\u043a\u0435\u043d \u043d\u0435\u0432\u0430\u043b\u0438\u0434\u0435\u043d \u0438\u043b\u0438 \u043f\u043e\u0432\u0440\u0435\u0436\u0434\u0451\u043d
-error.auth_token_expired.title=\u0422\u043e\u043a\u0435\u043d \u0438\u0441\u0442\u0451\u043a
-error.auth_token_expired.detail=\u0421\u0440\u043e\u043a \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f JWT \u0442\u043e\u043a\u0435\u043d\u0430 \u0438\u0441\u0442\u0451\u043a
-error.auth_insufficient_rights.title=\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043f\u0440\u0430\u0432
-error.auth_insufficient_rights.detail=\u0423 \u0432\u0430\u0441 \u043d\u0435\u0442 \u043f\u0440\u0430\u0432 \u0434\u043b\u044f \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u044d\u0442\u043e\u0433\u043e \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f
+error.auth_invalid_init_data.title=Invalid Telegram data
+error.auth_invalid_init_data.detail = Signature initData failed verification
+error.auth_expired_init_data.title=The initData has expired
+error.auth_expired_init_data.detail = initData has expired, please authenticate again
+error.auth_invalid_token.title=Invalid token
+error.auth_invalid_token.detail = JWT token is invalid or damaged
+error.auth_token_expired.title=Token has expired
+error.auth_token_expired.detail = JWT token has expired
+error.auth_insufficient_rights.title=Insufficient rights
+error.auth_insufficient_rights.detail = You do not have rights to perform this action
 
-error.deal_not_found.title=\u0421\u0434\u0435\u043b\u043a\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430
-error.deal_not_found.detail=\u0421\u0434\u0435\u043b\u043a\u0430 \u0441 id {0} \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430
-error.deal_invalid_transition.title=\u041d\u0435\u0434\u043e\u043f\u0443\u0441\u0442\u0438\u043c\u044b\u0439 \u043f\u0435\u0440\u0435\u0445\u043e\u0434
-error.deal_invalid_transition.detail=\u041d\u0435\u043b\u044c\u0437\u044f \u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0441\u0434\u0435\u043b\u043a\u0443 \u0438\u0437 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u044f {0} \u0432 {1}
+error.deal_not_found.title=Deal not found
+error.deal_not_found.detail=Deal with id {0} not found
+error.deal_invalid_transition.title=Invalid transition
+error.deal_invalid_transition.detail = The deal cannot be transferred from state {0} to {1}
 
-error.fin_insufficient_balance.title=\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u0441\u0440\u0435\u0434\u0441\u0442\u0432
-error.fin_insufficient_balance.detail=\u041d\u0430 \u0441\u0447\u0451\u0442\u0435 \u044d\u0441\u043a\u0440\u043e\u0443 \u043d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u0441\u0440\u0435\u0434\u0441\u0442\u0432
-error.fin_amount_mismatch.title=\u041d\u0435\u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435 \u0441\u0443\u043c\u043c\u044b
-error.fin_amount_mismatch.detail=\u041e\u0436\u0438\u0434\u0430\u043b\u043e\u0441\u044c {0} nanoTON, \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043e {1} nanoTON
+error.fin_insufficient_balance.title=Insufficient funds
+error.fin_insufficient_balance.detail = There are insufficient funds in the escrow account
+error.fin_amount_mismatch.title=Amount mismatch
+error.fin_amount_mismatch.detail=Expected {0} nanoTON, received {1} nanoTON
 
-error.val_invalid_input.title=\u041e\u0448\u0438\u0431\u043a\u0430 \u0432\u0430\u043b\u0438\u0434\u0430\u0446\u0438\u0438
-error.val_invalid_input.detail=\u0412\u0445\u043e\u0434\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u043d\u0435 \u043f\u0440\u043e\u0448\u043b\u0438 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0443
+error.val_invalid_input.title=Validation error
+error.val_invalid_input.detail = Input data was not validated
 ```
 
 ### Example: errors_en.properties
@@ -229,9 +229,9 @@ error.deal_not_found.detail=Deal with id {0} not found
 ```json
 {
   "type": "https://api.advertmarket.com/errors/DEAL_NOT_FOUND",
-  "title": "\u0421\u0434\u0435\u043b\u043a\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430",
+  "title": "Deal not found",
   "status": 404,
-  "detail": "\u0421\u0434\u0435\u043b\u043a\u0430 \u0441 id 550e8400-e29b-41d4-a716-446655440000 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430",
+  "detail": "Deal with id 550e8400-e29b-41d4-a716-446655440000 not found",
   "error_code": "DEAL_NOT_FOUND",
   "timestamp": "2025-01-15T10:30:00Z"
 }

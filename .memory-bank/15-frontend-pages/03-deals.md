@@ -12,8 +12,8 @@
       ├── /deals/:dealId/creative
       ├── /deals/:dealId/creative/review
       ├── /deals/:dealId/schedule
-      ├── [Sheet] \u041e\u043f\u043b\u0430\u0442\u0430 (TON Connect)
-      ├── [Sheet] \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430
+      ├── [Sheet] Payment (TON Connect)
+      ├── [Sheet] Support
       ├── /deals/:dealId/dispute
       └── /deals/:dealId/dispute/evidence
 ```
@@ -104,7 +104,7 @@ The manager sees channel transactions **only** with the `view_deals` right. With
 ```
 GET /api/v1/deals/:dealId
 GET /api/v1/deals/:dealId/timeline
-GET /api/v1/deals/:dealId/escrow     # \u0414\u043b\u044f funded-\u0441\u0442\u0430\u0442\u0443\u0441\u043e\u0432
+GET /api/v1/deals/:dealId/escrow # For funded statuses
 ```
 
 **Query keys:** `dealKeys.detail(dealId)`, `dealKeys.timeline(dealId)`, `dealKeys.escrow(dealId)`
@@ -195,8 +195,8 @@ Destructive actions (cancellation, rejection) require `DialogModal` confirmation
 ### API
 
 ```
-GET  /api/v1/deals/:dealId              # \u0422\u0435\u043a\u0443\u0449\u0438\u0435 \u0443\u0441\u043b\u043e\u0432\u0438\u044f
-POST /api/v1/deals/:dealId/negotiate     # \u041a\u043e\u043d\u0442\u0440-\u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435
+GET /api/v1/deals/:dealId # Current conditions
+POST /api/v1/deals/:dealId/negotiate # Counteroffer
 ```
 
 ### UI
@@ -211,7 +211,7 @@ POST /api/v1/deals/:dealId/negotiate     # \u041a\u043e\u043d\u0442\u0440-\u043f
 ```typescript
 {
   proposedAmountNano: bigint;  // > 0
-  pricingRuleId?: number;      // \u043e\u043f\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e: \u0441\u043c\u0435\u043d\u0438\u0442\u044c \u0442\u0438\u043f \u043f\u043e\u0441\u0442\u0430
+  pricingRuleId?: number;      // optional: change post type
   message?: string;            // max 2000
 }
 ```
@@ -246,8 +246,8 @@ Manager: `moderate` required.
 ### API
 
 ```
-GET  /api/v1/deals/:dealId        # \u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u0441\u0442\u0430\u0442\u0443\u0441\u0430
-POST /api/v1/deals/:dealId/brief  # \u041e\u0442\u043f\u0440\u0430\u0432\u043a\u0430 \u0431\u0440\u0438\u0444\u0430
+GET /api/v1/deals/:dealId # Checking status
+POST /api/v1/deals/:dealId/brief # Sending a brief
 ```
 
 **Query keys:** `creativeKeys.brief(dealId)`
@@ -288,9 +288,9 @@ POST /api/v1/deals/:dealId/brief  # \u041e\u0442\u043f\u0440\u0430\u0432\u043a\u
 ### API
 
 ```
-GET  /api/v1/deals/:dealId/brief      # \u0411\u0440\u0438\u0444 \u043e\u0442 \u0440\u0435\u043a\u043b\u0430\u043c\u043e\u0434\u0430\u0442\u0435\u043b\u044f
-GET  /api/v1/deals/:dealId            # \u0421\u0442\u0430\u0442\u0443\u0441
-POST /api/v1/deals/:dealId/creative   # \u041e\u0442\u043f\u0440\u0430\u0432\u043a\u0430 \u043a\u0440\u0435\u0430\u0442\u0438\u0432\u0430
+GET /api/v1/deals/:dealId/brief # Brief from the advertiser
+GET /api/v1/deals/:dealId # Status
+POST /api/v1/deals/:dealId/creative # Sending creative
 ```
 
 **Query keys:** `creativeKeys.brief(dealId)`, `creativeKeys.current(dealId)`
@@ -365,10 +365,10 @@ Manager: `moderate` required.
 ### API
 
 ```
-GET  /api/v1/deals/:dealId/creative         # \u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a
-GET  /api/v1/deals/:dealId/brief            # \u0414\u043b\u044f \u0441\u0440\u0430\u0432\u043d\u0435\u043d\u0438\u044f
-POST /api/v1/deals/:dealId/creative/approve  # \u041e\u0434\u043e\u0431\u0440\u0438\u0442\u044c
-POST /api/v1/deals/:dealId/creative/revision # \u0417\u0430\u043f\u0440\u043e\u0441\u0438\u0442\u044c \u0440\u0435\u0432\u0438\u0437\u0438\u044e
+GET /api/v1/deals/:dealId/creative # Current draft
+GET /api/v1/deals/:dealId/brief # For comparison
+POST /api/v1/deals/:dealId/creative/approve # Approve
+POST /api/v1/deals/:dealId/creative/revision # Request a revision
 ```
 
 **Query keys:** `creativeKeys.current(dealId)`, `creativeKeys.brief(dealId)`
@@ -409,9 +409,9 @@ POST /api/v1/deals/:dealId/creative/revision # \u0417\u0430\u043f\u0440\u043e\u0
 ### API
 
 ```
-GET  /api/v1/deals/:dealId          # \u0421\u0442\u0430\u0442\u0443\u0441 + \u043a\u0440\u0435\u0430\u0442\u0438\u0432
-POST /api/v1/deals/:dealId/publish   # \u041e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u0442\u044c \u0441\u0435\u0439\u0447\u0430\u0441
-POST /api/v1/deals/:dealId/schedule  # \u0417\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c
+GET /api/v1/deals/:dealId # Status + creative
+POST /api/v1/deals/:dealId/publish # Publish now
+POST /api/v1/deals/:dealId/schedule # Schedule
 ```
 
 ### UI
@@ -428,7 +428,7 @@ POST /api/v1/deals/:dealId/schedule  # \u0417\u0430\u043f\u043b\u0430\u043d\u043
 
 ```typescript
 {
-  scheduledAt: string;  // ISO 8601, \u0432 \u0431\u0443\u0434\u0443\u0449\u0435\u043c, max 30 \u0434\u043d\u0435\u0439
+  scheduledAt: string;  // ISO 8601, future, max 30 days
 }
 ```
 
@@ -522,8 +522,8 @@ After sending - polling `dealKeys.detail(dealId)` until the status changes to `F
 ### API
 
 ```
-GET  /api/v1/deals/:dealId           # \u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u0441\u0442\u0430\u0442\u0443\u0441\u0430
-POST /api/v1/deals/:dealId/dispute   # \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0441\u043f\u043e\u0440
+GET /api/v1/deals/:dealId # Checking status
+POST /api/v1/deals/:dealId/dispute # Open a dispute
 ```
 
 ### UI
@@ -624,8 +624,8 @@ Route `/deals/:dealId/dispute` shows:
 ### API
 
 ```
-GET  /api/v1/deals/:dealId/dispute            # \u041a\u043e\u043d\u0442\u0435\u043a\u0441\u0442 \u0441\u043f\u043e\u0440\u0430
-POST /api/v1/deals/:dealId/dispute/evidence   # \u041e\u0442\u043f\u0440\u0430\u0432\u043a\u0430 \u0434\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430
+GET /api/v1/deals/:dealId/dispute # Dispute context
+POST /api/v1/deals/:dealId/dispute/evidence # Sending evidence
 ```
 
 ### UI - combined form
@@ -642,10 +642,10 @@ One feed = combination of all types (at least one field is required):
 
 ```typescript
 {
-  screenshots?: string[];  // URLs \u043f\u043e\u0441\u043b\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438, max 5
+  screenshots?: string[];  // URLs after loading, max 5
   description?: string;    // max 5000
   links?: string[];        // max 3, valid URLs
-  comment?: string;        // \u043e\u0431\u0449\u0438\u0439 \u043a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439
+  comment?: string;        // general comment
 }
 ```
 
@@ -681,7 +681,7 @@ One feed = combination of all types (at least one field is required):
 ### API
 
 ```
-POST /api/v1/support   # \u0421\u043e\u0437\u0434\u0430\u0451\u0442 \u0442\u0438\u043a\u0435\u0442
+POST /api/v1/support # Creates a ticket
 ```
 
 ### UI
@@ -750,16 +750,16 @@ src/features/deals/
     deals.ts
   components/
     DealListItem.tsx
-    DealActions.tsx             # \u041c\u0430\u0442\u0440\u0438\u0446\u0430 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439
+    DealActions.tsx # Action Matrix
     DealTimeline.tsx
     DealStatusBadge.tsx
     PaymentSheet.tsx            # TON Connect sheet
     SupportSheet.tsx            # Support ticket sheet
-    TelegramPostPreview.tsx     # \u041f\u0440\u0435\u0432\u044c\u044e \u043a\u0440\u0435\u0430\u0442\u0438\u0432\u0430
-    ButtonBuilder.tsx           # Builder \u043a\u043d\u043e\u043f\u043e\u043a \u0434\u043b\u044f \u043a\u0440\u0435\u0430\u0442\u0438\u0432\u0430
-    EvidenceForm.tsx            # \u041a\u043e\u043c\u0431\u0438\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u0430\u044f \u0444\u043e\u0440\u043c\u0430 \u0434\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432
+    TelegramPostPreview.tsx # Creative preview
+    ButtonBuilder.tsx # Builder of buttons for creative
+    EvidenceForm.tsx # Combined evidence form
     EvidenceTimeline.tsx
-    CreativeImportFlow.tsx      # \u0418\u043c\u043f\u043e\u0440\u0442 \u043f\u043e\u0441\u0442\u0430 \u0447\u0435\u0440\u0435\u0437 \u0431\u043e\u0442\u0430
+    CreativeImportFlow.tsx # Import a post via bot
   hooks/
     useDealRole.ts
     useDealActions.ts

@@ -69,10 +69,10 @@
 ```typescript
 type OnboardingInterest = 'advertiser' | 'owner' | 'both';
 
-// \u041b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 state, \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440 \u043f\u0440\u0438 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0438 \u043e\u043d\u0431\u043e\u0440\u0434\u0438\u043d\u0433\u0430
+// Local state, sent to the server when onboarding is completed
 const [selected, setSelected] = useState<Set<'advertiser' | 'owner'>>(new Set());
 
-// \u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442:
+// Result:
 // selected = {'advertiser'} → 'advertiser'
 // selected = {'owner'} → 'owner'
 // selected = {'advertiser', 'owner'} → 'both'
@@ -131,7 +131,7 @@ The server sets `onboardingCompleted = true` + stores `interest` in the user pro
 ### Redirect logic
 
 ```typescript
-const interest = getOnboardingInterest(); // \u0438\u0437 state \u043f\u0440\u0435\u0434\u044b\u0434\u0443\u0449\u0435\u0433\u043e \u0448\u0430\u0433\u0430
+const interest = getOnboardingInterest(); // from state of the previous step
 
 switch (interest) {
   case 'advertiser':
@@ -141,7 +141,7 @@ switch (interest) {
     navigate('/profile/channels/new');
     break;
   case 'both':
-    navigate('/catalog'); // \u043e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u0441\u0446\u0435\u043d\u0430\u0440\u0438\u0439 — \u043f\u043e\u0438\u0441\u043a \u043a\u0430\u043d\u0430\u043b\u043e\u0432
+    navigate('/catalog'); // main scenario - searching for channels
     break;
 }
 ```
@@ -161,7 +161,7 @@ switch (interest) {
 The user has **already been created** with the `/start` command in the bot or with `POST /api/v1/auth/login` (upsert). Onboarding is shown **only** if `onboardingCompleted == false` is in the auth response.
 
 ```typescript
-// \u0412 \u043a\u043e\u0440\u043d\u0435\u0432\u043e\u043c \u0440\u043e\u0443\u0442\u0435\u0440\u0435
+// In the root router
 const { data: authData } = useAuth();
 
 if (!authData.onboardingCompleted) {

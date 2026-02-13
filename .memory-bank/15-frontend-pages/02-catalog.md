@@ -6,7 +6,7 @@
 
 ```
 /catalog
-  ├── [Sheet] \u0424\u0438\u043b\u044c\u0442\u0440\u044b
+  ├── [Sheet] Filters
   ├── /catalog/channels/:channelId
   └── /deals/new?channelId=:channelId
 ```
@@ -96,7 +96,7 @@ Storage: URL search params (shareable, back-compatible).
 ### API
 
 ```
-GET /api/v1/channels/topics   # \u0421\u043f\u0438\u0441\u043e\u043a \u0442\u0435\u043c\u0430\u0442\u0438\u043a (\u0438\u043b\u0438 enum \u043d\u0430 \u043a\u043b\u0438\u0435\u043d\u0442\u0435)
+GET /api/v1/channels/topics # List of topics (or enum on the client)
 ```
 
 ### UI
@@ -150,7 +150,7 @@ GET /api/v1/channels/topics   # \u0421\u043f\u0438\u0441\u043e\u043a \u0442\u043
 
 ```
 GET /api/v1/channels/:channelId
-GET /api/v1/channels/:channelId/team   # \u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430: \u0440\u043e\u043b\u044c \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f
+GET /api/v1/channels/:channelId/team # Check: user role
 ```
 
 **Query keys:** `channelKeys.detail(channelId)`, `channelKeys.team(channelId)`
@@ -221,7 +221,7 @@ const { isOwner, hasRight } = useChannelRights(channelId);
 
 ```
 GET  /api/v1/channels/:channelId    # Pricing rules
-POST /api/v1/deals                   # \u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0441\u0434\u0435\u043b\u043a\u0438
+POST /api/v1/deals # Create a deal
 ```
 
 **Mutation:** invalidates `dealKeys.lists()`
@@ -245,9 +245,9 @@ POST /api/v1/deals                   # \u0421\u043e\u0437\u0434\u0430\u043d\u043
 
 ```typescript
 {
-  channelId: number;      // \u0438\u0437 URL params
-  pricingRuleId: number;  // \u0438\u0437 Select
-  message?: string;       // \u0438\u0437 textarea
+  channelId: number;      // from URL params
+  pricingRuleId: number;  // from Select
+  message?: string;       // from textarea
 }
 ```
 
@@ -281,9 +281,9 @@ src/features/channels/
   components/
     ChannelCard.tsx             # Compact channel card (reused in deal pages)
     ChannelFiltersSheet.tsx     # Sheet overlay
-    ChannelListItem.tsx         # GroupItem \u0434\u043b\u044f \u0441\u043f\u0438\u0441\u043a\u0430
-    ChannelStats.tsx            # \u0413\u0440\u0443\u043f\u043f\u0430 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0438
-    PricingRulesList.tsx        # \u0421\u043f\u0438\u0441\u043e\u043a \u0446\u0435\u043d
+    ChannelListItem.tsx # GroupItem for the list
+    ChannelStats.tsx # Statistics group
+    PricingRulesList.tsx # List of prices
   hooks/
     useChannelFilters.ts        # URL search params state
     useChannelRights.ts         # ABAC hook (isOwner, hasRight)

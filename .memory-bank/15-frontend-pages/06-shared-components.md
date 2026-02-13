@@ -18,13 +18,13 @@
 All user-facing lines are only via `t('key')`. Exceptions: technical constants (date formats, regex patterns).
 
 ```typescript
-// \u041f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u043e
+// Right
 <Button>{t('common.save')}</Button>
 <EmptyState title={t('catalog.empty.title')} />
 
-// \u041d\u0435\u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u043e
-<Button>\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c</Button>
-<EmptyState title="\u041d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e" />
+// Wrong
+<Button>Save</Button>
+<EmptyState title="Nothing found" />
 ```
 
 ### API errors
@@ -39,8 +39,8 @@ catalog.*        — 02-catalog
 deals.*          — 03-deals
 wallet.*         — 04-wallet
 profile.*        — 05-profile
-common.*         — \u043e\u0431\u0449\u0438\u0435 (save, cancel, confirm, back, loading, copied)
-errors.*         — \u043e\u0448\u0438\u0431\u043a\u0438 frontend-only (validation, offline, timeout)
+common.* - general (save, cancel, confirm, back, loading, copied)
+errors.* — frontend-only errors (validation, offline, timeout)
 ```
 
 ###Language Definition
@@ -69,12 +69,12 @@ errors.*         — \u043e\u0448\u0438\u0431\u043a\u0438 frontend-only (validat
 ### Components
 
 ```typescript
-// ErrorBoundary — \u043e\u0431\u043e\u0440\u0430\u0447\u0438\u0432\u0430\u0435\u0442 \u043a\u0430\u0436\u0434\u044b\u0439 route
+// ErrorBoundary - wraps each route
 <ErrorBoundary fallback={<ErrorScreen />}>
   <Outlet />
 </ErrorBoundary>
 
-// ErrorScreen — full-screen \u043e\u0448\u0438\u0431\u043a\u0430 (403, 404, 500)
+// ErrorScreen - full-screen error (403, 404, 500)
 type ErrorScreenProps = {
   illustration?: ReactNode;
   title: string;
@@ -82,14 +82,14 @@ type ErrorScreenProps = {
   action?: { label: string; onClick: () => void };
 };
 
-// OfflineBanner — sticky banner \u043f\u0440\u0438 \u043f\u043e\u0442\u0435\u0440\u0435 \u0441\u0435\u0442\u0438
-// \u041e\u0442\u043e\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044f \u0433\u043b\u043e\u0431\u0430\u043b\u044c\u043d\u043e, \u043f\u043e\u0432\u0435\u0440\u0445 \u043b\u044e\u0431\u043e\u0433\u043e \u043a\u043e\u043d\u0442\u0435\u043d\u0442\u0430
+// OfflineBanner - sticky banner when network is lost
+// Displayed globally, on top of any content
 ```
 
 ### Processing in React Query
 
 ```typescript
-// \u0413\u043b\u043e\u0431\u0430\u043b\u044c\u043d\u044b\u0439 onError \u0432 QueryClient
+// Global onError in QueryClient
 queryCache: new QueryCache({
   onError: (error) => {
     if (error.status === 401) reAuth();
@@ -131,7 +131,7 @@ The only exception: page 5.9 "Participant rights" - toggle rights **disabled** w
 ### Checking rights on the client
 
 ```typescript
-// Hook \u0434\u043b\u044f ABAC
+// Hook for ABAC
 function useChannelRights(channelId: number) {
   const { data: team } = useQuery(channelKeys.team(channelId));
   const userId = useCurrentUser().id;
@@ -176,7 +176,7 @@ t.me/AdvertMarketBot/app?startapp={type}_{id}
 ### Login Processing
 
 ```typescript
-// \u0412 \u043a\u043e\u0440\u043d\u0435\u0432\u043e\u043c \u0440\u043e\u0443\u0442\u0435\u0440\u0435, \u0434\u043e \u0440\u0435\u043d\u0434\u0435\u0440\u0430
+// In the root router, before rendering
 const startParam = Telegram.WebApp.initDataUnsafe.start_param;
 
 if (startParam) {
@@ -197,9 +197,9 @@ type ShareButtonProps = {
   id: string;
 };
 
-// \u041f\u043e\u0432\u0435\u0434\u0435\u043d\u0438\u0435:
-// 1. \u0424\u043e\u0440\u043c\u0438\u0440\u0443\u0435\u0442 deep link URL
-// 2. \u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442 switchInlineQuery() (\u0435\u0441\u043b\u0438 \u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u0432 Telegram)
+// Behavior:
+// 1. Forms a deep link URL
+// 2. Calls switchInlineQuery() (if available in Telegram)
 // 3. Fallback: navigator.clipboard → toast t('common.copied')
 ```
 
@@ -385,16 +385,16 @@ Badge on the "Transactions" tab - the number of transactions where the current u
 
 ```typescript
 const routes = [
-  // \u041e\u043d\u0431\u043e\u0440\u0434\u0438\u043d\u0433
+  // Onboarding
   { path: '/onboarding', page: 'OnboardingPage' },
   { path: '/onboarding/interest', page: 'OnboardingInterestPage' },
   { path: '/onboarding/tour', page: 'OnboardingTourPage' },
 
-  // \u041a\u0430\u0442\u0430\u043b\u043e\u0433 (Tab 1)
+  // Directory (Tab 1)
   { path: '/catalog', page: 'CatalogPage' },
   { path: '/catalog/channels/:channelId', page: 'ChannelDetailPage' },
 
-  // \u0421\u0434\u0435\u043b\u043a\u0438 (Tab 2)
+  // Trades (Tab 2)
   { path: '/deals', page: 'DealsPage' },
   { path: '/deals/new', page: 'CreateDealPage' },
   { path: '/deals/:dealId', page: 'DealDetailPage' },
@@ -406,13 +406,13 @@ const routes = [
   { path: '/deals/:dealId/dispute', page: 'DisputePage' },
   { path: '/deals/:dealId/dispute/evidence', page: 'DisputeEvidencePage' },
 
-  // \u0424\u0438\u043d\u0430\u043d\u0441\u044b (Tab 3)
+  // Finance (Tab 3)
   { path: '/wallet', page: 'WalletPage' },
   { path: '/wallet/withdraw', page: 'WithdrawPage' },       // Channel Owner only
   { path: '/wallet/history', page: 'HistoryPage' },
   { path: '/wallet/history/:txId', page: 'TransactionDetailPage' },
 
-  // \u041f\u0440\u043e\u0444\u0438\u043b\u044c (Tab 4)
+  // Profile (Tab 4)
   { path: '/profile', page: 'ProfilePage' },
   { path: '/profile/language', page: 'LanguagePage' },
   { path: '/profile/notifications', page: 'NotificationsPage' },

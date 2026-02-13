@@ -214,8 +214,8 @@ Each impl module is organized into layers:
 
 ```
 com.advertmarket.<module>/
-├── api/           # \u0420\u0435\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 Port \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u043e\u0432
-├── internal/      # \u0412\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u044f\u044f \u043b\u043e\u0433\u0438\u043a\u0430
+├── api/ # Implementations of Port interfaces
+├── internal/ # Internal logic
 │   ├── config/    # @Configuration, @ConfigurationProperties
 │   ├── adapter/   # Kafka listeners, external API clients
 │   ├── service/   # Domain services

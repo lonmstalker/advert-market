@@ -25,9 +25,9 @@ Selecting a method by `creative_draft.media[]`:
 
 ```
 1. CREATIVE_APPROVED → SCHEDULED:
-   - Deal.scheduled_at = \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0435 \u0432\u0440\u0435\u043c\u044f
+   - Deal.scheduled_at = selected time
 
-2. Deal Timeout Scheduler (cron \u043a\u0430\u0436\u0434\u0443\u044e \u043c\u0438\u043d\u0443\u0442\u0443):
+2. Deal Timeout Scheduler (cron every minute):
    SELECT deal_id FROM deals
    WHERE status = 'SCHEDULED' AND scheduled_at <= NOW()
    FOR UPDATE SKIP LOCKED

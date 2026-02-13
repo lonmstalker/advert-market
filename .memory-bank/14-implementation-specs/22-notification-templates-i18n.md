@@ -36,21 +36,21 @@ src/main/resources/messages/
 RU sample content is intentionally stored with `\uXXXX` escapes to satisfy the English-only documentation policy while preserving locale semantics.
 
 ```properties
-notification.NEW_OFFER=<b>\u041d\u043e\u0432\u043e\u0435 \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435</b>\n\u041a\u0430\u043d\u0430\u043b: {0}\n\u0421\u0443\u043c\u043c\u0430: {1} TON
-notification.OFFER_ACCEPTED=<b>\u041f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u043f\u0440\u0438\u043d\u044f\u0442\u043e</b>\n\u0412\u043d\u0435\u0441\u0438\u0442\u0435 \u0434\u0435\u043f\u043e\u0437\u0438\u0442 {0} TON
-notification.OFFER_REJECTED=\u041f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0434\u043b\u044f {0} \u043e\u0442\u043a\u043b\u043e\u043d\u0435\u043d\u043e
-notification.ESCROW_FUNDED=<b>\u042d\u0441\u043a\u0440\u043e\u0443 \u043f\u043e\u043f\u043e\u043b\u043d\u0435\u043d</b> #{0}\n\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u044c\u0442\u0435 \u043a\u0440\u0435\u0430\u0442\u0438\u0432
-notification.CREATIVE_SUBMITTED=\u0427\u0435\u0440\u043d\u043e\u0432\u0438\u043a \u043a\u0440\u0435\u0430\u0442\u0438\u0432\u0430 \u0433\u043e\u0442\u043e\u0432 \u043a \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0435
-notification.CREATIVE_APPROVED=\u041a\u0440\u0435\u0430\u0442\u0438\u0432 \u043e\u0434\u043e\u0431\u0440\u0435\u043d! \u041f\u0443\u0431\u043b\u0438\u043a\u0443\u0439\u0442\u0435
-notification.REVISION_REQUESTED=\u0417\u0430\u043f\u0440\u043e\u0448\u0435\u043d\u0430 \u0434\u043e\u0440\u0430\u0431\u043e\u0442\u043a\u0430 \u043a\u0440\u0435\u0430\u0442\u0438\u0432\u0430
-notification.PUBLISHED=\u0420\u0435\u043a\u043b\u0430\u043c\u0430 \u043e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043d\u0430 \u0432 {0}!\n\u0412\u0435\u0440\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f 24\u0447
-notification.DELIVERY_VERIFIED=<b>\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0430</b>\n\u0412\u044b\u043f\u043b\u0430\u0442\u0430 \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442\u0441\u044f
-notification.PAYOUT_SENT=<b>\u0412\u044b\u043f\u043b\u0430\u0442\u0430 {0} TON</b>\nTX: {1}
-notification.DISPUTE_OPENED=<b>\u041e\u0442\u043a\u0440\u044b\u0442 \u0441\u043f\u043e\u0440</b> #{0}
-notification.DISPUTE_RESOLVED=\u0421\u043f\u043e\u0440 \u0440\u0430\u0437\u0440\u0435\u0448\u0451\u043d: {0}
-notification.DEAL_EXPIRED=\u0421\u0434\u0435\u043b\u043a\u0430 #{0} \u0438\u0441\u0442\u0435\u043a\u043b\u0430
-notification.DEAL_CANCELLED=\u0421\u0434\u0435\u043b\u043a\u0430 #{0} \u043e\u0442\u043c\u0435\u043d\u0435\u043d\u0430
-notification.RECONCILIATION_ALERT=<b>ALERT: \u0420\u0430\u0441\u0445\u043e\u0436\u0434\u0435\u043d\u0438\u0435 \u043f\u0440\u0438 \u0441\u0432\u0435\u0440\u043a\u0435</b>\n\u0422\u0438\u043f: {0}
+notification.NEW_OFFER=<b>New offer</b>\nChannel: {0}\nAmount: {1} TON
+notification.OFFER_ACCEPTED=<b>Offer accepted</b>\nMake a deposit {0} TON
+notification.OFFER_REJECTED=Offer for {0} has been rejected
+notification.ESCROW_FUNDED=<b>Escrow is replenished</b> #{0}\nPrepare creative
+notification.CREATIVE_SUBMITTED=Draft creative is ready for review
+notification.CREATIVE_APPROVED=Creative has been approved! Publish
+notification.REVISION_REQUESTED=Creative revision requested
+notification.PUBLISHED=Advertisement published in {0}!\n24h verification
+notification.DELIVERY_VERIFIED=<b>Delivery confirmed</b>\nPayment is being processed
+notification.PAYOUT_SENT=<b>Payout {0} TON</b>\nTX: {1}
+notification.DISPUTE_OPENED=<b>Dispute open</b> #{0}
+notification.DISPUTE_RESOLVED=Dispute resolved: {0}
+notification.DEAL_EXPIRED=Trade #{0} has expired
+notification.DEAL_CANCELLED=Deal #{0} canceled
+notification.RECONCILIATION_ALERT=<b>ALERT: Reconciliation discrepancy</b>\nType: {0}
 ```
 
 ### Template Keys Summary
@@ -90,7 +90,7 @@ notification.RECONCILIATION_ALERT=<b>ALERT: \u0420\u0430\u0441\u0445\u043e\u0436
     "outcome": "REFUND"
   },
   "buttons": [
-    {"text": "\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0441\u0434\u0435\u043b\u043a\u0443", "url": "https://t.me/bot?startapp=deal_550e8400"}
+    {"text": "Open deal", "url": "https://t.me/bot?startapp=deal_550e8400"}
   ]
 }
 ```

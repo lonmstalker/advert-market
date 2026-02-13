@@ -68,15 +68,15 @@ Two JSONB columns in `deals` table store creative workflow data:
 
 ```json
 {
-  "text_requirements": "\u0420\u0435\u043a\u043b\u0430\u043c\u043d\u044b\u0439 \u043f\u043e\u0441\u0442 \u043e \u043a\u0440\u0438\u043f\u0442\u043e-\u043a\u043e\u0448\u0435\u043b\u044c\u043a\u0435. \u0423\u043f\u043e\u043c\u044f\u043d\u0443\u0442\u044c \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u044c \u0438 \u043f\u0440\u043e\u0441\u0442\u043e\u0442\u0443 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u044f.",
+  "text_requirements": "Promotional post about a crypto wallet. Mention security and ease of use.",
   "tone": "CASUAL",
   "required_links": [
-    {"url": "https://example.com/wallet", "label": "\u0421\u043a\u0430\u0447\u0430\u0442\u044c"}
+    {"url": "https://example.com/wallet", "label": "Download"}
   ],
   "required_media": [
-    {"type": "PHOTO", "file_id": "AgACAgIAAxkBAAI...", "description": "\u041b\u043e\u0433\u043e\u0442\u0438\u043f \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f"}
+    {"type": "PHOTO", "file_id": "AgACAgIAAxkBAAI...", "description": "Application logo"}
   ],
-  "additional_notes": "\u041d\u0435 \u0443\u043f\u043e\u043c\u0438\u043d\u0430\u0442\u044c \u043a\u043e\u043d\u043a\u0443\u0440\u0435\u043d\u0442\u043e\u0432"
+  "additional_notes": "Do not mention competitors"
 }
 ```
 
@@ -146,16 +146,16 @@ Two JSONB columns in `deals` table store creative workflow data:
 
 ```json
 {
-  "text": "<b>\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u043a\u0440\u0438\u043f\u0442\u043e-\u043a\u043e\u0448\u0435\u043b\u0451\u043a</b>\n\n\u041f\u0440\u043e\u0441\u0442\u043e\u0439 \u0438 \u043d\u0430\u0434\u0451\u0436\u043d\u044b\u0439 \u0441\u043f\u043e\u0441\u043e\u0431 \u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0432\u0430\u0448\u0438 TON.\n\n✅ \u0411\u0438\u043e\u043c\u0435\u0442\u0440\u0438\u0447\u0435\u0441\u043a\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430\n✅ \u041c\u0433\u043d\u043e\u0432\u0435\u043d\u043d\u044b\u0435 \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u044b\n✅ \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430 NFT",
+  "text": "<b>Secure crypto wallet</b>\n\nA simple and reliable way to store your TON.\n\n✅ Biometric security\n✅ Instant transfers\n✅ NFT support",
   "media": [
     {"type": "PHOTO", "file_id": "AgACAgIAAxkBAAI...", "caption": null}
   ],
   "buttons": [
-    {"text": "\u0421\u043a\u0430\u0447\u0430\u0442\u044c", "url": "https://example.com/wallet"}
+    {"text": "Download", "url": "https://example.com/wallet"}
   ],
   "parse_mode": "HTML",
   "version": 2,
-  "revision_note": "\u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u044b \u043f\u0440\u0435\u0438\u043c\u0443\u0449\u0435\u0441\u0442\u0432\u0430 \u043f\u043e \u0437\u0430\u043f\u0440\u043e\u0441\u0443 \u0440\u0435\u043a\u043b\u0430\u043c\u043e\u0434\u0430\u0442\u0435\u043b\u044f"
+  "revision_note": "Added benefits at advertiser request"
 }
 ```
 

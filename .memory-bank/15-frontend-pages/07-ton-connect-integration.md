@@ -79,7 +79,7 @@ Simple transfers (address + amount) do not require Cell building. `@tonconnect/u
 ### TonConnectUIProvider (already configured)
 
 ```typescript
-// App.tsx — \u0442\u0435\u043a\u0443\u0449\u0430\u044f \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f
+// App.tsx - current configuration
 const TON_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
 
 <TonConnectUIProvider manifestUrl={TON_MANIFEST_URL}>
@@ -109,8 +109,8 @@ const explorerBaseUrl = import.meta.env.VITE_TON_NETWORK === 'mainnet'
   ? 'https://tonviewer.com'
   : 'https://testnet.tonviewer.com';
 
-// \u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0442\u0440\u0430\u043d\u0437\u0430\u043a\u0446\u0438\u044e: `${explorerBaseUrl}/transaction/${txHash}`
-// \u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0430\u0434\u0440\u0435\u0441: `${explorerBaseUrl}/${address}`
+// Transaction link: `${explorerBaseUrl}/transaction/${txHash}`
+// Link to address: `${explorerBaseUrl}/${address}`
 ```
 
 Used in 4.4 (Transaction Detail) - the "Open in TON Explorer" button.
@@ -130,15 +130,15 @@ type UseTonTransactionOptions = {
 };
 
 type TonTransactionParams = {
-  address: string;      // non-bounceable UQ... \u0438\u043b\u0438 bounceable EQ...
-  amountNano: string;   // nanoTON \u043a\u0430\u043a \u0441\u0442\u0440\u043e\u043a\u0430
+  address: string;      // non-bounceable UQ... or bounceable EQ...
+  amountNano: string;   // nanoTON as a string
   validUntil?: number;  // unix timestamp, default: now + 600s
 };
 
 function useTonTransaction(options?: UseTonTransactionOptions) {
   return {
     send: (params: TonTransactionParams) => Promise<void>;
-    isPending: boolean;    // \u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0435\u0442 \u043a\u043d\u043e\u043f\u043a\u0443, \u043f\u0440\u0435\u0434\u043e\u0442\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043f\u043e\u0432\u0442\u043e\u0440\u043d\u044b\u0435 \u043a\u043b\u0438\u043a\u0438
+    isPending: boolean;    // locks the button, prevents repeated clicks
     error: TonTransactionError | null;
   };
 }
@@ -177,19 +177,19 @@ Adaptive polling of deposit status after sending a transaction.
 
 ```typescript
 type DepositPollingOptions = {
-  enabled: boolean;            // \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0442\u044c \u043b\u0438 polling
-  onConfirmed?: () => void;    // callback \u043f\u0440\u0438 FUNDED
-  onTimeout?: () => void;      // callback \u043f\u0440\u0438 \u0438\u0441\u0442\u0435\u0447\u0435\u043d\u0438\u0438 \u0442\u0430\u0439\u043c\u0430\u0443\u0442\u0430
-  timeoutMs?: number;          // default: 30 * 60 * 1000 (30 \u043c\u0438\u043d)
+  enabled: boolean;            // whether to run polling
+  onConfirmed?: () => void;    // callback when FUNDED
+  onTimeout?: () => void;      // callback when timeout expires
+  timeoutMs?: number;          // default: 30 * 60 * 1000 (30 min)
 };
 
 function useDepositPolling(dealId: string, options: DepositPollingOptions) {
   return {
-    depositStatus: DepositStatus;   // \u0441\u043c. 7.4
+    depositStatus: DepositStatus;   // see 7.4
     confirmations: number | null;
     requiredConfirmations: number | null;
     isPolling: boolean;
-    elapsed: number;                // ms \u0441 \u043d\u0430\u0447\u0430\u043b\u0430 polling
+    elapsed: number;                // ms from the beginning polling
   };
 }
 ```
@@ -208,7 +208,7 @@ Inside:
 // nanoTON → "1 250.00 TON"
 function formatTonAmount(nanoTon: bigint | string): string;
 
-// nanoTON → \u0441\u0442\u0440\u043e\u043a\u0430 \u0434\u043b\u044f sendTransaction
+// nanoTON → string for sendTransaction
 function toNanoString(nanoTon: bigint): string;
 
 // TON (float input) → nanoTON
@@ -220,17 +220,17 @@ function parseUserTonInput(input: string): bigint;
 ```typescript
 type TonTransactionError =
   | { code: 'WALLET_NOT_CONNECTED' }
-  | { code: 'USER_REJECTED' }            // \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043e\u0442\u043c\u0435\u043d\u0438\u043b \u0432 \u043a\u043e\u0448\u0435\u043b\u044c\u043a\u0435
+  | { code: 'USER_REJECTED' } // user canceled in wallet
   | { code: 'INSUFFICIENT_FUNDS' }
-  | { code: 'TIMEOUT' }                  // validUntil \u0438\u0441\u0442\u0451\u043a
-  | { code: 'NETWORK_MISMATCH' }         // \u043a\u043e\u0448\u0435\u043b\u0451\u043a \u0432 \u0434\u0440\u0443\u0433\u043e\u0439 \u0441\u0435\u0442\u0438
-  | { code: 'DISCONNECTED_DURING_TX' }   // disconnect \u0432\u043e \u0432\u0440\u0435\u043c\u044f \u0442\u0440\u0430\u043d\u0437\u0430\u043a\u0446\u0438\u0438
+  | { code: 'TIMEOUT' } // validUntil has expired
+  | { code: 'NETWORK_MISMATCH' } // wallet on another network
+  | { code: 'DISCONNECTED_DURING_TX' }   // disconnect RU_TEXT
   | { code: 'UNKNOWN'; message: string };
 
-// TON Connect error → \u043d\u0430\u0448 \u0442\u0438\u043f + i18n key
+// TON Connect error → our type + i18n key
 function mapTonConnectError(error: unknown): TonTransactionError;
 
-// TonTransactionError → i18n key \u0434\u043b\u044f toast
+// TonTransactionError → i18n key for toast
 function getErrorI18nKey(error: TonTransactionError): string;
 ```
 
@@ -265,26 +265,26 @@ Button `t('deals.payment.pay')` on Payment Sheet (3.8).
 ### Steps
 
 ```
-1. \u0424\u0440\u043e\u043d\u0442: GET /api/v1/deals/:dealId/deposit
+1. Front: GET /api/v1/deals/:dealId/deposit
    → { escrowAddress, amountNano, status, expiresAt }
 
-2. \u0424\u0440\u043e\u043d\u0442: useTonTransaction().send({
+2. Front: useTonTransaction().send({
      address: escrowAddress,
      amountNano: amountNano.toString(),
    })
 
-3. TON Connect \u043e\u0442\u043a\u0440\u044b\u0432\u0430\u0435\u0442 \u043a\u043e\u0448\u0435\u043b\u0451\u043a → \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u0442
+3. TON Connect opens the wallet → user confirms
 
 4. Promise resolved → toast t('wallet.toast.paymentSent')
-   \u0421\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u043c \u0432 sessionStorage: { dealId, sentAt: Date.now() }
+   Save in sessionStorage: { dealId, sentAt: Date.now() }
 
 5. useDepositPolling(dealId, { enabled: true })
-   Polling GET /api/v1/deals/:dealId \u043a\u0430\u0436\u0434\u044b\u0435 10s
+   Polling GET /api/v1/deals/:dealId every 10s
 
-6. Backend Deposit Watcher \u0434\u0435\u0442\u0435\u043a\u0442\u0438\u0442 tx → \u0441\u0447\u0438\u0442\u0430\u0435\u0442 confirmations →
-   \u043f\u0440\u0438 \u0434\u043e\u0441\u0442\u0438\u0436\u0435\u043d\u0438\u0438 required → deal.status = FUNDED
+6. Backend Deposit Watcher detects tx → counts confirmations →
+   upon reaching required → deal.status = FUNDED
 
-7. \u0424\u0440\u043e\u043d\u0442 \u0432\u0438\u0434\u0438\u0442 FUNDED → toast t('wallet.toast.paymentConfirmed') → \u0437\u0430\u043a\u0440\u044b\u0442\u044c sheet
+7. Front sees FUNDED → toast t('wallet.toast.paymentConfirmed') → close sheet
 ```
 
 ### API contract: `GET /api/v1/deals/:dealId/deposit`
@@ -297,21 +297,21 @@ const DepositInfoSchema = z.object({
   amountNano: z.string(),              // bigint as string
   dealId: z.string(),
   status: z.enum([
-    'AWAITING_PAYMENT',                // \u043e\u0436\u0438\u0434\u0430\u0435\u0442 \u043e\u0442\u043f\u0440\u0430\u0432\u043a\u0438
-    'TX_DETECTED',                     // tx \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d\u0430, \u0436\u0434\u0451\u043c confirmations
-    'CONFIRMING',                      // \u043d\u0430\u0431\u0438\u0440\u0430\u0435\u043c confirmations
-    'AWAITING_OPERATOR_REVIEW',        // >1000 TON, \u043e\u0436\u0438\u0434\u0430\u0435\u0442 \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u0430
-    'CONFIRMED',                       // \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u043e (= deal FUNDED)
-    'EXPIRED',                         // \u0442\u0430\u0439\u043c\u0430\u0443\u0442 (30 \u043c\u0438\u043d \u0431\u0435\u0437 tx)
-    'UNDERPAID',                       // \u0441\u0443\u043c\u043c\u0430 \u043c\u0435\u043d\u044c\u0448\u0435 \u043e\u0436\u0438\u0434\u0430\u0435\u043c\u043e\u0439
-    'OVERPAID',                        // \u0441\u0443\u043c\u043c\u0430 \u0431\u043e\u043b\u044c\u0448\u0435 \u043e\u0436\u0438\u0434\u0430\u0435\u043c\u043e\u0439 (manual review)
-    'REJECTED',                        // \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440 \u043e\u0442\u043a\u043b\u043e\u043d\u0438\u043b
+    'AWAITING_PAYMENT', // awaits sending
+    'TX_DETECTED', // tx detected, wait for confirmations
+    'CONFIRMING', // type confirmations
+    'AWAITING_OPERATOR_REVIEW', // >1000 TON, awaits operator
+    'CONFIRMED', // confirmed (= deal FUNDED)
+    'EXPIRED', // timeout (30 min without tx)
+    'UNDERPAID', // amount less than expected
+    'OVERPAID', // amount is greater than expected (manual review)
+    'REJECTED', // operator rejected
   ]),
   currentConfirmations: z.number().nullable(),
   requiredConfirmations: z.number().nullable(),
-  receivedAmountNano: z.string().nullable(),   // \u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0444\u0430\u043a\u0442\u0438\u0447\u0435\u0441\u043a\u0438 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043e
-  txHash: z.string().nullable(),               // hash \u0435\u0441\u043b\u0438 tx \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d\u0430
-  expiresAt: z.string().nullable(),            // ISO 8601, \u043a\u043e\u0433\u0434\u0430 deposit expire
+  receivedAmountNano: z.string().nullable(), // how much was actually received
+  txHash: z.string().nullable(), // hash if tx is detected
+  expiresAt: z.string().nullable(), // ISO 8601 when deposit expires
 });
 ```
 
@@ -374,20 +374,20 @@ From [06-confirmation-policy.md](../07-financial-system/06-confirmation-policy.m
 ### Steps
 
 ```
-1. \u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u0432\u0432\u043e\u0434\u0438\u0442 \u0441\u0443\u043c\u043c\u0443 + \u0430\u0434\u0440\u0435\u0441 (pre-filled \u0438\u0437 TON Connect \u0438\u043b\u0438 \u0440\u0443\u0447\u043d\u043e\u0439)
+1. User enters amount + address (pre-filled from TON Connect or manual)
 
-2. DialogModal \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u044f
+2. DialogModal confirmation
 
-3. \u0424\u0440\u043e\u043d\u0442: POST /api/v1/wallet/withdraw
+3. Front: POST /api/v1/wallet/withdraw
    Headers: { Idempotency-Key: uuid }
    Body: { amountNano, destinationAddress }
    → { withdrawalId, status: 'PENDING', estimatedFeeNano }
 
 4. Toast t('wallet.toast.withdrawProcessing') → navigate /wallet
 
-5. Backend \u043f\u043e\u0434\u043f\u0438\u0441\u044b\u0432\u0430\u0435\u0442, \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442 \u0447\u0435\u0440\u0435\u0437 ton4j
+5. Backend signs, sends via ton4j
 
-6. \u041f\u0440\u0438 \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0435\u043c GET /wallet/summary — pendingPayoutNano \u0443\u043c\u0435\u043d\u044c\u0448\u0438\u043b\u0441\u044f
+6. With the next GET /wallet/summary - pendingPayoutNano has decreased
 ```
 
 ### Double Output Protection
@@ -454,23 +454,23 @@ type PendingTonIntent = {
   type: 'escrow_deposit';
   dealId: string;
   sentAt: number;            // timestamp
-  address: string;           // \u043a\u0443\u0434\u0430 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u043b\u0438
+  address: string;           // where they were sent
   amountNano: string;
 };
 
-// \u0421\u043e\u0445\u0440\u0430\u043d\u044f\u0442\u044c \u043f\u0435\u0440\u0435\u0434 sendTransaction
+// Save before sendTransaction
 sessionStorage.setItem('ton_pending_intent', JSON.stringify(intent));
 
-// \u0423\u0434\u0430\u043b\u044f\u0442\u044c \u043f\u0440\u0438 confirmed \u0438\u043b\u0438 timeout
+// Delete when confirmed or timeout
 ```
 
 ### When mounting a page
 
 ```
-1. \u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c sessionStorage \u043d\u0430 pending intent
-2. \u0415\u0441\u043b\u0438 \u0435\u0441\u0442\u044c \u0438 sentAt < 30 \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434:
-   - escrow_deposit: \u0437\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c useDepositPolling(dealId)
-3. \u0415\u0441\u043b\u0438 sentAt > 30 \u043c\u0438\u043d: \u0443\u0434\u0430\u043b\u0438\u0442\u044c intent, \u043f\u043e\u043a\u0430\u0437\u0430\u0442\u044c toast "\u0442\u0430\u0439\u043c\u0430\u0443\u0442"
+1. Check sessionStorage for pending intent
+2. If there is and sentAt < 30 minutes ago:
+   - escrow_deposit: run useDepositPolling(dealId)
+3. If sentAt > 30 min: remove intent, show toast "timeout"
 ```
 
 ### `refetchOnWindowFocus`
@@ -478,10 +478,10 @@ sessionStorage.setItem('ton_pending_intent', JSON.stringify(intent));
 The current `App.tsx` is set to `refetchOnWindowFocus: false`. This is correct for the general case, but for financial queries an override is needed:
 
 ```typescript
-// \u0412 useDepositPolling
+// In useDepositPolling
 useQuery({
   queryKey: dealKeys.deposit(dealId),
-  refetchOnWindowFocus: true,     // override \u0433\u043b\u043e\u0431\u0430\u043b\u044c\u043d\u043e\u0433\u043e false
+  refetchOnWindowFocus: true, // override global false
   refetchInterval: 10_000,
 });
 ```
@@ -561,9 +561,9 @@ If `sendTransaction()` throws a disconnect error:
 ```
 src/features/ton/
   hooks/
-    useTonTransaction.ts          # \u043e\u0431\u0451\u0440\u0442\u043a\u0430 \u043d\u0430\u0434 sendTransaction
-    useTonWalletStatus.ts         # \u0441\u0442\u0430\u0442\u0443\u0441 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f + \u0430\u0434\u0440\u0435\u0441
-    useDepositPolling.ts          # polling \u0441\u0442\u0430\u0442\u0443\u0441\u0430 escrow deposit
+    useTonTransaction.ts # wrapper around sendTransaction
+    useTonWalletStatus.ts # connection status + address
+    useDepositPolling.ts # polling escrow deposit status
   lib/
     ton-amount.ts                 # formatTonAmount, toNanoString, parseUserTonInput
     ton-errors.ts                 # mapTonConnectError, getErrorI18nKey
@@ -586,9 +586,9 @@ Everything in namespace `wallet.*` (already defined in [06-shared-components.md]
 ```
 wallet.connectWallet
 wallet.status.txDetected
-wallet.status.confirming              # "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435 {current}/{required}"
-wallet.status.operatorReview          # "\u041e\u0436\u0438\u0434\u0430\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438 \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u043e\u043c"
-wallet.status.overpaid                # "\u0421\u0443\u043c\u043c\u0430 \u0431\u043e\u043b\u044c\u0448\u0435 — \u0440\u0430\u0437\u043d\u0438\u0446\u0430 \u0431\u0443\u0434\u0435\u0442 \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0435\u043d\u0430"
+wallet.status.confirming # "Confirming {current}/{required}"
+wallet.status.operatorReview # "Pending operator review"
+wallet.status.overpaid # "The amount is greater - the difference will be returned"
 wallet.toast.paymentSent
 wallet.toast.paymentConfirmed
 wallet.toast.withdrawProcessing
@@ -602,7 +602,7 @@ wallet.error.disconnected
 wallet.error.transactionFailed        # generic fallback
 wallet.error.depositExpired
 wallet.error.pollingTimeout
-wallet.error.underpaid                # "\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u043e {received}, \u043e\u0436\u0438\u0434\u0430\u043b\u043e\u0441\u044c {expected}"
+wallet.error.underpaid # "Received {received}, expected {expected}"
 wallet.error.depositRejected
 wallet.error.insufficientFunds
 wallet.error.invalidAddress

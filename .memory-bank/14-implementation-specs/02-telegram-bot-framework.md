@@ -241,9 +241,9 @@ public void handleStartCommand(Update update) {
 
     // Parse deep link
     String webAppUrl = buildDeepLinkUrl(startParam);
-    var button = new InlineKeyboardButton("\u041e\u0442\u043a\u0440\u044b\u0442\u044c")
+    var button = new InlineKeyboardButton("Open")
             .webApp(new WebAppInfo(webAppUrl));
-    bot.execute(new SendMessage(chatId, "\u041e\u0442\u043a\u0440\u044b\u0432\u0430\u044e...")
+    bot.execute(new SendMessage(chatId, "Opening...")
             .replyMarkup(new InlineKeyboardMarkup(button)));
 }
 
@@ -280,7 +280,7 @@ All notification templates with an "Open trade" button use deep link:
 ```java
 String dealUrl = String.format("https://t.me/%s/app?startapp=deal_%s",
     botUsername, dealId.toString().substring(0, 8));
-var button = new InlineKeyboardButton("\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0441\u0434\u0435\u043b\u043a\u0443").url(dealUrl);
+var button = new InlineKeyboardButton("Open deal").url(dealUrl);
 ```
 
 ### Security
