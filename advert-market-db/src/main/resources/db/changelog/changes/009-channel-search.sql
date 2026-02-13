@@ -1,7 +1,7 @@
 --liquibase formatted sql
 
---changeset channel-search:009-01
---comment: Enable pg_search extension for BM25 full-text search
+--changeset channel-search:009-01 failOnError:false
+--comment: Enable pg_search extension for BM25 full-text search (ParadeDB only)
 CREATE EXTENSION IF NOT EXISTS pg_search;
 
 --changeset channel-search:009-02
@@ -11,8 +11,8 @@ ALTER TABLE channels
     ADD COLUMN avg_views       INTEGER     DEFAULT 0,
     ADD COLUMN language        VARCHAR(10) DEFAULT 'ru';
 
---changeset channel-search:009-03
---comment: Create BM25 index for full-text search via ParadeDB pg_search
+--changeset channel-search:009-03 failOnError:false
+--comment: Create BM25 index for full-text search via ParadeDB pg_search (ParadeDB only)
 CREATE INDEX idx_channels_bm25 ON channels
     USING bm25 (
         id,

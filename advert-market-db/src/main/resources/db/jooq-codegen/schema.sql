@@ -27,7 +27,6 @@ CREATE TABLE channels (
     username            VARCHAR(255),
     description         TEXT,
     subscriber_count    INTEGER       DEFAULT 0,
-    category            VARCHAR(100),
     price_per_post_nano BIGINT,
     is_active           BOOLEAN       DEFAULT TRUE,
     owner_id            BIGINT        NOT NULL REFERENCES users(id),
@@ -58,13 +57,36 @@ CREATE TABLE channel_pricing_rules (
     channel_id      BIGINT        NOT NULL REFERENCES channels(id),
     name            VARCHAR(100)  NOT NULL,
     description     TEXT,
-    post_type       VARCHAR(50)   NOT NULL,
     price_nano      BIGINT        NOT NULL CHECK (price_nano > 0),
     is_active       BOOLEAN       DEFAULT TRUE,
     sort_order      INTEGER       DEFAULT 0,
     version         INTEGER       NOT NULL DEFAULT 0,
     created_at      TIMESTAMPTZ   DEFAULT now(),
     updated_at      TIMESTAMPTZ   DEFAULT now()
+);
+
+-- 4a. categories
+CREATE TABLE categories (
+    id              SERIAL        PRIMARY KEY,
+    slug            VARCHAR(100)  NOT NULL UNIQUE,
+    localized_name  JSONB         NOT NULL DEFAULT '{}',
+    sort_order      INTEGER       DEFAULT 0,
+    is_active       BOOLEAN       DEFAULT TRUE,
+    created_at      TIMESTAMPTZ   DEFAULT now()
+);
+
+-- 4b. channel_categories (many-to-many)
+CREATE TABLE channel_categories (
+    channel_id   BIGINT   NOT NULL REFERENCES channels(id),
+    category_id  INTEGER  NOT NULL REFERENCES categories(id),
+    PRIMARY KEY (channel_id, category_id)
+);
+
+-- 4c. pricing_rule_post_types (many-to-many)
+CREATE TABLE pricing_rule_post_types (
+    pricing_rule_id  BIGINT      NOT NULL REFERENCES channel_pricing_rules(id) ON DELETE CASCADE,
+    post_type        VARCHAR(30) NOT NULL,
+    PRIMARY KEY (pricing_rule_id, post_type)
 );
 
 -- 5. commission_tiers

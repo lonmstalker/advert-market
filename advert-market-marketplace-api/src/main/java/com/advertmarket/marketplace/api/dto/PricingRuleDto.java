@@ -1,6 +1,8 @@
 package com.advertmarket.marketplace.api.dto;
 
+import com.advertmarket.marketplace.api.model.PostType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -11,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param channelId   channel this rule belongs to
  * @param name        rule display name
  * @param description rule description
- * @param postType    type of post (e.g. "repost", "native", "story")
+ * @param postTypes   post types covered by this rule
  * @param priceNano   price in nanoTON
  * @param isActive    whether the rule is active
  * @param sortOrder   display order
@@ -22,9 +24,13 @@ public record PricingRuleDto(
         long channelId,
         @NonNull String name,
         @Nullable String description,
-        @NonNull String postType,
+        @NonNull Set<PostType> postTypes,
         long priceNano,
         boolean isActive,
         int sortOrder
 ) {
+
+    public PricingRuleDto {
+        postTypes = Set.copyOf(postTypes);
+    }
 }

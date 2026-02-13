@@ -24,8 +24,8 @@ export function BottomTabs() {
         justifyContent: 'space-around',
         alignItems: 'center',
         height: '56px',
-        backgroundColor: 'var(--color-background-primary)',
-        borderTop: '0.5px solid var(--color-separator)',
+        backgroundColor: 'var(--color-background-base)',
+        borderTop: '0.5px solid var(--color-border-separator)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         zIndex: 100,
       }}
@@ -39,16 +39,16 @@ export function BottomTabs() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '2px',
+            gap: '4px',
             flex: 1,
             height: '100%',
             textDecoration: 'none',
-            color: isActive ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
+            color: isActive ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
             transition: 'color 0.15s ease',
           })}
         >
           <Icon width={24} height={24} />
-          <Text type="caption2" style={{ color: 'inherit', fontSize: '10px' }}>
+          <Text type="caption2" style={{ color: 'inherit' }}>
             {t(labelKey)}
           </Text>
         </NavLink>

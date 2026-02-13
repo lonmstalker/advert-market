@@ -1,7 +1,9 @@
 package com.advertmarket.marketplace.api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -11,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param id               channel (Telegram chat) ID
  * @param title            channel title
  * @param username         public username without @
- * @param category         channel category
+ * @param categories       category slugs
  * @param subscriberCount  number of subscribers
  * @param avgViews         average post views
  * @param engagementRate   engagement rate percentage
@@ -19,11 +21,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param isActive         whether the channel is available
  * @param updatedAt        last update timestamp
  */
+@Schema(description = "Channel search result item")
 public record ChannelListItem(
         long id,
         @NonNull String title,
         @Nullable String username,
-        @Nullable String category,
+        @NonNull List<String> categories,
         int subscriberCount,
         int avgViews,
         @Nullable BigDecimal engagementRate,
@@ -31,4 +34,8 @@ public record ChannelListItem(
         boolean isActive,
         @NonNull OffsetDateTime updatedAt
 ) {
+
+    public ChannelListItem {
+        categories = List.copyOf(categories);
+    }
 }

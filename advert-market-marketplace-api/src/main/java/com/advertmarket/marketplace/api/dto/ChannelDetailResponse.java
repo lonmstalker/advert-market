@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param username         public username without @
  * @param description      channel description
  * @param subscriberCount  number of subscribers
- * @param category         channel category
+ * @param categories       category slugs
  * @param pricePerPostNano base price per post in nanoTON
  * @param isActive         whether the channel is available
  * @param ownerId          channel owner user ID
@@ -33,7 +33,7 @@ public record ChannelDetailResponse(
         @Nullable String username,
         @Nullable String description,
         int subscriberCount,
-        @Nullable String category,
+        @NonNull List<String> categories,
         @Nullable Long pricePerPostNano,
         boolean isActive,
         long ownerId,
@@ -46,6 +46,7 @@ public record ChannelDetailResponse(
 ) {
 
     public ChannelDetailResponse {
+        categories = List.copyOf(categories);
         pricingRules = List.copyOf(pricingRules);
     }
 }

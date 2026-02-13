@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { pressScale } from '@/shared/ui';
 
 type RoleCardProps = {
-  emoji: string;
+  icon: ReactNode;
   title: string;
   hint: string;
   isSelected: boolean;
@@ -17,7 +17,7 @@ const previewContainer = {
   animate: { transition: { staggerChildren: 0.06 } },
 };
 
-export function RoleCard({ emoji, title, hint, isSelected, onToggle, children }: RoleCardProps) {
+export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: RoleCardProps) {
   return (
     <motion.div {...pressScale}>
       <button
@@ -60,9 +60,10 @@ export function RoleCard({ emoji, title, hint, isSelected, onToggle, children }:
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              color: 'var(--color-accent-primary)',
             }}
           >
-            <span style={{ fontSize: '28px', lineHeight: 1 }}>{emoji}</span>
+            {icon}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text type="body" weight="medium">

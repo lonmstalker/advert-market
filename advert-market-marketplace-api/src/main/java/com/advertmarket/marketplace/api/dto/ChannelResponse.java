@@ -2,6 +2,7 @@ package com.advertmarket.marketplace.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -13,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param username         public username
  * @param description      channel description
  * @param subscriberCount  number of subscribers
- * @param category         channel category
+ * @param categories       category slugs
  * @param pricePerPostNano price per post in nanoTON
  * @param isActive         whether the channel is active
  * @param ownerId          owner user identifier
@@ -26,10 +27,14 @@ public record ChannelResponse(
         @Nullable String username,
         @Nullable String description,
         int subscriberCount,
-        @Nullable String category,
+        @NonNull List<String> categories,
         @Nullable Long pricePerPostNano,
         boolean isActive,
         long ownerId,
         @NonNull OffsetDateTime createdAt
 ) {
+
+    public ChannelResponse {
+        categories = List.copyOf(categories);
+    }
 }

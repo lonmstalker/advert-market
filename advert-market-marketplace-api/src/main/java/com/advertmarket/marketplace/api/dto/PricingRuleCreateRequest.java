@@ -1,9 +1,12 @@
 package com.advertmarket.marketplace.api.dto;
 
+import com.advertmarket.marketplace.api.model.PostType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -12,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @param name        rule display name
  * @param description rule description
- * @param postType    type of post
+ * @param postTypes   post types covered by this rule
  * @param priceNano   price in nanoTON
  * @param sortOrder   display order
  */
@@ -20,7 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public record PricingRuleCreateRequest(
         @NotBlank @Size(max = 100) @NonNull String name,
         @Nullable String description,
-        @NotBlank @Size(max = 50) @NonNull String postType,
+        @NotEmpty @NonNull Set<PostType> postTypes,
         @Positive long priceNano,
         int sortOrder
 ) {

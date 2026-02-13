@@ -16,57 +16,36 @@ export function TourSlideDeal() {
   const { t } = useTranslation();
   const [dealView, setDealView] = useState<DealView>('timeline');
   const [dealState, setDealState] = useState<DealState>('initial');
-  const [expandedStep, setExpandedStep] = useState<number | null>(4);
+  const [expandedStep, setExpandedStep] = useState<number | null>(1);
   const { completeTourTask } = useOnboardingStore();
 
   const initialSteps = useMemo(
     () => [
       {
-        label: t('onboarding.tour.timeline.offerSent'),
+        label: t('onboarding.tour.timeline.macro1'),
         status: 'completed' as const,
-        description: t('onboarding.tour.timeline.offerSentDesc'),
+        description: t('onboarding.tour.timeline.macro1Desc'),
       },
       {
-        label: t('onboarding.tour.timeline.accepted'),
-        status: 'completed' as const,
-        description: t('onboarding.tour.timeline.acceptedDesc'),
-      },
-      {
-        label: t('onboarding.tour.timeline.escrowFunded'),
-        status: 'completed' as const,
-        description: t('onboarding.tour.timeline.escrowFundedDesc'),
-      },
-      {
-        label: t('onboarding.tour.timeline.creativeSubmitted'),
-        status: 'completed' as const,
-        description: t('onboarding.tour.timeline.creativeSubmittedDesc'),
-      },
-      {
-        label: t('onboarding.tour.timeline.creativeApproved'),
+        label: t('onboarding.tour.timeline.macro2'),
         status: 'active' as const,
-        description: t('onboarding.tour.timeline.creativeApprovedDesc'),
+        description: t('onboarding.tour.timeline.macro2Desc'),
       },
       {
-        label: t('onboarding.tour.timeline.published'),
+        label: t('onboarding.tour.timeline.macro3'),
         status: 'pending' as const,
-        description: t('onboarding.tour.timeline.publishedDesc'),
-      },
-      {
-        label: t('onboarding.tour.timeline.completed'),
-        status: 'pending' as const,
-        description: t('onboarding.tour.timeline.completedDesc'),
+        description: t('onboarding.tour.timeline.macro3Desc'),
       },
     ],
     [t],
   );
 
   const approvedSteps = useMemo(
-    () =>
-      initialSteps.map((step, i) => {
-        if (i === 4) return { ...step, status: 'completed' as const };
-        if (i === 5) return { ...step, status: 'active' as const };
-        return step;
-      }),
+    () => [
+      { ...initialSteps[0], status: 'completed' as const },
+      { ...initialSteps[1], status: 'completed' as const },
+      { ...initialSteps[2], status: 'active' as const },
+    ],
     [initialSteps],
   );
 
@@ -177,7 +156,7 @@ export function TourSlideDeal() {
 
   function handleApprove() {
     setDealState('approved');
-    setExpandedStep(5);
+    setExpandedStep(2);
     completeTourTask(1);
   }
 
@@ -189,7 +168,7 @@ export function TourSlideDeal() {
     if (dealState === 'approved') {
       const timer = setTimeout(() => {
         setDealState('initial');
-        setExpandedStep(4);
+        setExpandedStep(1);
       }, 2500);
       return () => clearTimeout(timer);
     }
@@ -227,26 +206,19 @@ export function TourSlideDeal() {
                 </motion.div>
               </AnimatePresence>
 
-              <Group>
-                <GroupItem
-                  text={t('onboarding.tour.mockup.creative')}
-                  description={t('onboarding.tour.mockup.creativeBanner')}
-                  chevron
-                />
-              </Group>
+              <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
+                <Text type="caption1" color="tertiary">
+                  {t('onboarding.tour.timeline.simplifiedNote')}
+                </Text>
+              </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                <div style={{ flex: 1 }}>
-                  <Button text={t('onboarding.tour.mockup.requestEdits')} type="secondary" disabled />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <Button
-                    text={t('onboarding.tour.mockup.approve')}
-                    type="primary"
-                    disabled={dealState === 'approved'}
-                    onClick={dealState === 'initial' ? handleApprove : undefined}
-                  />
-                </div>
+              <div style={{ marginTop: '4px' }}>
+                <Button
+                  text={t('onboarding.tour.mockup.approve')}
+                  type="primary"
+                  disabled={dealState === 'approved'}
+                  onClick={dealState === 'initial' ? handleApprove : undefined}
+                />
               </div>
 
               <AnimatePresence>

@@ -1,16 +1,24 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { EmptyState } from '@/shared/ui';
 
 export default function ProfilePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <div style={{ padding: '16px' }}>
       <Text type="title1" weight="bold">
         {t('profile.title')}
       </Text>
-      <EmptyState emoji="👤" title={t('profile.empty.title')} description={t('profile.empty.description')} />
+      <EmptyState
+        emoji="👤"
+        title={t('profile.empty.title')}
+        description={t('profile.empty.description')}
+        actionLabel={t('profile.empty.cta')}
+        onAction={() => navigate('/catalog')}
+      />
     </div>
   );
 }

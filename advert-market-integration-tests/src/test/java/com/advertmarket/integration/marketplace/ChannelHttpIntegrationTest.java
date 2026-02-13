@@ -1,5 +1,6 @@
 package com.advertmarket.integration.marketplace;
 
+import static com.advertmarket.db.generated.tables.ChannelCategories.CHANNEL_CATEGORIES;
 import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static com.advertmarket.db.generated.tables.Users.USERS;
@@ -26,16 +27,22 @@ import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.identity.config.RateLimiterProperties;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
-import com.advertmarket.marketplace.adapter.JooqChannelRepository;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
+import com.advertmarket.marketplace.api.port.CategoryRepository;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
-import com.advertmarket.marketplace.config.ChannelBotProperties;
-import com.advertmarket.marketplace.service.ChannelRegistrationService;
-import com.advertmarket.marketplace.service.ChannelVerificationService;
-import com.advertmarket.marketplace.web.ChannelController;
+import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
+import com.advertmarket.marketplace.channel.mapper.ChannelRecordMapper;
+import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
+import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
+import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
+import com.advertmarket.marketplace.channel.service.ChannelService;
+import com.advertmarket.marketplace.channel.service.ChannelVerificationService;
+import com.advertmarket.marketplace.channel.web.ChannelController;
+import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
+import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.shared.error.ErrorCode;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
@@ -50,6 +57,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import javax.sql.DataSource;
 import liquibase.Liquibase;
@@ -180,6 +188,7 @@ class ChannelHttpIntegrationTest {
                 .baseUrl("http://localhost:" + port)
                 .build();
         reset(telegramChannelPort);
+        dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
         dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
         dsl.deleteFrom(CHANNELS).execute();
         dsl.deleteFrom(USERS).execute();
@@ -248,7 +257,7 @@ class ChannelHttpIntegrationTest {
                 .headers(h -> h.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelRegistrationRequest(
-                        CHAN_TG_ID, "tech", null))
+                        CHAN_TG_ID, List.of("tech"), null))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(ChannelResponse.class)
@@ -276,7 +285,7 @@ class ChannelHttpIntegrationTest {
                 .headers(h -> h.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelRegistrationRequest(
-                        CHAN_TG_ID, "tech", null))
+                        CHAN_TG_ID, List.of("tech"), null))
                 .exchange()
                 .expectStatus().isCreated();
 
@@ -285,7 +294,7 @@ class ChannelHttpIntegrationTest {
                 .headers(h -> h.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelRegistrationRequest(
-                        CHAN_TG_ID, "tech", null))
+                        CHAN_TG_ID, List.of("tech"), null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody()
@@ -393,6 +402,10 @@ class ChannelHttpIntegrationTest {
     @Configuration
     @EnableAutoConfiguration
     @EnableMethodSecurity
+    @org.springframework.context.annotation.ComponentScan(basePackages = {
+            "com.advertmarket.marketplace.channel.mapper",
+            "com.advertmarket.marketplace.pricing.mapper"
+    })
     static class TestConfig {
 
         @Bean
@@ -506,8 +519,29 @@ class ChannelHttpIntegrationTest {
         }
 
         @Bean
-        ChannelRepository channelRepository(DSLContext dsl) {
-            return new JooqChannelRepository(dsl);
+        CategoryRepository categoryRepository(
+                DSLContext dsl, JsonFacade jsonFacade) {
+            return new JooqCategoryRepository(dsl, jsonFacade);
+        }
+
+        @Bean
+        JooqPricingRuleRepository jooqPricingRuleRepository(
+                DSLContext dsl,
+                PricingRuleRecordMapper pricingRuleMapper) {
+            return new JooqPricingRuleRepository(
+                    dsl, pricingRuleMapper);
+        }
+
+        @Bean
+        ChannelRepository channelRepository(
+                DSLContext dsl,
+                ChannelRecordMapper channelMapper,
+                PricingRuleRecordMapper pricingRuleMapper,
+                CategoryRepository categoryRepo,
+                JooqPricingRuleRepository pricingRuleRepo) {
+            return new JooqChannelRepository(
+                    dsl, channelMapper, pricingRuleMapper,
+                    categoryRepo, pricingRuleRepo);
         }
 
         @Bean
@@ -525,9 +559,15 @@ class ChannelHttpIntegrationTest {
         }
 
         @Bean
+        ChannelService channelService() {
+            return mock(ChannelService.class);
+        }
+
+        @Bean
         ChannelController channelController(
-                ChannelRegistrationService svc) {
-            return new ChannelController(svc);
+                ChannelRegistrationService svc,
+                ChannelService channelService) {
+            return new ChannelController(svc, channelService);
         }
 
         @Bean

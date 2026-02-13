@@ -1,0 +1,363 @@
+package com.advertmarket.integration.marketplace;
+
+import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
+import static com.advertmarket.db.generated.tables.ChannelPricingRules.CHANNEL_PRICING_RULES;
+import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
+import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_RULE_POST_TYPES;
+import static com.advertmarket.db.generated.tables.Users.USERS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
+import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
+import com.advertmarket.marketplace.api.dto.PricingRuleCreateRequest;
+import com.advertmarket.marketplace.api.dto.PricingRuleDto;
+import com.advertmarket.marketplace.api.dto.PricingRuleUpdateRequest;
+import com.advertmarket.marketplace.api.model.PostType;
+import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.PricingRuleRepository;
+import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
+import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
+import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
+import com.advertmarket.marketplace.pricing.service.PricingRuleService;
+import com.advertmarket.marketplace.pricing.web.PricingRuleController;
+import com.advertmarket.shared.model.UserId;
+import com.advertmarket.identity.security.JwtTokenProvider;
+import java.util.Set;
+import liquibase.Liquibase;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+/**
+ * HTTP-level integration tests for pricing rule CRUD endpoints.
+ */
+@SpringBootTest(
+        classes = PricingRuleHttpIntegrationTest.TestConfig.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+@Testcontainers
+@DisplayName("PricingRule HTTP — end-to-end integration")
+class PricingRuleHttpIntegrationTest {
+
+    private static final long OWNER_ID = 1L;
+    private static final long OTHER_USER_ID = 2L;
+    private static final long CHANNEL_ID = -100L;
+
+    @Container
+    static final PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>("postgres:18-alpine");
+
+    @Container
+    static final GenericContainer<?> redis =
+            new GenericContainer<>("redis:8.4-alpine")
+                    .withExposedPorts(6379);
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.data.redis.host", redis::getHost);
+        registry.add("spring.data.redis.port",
+                () -> redis.getMappedPort(6379));
+    }
+
+    @BeforeAll
+    static void initDatabase() throws Exception {
+        try (var dslCtx = DSL.using(
+                postgres.getJdbcUrl(),
+                postgres.getUsername(),
+                postgres.getPassword())) {
+            var conn = dslCtx.configuration()
+                    .connectionProvider().acquire();
+            var database = DatabaseFactory.getInstance()
+                    .findCorrectDatabaseImplementation(
+                            new JdbcConnection(conn));
+            try (var liquibase = new Liquibase(
+                    "db/changelog/db.changelog-master.yaml",
+                    new ClassLoaderResourceAccessor(),
+                    database)) {
+                liquibase.update("");
+            }
+        }
+    }
+
+    @LocalServerPort
+    private int port;
+
+    private WebTestClient webClient;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private DSLContext dsl;
+
+    @BeforeEach
+    void setUp() {
+        webClient = WebTestClient.bindToServer()
+                .baseUrl("http://localhost:" + port)
+                .build();
+        dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
+        dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
+        dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
+        dsl.deleteFrom(CHANNELS).execute();
+        dsl.deleteFrom(USERS).execute();
+        upsertUser(OWNER_ID);
+        upsertUser(OTHER_USER_ID);
+        insertChannelWithOwner(CHANNEL_ID, OWNER_ID);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/channels/{id}/pricing returns empty for new channel")
+    void listRulesReturnsEmptyForNewChannel() {
+        webClient.get()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/channels/{id}/pricing by owner returns 201")
+    void createRuleByOwnerReturns201() {
+        PricingRuleDto body = webClient.post()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleCreateRequest(
+                        "Repost", "Repost description",
+                        Set.of(PostType.REPOST), 1_000_000L, 1))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(PricingRuleDto.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.name()).isEqualTo("Repost");
+        assertThat(body.postTypes()).containsExactly(PostType.REPOST);
+        assertThat(body.priceNano()).isEqualTo(1_000_000L);
+        assertThat(body.channelId()).isEqualTo(CHANNEL_ID);
+        assertThat(body.isActive()).isTrue();
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/channels/{id}/pricing by non-owner returns 403")
+    void createRuleByNonOwnerReturns403() {
+        webClient.post()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(OTHER_USER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleCreateRequest(
+                        "Repost", null, Set.of(PostType.REPOST), 1_000_000L, 1))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error_code").isEqualTo("CHANNEL_NOT_OWNED");
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/channels/{id}/pricing with blank name returns 400")
+    void createRuleWithInvalidDataReturns400() {
+        webClient.post()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"name\":\"\",\"postTypes\":[\"REPOST\"],\"priceNano\":1000000,\"sortOrder\":1}")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error_code").isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/channels/{id}/pricing/{ruleId} by owner returns 200")
+    void updateRuleByOwnerReturns200() {
+        long ruleId = createTestRule();
+
+        PricingRuleDto body = webClient.put()
+                .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
+                        CHANNEL_ID, ruleId)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleUpdateRequest(
+                        "Updated Name", null, null, 2_000_000L, null, null))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(PricingRuleDto.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.name()).isEqualTo("Updated Name");
+        assertThat(body.priceNano()).isEqualTo(2_000_000L);
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/channels/{id}/pricing/{ruleId} non-existent returns 404")
+    void updateNonExistentRuleReturns404() {
+        webClient.put()
+                .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
+                        CHANNEL_ID, 999)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleUpdateRequest(
+                        "Name", null, null, null, null, null))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("PRICING_RULE_NOT_FOUND");
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/channels/{id}/pricing/{ruleId} by owner returns 204")
+    void deleteRuleByOwnerReturns204() {
+        long ruleId = createTestRule();
+
+        webClient.delete()
+                .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
+                        CHANNEL_ID, ruleId)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .exchange()
+                .expectStatus().isNoContent();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/channels/{id}/pricing/{ruleId} non-existent returns 404")
+    void deleteNonExistentRuleReturns404() {
+        webClient.delete()
+                .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
+                        CHANNEL_ID, 999)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("PRICING_RULE_NOT_FOUND");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/channels/{id}/pricing excludes deleted rules")
+    void listRulesExcludesDeleted() {
+        long ruleId = createTestRule();
+
+        webClient.delete()
+                .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
+                        CHANNEL_ID, ruleId)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .exchange()
+                .expectStatus().isNoContent();
+
+        webClient.get()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(0);
+    }
+
+    // --- helpers ---
+
+    private String jwt(long userId) {
+        return jwtTokenProvider.generateToken(
+                new UserId(userId), false);
+    }
+
+    private long createTestRule() {
+        long ruleId = dsl.insertInto(CHANNEL_PRICING_RULES)
+                .set(CHANNEL_PRICING_RULES.CHANNEL_ID, CHANNEL_ID)
+                .set(CHANNEL_PRICING_RULES.NAME, "Test Rule")
+                .set(CHANNEL_PRICING_RULES.PRICE_NANO, 1_000_000L)
+                .set(CHANNEL_PRICING_RULES.SORT_ORDER, 1)
+                .returning(CHANNEL_PRICING_RULES.ID)
+                .fetchSingle()
+                .getId();
+        dsl.insertInto(PRICING_RULE_POST_TYPES)
+                .set(PRICING_RULE_POST_TYPES.PRICING_RULE_ID, ruleId)
+                .set(PRICING_RULE_POST_TYPES.POST_TYPE, "REPOST")
+                .execute();
+        return ruleId;
+    }
+
+    private void upsertUser(long userId) {
+        dsl.insertInto(USERS)
+                .set(USERS.ID, userId)
+                .set(USERS.FIRST_NAME, "U" + userId)
+                .set(USERS.LANGUAGE_CODE, "en")
+                .onConflictDoNothing()
+                .execute();
+    }
+
+    private void insertChannelWithOwner(long channelId, long ownerId) {
+        dsl.insertInto(CHANNELS)
+                .set(CHANNELS.ID, channelId)
+                .set(CHANNELS.TITLE, "Test Channel")
+                .set(CHANNELS.SUBSCRIBER_COUNT, 5000)
+                .set(CHANNELS.OWNER_ID, ownerId)
+                .execute();
+        dsl.insertInto(CHANNEL_MEMBERSHIPS)
+                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, channelId)
+                .set(CHANNEL_MEMBERSHIPS.USER_ID, ownerId)
+                .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
+                .execute();
+    }
+
+    @Configuration
+    @EnableAutoConfiguration
+    @Import(MarketplaceTestConfig.class)
+    @ComponentScan(basePackages = {
+            "com.advertmarket.marketplace.pricing.mapper"
+    })
+    static class TestConfig {
+
+        @Bean
+        ChannelAuthorizationPort channelAuthorizationPort(DSLContext dsl) {
+            return new ChannelAuthorizationAdapter(dsl);
+        }
+
+        @Bean
+        PricingRuleRepository pricingRuleRepository(
+                DSLContext dsl,
+                PricingRuleRecordMapper mapper) {
+            return new JooqPricingRuleRepository(dsl, mapper);
+        }
+
+        @Bean
+        PricingRuleService pricingRuleService(
+                PricingRuleRepository repo,
+                ChannelAuthorizationPort authPort) {
+            return new PricingRuleService(repo, authPort);
+        }
+
+        @Bean
+        PricingRuleController pricingRuleController(
+                PricingRuleService pricingRuleService) {
+            return new PricingRuleController(pricingRuleService);
+        }
+    }
+}

@@ -21,8 +21,8 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '14px',
-          padding: '14px 16px',
+          gap: '16px',
+          padding: '16px',
           borderRadius: '12px',
           backgroundColor: 'var(--color-background-secondary)',
           cursor: 'default',

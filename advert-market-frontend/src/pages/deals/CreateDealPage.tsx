@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, Input, Select, Spinner, Text } from '@telegram-tools/ui-kit';
+import { Button, Select, Spinner, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -149,11 +149,26 @@ export default function CreateDealPage() {
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>{message.length}/2000</span>
               </Text>
             </div>
-            <Input
+            <textarea
               value={message}
-              onChange={setMessage}
+              onChange={(e) => setMessage(e.target.value)}
               placeholder={t('deals.create.messagePlaceholder')}
               maxLength={2000}
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: 12,
+                border: '1px solid var(--color-border-separator)',
+                background: 'var(--color-background-base)',
+                color: 'var(--color-foreground-primary)',
+                fontSize: 16,
+                fontFamily: 'inherit',
+                lineHeight: 1.4,
+                resize: 'vertical',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
         </div>

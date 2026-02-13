@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { MegaphoneIcon } from '@/shared/ui';
 
 export function OnboardingLogo() {
   return (
@@ -35,7 +36,7 @@ export function OnboardingLogo() {
           padding: '1px',
         }}
       />
-      <span style={{ fontSize: '56px', lineHeight: 1 }}>📢</span>
+      <MegaphoneIcon width={56} height={56} style={{ color: 'var(--color-accent-primary)' }} />
       <style>
         {`@keyframes logo-ring-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
       </style>

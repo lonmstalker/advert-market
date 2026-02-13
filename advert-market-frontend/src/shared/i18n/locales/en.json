@@ -15,7 +15,7 @@
       },
       "featureCard3": {
         "title": "Deal Tracking",
-        "hint": "16-state pipeline"
+        "hint": "17-state pipeline"
       }
     },
     "interest": {
@@ -48,9 +48,9 @@
       },
       "slide2": {
         "title": "Secure Deals",
-        "hint": "Tap the timeline to see progress",
-        "taskHint": "👆 Tap any deal step",
-        "taskDone": "✓ Creative approved! Publication scheduled."
+        "hint": "Approve the creative to see deal progress",
+        "taskHint": "👆 Tap 'Approve' to advance to the next stage",
+        "taskDone": "✓ Creative approved! Moving to publication."
       },
       "slide3": {
         "title": "Secure Payments",
@@ -95,6 +95,13 @@
         "escrowFlow3Desc": "Receives payout"
       },
       "timeline": {
+        "macro1": "Offer & Negotiation",
+        "macro1Desc": "Offer sent, terms agreed",
+        "macro2": "Payment & Creative",
+        "macro2Desc": "Escrow funded, creative under review",
+        "macro3": "Publication & Payout",
+        "macro3Desc": "Ad published, funds released",
+        "simplifiedNote": "Key stages · 17 states total",
         "offerSent": "Offer Sent",
         "offerSentDesc": "Advertiser sent a placement offer",
         "accepted": "Accepted",
@@ -220,13 +227,15 @@
       "title": "Nothing found",
       "description": "Try changing your search parameters or reset filters",
       "cta": "Reset filters"
-    }
+    },
+    "endOfList": "All channels loaded"
   },
   "deals": {
     "title": "Deals",
     "empty": {
       "title": "No active deals",
-      "description": "Your advertising deals will appear here"
+      "description": "Your advertising deals will appear here",
+      "cta": "Find a channel"
     },
     "create": {
       "title": "Create deal",
@@ -246,14 +255,16 @@
     "title": "Wallet",
     "empty": {
       "title": "History is empty",
-      "description": "Your transaction history will appear here"
+      "description": "Your transaction history will appear here",
+      "cta": "Go to catalog"
     }
   },
   "profile": {
     "title": "Profile",
     "empty": {
       "title": "Profile Settings",
-      "description": "Your settings and channel management will be here"
+      "description": "Your settings and channel management will be here",
+      "cta": "Go to catalog"
     }
   },
   "error": {

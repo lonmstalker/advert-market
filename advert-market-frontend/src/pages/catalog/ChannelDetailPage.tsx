@@ -125,7 +125,7 @@ export default function ChannelDetailPage() {
                 flexShrink: 0,
               }}
             >
-              <span style={{ color: '#fff', fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
+              <span style={{ color: 'var(--color-static-white)', fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
             </div>
             <div>
               <Text type="title1" weight="bold">

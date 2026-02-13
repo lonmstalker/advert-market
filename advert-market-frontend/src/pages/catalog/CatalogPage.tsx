@@ -28,19 +28,14 @@ function SkeletonCard() {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <SkeletonElement style={{ width: 44, height: 44, borderRadius: '50%' }} />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ flex: 1 }}>
           <SkeletonElement style={{ width: 120, height: 16, borderRadius: 6 }} />
-          <SkeletonElement style={{ width: 80, height: 12, borderRadius: 6 }} />
         </div>
         <SkeletonElement style={{ width: 60, height: 16, borderRadius: 6 }} />
       </div>
-      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <SkeletonElement style={{ width: '100%', height: 12, borderRadius: 6 }} />
-        <SkeletonElement style={{ width: '70%', height: 12, borderRadius: 6 }} />
-      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
-        <SkeletonElement style={{ width: 60, height: 20, borderRadius: 10 }} />
         <SkeletonElement style={{ width: 40, height: 14, borderRadius: 6 }} />
+        <SkeletonElement style={{ width: 60, height: 20, borderRadius: 10 }} />
       </div>
     </div>
   );
@@ -142,7 +137,7 @@ export default function CatalogPage() {
                 height: 18,
                 borderRadius: '50%',
                 background: 'var(--color-accent-primary)',
-                color: '#fff',
+                color: 'var(--color-static-white)',
                 fontSize: 11,
                 fontWeight: 700,
                 display: 'flex',
@@ -219,6 +214,19 @@ export default function CatalogPage() {
             )}
 
             <div ref={observerRef} style={{ height: 1 }} />
+
+            {!hasNextPage && channels.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                style={{ textAlign: 'center', padding: '16px 16px 8px' }}
+              >
+                <Text type="caption1" color="tertiary">
+                  {t('catalog.endOfList')}
+                </Text>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

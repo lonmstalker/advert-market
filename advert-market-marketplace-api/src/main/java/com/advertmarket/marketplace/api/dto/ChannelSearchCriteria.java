@@ -1,5 +1,6 @@
 package com.advertmarket.marketplace.api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -18,6 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param cursor        keyset pagination cursor
  * @param limit         page size (1..50)
  */
+@Schema(description = "Channel search criteria")
 public record ChannelSearchCriteria(
         @Nullable String category,
         @Nullable Integer minSubscribers,

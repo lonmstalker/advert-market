@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { useOnboardingStore } from '@/features/onboarding';
 import { RoleCard } from '@/features/onboarding/components/role-card';
 import { RolePreviewItem } from '@/features/onboarding/components/role-preview-item';
-import { pressScale, slideUp } from '@/shared/ui';
+import { MonitorIcon, pressScale, slideUp, SpeakerIcon } from '@/shared/ui';
 
 export default function OnboardingInterestPage() {
   const { t } = useTranslation();
@@ -35,7 +35,7 @@ export default function OnboardingInterestPage() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <RoleCard
-          emoji="📣"
+          icon={<SpeakerIcon width={28} height={28} />}
           title={t('onboarding.interest.advertiser')}
           hint={t('onboarding.interest.advertiserHint')}
           isSelected={interests.has('advertiser')}
@@ -47,7 +47,7 @@ export default function OnboardingInterestPage() {
         </RoleCard>
 
         <RoleCard
-          emoji="📺"
+          icon={<MonitorIcon width={28} height={28} />}
           title={t('onboarding.interest.owner')}
           hint={t('onboarding.interest.ownerHint')}
           isSelected={interests.has('owner')}

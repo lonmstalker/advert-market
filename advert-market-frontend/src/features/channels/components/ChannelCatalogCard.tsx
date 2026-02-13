@@ -32,7 +32,7 @@ function ChannelAvatar({ title }: { title: string }) {
         flexShrink: 0,
       }}
     >
-      <span style={{ color: '#fff', fontSize: 18, fontWeight: 600, lineHeight: 1 }}>{letter}</span>
+      <span style={{ color: 'var(--color-static-white)', fontSize: 18, fontWeight: 600, lineHeight: 1 }}>{letter}</span>
     </div>
   );
 }
@@ -72,7 +72,7 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {/* Top row: avatar + title/username + price */}
+      {/* Row 1: avatar + title + price */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <ChannelAvatar title={channel.title} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -81,11 +81,6 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
               {channel.title}
             </span>
           </Text>
-          {channel.username && (
-            <Text type="caption1" color="secondary">
-              @{channel.username}
-            </Text>
-          )}
         </div>
         {channel.pricePerPostNano != null && (
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -96,32 +91,15 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
         )}
       </div>
 
-      {/* Description snippet */}
-      {channel.description && (
-        <div
-          style={{
-            marginTop: 10,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          <Text type="subheadline2" color="secondary">
-            {channel.description}
-          </Text>
-        </div>
-      )}
-
-      {/* Bottom row: topic badges + mini stats */}
+      {/* Row 2: stats + category */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 }}>
-        <div style={{ display: 'flex', gap: 6, overflow: 'hidden', flexShrink: 1 }}>
-          {topicName && <TopicBadge name={topicName} />}
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
           <Text type="caption1" color="secondary">
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatSubscribers(channel.subscriberCount)}</span>
           </Text>
+        </div>
+        <div style={{ display: 'flex', gap: 8, overflow: 'hidden', flexShrink: 1, justifyContent: 'flex-end' }}>
+          {topicName && <TopicBadge name={topicName} />}
         </div>
       </div>
     </motion.div>
