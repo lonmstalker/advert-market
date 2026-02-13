@@ -11,6 +11,12 @@ DEPLOY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 NEW_IMAGE="${1:?Usage: $0 <image-tag>}"
 COMPOSE_FILE="${DEPLOY_DIR}/docker-compose.prod.yml"
 
+# Keep Compose project name consistent across runs.
+# If you started the stack with a different name, export COMPOSE_PROJECT_NAME
+# explicitly to match it.
+: "${COMPOSE_PROJECT_NAME:=advert-market}"
+export COMPOSE_PROJECT_NAME
+
 # Determine current active color
 CURRENT_ACTIVE=$(grep -o 'am-app-[a-z]*' "${DEPLOY_DIR}/nginx/upstream-active.conf" | head -1 | sed 's/am-app-//')
 if [[ "$CURRENT_ACTIVE" == "blue" ]]; then

@@ -32,6 +32,17 @@ Telegram ──HTTPS──▶ │  nginx  │
 | Env vars | See `docker-compose.prod.yml` |
 | TLS certs | `deploy/nginx/ssl/fullchain.pem`, `privkey.pem` |
 
+## Docker Compose Project Name
+
+Use a stable Compose project name across all commands. Otherwise you may hit
+container name conflicts (because `container_name:` is fixed in Compose).
+
+Recommended:
+
+```bash
+export COMPOSE_PROJECT_NAME=advert-market
+```
+
 ## Environment Variables
 
 | Variable | Required | Description |
