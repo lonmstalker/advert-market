@@ -13,6 +13,8 @@ import org.testcontainers.utility.DockerImageName;
  */
 public final class SharedContainers {
 
+    private static final int REDIS_PORT = 6379;
+
     public static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>(DockerImageName
                     .parse("paradedb/paradedb:latest")
@@ -21,7 +23,7 @@ public final class SharedContainers {
     @SuppressWarnings("resource")
     public static final GenericContainer<?> REDIS =
             new GenericContainer<>("redis:8.4-alpine")
-                    .withExposedPorts(6379);
+                    .withExposedPorts(REDIS_PORT);
 
     static {
         POSTGRES.start();
@@ -31,23 +33,28 @@ public final class SharedContainers {
     private SharedContainers() {
     }
 
+    /** JDBC URL for the shared Postgres container. */
     public static String pgJdbcUrl() {
         return POSTGRES.getJdbcUrl();
     }
 
+    /** Username for the shared Postgres container. */
     public static String pgUsername() {
         return POSTGRES.getUsername();
     }
 
+    /** Password for the shared Postgres container. */
     public static String pgPassword() {
         return POSTGRES.getPassword();
     }
 
+    /** Host for the shared Redis container. */
     public static String redisHost() {
         return REDIS.getHost();
     }
 
+    /** Mapped port for the shared Redis container. */
     public static int redisPort() {
-        return REDIS.getMappedPort(6379);
+        return REDIS.getMappedPort(REDIS_PORT);
     }
 }

@@ -26,7 +26,8 @@ class CanaryRouterIntegrationTest {
         redisTemplate = RedisSupport.redisTemplate();
         redisTemplate.delete("canary:percent");
         redisTemplate.delete("canary:salt");
-        canaryRouter = new CanaryRouter(redisTemplate, new MetricsFacade(new SimpleMeterRegistry()));
+        var metrics = new MetricsFacade(new SimpleMeterRegistry());
+        canaryRouter = new CanaryRouter(redisTemplate, metrics);
     }
 
     @Test
@@ -55,7 +56,8 @@ class CanaryRouterIntegrationTest {
     void percentReadFromRedis_onNewInstance() {
         redisTemplate.opsForValue().set("canary:percent", "15");
         // New instance should read from Redis
-        var newRouter = new CanaryRouter(redisTemplate, new MetricsFacade(new SimpleMeterRegistry()));
+        var metrics = new MetricsFacade(new SimpleMeterRegistry());
+        var newRouter = new CanaryRouter(redisTemplate, metrics);
         assertThat(newRouter.getCanaryPercent()).isEqualTo(15);
     }
 

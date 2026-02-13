@@ -8,6 +8,7 @@ import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
 import com.advertmarket.integration.support.ContainerProperties;
 import com.advertmarket.integration.support.DatabaseSupport;
@@ -24,7 +25,6 @@ import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository
 import com.advertmarket.marketplace.pricing.service.PricingRuleService;
 import com.advertmarket.marketplace.pricing.web.PricingRuleController;
 import com.advertmarket.shared.model.UserId;
-import com.advertmarket.identity.security.JwtTokenProvider;
 import java.util.Set;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
@@ -151,7 +151,8 @@ class PricingRuleHttpIntegrationTest {
                 .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
                 .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"name\":\"\",\"postTypes\":[\"REPOST\"],\"priceNano\":1000000,\"sortOrder\":1}")
+                .bodyValue("{\"name\":\"\",\"postTypes\":[\"REPOST\"],"
+                        + "\"priceNano\":1000000,\"sortOrder\":1}")
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()

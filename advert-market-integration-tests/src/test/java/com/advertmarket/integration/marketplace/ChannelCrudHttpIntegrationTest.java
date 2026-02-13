@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
 import com.advertmarket.integration.support.ContainerProperties;
 import com.advertmarket.integration.support.DatabaseSupport;
@@ -33,7 +34,7 @@ import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.UserId;
-import com.advertmarket.identity.security.JwtTokenProvider;
+import com.advertmarket.shared.pagination.CursorPage;
 import java.util.List;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,7 +53,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import com.advertmarket.shared.pagination.CursorPage;
 
 /**
  * HTTP-level integration tests for channel CRUD endpoints

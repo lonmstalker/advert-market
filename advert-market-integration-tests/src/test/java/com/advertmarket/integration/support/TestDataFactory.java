@@ -15,6 +15,8 @@ import org.jooq.DSLContext;
  */
 public final class TestDataFactory {
 
+    private static final int DEFAULT_SUBSCRIBER_COUNT = 5000;
+
     private TestDataFactory() {
     }
 
@@ -51,7 +53,7 @@ public final class TestDataFactory {
         dsl.insertInto(CHANNELS)
                 .set(CHANNELS.ID, channelId)
                 .set(CHANNELS.TITLE, "Test Channel")
-                .set(CHANNELS.SUBSCRIBER_COUNT, 5000)
+                .set(CHANNELS.SUBSCRIBER_COUNT, DEFAULT_SUBSCRIBER_COUNT)
                 .set(CHANNELS.OWNER_ID, ownerId)
                 .execute();
         dsl.insertInto(CHANNEL_MEMBERSHIPS)

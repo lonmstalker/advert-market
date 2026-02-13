@@ -194,7 +194,7 @@ class AuthHttpIntegrationTest {
     }
 
     @Test
-    @DisplayName("ProblemDetail contains required fields: type, title, status, error_code, timestamp, correlation_id")
+    @DisplayName("ProblemDetail contains required fields")
     void problemDetail_hasRequiredFields() {
         Map<String, Object> body = webClient.post()
                 .uri("/api/v1/auth/login")

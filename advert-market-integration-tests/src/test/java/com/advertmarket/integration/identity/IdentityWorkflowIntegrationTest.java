@@ -163,21 +163,22 @@ class IdentityWorkflowIntegrationTest {
     @Test
     @DisplayName("Delete account → profile gone, token blacklisted")
     void deleteAccountCleansUpEverything() throws Exception {
+        long userId = 42L;
         userRepository.upsert(new TelegramUserData(
-                42L, "John", "Doe", "johndoe", "en"));
-        String token = jwtTokenProvider.generateToken(
-                new UserId(42L), false);
+                userId, "John", "Doe", "johndoe", "en"));
 
-        UserProfile profile = userRepository.findById(new UserId(42L));
+        UserProfile profile = userRepository.findById(new UserId(userId));
         assertThat(profile).isNotNull();
         assertThat(profile.username()).isEqualTo("johndoe");
 
-        userService.deleteAccount(new UserId(42L));
+        String token = jwtTokenProvider.generateToken(
+                new UserId(userId), false);
+        userService.deleteAccount(new UserId(userId));
         TelegramAuthentication auth = runFilter(token);
         String jti = auth.getJti();
         authService.logout(jti, auth.getTokenExpSeconds());
 
-        assertThat(userRepository.findById(new UserId(42L))).isNull();
+        assertThat(userRepository.findById(new UserId(userId))).isNull();
 
         assertThat(runFilter(token)).isNull();
     }

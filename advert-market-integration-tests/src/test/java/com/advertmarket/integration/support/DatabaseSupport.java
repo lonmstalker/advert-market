@@ -110,7 +110,7 @@ public final class DatabaseSupport {
                     database)) {
                 liquibase.update("");
             }
-        } catch (Exception e) {
+        } catch (liquibase.exception.LiquibaseException e) {
             throw new IllegalStateException(
                     "Liquibase migration failed", e);
         }

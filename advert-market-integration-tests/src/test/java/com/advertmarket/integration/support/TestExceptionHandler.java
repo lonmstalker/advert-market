@@ -31,7 +31,9 @@ public class TestExceptionHandler
     @ExceptionHandler(DomainException.class)
     ProblemDetail handleDomain(DomainException ex) {
         var code = ErrorCode.resolve(ex.getErrorCode());
-        int status = code != null ? code.httpStatus() : 500;
+        int status = code != null
+                ? code.httpStatus()
+                : HttpStatus.INTERNAL_SERVER_ERROR.value();
         var pd = ProblemDetail.forStatus(status);
         if (code != null) {
             pd.setType(URI.create(code.typeUri()));

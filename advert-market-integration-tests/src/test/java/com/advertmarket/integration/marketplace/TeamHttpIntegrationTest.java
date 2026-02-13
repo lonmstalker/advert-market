@@ -3,19 +3,20 @@ package com.advertmarket.integration.marketplace;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
 import com.advertmarket.integration.support.ContainerProperties;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.TestDataFactory;
+import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
+import com.advertmarket.marketplace.api.dto.ChannelResponse;
+import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
+import com.advertmarket.marketplace.api.dto.NewChannel;
 import com.advertmarket.marketplace.api.dto.TeamInviteRequest;
 import com.advertmarket.marketplace.api.dto.TeamMemberDto;
 import com.advertmarket.marketplace.api.dto.TeamUpdateRightsRequest;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
-import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
-import com.advertmarket.marketplace.api.dto.ChannelResponse;
-import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
-import com.advertmarket.marketplace.api.dto.NewChannel;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
@@ -24,7 +25,6 @@ import com.advertmarket.marketplace.team.repository.JooqTeamMembershipRepository
 import com.advertmarket.marketplace.team.service.TeamService;
 import com.advertmarket.marketplace.team.web.TeamController;
 import com.advertmarket.shared.json.JsonFacade;
-import com.advertmarket.identity.security.JwtTokenProvider;
 import java.util.Optional;
 import java.util.Set;
 import org.jooq.DSLContext;
@@ -403,7 +403,8 @@ class TeamHttpIntegrationTest {
                 }
 
                 @Override
-                public Optional<ChannelResponse> update(long channelId, ChannelUpdateRequest request) {
+                public Optional<ChannelResponse> update(
+                        long channelId, ChannelUpdateRequest request) {
                     throw new UnsupportedOperationException();
                 }
 

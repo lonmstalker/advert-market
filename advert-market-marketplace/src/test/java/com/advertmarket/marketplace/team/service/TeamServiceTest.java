@@ -367,7 +367,7 @@ class TeamServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw TEAM_OWNER_PROTECTED when another owner tries to remove owner via non-self path")
+        @DisplayName("Should throw TEAM_OWNER_PROTECTED when removing owner")
         void shouldThrowWhenRemovingOwnerByAnotherUser() {
             setCurrentUser(MANAGER_ID);
             when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
