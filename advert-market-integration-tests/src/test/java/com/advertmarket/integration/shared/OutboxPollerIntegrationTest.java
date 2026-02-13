@@ -4,6 +4,7 @@ import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATI
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.app.outbox.JooqOutboxRepository;
+import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.shared.event.TopicNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.outbox.OutboxEntry;
@@ -16,46 +17,31 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import javax.sql.DataSource;
-import liquibase.integration.spring.SpringLiquibase;
 import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Integration test for the outbox poller pipeline with real PostgreSQL.
  */
-@Testcontainers
 @DisplayName("OutboxPoller — PostgreSQL integration")
 class OutboxPollerIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer<?> pg =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"))
-                    .withDatabaseName("test_outbox");
-
+    private static DSLContext dsl;
     private JooqOutboxRepository repository;
-    private DSLContext dsl;
     private MetricsFacade metrics;
 
+    @BeforeAll
+    static void initDatabase() {
+        DatabaseSupport.ensureMigrated();
+        dsl = DatabaseSupport.dsl();
+    }
+
     @BeforeEach
-    void setUp() throws Exception {
-        DataSource dataSource = createDataSource();
-        runMigrations(dataSource);
-
-        dsl = DSL.using(dataSource, SQLDialect.POSTGRES);
+    void setUp() {
         dsl.deleteFrom(NOTIFICATION_OUTBOX).execute();
-
         repository = new JooqOutboxRepository(dsl);
         metrics = new MetricsFacade(new SimpleMeterRegistry());
     }
@@ -66,8 +52,6 @@ class OutboxPollerIntegrationTest {
         OutboxEntry entry = testEntry();
         repository.save(entry);
 
-        // Entry just saved has created_at ~ now, but findPendingBatch
-        // requires created_at < now() - 1s, so we wait briefly
         sleep(1200);
 
         List<OutboxEntry> pending =
@@ -125,7 +109,6 @@ class OutboxPollerIntegrationTest {
 
         repository.incrementRetry(id);
 
-        // Re-fetch: entry should still be pending with retryCount=1
         List<OutboxEntry> after =
                 repository.findPendingBatch(10);
         assertThat(after).hasSize(1);
@@ -162,23 +145,6 @@ class OutboxPollerIntegrationTest {
                 .version(0)
                 .createdAt(Instant.now())
                 .build();
-    }
-
-    private DataSource createDataSource() {
-        var ds = new DriverManagerDataSource();
-        ds.setUrl(pg.getJdbcUrl());
-        ds.setUsername(pg.getUsername());
-        ds.setPassword(pg.getPassword());
-        return ds;
-    }
-
-    private void runMigrations(DataSource dataSource)
-            throws Exception {
-        var liquibase = new SpringLiquibase();
-        liquibase.setDataSource(dataSource);
-        liquibase.setChangeLog(
-                "classpath:db/changelog/db.changelog-master.yaml");
-        liquibase.afterPropertiesSet();
     }
 
     private static void sleep(long millis) {

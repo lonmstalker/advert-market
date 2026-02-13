@@ -8,6 +8,8 @@ import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
@@ -16,20 +18,11 @@ import com.advertmarket.marketplace.channel.search.ParadeDbChannelSearch;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.pagination.CursorPage;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Integration test for ParadeDbChannelSearch filter-based search.
@@ -37,37 +30,18 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * <p>BM25 text search ({@code channels @@@}) requires ParadeDB image
  * and is not tested here. Only filter/sort/pagination logic is covered.
  */
-@Testcontainers
 @DisplayName("ParadeDbChannelSearch — filter-based search integration")
 class ChannelSearchIntegrationTest {
 
     private static final long USER_ID = 1L;
 
-    @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"));
-
     private static DSLContext dsl;
     private ParadeDbChannelSearch search;
 
     @BeforeAll
-    static void initDatabase() throws Exception {
-        dsl = DSL.using(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword());
-
-        var conn = dsl.configuration().connectionProvider().acquire();
-        var database = DatabaseFactory.getInstance()
-                .findCorrectDatabaseImplementation(
-                        new JdbcConnection(conn));
-        var liquibase = new Liquibase(
-                "db/changelog/db.changelog-master.yaml",
-                new ClassLoaderResourceAccessor(),
-                database);
-        liquibase.update("");
+    static void initDatabase() {
+        DatabaseSupport.ensureMigrated();
+        dsl = DatabaseSupport.dsl();
     }
 
     @BeforeEach
@@ -75,12 +49,8 @@ class ChannelSearchIntegrationTest {
         var jsonFacade = new JsonFacade(new ObjectMapper());
         var categoryRepo = new JooqCategoryRepository(dsl, jsonFacade);
         search = new ParadeDbChannelSearch(dsl, categoryRepo);
-        dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
-        dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
-        dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
-        dsl.deleteFrom(CHANNELS).execute();
-        dsl.deleteFrom(USERS).execute();
-        insertTestUser(USER_ID);
+        DatabaseSupport.cleanAllTables(dsl);
+        TestDataFactory.upsertUser(dsl, USER_ID);
     }
 
     @Test
@@ -247,14 +217,5 @@ class ChannelSearchIntegrationTest {
                         .execute();
             }
         }
-    }
-
-    private static void insertTestUser(long userId) {
-        dsl.insertInto(USERS)
-                .set(USERS.ID, userId)
-                .set(USERS.FIRST_NAME, "Test")
-                .set(USERS.LANGUAGE_CODE, "en")
-                .onConflictDoNothing()
-                .execute();
     }
 }

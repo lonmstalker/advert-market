@@ -8,12 +8,14 @@ import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
+import com.advertmarket.marketplace.team.config.TeamProperties;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.security.SecurityContextUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -22,13 +24,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@EnableConfigurationProperties(TeamProperties.class)
 public class TeamService {
-
-    private static final int MAX_MANAGERS = 10;
 
     private final TeamMembershipRepository teamRepository;
     private final ChannelAuthorizationPort authorizationPort;
     private final ChannelRepository channelRepository;
+    private final TeamProperties teamProperties;
 
     /**
      * Lists all team members. Requires manage_team right.
@@ -68,10 +70,11 @@ public class TeamService {
                     "Target user not found: " + request.userId());
         }
 
-        if (teamRepository.countManagers(channelId) >= MAX_MANAGERS) {
+        int maxManagers = teamProperties.maxManagers();
+        if (teamRepository.countManagers(channelId) >= maxManagers) {
             throw new DomainException(
                     ErrorCodes.TEAM_LIMIT_EXCEEDED,
-                    "Maximum of " + MAX_MANAGERS
+                    "Maximum of " + maxManagers
                             + " managers per channel");
         }
 

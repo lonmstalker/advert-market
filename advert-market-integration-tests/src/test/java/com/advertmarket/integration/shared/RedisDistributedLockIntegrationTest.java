@@ -2,6 +2,7 @@ package com.advertmarket.integration.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.integration.support.RedisSupport;
 import com.advertmarket.shared.lock.RedisDistributedLock;
 import com.advertmarket.shared.metric.MetricsFacade;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -10,32 +11,19 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Integration test for RedisDistributedLock with real Redis.
  */
-@Testcontainers
 @DisplayName("RedisDistributedLock — Redis integration")
 class RedisDistributedLockIntegrationTest {
-
-    @Container
-    static final GenericContainer<?> redis =
-            new GenericContainer<>("redis:8.4-alpine")
-                    .withExposedPorts(6379);
 
     private RedisDistributedLock lock;
 
     @BeforeEach
     void setUp() {
-        var factory = new LettuceConnectionFactory(
-                redis.getHost(), redis.getMappedPort(6379));
-        factory.afterPropertiesSet();
-        var redisTemplate = new StringRedisTemplate(factory);
+        RedisSupport.flushAll();
+        var redisTemplate = RedisSupport.redisTemplate();
         var metrics = new MetricsFacade(new SimpleMeterRegistry());
         lock = new RedisDistributedLock(redisTemplate, metrics);
     }

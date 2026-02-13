@@ -5,40 +5,27 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.advertmarket.identity.adapter.RedisLoginRateLimiter;
 import com.advertmarket.identity.config.RateLimiterProperties;
+import com.advertmarket.integration.support.RedisSupport;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.metric.MetricsFacade;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Integration test for RedisLoginRateLimiter with real Redis.
  */
-@Testcontainers
 @DisplayName("RedisLoginRateLimiter — Redis integration")
 class RedisLoginRateLimiterIntegrationTest {
-
-    @Container
-    static final GenericContainer<?> redis =
-            new GenericContainer<>("redis:8.4-alpine")
-                    .withExposedPorts(6379);
 
     private RedisLoginRateLimiter rateLimiter;
     private StringRedisTemplate redisTemplate;
 
     @BeforeEach
     void setUp() {
-        var factory = new LettuceConnectionFactory(
-                redis.getHost(), redis.getMappedPort(6379));
-        factory.afterPropertiesSet();
-        redisTemplate = new StringRedisTemplate(factory);
-        // Clean state between tests
+        redisTemplate = RedisSupport.redisTemplate();
         redisTemplate.delete("rate:login:127.0.0.1");
         rateLimiter = new RedisLoginRateLimiter(redisTemplate,
                 new RateLimiterProperties(10, 60),

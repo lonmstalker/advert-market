@@ -5,63 +5,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.advertmarket.identity.adapter.JooqUserRepository;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.shared.model.UserId;
 import java.util.List;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Integration test for JooqUserRepository with real PostgreSQL.
  */
-@Testcontainers
 @DisplayName("JooqUserRepository — PostgreSQL integration")
 class JooqUserRepositoryIntegrationTest {
-
-    @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"));
 
     private static DSLContext dsl;
     private JooqUserRepository repository;
 
     @BeforeAll
-    static void initDatabase() throws Exception {
-        dsl = DSL.using(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword());
-
-        var conn = dsl.configuration().connectionProvider().acquire();
-        var database = DatabaseFactory.getInstance()
-                .findCorrectDatabaseImplementation(
-                        new JdbcConnection(conn));
-        var liquibase = new Liquibase(
-                "db/changelog/db.changelog-master.yaml",
-                new ClassLoaderResourceAccessor(),
-                database);
-        liquibase.update("");
+    static void initDatabase() {
+        DatabaseSupport.ensureMigrated();
+        dsl = DatabaseSupport.dsl();
     }
 
     @BeforeEach
     void setUp() {
         repository = new JooqUserRepository(dsl);
-        dsl.deleteFrom(com.advertmarket.db.generated.tables.Users.USERS)
-                .execute();
+        DatabaseSupport.cleanUserTables(dsl);
     }
 
     @Test

@@ -12,6 +12,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
+import com.advertmarket.integration.support.ContainerProperties;
+import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
@@ -30,15 +33,9 @@ import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.UserId;
-import com.advertmarket.shared.pagination.CursorPage;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import java.util.List;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,11 +52,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import com.advertmarket.shared.pagination.CursorPage;
 
 /**
  * HTTP-level integration tests for channel CRUD endpoints
@@ -69,7 +62,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
         classes = ChannelCrudHttpIntegrationTest.TestConfig.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-@Testcontainers
 @DisplayName("Channel CRUD HTTP — end-to-end integration")
 class ChannelCrudHttpIntegrationTest {
 
@@ -77,45 +69,14 @@ class ChannelCrudHttpIntegrationTest {
     private static final long OTHER_USER_ID = 2L;
     private static final long CHANNEL_ID = -100L;
 
-    @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"));
-
-    @Container
-    static final GenericContainer<?> redis =
-            new GenericContainer<>("redis:8.4-alpine")
-                    .withExposedPorts(6379);
-
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port",
-                () -> redis.getMappedPort(6379));
+        ContainerProperties.registerAll(registry);
     }
 
     @BeforeAll
     static void initDatabase() throws Exception {
-        try (var dslCtx = DSL.using(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword())) {
-            var conn = dslCtx.configuration()
-                    .connectionProvider().acquire();
-            var database = DatabaseFactory.getInstance()
-                    .findCorrectDatabaseImplementation(
-                            new JdbcConnection(conn));
-            try (var liquibase = new Liquibase(
-                    "db/changelog/db.changelog-master.yaml",
-                    new ClassLoaderResourceAccessor(),
-                    database)) {
-                liquibase.update("");
-            }
-        }
+        DatabaseSupport.ensureMigrated();
     }
 
     @LocalServerPort
@@ -143,8 +104,8 @@ class ChannelCrudHttpIntegrationTest {
         dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
         dsl.deleteFrom(CHANNELS).execute();
         dsl.deleteFrom(USERS).execute();
-        upsertUser(OWNER_ID);
-        upsertUser(OTHER_USER_ID);
+        TestDataFactory.upsertUser(dsl, OWNER_ID);
+        TestDataFactory.upsertUser(dsl, OTHER_USER_ID);
     }
 
     @Test
@@ -165,8 +126,8 @@ class ChannelCrudHttpIntegrationTest {
     @Test
     @DisplayName("GET /api/v1/channels/{id} returns 200 with detail")
     void getDetailReturns200() {
-        insertChannelWithOwner(CHANNEL_ID, OWNER_ID);
-        insertPricingRule(CHANNEL_ID, "Repost", "REPOST", 1_000_000L);
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertPricingRule(dsl, CHANNEL_ID, "Repost", "REPOST", 1_000_000L, 1);
 
         webClient.get()
                 .uri("/api/v1/channels/{id}", CHANNEL_ID)
@@ -193,7 +154,7 @@ class ChannelCrudHttpIntegrationTest {
     @Test
     @DisplayName("PUT /api/v1/channels/{id} by owner returns 200")
     void updateByOwnerReturns200() {
-        insertChannelWithOwner(CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
 
         webClient.put()
                 .uri("/api/v1/channels/{id}", CHANNEL_ID)
@@ -212,7 +173,7 @@ class ChannelCrudHttpIntegrationTest {
     @Test
     @DisplayName("PUT /api/v1/channels/{id} by non-owner returns 403")
     void updateByNonOwnerReturns403() {
-        insertChannelWithOwner(CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
 
         webClient.put()
                 .uri("/api/v1/channels/{id}", CHANNEL_ID)
@@ -241,7 +202,7 @@ class ChannelCrudHttpIntegrationTest {
     @Test
     @DisplayName("DELETE /api/v1/channels/{id} by owner returns 204")
     void deactivateByOwnerReturns204() {
-        insertChannelWithOwner(CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
 
         webClient.delete()
                 .uri("/api/v1/channels/{id}", CHANNEL_ID)
@@ -259,7 +220,7 @@ class ChannelCrudHttpIntegrationTest {
     @Test
     @DisplayName("DELETE /api/v1/channels/{id} by non-owner returns 403")
     void deactivateByNonOwnerReturns403() {
-        insertChannelWithOwner(CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
 
         webClient.delete()
                 .uri("/api/v1/channels/{id}", CHANNEL_ID)
@@ -294,46 +255,7 @@ class ChannelCrudHttpIntegrationTest {
     // --- helpers ---
 
     private String jwt(long userId) {
-        return jwtTokenProvider.generateToken(
-                new UserId(userId), false);
-    }
-
-    private void upsertUser(long userId) {
-        dsl.insertInto(USERS)
-                .set(USERS.ID, userId)
-                .set(USERS.FIRST_NAME, "U" + userId)
-                .set(USERS.LANGUAGE_CODE, "en")
-                .onConflictDoNothing()
-                .execute();
-    }
-
-    private void insertChannelWithOwner(long channelId, long ownerId) {
-        dsl.insertInto(CHANNELS)
-                .set(CHANNELS.ID, channelId)
-                .set(CHANNELS.TITLE, "Test Channel")
-                .set(CHANNELS.SUBSCRIBER_COUNT, 5000)
-                .set(CHANNELS.OWNER_ID, ownerId)
-                .execute();
-        dsl.insertInto(CHANNEL_MEMBERSHIPS)
-                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, channelId)
-                .set(CHANNEL_MEMBERSHIPS.USER_ID, ownerId)
-                .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
-                .execute();
-    }
-
-    private void insertPricingRule(long channelId, String name,
-                                   String postType, long priceNano) {
-        long ruleId = dsl.insertInto(CHANNEL_PRICING_RULES)
-                .set(CHANNEL_PRICING_RULES.CHANNEL_ID, channelId)
-                .set(CHANNEL_PRICING_RULES.NAME, name)
-                .set(CHANNEL_PRICING_RULES.PRICE_NANO, priceNano)
-                .returning(CHANNEL_PRICING_RULES.ID)
-                .fetchSingle()
-                .getId();
-        dsl.insertInto(PRICING_RULE_POST_TYPES)
-                .set(PRICING_RULE_POST_TYPES.PRICING_RULE_ID, ruleId)
-                .set(PRICING_RULE_POST_TYPES.POST_TYPE, postType)
-                .execute();
+        return TestDataFactory.jwt(jwtTokenProvider, userId);
     }
 
     @Configuration

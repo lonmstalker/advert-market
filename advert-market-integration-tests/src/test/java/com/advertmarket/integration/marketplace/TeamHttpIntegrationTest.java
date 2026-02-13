@@ -1,11 +1,12 @@
 package com.advertmarket.integration.marketplace;
 
-import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
-import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
+import com.advertmarket.integration.support.ContainerProperties;
+import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.TeamInviteRequest;
 import com.advertmarket.marketplace.api.dto.TeamMemberDto;
 import com.advertmarket.marketplace.api.dto.TeamUpdateRightsRequest;
@@ -18,20 +19,15 @@ import com.advertmarket.marketplace.api.dto.NewChannel;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
+import com.advertmarket.marketplace.team.config.TeamProperties;
 import com.advertmarket.marketplace.team.repository.JooqTeamMembershipRepository;
 import com.advertmarket.marketplace.team.service.TeamService;
 import com.advertmarket.marketplace.team.web.TeamController;
 import com.advertmarket.shared.json.JsonFacade;
-import com.advertmarket.shared.model.UserId;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import java.util.Optional;
 import java.util.Set;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,11 +43,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * HTTP-level integration tests for channel team management endpoints.
@@ -60,7 +51,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
         classes = TeamHttpIntegrationTest.TestConfig.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-@Testcontainers
 @DisplayName("Team HTTP — end-to-end integration")
 class TeamHttpIntegrationTest {
 
@@ -69,45 +59,14 @@ class TeamHttpIntegrationTest {
     private static final long OTHER_USER_ID = 3L;
     private static final long CHANNEL_ID = -100L;
 
-    @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"));
-
-    @Container
-    static final GenericContainer<?> redis =
-            new GenericContainer<>("redis:8.4-alpine")
-                    .withExposedPorts(6379);
-
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port",
-                () -> redis.getMappedPort(6379));
+        ContainerProperties.registerAll(registry);
     }
 
     @BeforeAll
     static void initDatabase() throws Exception {
-        try (var dslCtx = DSL.using(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword())) {
-            var conn = dslCtx.configuration()
-                    .connectionProvider().acquire();
-            var database = DatabaseFactory.getInstance()
-                    .findCorrectDatabaseImplementation(
-                            new JdbcConnection(conn));
-            try (var liquibase = new Liquibase(
-                    "db/changelog/db.changelog-master.yaml",
-                    new ClassLoaderResourceAccessor(),
-                    database)) {
-                liquibase.update("");
-            }
-        }
+        DatabaseSupport.ensureMigrated();
     }
 
     @LocalServerPort
@@ -126,13 +85,11 @@ class TeamHttpIntegrationTest {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
-        dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
-        dsl.deleteFrom(CHANNELS).execute();
-        dsl.deleteFrom(USERS).execute();
-        upsertUser(OWNER_ID, "owner", "Owner");
-        upsertUser(MANAGER_ID, "manager", "Manager");
-        upsertUser(OTHER_USER_ID, "other", "Other");
-        insertChannelWithOwner(CHANNEL_ID, OWNER_ID);
+        DatabaseSupport.cleanAllTables(dsl);
+        TestDataFactory.upsertUser(dsl, OWNER_ID, "Owner", "owner");
+        TestDataFactory.upsertUser(dsl, MANAGER_ID, "Manager", "manager");
+        TestDataFactory.upsertUser(dsl, OTHER_USER_ID, "Other", "other");
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
     }
 
     // --- LIST ---
@@ -390,8 +347,7 @@ class TeamHttpIntegrationTest {
     // --- helpers ---
 
     private String jwt(long userId) {
-        return jwtTokenProvider.generateToken(
-                new UserId(userId), false);
+        return TestDataFactory.jwt(jwtTokenProvider, userId);
     }
 
     private void inviteMember(long userId, Set<ChannelRight> rights) {
@@ -402,30 +358,6 @@ class TeamHttpIntegrationTest {
                 .bodyValue(new TeamInviteRequest(userId, rights))
                 .exchange()
                 .expectStatus().isCreated();
-    }
-
-    private void upsertUser(long userId, String username, String firstName) {
-        dsl.insertInto(USERS)
-                .set(USERS.ID, userId)
-                .set(USERS.USERNAME, username)
-                .set(USERS.FIRST_NAME, firstName)
-                .set(USERS.LANGUAGE_CODE, "en")
-                .onConflictDoNothing()
-                .execute();
-    }
-
-    private void insertChannelWithOwner(long channelId, long ownerId) {
-        dsl.insertInto(CHANNELS)
-                .set(CHANNELS.ID, channelId)
-                .set(CHANNELS.TITLE, "Test Channel")
-                .set(CHANNELS.SUBSCRIBER_COUNT, 5000)
-                .set(CHANNELS.OWNER_ID, ownerId)
-                .execute();
-        dsl.insertInto(CHANNEL_MEMBERSHIPS)
-                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, channelId)
-                .set(CHANNEL_MEMBERSHIPS.USER_ID, ownerId)
-                .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
-                .execute();
     }
 
     @Configuration
@@ -483,11 +415,17 @@ class TeamHttpIntegrationTest {
         }
 
         @Bean
+        TeamProperties teamProperties() {
+            return new TeamProperties(10);
+        }
+
+        @Bean
         TeamService teamService(
                 TeamMembershipRepository repo,
                 ChannelAuthorizationPort authPort,
-                ChannelRepository channelRepo) {
-            return new TeamService(repo, authPort, channelRepo);
+                ChannelRepository channelRepo,
+                TeamProperties teamProperties) {
+            return new TeamService(repo, authPort, channelRepo, teamProperties);
         }
 
         @Bean

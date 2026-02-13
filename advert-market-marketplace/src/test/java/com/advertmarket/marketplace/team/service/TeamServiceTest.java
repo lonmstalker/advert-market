@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
+import com.advertmarket.marketplace.team.config.TeamProperties;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.UserId;
@@ -54,6 +56,8 @@ class TeamServiceTest {
     private ChannelAuthorizationPort authorizationPort;
     @Mock
     private ChannelRepository channelRepository;
+    @Mock
+    private TeamProperties teamProperties;
 
     @InjectMocks
     private TeamService teamService;
@@ -61,6 +65,7 @@ class TeamServiceTest {
     @BeforeEach
     void setUpSecurityContext() {
         setCurrentUser(OWNER_ID);
+        lenient().when(teamProperties.maxManagers()).thenReturn(10);
     }
 
     @AfterEach

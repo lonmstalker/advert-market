@@ -8,6 +8,8 @@ import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_
 import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
@@ -21,26 +23,16 @@ import com.advertmarket.shared.json.JsonFacade;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Integration test for JooqChannelRepository with real PostgreSQL.
  */
-@Testcontainers
 @DisplayName("JooqChannelRepository — PostgreSQL integration")
 class JooqChannelRepositoryIntegrationTest {
 
@@ -49,31 +41,13 @@ class JooqChannelRepositoryIntegrationTest {
     private static final String CHANNEL_TITLE = "Chan A";
     private static final String CHANNEL_USERNAME = "chan_a";
 
-    @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"));
-
     private static DSLContext dsl;
     private JooqChannelRepository repository;
 
     @BeforeAll
-    static void initDatabase() throws Exception {
-        dsl = DSL.using(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword());
-
-        var conn = dsl.configuration().connectionProvider().acquire();
-        var database = DatabaseFactory.getInstance()
-                .findCorrectDatabaseImplementation(
-                        new JdbcConnection(conn));
-        var liquibase = new Liquibase(
-                "db/changelog/db.changelog-master.yaml",
-                new ClassLoaderResourceAccessor(),
-                database);
-        liquibase.update("");
+    static void initDatabase() {
+        DatabaseSupport.ensureMigrated();
+        dsl = DatabaseSupport.dsl();
     }
 
     @BeforeEach
@@ -88,13 +62,8 @@ class JooqChannelRepositoryIntegrationTest {
                 pricingRuleMapper,
                 categoryRepo,
                 pricingRuleRepo);
-        dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
-        dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
-        dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
-        dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
-        dsl.deleteFrom(CHANNELS).execute();
-        dsl.deleteFrom(USERS).execute();
-        insertTestUser(TEST_USER_ID);
+        DatabaseSupport.cleanAllTables(dsl);
+        TestDataFactory.upsertUser(dsl, TEST_USER_ID);
     }
 
     @Test
@@ -163,8 +132,8 @@ class JooqChannelRepositoryIntegrationTest {
     @DisplayName("Should find detail by ID with pricing rules")
     void shouldFindDetailByIdWithPricingRules() {
         repository.insert(testChannel());
-        insertPricingRule(CHANNEL_ID, "Repost", "REPOST", 1_000_000L, 1);
-        insertPricingRule(CHANNEL_ID, "Native", "NATIVE", 2_000_000L, 2);
+        TestDataFactory.insertPricingRule(dsl, CHANNEL_ID, "Repost", "REPOST", 1_000_000L, 1);
+        TestDataFactory.insertPricingRule(dsl, CHANNEL_ID, "Native", "NATIVE", 2_000_000L, 2);
 
         Optional<ChannelDetailResponse> detail =
                 repository.findDetailById(CHANNEL_ID);
@@ -245,36 +214,10 @@ class JooqChannelRepositoryIntegrationTest {
         assertThat(repository.deactivate(999L)).isFalse();
     }
 
-    private static void insertPricingRule(long channelId, String name,
-                                          String postType, long priceNano,
-                                          int sortOrder) {
-        long ruleId = dsl.insertInto(CHANNEL_PRICING_RULES)
-                .set(CHANNEL_PRICING_RULES.CHANNEL_ID, channelId)
-                .set(CHANNEL_PRICING_RULES.NAME, name)
-                .set(CHANNEL_PRICING_RULES.PRICE_NANO, priceNano)
-                .set(CHANNEL_PRICING_RULES.SORT_ORDER, sortOrder)
-                .returning(CHANNEL_PRICING_RULES.ID)
-                .fetchSingle()
-                .getId();
-        dsl.insertInto(PRICING_RULE_POST_TYPES)
-                .set(PRICING_RULE_POST_TYPES.PRICING_RULE_ID, ruleId)
-                .set(PRICING_RULE_POST_TYPES.POST_TYPE, postType)
-                .execute();
-    }
-
     private static NewChannel testChannel() {
         return new NewChannel(
                 CHANNEL_ID, CHANNEL_TITLE, CHANNEL_USERNAME,
                 "Test description", 5000, List.of("tech"),
                 null, TEST_USER_ID);
-    }
-
-    private static void insertTestUser(long userId) {
-        dsl.insertInto(USERS)
-                .set(USERS.ID, userId)
-                .set(USERS.FIRST_NAME, "Test")
-                .set(USERS.LANGUAGE_CODE, "en")
-                .onConflictDoNothing()
-                .execute();
     }
 }

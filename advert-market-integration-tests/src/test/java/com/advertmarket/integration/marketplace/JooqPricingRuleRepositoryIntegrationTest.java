@@ -7,6 +7,8 @@ import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_
 import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.PricingRuleCreateRequest;
 import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.dto.PricingRuleUpdateRequest;
@@ -15,57 +17,29 @@ import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import java.util.List;
 import java.util.Set;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Integration test for JooqPricingRuleRepository with real PostgreSQL.
  */
-@Testcontainers
 @DisplayName("JooqPricingRuleRepository — PostgreSQL integration")
 class JooqPricingRuleRepositoryIntegrationTest {
 
     private static final long TEST_USER_ID = 1L;
     private static final long CHANNEL_ID = -100L;
 
-    @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"));
-
     private static DSLContext dsl;
     private JooqPricingRuleRepository repository;
 
     @BeforeAll
-    static void initDatabase() throws Exception {
-        dsl = DSL.using(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword());
-
-        var conn = dsl.configuration().connectionProvider().acquire();
-        var database = DatabaseFactory.getInstance()
-                .findCorrectDatabaseImplementation(
-                        new JdbcConnection(conn));
-        var liquibase = new Liquibase(
-                "db/changelog/db.changelog-master.yaml",
-                new ClassLoaderResourceAccessor(),
-                database);
-        liquibase.update("");
+    static void initDatabase() {
+        DatabaseSupport.ensureMigrated();
+        dsl = DatabaseSupport.dsl();
     }
 
     @BeforeEach
@@ -73,13 +47,9 @@ class JooqPricingRuleRepositoryIntegrationTest {
         repository = new JooqPricingRuleRepository(
                 dsl,
                 Mappers.getMapper(PricingRuleRecordMapper.class));
-        dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
-        dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
-        dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
-        dsl.deleteFrom(CHANNELS).execute();
-        dsl.deleteFrom(USERS).execute();
-        insertTestUser(TEST_USER_ID);
-        insertTestChannel(CHANNEL_ID, TEST_USER_ID);
+        DatabaseSupport.cleanAllTables(dsl);
+        TestDataFactory.upsertUser(dsl, TEST_USER_ID);
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, TEST_USER_ID);
     }
 
     @Test
@@ -218,28 +188,5 @@ class JooqPricingRuleRepositoryIntegrationTest {
             int sortOrder) {
         return new PricingRuleCreateRequest(
                 name, null, postTypes, priceNano, sortOrder);
-    }
-
-    private static void insertTestUser(long userId) {
-        dsl.insertInto(USERS)
-                .set(USERS.ID, userId)
-                .set(USERS.FIRST_NAME, "Test")
-                .set(USERS.LANGUAGE_CODE, "en")
-                .onConflictDoNothing()
-                .execute();
-    }
-
-    private static void insertTestChannel(long channelId, long ownerId) {
-        dsl.insertInto(CHANNELS)
-                .set(CHANNELS.ID, channelId)
-                .set(CHANNELS.TITLE, "Test Channel")
-                .set(CHANNELS.SUBSCRIBER_COUNT, 1000)
-                .set(CHANNELS.OWNER_ID, ownerId)
-                .execute();
-        dsl.insertInto(CHANNEL_MEMBERSHIPS)
-                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, channelId)
-                .set(CHANNEL_MEMBERSHIPS.USER_ID, ownerId)
-                .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
-                .execute();
     }
 }

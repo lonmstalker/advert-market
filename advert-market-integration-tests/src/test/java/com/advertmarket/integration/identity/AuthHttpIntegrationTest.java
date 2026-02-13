@@ -3,17 +3,11 @@ package com.advertmarket.integration.identity;
 import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.advertmarket.identity.adapter.JooqUserRepository;
-import com.advertmarket.identity.adapter.RedisLoginRateLimiter;
-import com.advertmarket.identity.adapter.RedisTokenBlacklist;
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.LoginRateLimiterPort;
-import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
-import com.advertmarket.identity.config.AuthProperties;
-import com.advertmarket.identity.config.RateLimiterProperties;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.identity.service.AuthServiceImpl;
@@ -21,31 +15,16 @@ import com.advertmarket.identity.service.TelegramInitDataValidator;
 import com.advertmarket.identity.service.UserServiceImpl;
 import com.advertmarket.identity.web.AuthController;
 import com.advertmarket.identity.web.ProfileController;
-import com.advertmarket.shared.error.ErrorCode;
-import com.advertmarket.shared.exception.DomainException;
-import com.advertmarket.shared.exception.EntityNotFoundException;
-import com.advertmarket.shared.i18n.LocalizationService;
+import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
+import com.advertmarket.integration.support.ContainerProperties;
+import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
-import com.advertmarket.shared.model.UserBlockCheckPort;
-import com.advertmarket.communication.bot.internal.block.RedisUserBlockService;
-import com.advertmarket.communication.bot.internal.block.UserBlockProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.net.URI;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import javax.sql.DataSource;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,15 +35,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.StaticMessageSource;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -72,82 +46,33 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * HTTP-level integration tests for Auth and Profile endpoints.
  *
  * <p>Uses a minimal Spring context with real PostgreSQL and Redis
- * via Testcontainers. Validates request/response contracts
+ * via shared containers. Validates request/response contracts
  * including ProblemDetail format.
  */
 @SpringBootTest(
         classes = AuthHttpIntegrationTest.TestConfig.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.main.allow-bean-definition-overriding=true"
 )
-@Testcontainers
 @DisplayName("Auth HTTP — end-to-end integration")
 class AuthHttpIntegrationTest {
 
     private static final long TEST_USER_ID = 42L;
-    private static final String JWT_SECRET =
-            "test-secret-key-at-least-32-bytes-long!!";
-
-    @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName
-                    .parse("paradedb/paradedb:latest")
-                    .asCompatibleSubstituteFor("postgres"));
-
-    @Container
-    static final GenericContainer<?> redis =
-            new GenericContainer<>("redis:8.4-alpine")
-                    .withExposedPorts(6379);
 
     @DynamicPropertySource
-    static void configureProperties(
-            DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url",
-                postgres::getJdbcUrl);
-        registry.add("spring.datasource.username",
-                postgres::getUsername);
-        registry.add("spring.datasource.password",
-                postgres::getPassword);
-        registry.add("spring.data.redis.host",
-                redis::getHost);
-        registry.add("spring.data.redis.port",
-                () -> redis.getMappedPort(6379));
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        ContainerProperties.registerAll(registry);
     }
 
     @BeforeAll
-    static void initDatabase() throws Exception {
-        try (var dslCtx = DSL.using(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword())) {
-            var conn = dslCtx.configuration()
-                    .connectionProvider().acquire();
-            var database = DatabaseFactory.getInstance()
-                    .findCorrectDatabaseImplementation(
-                            new JdbcConnection(conn));
-            try (var liquibase = new Liquibase(
-                    "db/changelog/db.changelog-master.yaml",
-                    new ClassLoaderResourceAccessor(),
-                    database)) {
-                liquibase.update("");
-            }
-        }
+    static void initDatabase() {
+        DatabaseSupport.ensureMigrated();
     }
 
     @LocalServerPort
@@ -201,8 +126,8 @@ class AuthHttpIntegrationTest {
     void profileWithValidJwt_returns200() {
         userRepository.upsert(new TelegramUserData(
                 TEST_USER_ID, "John", "Doe", "johndoe", "en"));
-        String token = jwtTokenProvider.generateToken(
-                new UserId(TEST_USER_ID), false);
+        String token = TestDataFactory.jwt(
+                jwtTokenProvider, TEST_USER_ID);
 
         UserProfile profile = webClient.get()
                 .uri("/api/v1/profile")
@@ -227,8 +152,8 @@ class AuthHttpIntegrationTest {
     void onboardingWithValidJwt_returns200() {
         userRepository.upsert(new TelegramUserData(
                 TEST_USER_ID, "John", "Doe", "johndoe", "en"));
-        String token = jwtTokenProvider.generateToken(
-                new UserId(TEST_USER_ID), false);
+        String token = TestDataFactory.jwt(
+                jwtTokenProvider, TEST_USER_ID);
 
         UserProfile profile = webClient.put()
                 .uri("/api/v1/profile/onboarding")
@@ -253,8 +178,8 @@ class AuthHttpIntegrationTest {
     void logoutThenProfile_returnsForbidden() {
         userRepository.upsert(new TelegramUserData(
                 TEST_USER_ID, "John", "Doe", "johndoe", "en"));
-        String token = jwtTokenProvider.generateToken(
-                new UserId(TEST_USER_ID), false);
+        String token = TestDataFactory.jwt(
+                jwtTokenProvider, TEST_USER_ID);
 
         webClient.post().uri("/api/v1/auth/logout")
                 .headers(h -> h.setBearerAuth(token))
@@ -300,101 +225,8 @@ class AuthHttpIntegrationTest {
      */
     @Configuration
     @EnableAutoConfiguration
+    @Import(MarketplaceTestConfig.class)
     static class TestConfig {
-
-        @Bean
-        DSLContext dslContext(DataSource dataSource) {
-            return DSL.using(dataSource, SQLDialect.POSTGRES);
-        }
-
-        @Bean
-        AuthProperties authProperties() {
-            return new AuthProperties(
-                    new AuthProperties.Jwt(JWT_SECRET, 3600),
-                    300);
-        }
-
-        @Bean
-        RateLimiterProperties rateLimiterProperties() {
-            return new RateLimiterProperties(10, 60);
-        }
-
-        @Bean
-        JwtTokenProvider jwtTokenProvider(
-                AuthProperties authProperties) {
-            return new JwtTokenProvider(authProperties);
-        }
-
-        @Bean
-        ObjectMapper objectMapper() {
-            var mapper = new ObjectMapper();
-            mapper.findAndRegisterModules();
-            return mapper;
-        }
-
-        @Bean
-        JsonFacade jsonFacade(ObjectMapper objectMapper) {
-            return new JsonFacade(objectMapper);
-        }
-
-        @Bean
-        MetricsFacade metricsFacade() {
-            return new MetricsFacade(new SimpleMeterRegistry());
-        }
-
-        @Bean
-        LocalizationService localizationService() {
-            return new LocalizationService(
-                    new StaticMessageSource());
-        }
-
-        @Bean
-        UserRepository userRepository(DSLContext dsl) {
-            return new JooqUserRepository(dsl);
-        }
-
-        @Bean
-        TokenBlacklistPort tokenBlacklistPort(
-                StringRedisTemplate redisTemplate) {
-            return new RedisTokenBlacklist(redisTemplate);
-        }
-
-        @Bean
-        LoginRateLimiterPort loginRateLimiterPort(
-                StringRedisTemplate redisTemplate,
-                RateLimiterProperties properties,
-                MetricsFacade metricsFacade) {
-            return new RedisLoginRateLimiter(
-                    redisTemplate, properties, metricsFacade);
-        }
-
-        @Bean
-        UserBlockCheckPort userBlockCheckPort(
-                StringRedisTemplate redisTemplate) {
-            return new RedisUserBlockService(
-                    redisTemplate,
-                    new UserBlockProperties("tg:block:"));
-        }
-
-        @Bean
-        TelegramInitDataValidator telegramInitDataValidator(
-                AuthProperties authProperties,
-                JsonFacade jsonFacade) {
-            return new TelegramInitDataValidator(
-                    "123456:TEST-TOKEN",
-                    authProperties, jsonFacade);
-        }
-
-        @Bean
-        JwtAuthenticationFilter jwtAuthenticationFilter(
-                JwtTokenProvider jwtTokenProvider,
-                TokenBlacklistPort tokenBlacklistPort,
-                UserBlockCheckPort userBlockCheckPort) {
-            return new JwtAuthenticationFilter(
-                    jwtTokenProvider,
-                    tokenBlacklistPort,
-                    userBlockCheckPort);
-        }
 
         @Bean
         SecurityFilterChain securityFilterChain(
@@ -421,11 +253,20 @@ class AuthHttpIntegrationTest {
         }
 
         @Bean
+        TelegramInitDataValidator telegramInitDataValidator(
+                com.advertmarket.identity.config.AuthProperties authProperties,
+                JsonFacade jsonFacade) {
+            return new TelegramInitDataValidator(
+                    "123456:TEST-TOKEN",
+                    authProperties, jsonFacade);
+        }
+
+        @Bean
         AuthServiceImpl authService(
                 TelegramInitDataValidator validator,
                 UserRepository userRepository,
                 JwtTokenProvider jwtTokenProvider,
-                TokenBlacklistPort tokenBlacklistPort,
+                com.advertmarket.identity.api.port.TokenBlacklistPort tokenBlacklistPort,
                 MetricsFacade metricsFacade) {
             return new AuthServiceImpl(
                     validator, userRepository,
@@ -455,89 +296,6 @@ class AuthHttpIntegrationTest {
                 AuthServiceImpl authService) {
             return new ProfileController(
                     userService, authService);
-        }
-
-        @Bean
-        TestExceptionHandler testExceptionHandler() {
-            return new TestExceptionHandler();
-        }
-    }
-
-    /**
-     * Test error handler producing ProblemDetail responses.
-     */
-    @RestControllerAdvice
-    static class TestExceptionHandler
-            extends ResponseEntityExceptionHandler {
-
-        @ExceptionHandler(DomainException.class)
-        ProblemDetail handleDomain(DomainException ex) {
-            var code = ErrorCode.resolve(ex.getErrorCode());
-            int status = code != null
-                    ? code.httpStatus() : 500;
-            var pd = ProblemDetail.forStatus(status);
-            if (code != null) {
-                pd.setType(URI.create(code.typeUri()));
-                pd.setTitle(code.name());
-            }
-            pd.setDetail(ex.getMessage());
-            addCommonProps(pd, ex.getErrorCode());
-            return pd;
-        }
-
-        @ExceptionHandler(EntityNotFoundException.class)
-        ProblemDetail handleNotFound(
-                EntityNotFoundException ex) {
-            return handleDomain(ex);
-        }
-
-        @Override
-        protected ResponseEntity<Object>
-                handleMethodArgumentNotValid(
-                MethodArgumentNotValidException ex,
-                HttpHeaders headers,
-                HttpStatusCode status,
-                WebRequest request) {
-            var pd = ProblemDetail.forStatus(
-                    HttpStatus.BAD_REQUEST);
-            pd.setType(URI.create(
-                    "urn:problem-type:validation-failed"));
-            pd.setTitle("Validation failed");
-            pd.setDetail(ex.getBindingResult()
-                    .getFieldErrors().stream()
-                    .map(e -> e.getField() + ": "
-                            + e.getDefaultMessage())
-                    .reduce((a, b) -> a + "; " + b)
-                    .orElse("Validation failed"));
-            addCommonProps(pd, "VALIDATION_FAILED");
-            return ResponseEntity.badRequest().body(pd);
-        }
-
-        @Override
-        protected ResponseEntity<Object>
-                handleHttpMessageNotReadable(
-                HttpMessageNotReadableException ex,
-                HttpHeaders headers,
-                HttpStatusCode status,
-                WebRequest request) {
-            var pd = ProblemDetail.forStatus(
-                    HttpStatus.BAD_REQUEST);
-            pd.setType(URI.create(
-                    "urn:problem-type:validation-failed"));
-            pd.setTitle("Malformed request body");
-            pd.setDetail("Request body is missing or"
-                    + " contains invalid JSON");
-            addCommonProps(pd, "VALIDATION_FAILED");
-            return ResponseEntity.badRequest().body(pd);
-        }
-
-        private void addCommonProps(
-                ProblemDetail pd, String errorCode) {
-            pd.setProperty("error_code", errorCode);
-            pd.setProperty("timestamp",
-                    Instant.now().toString());
-            pd.setProperty("correlation_id",
-                    UUID.randomUUID().toString());
         }
     }
 }

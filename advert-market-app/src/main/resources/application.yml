@@ -68,6 +68,9 @@ app:
     rate-limiter:
       max-attempts: 10
       window-seconds: 60
+  marketplace:
+    team:
+      max-managers: 10
   telegram:
     bot-token: ${TELEGRAM_BOT_TOKEN:}
     bot-username: ${TELEGRAM_BOT_USERNAME:AdvertMarketBot}
