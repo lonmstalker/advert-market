@@ -19,7 +19,7 @@ public record TelegramUserData(
         @Schema(description = "Telegram user ID", example = "42")
         long id,
         @Schema(description = "First name", example = "John")
-        @JsonProperty("first_name") String firstName,
+        @JsonProperty("first_name") @NonNull String firstName,
         @Schema(description = "Last name (optional)", example = "Doe")
         @JsonProperty("last_name") @Nullable String lastName,
         @Schema(description = "Username without @", example = "johndoe")
@@ -29,8 +29,7 @@ public record TelegramUserData(
 ) {
 
     /** Builds display name from first and last name. */
-    @NonNull
-    public String displayName() {
+    public @NonNull String displayName() {
         if (lastName != null && !lastName.isBlank()) {
             return firstName + " " + lastName;
         }

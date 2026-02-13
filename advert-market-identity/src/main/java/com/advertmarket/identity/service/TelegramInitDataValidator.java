@@ -1,6 +1,7 @@
 package com.advertmarket.identity.service;
 
 import com.advertmarket.identity.api.dto.TelegramUserData;
+import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
@@ -20,14 +21,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Validates Telegram Mini App initData using HMAC-SHA256.
- *
- * <p>Not annotated as {@code @Component} — created as a {@code @Bean}
- * in the app module (needs bot token from communication module).
  */
 @SuppressFBWarnings(
         value = "CT_CONSTRUCTOR_THROW",
         justification = "Bean constructor derives HMAC key")
-public class TelegramInitDataValidator {
+public class TelegramInitDataValidator implements InitDataValidatorPort {
 
     private static final String HMAC_SHA256 = "HmacSHA256";
     private static final String WEB_APP_DATA = "WebAppData";
@@ -63,8 +61,8 @@ public class TelegramInitDataValidator {
      * @return parsed Telegram user data
      * @throws DomainException if validation fails
      */
-    @NonNull
-    public TelegramUserData validate(@NonNull String initData) {
+    @Override
+    public @NonNull TelegramUserData validate(@NonNull String initData) {
         Map<String, String> params = parseQueryString(initData);
 
         String receivedHash = params.remove("hash");

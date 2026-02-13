@@ -26,4 +26,7 @@ public interface PrincipalAuthentication extends Authentication {
 
     /** Returns {@code true} if the user is an operator. */
     boolean isOperator();
+
+    /** Returns the token expiration as epoch seconds. */
+    long getTokenExpSeconds();
 }

@@ -24,8 +24,7 @@ public class UserServiceImpl implements UserService {
     private final MetricsFacade metricsFacade;
 
     @Override
-    @NonNull
-    public UserProfile getProfile(@NonNull UserId userId) {
+    public @NonNull UserProfile getProfile(@NonNull UserId userId) {
         UserProfile profile = userRepository.findById(userId);
         if (profile == null) {
             throw new EntityNotFoundException(
@@ -36,20 +35,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @NonNull
-    public UserProfile completeOnboarding(
+    public @NonNull UserProfile completeOnboarding(
             @NonNull UserId userId,
             @NonNull OnboardingRequest request) {
         userRepository.completeOnboarding(
                 userId, request.interests());
-
-        UserProfile profile = userRepository.findById(userId);
-        if (profile == null) {
-            throw new EntityNotFoundException(
-                    ErrorCodes.USER_NOT_FOUND, "User",
-                    String.valueOf(userId.value()));
-        }
-        return profile;
+        return getProfile(userId);
     }
 
     @Override

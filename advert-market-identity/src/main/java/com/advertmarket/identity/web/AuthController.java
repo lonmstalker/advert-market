@@ -4,7 +4,8 @@ import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
 import com.advertmarket.identity.api.port.AuthService;
 import com.advertmarket.identity.api.port.LoginRateLimiterPort;
-import com.advertmarket.identity.security.TelegramAuthentication;
+import com.advertmarket.shared.security.PrincipalAuthentication;
+import com.advertmarket.shared.security.SecurityContextUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,9 +15,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,8 +63,8 @@ public class AuthController {
             responseCode = "429",
             description = "Too many login attempts"
     )
-    public LoginResponse login(
-            @Valid @RequestBody LoginRequest request,
+    public @NonNull LoginResponse login(
+            @RequestBody @Valid LoginRequest request,
             HttpServletRequest httpRequest) {
         loginRateLimiter.checkRate(resolveClientIp(httpRequest));
         return authService.login(request);
@@ -95,8 +96,8 @@ public class AuthController {
             description = "Not authenticated")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout() {
-        var auth = (TelegramAuthentication) SecurityContextHolder
-                .getContext().getAuthentication();
+        PrincipalAuthentication auth =
+                SecurityContextUtil.currentAuthentication();
         authService.logout(auth.getJti(),
                 auth.getTokenExpSeconds());
     }

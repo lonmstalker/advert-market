@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -28,7 +29,7 @@ public record AuthProperties(
                 description = "JWT token configuration",
                 required = Requirement.REQUIRED
         )
-        @Valid Jwt jwt,
+        @Valid @NonNull Jwt jwt,
 
         @PropertyDoc(
                 description = "Maximum age of Telegram initData auth_date"
@@ -51,7 +52,7 @@ public record AuthProperties(
                     required = Requirement.REQUIRED,
                     sensitive = true
             )
-            @NotBlank @Size(min = 32) String secret,
+            @NotBlank @Size(min = 32) @NonNull String secret,
 
             @PropertyDoc(
                     description = "Token lifetime in seconds",

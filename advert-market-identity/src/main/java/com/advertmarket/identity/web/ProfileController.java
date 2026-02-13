@@ -4,8 +4,9 @@ import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.AuthService;
 import com.advertmarket.identity.api.port.UserService;
-import com.advertmarket.identity.security.TelegramAuthentication;
 import com.advertmarket.shared.model.UserId;
+import com.advertmarket.shared.security.PrincipalAuthentication;
+import com.advertmarket.shared.security.SecurityContextUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,10 +15,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -53,8 +54,8 @@ public class ProfileController {
     )
     @ApiResponse(responseCode = "401",
             description = "Not authenticated")
-    public UserProfile getProfile(
-            @AuthenticationPrincipal UserId userId) {
+    public @NonNull UserProfile getProfile(
+            @AuthenticationPrincipal @NonNull UserId userId) {
         return userService.getProfile(userId);
     }
 
@@ -73,9 +74,9 @@ public class ProfileController {
             description = "Invalid interests")
     @ApiResponse(responseCode = "401",
             description = "Not authenticated")
-    public UserProfile completeOnboarding(
-            @AuthenticationPrincipal UserId userId,
-            @Valid @RequestBody OnboardingRequest request) {
+    public @NonNull UserProfile completeOnboarding(
+            @AuthenticationPrincipal @NonNull UserId userId,
+            @RequestBody @Valid OnboardingRequest request) {
         return userService.completeOnboarding(userId, request);
     }
 
@@ -90,10 +91,10 @@ public class ProfileController {
             description = "Not authenticated")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(
-            @AuthenticationPrincipal UserId userId) {
+            @AuthenticationPrincipal @NonNull UserId userId) {
         userService.deleteAccount(userId);
-        var auth = (TelegramAuthentication) SecurityContextHolder
-                .getContext().getAuthentication();
+        PrincipalAuthentication auth =
+                SecurityContextUtil.currentAuthentication();
         authService.logout(auth.getJti(),
                 auth.getTokenExpSeconds());
     }

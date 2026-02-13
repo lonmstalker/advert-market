@@ -5,7 +5,9 @@ import com.advertmarket.shared.security.PrincipalAuthentication;
 import java.util.Collection;
 import java.util.List;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 
 /**
@@ -15,6 +17,7 @@ import org.springframework.security.core.GrantedAuthority;
  * for downstream authorization decisions.
  */
 @Getter
+@RequiredArgsConstructor
 public class TelegramAuthentication implements PrincipalAuthentication {
 
     private final @NonNull UserId userId;
@@ -22,37 +25,18 @@ public class TelegramAuthentication implements PrincipalAuthentication {
     private final @NonNull String jti;
     private final long tokenExpSeconds;
 
-    /**
-     * Creates a new authenticated token.
-     *
-     * @param userId          the authenticated user
-     * @param isOperator      whether the user is a platform operator
-     * @param jti             the JWT unique identifier
-     * @param tokenExpSeconds token expiration as epoch seconds
-     */
-    public TelegramAuthentication(
-            @NonNull UserId userId,
-            boolean isOperator,
-            @NonNull String jti,
-            long tokenExpSeconds) {
-        this.userId = userId;
-        this.operator = isOperator;
-        this.jti = jti;
-        this.tokenExpSeconds = tokenExpSeconds;
-    }
-
     @Override
     public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
 
     @Override
-    public Object getCredentials() {
+    public @Nullable Object getCredentials() {
         return null;
     }
 
     @Override
-    public Object getDetails() {
+    public @Nullable Object getDetails() {
         return null;
     }
 
@@ -73,7 +57,7 @@ public class TelegramAuthentication implements PrincipalAuthentication {
     }
 
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return userId.toString();
     }
 }

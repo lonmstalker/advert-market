@@ -31,10 +31,7 @@ public class JwtTokenProvider {
     private static final String AUDIENCE = "advert-market-api";
 
     private final SecretKey signingKey;
-    /**
-     * -- GETTER --
-     * Returns the configured token lifetime in seconds.
-     */
+    /** Token lifetime in seconds. */
     @Getter
     private final long expirationSeconds;
 
@@ -57,8 +54,7 @@ public class JwtTokenProvider {
      * @param isOperator whether the user is an operator
      * @return signed JWT string
      */
-    @NonNull
-    public String generateToken(@NonNull UserId userId,
+    public @NonNull String generateToken(@NonNull UserId userId,
             boolean isOperator) {
         Instant now = Instant.now();
         return Jwts.builder()
@@ -81,8 +77,7 @@ public class JwtTokenProvider {
      * @return authentication object
      * @throws DomainException if the token is invalid or expired
      */
-    @NonNull
-    public TelegramAuthentication parseToken(@NonNull String token) {
+    public @NonNull TelegramAuthentication parseToken(@NonNull String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(signingKey)

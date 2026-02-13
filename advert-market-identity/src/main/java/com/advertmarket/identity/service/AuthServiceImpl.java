@@ -4,6 +4,7 @@ import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.port.AuthService;
+import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.security.JwtTokenProvider;
@@ -22,15 +23,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final TelegramInitDataValidator initDataValidator;
+    private final InitDataValidatorPort initDataValidator;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistPort tokenBlacklistPort;
     private final MetricsFacade metricsFacade;
 
     @Override
-    @NonNull
-    public LoginResponse login(@NonNull LoginRequest request) {
+    public @NonNull LoginResponse login(@NonNull LoginRequest request) {
         TelegramUserData userData =
                 initDataValidator.validate(request.initData());
 

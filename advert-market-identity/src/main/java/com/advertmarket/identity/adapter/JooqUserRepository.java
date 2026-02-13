@@ -57,8 +57,7 @@ public class JooqUserRepository implements UserRepository {
     }
 
     @Override
-    @Nullable
-    public UserProfile findById(@NonNull UserId userId) {
+    public @Nullable UserProfile findById(@NonNull UserId userId) {
         Record record = dsl.select()
                 .from(USERS)
                 .where(USERS.ID.eq(userId.value()))

@@ -2,6 +2,7 @@ package com.advertmarket.identity.api.port;
 
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.model.UserId;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -15,8 +16,7 @@ public interface UserService {
      *
      * @param userId user identifier
      * @return user profile
-     * @throws com.advertmarket.shared.exception.EntityNotFoundException
-     *         if user not found
+     * @throws EntityNotFoundException if user not found
      */
     @NonNull
     UserProfile getProfile(@NonNull UserId userId);

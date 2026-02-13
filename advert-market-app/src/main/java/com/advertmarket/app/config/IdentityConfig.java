@@ -1,6 +1,7 @@
 package com.advertmarket.app.config;
 
 import com.advertmarket.communication.bot.internal.config.TelegramBotProperties;
+import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.identity.config.RateLimiterProperties;
@@ -29,7 +30,7 @@ public class IdentityConfig {
 
     /** Creates the Telegram initData validator. */
     @Bean
-    public TelegramInitDataValidator telegramInitDataValidator(
+    public InitDataValidatorPort telegramInitDataValidator(
             TelegramBotProperties telegramBotProperties,
             AuthProperties authProperties,
             JsonFacade jsonFacade) {

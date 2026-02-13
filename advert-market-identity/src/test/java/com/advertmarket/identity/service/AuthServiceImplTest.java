@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
 import com.advertmarket.identity.api.dto.TelegramUserData;
+import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.security.JwtTokenProvider;
@@ -26,7 +27,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("AuthServiceImpl — login and logout flow")
 class AuthServiceImplTest {
 
-    private TelegramInitDataValidator initDataValidator;
+    private InitDataValidatorPort initDataValidator;
     private UserRepository userRepository;
     private JwtTokenProvider jwtTokenProvider;
     private TokenBlacklistPort tokenBlacklistPort;
@@ -35,7 +36,7 @@ class AuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        initDataValidator = mock(TelegramInitDataValidator.class);
+        initDataValidator = mock(InitDataValidatorPort.class);
         userRepository = mock(UserRepository.class);
         jwtTokenProvider = mock(JwtTokenProvider.class);
         tokenBlacklistPort = mock(TokenBlacklistPort.class);

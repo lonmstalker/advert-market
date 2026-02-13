@@ -17,9 +17,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Extracts and validates JWT tokens from the Authorization header.
- *
- * <p>Not annotated as {@code @Component} — created as a {@code @Bean}
- * in the app module to wire cross-module dependencies.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -54,13 +51,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.debug("Token blacklisted, jti={}",
                         auth.getJti());
             } else if (userBlockCheckPort.isBlocked(
-                    auth.getUserId().value())) {
+                    auth.getUserId())) {
                 log.debug("User blocked, userId={}",
                         auth.getUserId());
             } else {
                 SecurityContextHolder.getContext()
                         .setAuthentication(auth);
-                MdcKeys.putUserId(auth.getUserId().value());
+                MdcKeys.putUserId(auth.getUserId());
             }
         } catch (DomainException e) {
             log.debug("JWT validation failed: {}", e.getMessage());

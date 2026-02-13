@@ -6,8 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.api.port.LoginRateLimiterPort;
+import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.identity.service.AuthServiceImpl;
@@ -253,8 +256,8 @@ class AuthHttpIntegrationTest {
         }
 
         @Bean
-        TelegramInitDataValidator telegramInitDataValidator(
-                com.advertmarket.identity.config.AuthProperties authProperties,
+        InitDataValidatorPort telegramInitDataValidator(
+                AuthProperties authProperties,
                 JsonFacade jsonFacade) {
             return new TelegramInitDataValidator(
                     "123456:TEST-TOKEN",
@@ -263,10 +266,10 @@ class AuthHttpIntegrationTest {
 
         @Bean
         AuthServiceImpl authService(
-                TelegramInitDataValidator validator,
+                InitDataValidatorPort validator,
                 UserRepository userRepository,
                 JwtTokenProvider jwtTokenProvider,
-                com.advertmarket.identity.api.port.TokenBlacklistPort tokenBlacklistPort,
+                TokenBlacklistPort tokenBlacklistPort,
                 MetricsFacade metricsFacade) {
             return new AuthServiceImpl(
                     validator, userRepository,
