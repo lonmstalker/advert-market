@@ -65,6 +65,22 @@ function formatTimeUntil(isoDate: string): string | null {
   return `${minutes}m`;
 }
 
+function formatChannelAge(createdAt: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days < 1) return t('catalog.channel.addedToday');
+  if (days < 30) return t('catalog.channel.addedDaysAgo', { count: days });
+  const months = Math.floor(days / 30);
+  if (months < 12) return t('catalog.channel.addedMonthsAgo', { count: months });
+  const monthNames = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  return t('catalog.channel.onPlatformSince', {
+    date: `${monthNames[created.getMonth()]} ${created.getFullYear()}`,
+  });
+}
+
 function LanguageBadge({ code }: { code: string }) {
   return (
     <span
@@ -86,6 +102,218 @@ function LanguageBadge({ code }: { code: string }) {
     >
       {code}
     </span>
+  );
+}
+
+function RuleIndicator({ allowed }: { allowed: boolean }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: allowed ? 'var(--color-state-success)' : 'var(--color-state-destructive)',
+        flexShrink: 0,
+        marginTop: 6,
+      }}
+    />
+  );
+}
+
+function ChannelRulesSection({
+  rules,
+  t,
+}: {
+  rules: NonNullable<ChannelDetail['rules']>;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  const hasContent = rules.maxPostChars != null
+    || (rules.prohibitedTopics && rules.prohibitedTopics.length > 0);
+  const hasMedia = rules.mediaAllowed != null
+    || rules.mediaTypes != null
+    || rules.maxMediaCount != null;
+  const hasLinksButtons = rules.linksAllowed != null
+    || rules.mentionsAllowed != null
+    || rules.maxButtons != null;
+  const hasFormatting = rules.formattingAllowed != null;
+  const hasCustom = !!rules.customRules;
+
+  const sections: { label: string; rows: React.ReactNode[] }[] = [];
+
+  // Content section
+  if (hasContent) {
+    const rows: React.ReactNode[] = [];
+    if (rules.maxPostChars != null) {
+      rows.push(
+        <div key="chars" style={ruleItemStyle}>
+          <RuleIndicator allowed />
+          <Text type="caption1">
+            {t('catalog.channel.rulesMaxChars', { count: rules.maxPostChars })}
+          </Text>
+        </div>,
+      );
+    }
+    if (rules.prohibitedTopics && rules.prohibitedTopics.length > 0) {
+      rows.push(
+        <div key="prohibited" style={{ ...ruleItemStyle, flexWrap: 'wrap' }}>
+          <RuleIndicator allowed={false} />
+          <Text type="caption1" color="secondary">{t('catalog.channel.rulesProhibited')}:</Text>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, width: '100%', paddingLeft: 14 }}>
+            {rules.prohibitedTopics.map((topic) => (
+              <span
+                key={topic}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  background: 'color-mix(in srgb, var(--color-state-destructive) 8%, transparent)',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: 'var(--color-state-destructive)',
+                }}
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        </div>,
+      );
+    }
+    sections.push({ label: t('catalog.channel.rulesPostSize'), rows });
+  }
+
+  // Media section
+  if (hasMedia) {
+    const rows: React.ReactNode[] = [];
+    if (rules.mediaAllowed != null) {
+      rows.push(
+        <div key="media" style={ruleItemStyle}>
+          <RuleIndicator allowed={rules.mediaAllowed} />
+          <Text type="caption1">
+            {rules.mediaAllowed ? t('catalog.channel.rulesMediaAllowed') : t('catalog.channel.rulesMediaNotAllowed')}
+          </Text>
+        </div>,
+      );
+    }
+    if (rules.mediaTypes && rules.mediaTypes.length > 0) {
+      const types = rules.mediaTypes.map((mt) => t(`catalog.channel.mediaType.${mt}`, { defaultValue: mt })).join(', ');
+      rows.push(
+        <div key="types" style={ruleItemStyle}>
+          <RuleIndicator allowed />
+          <Text type="caption1">{t('catalog.channel.rulesMediaTypes', { types })}</Text>
+        </div>,
+      );
+    }
+    if (rules.maxMediaCount != null) {
+      rows.push(
+        <div key="count" style={ruleItemStyle}>
+          <RuleIndicator allowed />
+          <Text type="caption1">{t('catalog.channel.rulesMaxMedia', { count: rules.maxMediaCount })}</Text>
+        </div>,
+      );
+    }
+    sections.push({ label: t('catalog.channel.rulesMedia'), rows });
+  }
+
+  // Links & buttons
+  if (hasLinksButtons) {
+    const rows: React.ReactNode[] = [];
+    if (rules.linksAllowed != null) {
+      rows.push(
+        <div key="links" style={ruleItemStyle}>
+          <RuleIndicator allowed={rules.linksAllowed} />
+          <Text type="caption1">
+            {rules.linksAllowed ? t('catalog.channel.rulesLinksAllowed') : t('catalog.channel.rulesLinksNotAllowed')}
+          </Text>
+        </div>,
+      );
+    }
+    if (rules.mentionsAllowed != null) {
+      rows.push(
+        <div key="mentions" style={ruleItemStyle}>
+          <RuleIndicator allowed={rules.mentionsAllowed} />
+          <Text type="caption1">
+            {rules.mentionsAllowed ? t('catalog.channel.rulesMentionsAllowed') : t('catalog.channel.rulesMentionsNotAllowed')}
+          </Text>
+        </div>,
+      );
+    }
+    if (rules.maxButtons != null) {
+      rows.push(
+        <div key="buttons" style={ruleItemStyle}>
+          <RuleIndicator allowed />
+          <Text type="caption1">
+            {t('catalog.channel.rulesMaxButtons')}: {t('catalog.channel.rulesButtonsCount', { count: rules.maxButtons })}
+          </Text>
+        </div>,
+      );
+    }
+    sections.push({ label: t('catalog.channel.rulesLinks'), rows });
+  }
+
+  // Formatting
+  if (hasFormatting) {
+    sections.push({
+      label: t('catalog.channel.rulesFormatting'),
+      rows: [
+        <div key="fmt" style={ruleItemStyle}>
+          <RuleIndicator allowed={rules.formattingAllowed!} />
+          <Text type="caption1">
+            {rules.formattingAllowed ? t('catalog.channel.rulesFormattingAllowed') : t('catalog.channel.rulesFormattingNotAllowed')}
+          </Text>
+        </div>,
+      ],
+    });
+  }
+
+  // Custom rules
+  if (hasCustom) {
+    sections.push({
+      label: t('catalog.channel.rulesCustom'),
+      rows: [
+        <div key="custom" style={{ padding: '0 0 0 14px' }}>
+          <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+            {rules.customRules}
+          </Text>
+        </div>,
+      ],
+    });
+  }
+
+  if (sections.length === 0) {
+    return (
+      <div style={{ padding: '12px 16px', background: 'var(--color-background-section)', borderRadius: 12 }}>
+        <Text type="caption1" color="tertiary">{t('catalog.channel.noRules')}</Text>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        background: 'var(--color-background-base)',
+        border: '1px solid var(--color-border-separator)',
+        borderRadius: 12,
+        overflow: 'hidden',
+      }}
+    >
+      {sections.map((section, i) => (
+        <div
+          key={section.label}
+          style={{
+            padding: '12px 16px',
+            borderBottom: i < sections.length - 1 ? '1px solid var(--color-border-separator)' : 'none',
+          }}
+        >
+          <Text type="caption1" weight="medium" color="secondary" style={{ marginBottom: 8 }}>
+            {section.label}
+          </Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {section.rows}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -161,9 +389,13 @@ export default function ChannelDetailPage() {
     }
   };
 
+  const telegramLink = channel.username
+    ? `https://t.me/${channel.username}`
+    : channel.inviteLink ?? null;
+
   const handleOpenTelegram = () => {
-    if (channel.username) {
-      window.open(`https://t.me/${channel.username}`, '_blank');
+    if (telegramLink) {
+      window.open(telegramLink, '_blank');
     }
   };
 
@@ -213,13 +445,11 @@ export default function ChannelDetailPage() {
                     <LanguageBadge key={code} code={code} />
                   ))}
                 </div>
-                {channel.username && (
-                  <Text type="subheadline1" color="secondary">
-                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      @{channel.username}
-                    </span>
-                  </Text>
-                )}
+                <Text type="subheadline1" color="secondary">
+                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {channel.username ? `@${channel.username}` : t('catalog.channel.privateChannel')}
+                  </span>
+                </Text>
               </div>
               <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 <motion.button
@@ -388,7 +618,7 @@ export default function ChannelDetailPage() {
         )}
 
         {/* Open in Telegram link */}
-        {channel.username && (
+        {telegramLink && (
           <motion.div {...slideUp} style={{ padding: '0 16px 8px' }}>
             <motion.button
               {...pressScale}
@@ -407,7 +637,7 @@ export default function ChannelDetailPage() {
             >
               <TelegramIcon style={{ width: 16, height: 16, color: 'var(--color-link)' }} />
               <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-link)' }}>
-                {t('catalog.channel.openInTelegram')}
+                {channel.username ? t('catalog.channel.openInTelegram') : t('catalog.channel.joinChannel')}
               </span>
               <ArrowRightIcon style={{ width: 14, height: 14, color: 'var(--color-link)', opacity: 0.6 }} />
             </motion.button>
@@ -496,60 +726,7 @@ export default function ChannelDetailPage() {
             {t('catalog.channel.rules')}
           </Text>
           {channel.rules ? (
-            <div
-              style={{
-                background: 'var(--color-background-base)',
-                border: '1px solid var(--color-border-separator)',
-                borderRadius: 12,
-                overflow: 'hidden',
-              }}
-            >
-              {channel.rules.prohibitedTopics && channel.rules.prohibitedTopics.length > 0 && (
-                <div style={ruleRowStyle}>
-                  <Text type="caption1" color="secondary">{t('catalog.channel.rulesProhibited')}</Text>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                    {channel.rules.prohibitedTopics.map((topic) => (
-                      <span
-                        key={topic}
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: 6,
-                          background: 'color-mix(in srgb, var(--color-state-destructive) 8%, transparent)',
-                          fontSize: 12,
-                          fontWeight: 500,
-                          color: 'var(--color-state-destructive)',
-                        }}
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {channel.rules.maxPostChars != null && (
-                <div style={ruleRowStyle}>
-                  <Text type="caption1" color="secondary">{t('catalog.channel.rulesPostSize')}</Text>
-                  <Text type="body">
-                    {t('catalog.channel.rulesMaxChars', { count: channel.rules.maxPostChars })}
-                  </Text>
-                </div>
-              )}
-              {channel.rules.maxButtons != null && (
-                <div style={ruleRowStyle}>
-                  <Text type="caption1" color="secondary">{t('catalog.channel.rulesMaxButtons')}</Text>
-                  <Text type="body">
-                    {t('catalog.channel.rulesButtonsCount', { count: channel.rules.maxButtons })}
-                  </Text>
-                </div>
-              )}
-              {channel.rules.customRules && (
-                <div style={{ ...ruleRowStyle, borderBottom: 'none' }}>
-                  <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                    {channel.rules.customRules}
-                  </Text>
-                </div>
-              )}
-            </div>
+            <ChannelRulesSection rules={channel.rules} t={t} />
           ) : (
             <div
               style={{
@@ -565,18 +742,22 @@ export default function ChannelDetailPage() {
           )}
         </motion.div>
 
-        {/* Social proof */}
+        {/* Channel age */}
         <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
           <div
             style={{
-              padding: '12px 16px',
+              padding: '10px 16px',
               background: 'var(--color-background-section)',
               borderRadius: 12,
-              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
             }}
           >
-            <Text type="caption1" color="secondary">
-              {t('catalog.channel.newChannel')}
+            <ClockIcon style={{ width: 14, height: 14, color: 'var(--color-foreground-tertiary)' }} />
+            <Text type="caption1" color="tertiary">
+              {formatChannelAge(channel.createdAt, t)}
             </Text>
           </div>
         </motion.div>
@@ -655,7 +836,8 @@ const pricingCardStyle: React.CSSProperties = {
   gap: 12,
 };
 
-const ruleRowStyle: React.CSSProperties = {
-  padding: '12px 16px',
-  borderBottom: '1px solid var(--color-border-separator)',
+const ruleItemStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 8,
 };

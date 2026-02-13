@@ -100,6 +100,7 @@ export const handlers = [
       topics: detail?.topics ?? (fallbackCategory
         ? [{ slug: fallbackCategory.slug, name: fallbackCategory.localizedName.ru }]
         : []),
+      ...(detail?.rules ? { rules: detail.rules } : {}),
     });
   }),
 

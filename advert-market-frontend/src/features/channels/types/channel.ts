@@ -44,6 +44,7 @@ export const channelSchema = z.object({
   id: z.number(),
   title: z.string(),
   username: z.string().optional(),
+  inviteLink: z.string().optional(),
   subscriberCount: z.number(),
   categories: z.array(z.string()).default([]),
   pricePerPostNano: z.number().optional(),
@@ -64,6 +65,12 @@ export const channelRulesSchema = z.object({
   prohibitedTopics: z.array(z.string()).optional(),
   maxPostChars: z.number().optional(),
   maxButtons: z.number().optional(),
+  mediaAllowed: z.boolean().optional(),
+  mediaTypes: z.array(z.string()).optional(),
+  maxMediaCount: z.number().optional(),
+  linksAllowed: z.boolean().optional(),
+  mentionsAllowed: z.boolean().optional(),
+  formattingAllowed: z.boolean().optional(),
   customRules: z.string().optional(),
 });
 

@@ -105,7 +105,7 @@ export const mockChannels = [
   {
     id: 5,
     title: 'Marketing Hub',
-    username: 'marketinghub',
+    inviteLink: 'https://t.me/+abc123marketinghub',
     subscriberCount: 45000,
     categories: ['marketing'],
     pricePerPostNano: 2_000_000_000,
@@ -236,17 +236,28 @@ export const mockChannels = [
 
 // --- Channel detail data (pricing rules, topics, stats, description, owner) ---
 
-export const mockChannelDetails: Record<
-  number,
-  {
-    description: string;
-    ownerId: number;
-    createdAt: string;
-    avgReach: number;
-    pricingRules: { id: number; postType: string; priceNano: number; durationHours?: number; description?: string }[];
-    topics: { slug: string; name: string }[];
-  }
-> = {
+type MockChannelDetail = {
+  description: string;
+  ownerId: number;
+  createdAt: string;
+  avgReach: number;
+  pricingRules: { id: number; postType: string; priceNano: number; durationHours?: number; description?: string }[];
+  topics: { slug: string; name: string }[];
+  rules?: {
+    prohibitedTopics?: string[];
+    maxPostChars?: number;
+    maxButtons?: number;
+    mediaAllowed?: boolean;
+    mediaTypes?: string[];
+    maxMediaCount?: number;
+    linksAllowed?: boolean;
+    mentionsAllowed?: boolean;
+    formattingAllowed?: boolean;
+    customRules?: string;
+  };
+};
+
+export const mockChannelDetails: Record<number, MockChannelDetail> = {
   1: {
     description: 'Ежедневные новости из мира криптовалют и блокчейна. Обзоры, аналитика, прогнозы.',
     ownerId: 1,
@@ -262,6 +273,18 @@ export const mockChannelDetails: Record<
       { slug: 'crypto', name: 'Криптовалюта' },
       { slug: 'finance', name: 'Финансы' },
     ],
+    rules: {
+      prohibitedTopics: ['Казино', 'Форекс', 'P2P-обменники'],
+      maxPostChars: 2000,
+      maxButtons: 3,
+      mediaAllowed: true,
+      mediaTypes: ['photo', 'video'],
+      maxMediaCount: 2,
+      linksAllowed: true,
+      mentionsAllowed: false,
+      formattingAllowed: true,
+      customRules: 'Пост должен быть на тему криптовалют или блокчейна.\nПеред публикацией требуется согласование текста.',
+    },
   },
   2: {
     description: 'Технологические новости, обзоры гаджетов и софта.',
@@ -304,6 +327,28 @@ export const mockChannelDetails: Record<
       { slug: 'finance', name: 'Финансы' },
       { slug: 'business', name: 'Бизнес' },
     ],
+  },
+  5: {
+    description: 'Закрытое сообщество маркетологов. Кейсы, стратегии, инструменты.',
+    ownerId: 5,
+    createdAt: '2026-01-20T10:00:00Z',
+    avgReach: 12000,
+    pricingRules: [
+      { id: 14, postType: 'NATIVE', priceNano: 2_000_000_000, durationHours: 24, description: 'Кейс или обзор инструмента' },
+      { id: 15, postType: 'MENTION', priceNano: 1_500_000_000, description: 'Упоминание в тематическом посте' },
+    ],
+    topics: [{ slug: 'marketing', name: 'Маркетинг' }],
+    rules: {
+      maxPostChars: 1500,
+      maxButtons: 2,
+      mediaAllowed: true,
+      mediaTypes: ['photo'],
+      maxMediaCount: 1,
+      linksAllowed: true,
+      mentionsAllowed: true,
+      formattingAllowed: false,
+      customRules: 'Только маркетинговая тематика. Без кликбейта.',
+    },
   },
 };
 

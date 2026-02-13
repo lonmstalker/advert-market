@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Button, Input, Select, Text } from '@telegram-tools/ui-kit';
+import { Button, Input, Text } from '@telegram-tools/ui-kit';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
@@ -233,7 +233,16 @@ export function ChannelFiltersContent() {
         <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
           {t('catalog.filters.sortLabel')}
         </Text>
-        <Select options={sortOptions} value={sort} onChange={setSort} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {sortOptions.map((opt) => (
+            <ToggleChip
+              key={opt.value ?? '__default'}
+              label={opt.label}
+              active={sort === opt.value}
+              onClick={() => setSort(opt.value)}
+            />
+          ))}
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
