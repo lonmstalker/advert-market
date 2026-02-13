@@ -1,16 +1,18 @@
 import { Button, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { fadeIn } from '../animations';
+import type { ReactNode } from 'react';
+import { fadeIn, pressScale } from '../animations';
 
 type EmptyStateProps = {
-  emoji: string;
+  emoji?: string;
+  icon?: ReactNode;
   title: string;
   description: string;
   actionLabel?: string;
   onAction?: () => void;
 };
 
-export function EmptyState({ emoji, title, description, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({ emoji, icon, title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
     <motion.div
       {...fadeIn}
@@ -24,7 +26,24 @@ export function EmptyState({ emoji, title, description, actionLabel, onAction }:
         gap: '12px',
       }}
     >
-      <span style={{ fontSize: '48px', lineHeight: 1 }}>{emoji}</span>
+      {icon ? (
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            background: 'var(--color-background-base)',
+            border: '1px solid var(--color-border-separator)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {icon}
+        </div>
+      ) : emoji ? (
+        <span style={{ fontSize: '48px', lineHeight: 1 }}>{emoji}</span>
+      ) : null}
       <Text type="title2" weight="bold">
         {title}
       </Text>
@@ -32,7 +51,11 @@ export function EmptyState({ emoji, title, description, actionLabel, onAction }:
         {description}
       </Text>
       {actionLabel && onAction && (
-        <Button text={actionLabel} type="primary" onClick={onAction} style={{ marginTop: '12px' }} />
+        <div style={{ marginTop: '12px' }}>
+          <motion.div {...pressScale}>
+            <Button text={actionLabel} type="primary" onClick={onAction} />
+          </motion.div>
+        </div>
       )}
     </motion.div>
   );

@@ -22,6 +22,7 @@ export {
   StoryIcon,
 } from './post-type-icons';
 export { SearchIcon } from './search-icon';
+export { SearchOffIcon } from './search-off-icon';
 export { ShareIcon } from './share-icon';
 export { SpeakerIcon } from './speaker-icon';
 export { TelegramIcon } from './telegram-icon';

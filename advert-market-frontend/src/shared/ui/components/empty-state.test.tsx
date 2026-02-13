@@ -29,4 +29,12 @@ describe('EmptyState', () => {
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onAction).toHaveBeenCalledOnce();
   });
+
+  it('renders icon instead of emoji when icon prop is provided', () => {
+    renderWithProviders(
+      <EmptyState icon={<svg data-testid="test-icon" />} title="No results" description="Try again" />,
+    );
+    expect(screen.getByTestId('test-icon')).toBeInTheDocument();
+    expect(screen.queryByText('🔍')).not.toBeInTheDocument();
+  });
 });

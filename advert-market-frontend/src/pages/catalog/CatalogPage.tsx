@@ -17,7 +17,7 @@ import { useDebounce } from '@/shared/hooks/use-debounce';
 import { computeCpm, formatCpm } from '@/shared/lib/ton-format';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
-import { FilterIcon, SearchIcon } from '@/shared/ui/icons';
+import { FilterIcon, SearchIcon, SearchOffIcon } from '@/shared/ui/icons';
 
 function formatCompact(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
@@ -281,7 +281,6 @@ export default function CatalogPage() {
         ) : isError ? (
           <motion.div key="error" {...fadeIn}>
             <EmptyState
-              emoji="\u26A0\uFE0F"
               title={t('common.error')}
               description={t('errors.server')}
               actionLabel={t('common.retry')}
@@ -291,7 +290,7 @@ export default function CatalogPage() {
         ) : channels.length === 0 ? (
           <motion.div key="empty" {...fadeIn}>
             <EmptyState
-              emoji="\u{1F50D}"
+              icon={<SearchOffIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
               title={t('catalog.empty.title')}
               description={t('catalog.empty.description')}
               actionLabel={t('catalog.empty.cta')}

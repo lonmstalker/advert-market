@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Button, Spinner, Text } from '@telegram-tools/ui-kit';
+import { Spinner, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
@@ -16,6 +16,7 @@ import {
   ClockIcon,
   EditIcon,
   PostTypeIcon,
+  SearchOffIcon,
   ShareIcon,
   TelegramIcon,
   VerifiedIcon,
@@ -33,9 +34,9 @@ function formatNumber(count: number): string {
 }
 
 function erColor(rate: number): string {
-  if (rate > 5) return 'var(--color-accent-primary)';
-  if (rate >= 2) return 'var(--color-foreground-secondary)';
-  return 'var(--color-foreground-tertiary)';
+  if (rate >= 5) return 'var(--color-state-success)';
+  if (rate >= 2) return 'var(--color-foreground-primary)';
+  return 'var(--color-state-destructive)';
 }
 
 function getChannelLanguages(channel: ChannelDetail): string[] {
@@ -124,7 +125,7 @@ export default function ChannelDetailPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          emoji="\u{1F614}"
+          icon={<SearchOffIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
           title={t('errors.notFound')}
           description={t('catalog.empty.description')}
           actionLabel={t('common.back')}
@@ -169,51 +170,22 @@ export default function ChannelDetailPage() {
   return (
     <>
       <BackButtonHandler />
-      <div style={{ paddingBottom: 88 }}>
+      <div style={{ paddingBottom: 72 }}>
         <motion.div {...fadeIn}>
           {/* Header */}
           <div
             style={{
-              padding: '24px 16px 20px',
+              padding: '16px 16px 14px',
               background: 'var(--color-background-base)',
               borderBottom: '1px solid var(--color-border-separator)',
-              position: 'relative',
             }}
           >
-            {/* Edit button — SVG icon top-right */}
-            {isOwner && (
-              <motion.button
-                {...pressScale}
-                type="button"
-                onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
-                style={{
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: '1px solid var(--color-border-separator)',
-                  background: 'var(--color-background-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                  padding: 0,
-                  zIndex: 1,
-                }}
-                aria-label={t('catalog.channel.edit')}
-              >
-                <EditIcon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />
-              </motion.button>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+            {/* Row: avatar + title/username + actions */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div
                 style={{
-                  width: 72,
-                  height: 72,
+                  width: 56,
+                  height: 56,
                   borderRadius: '50%',
                   background: `hsl(${hue}, 55%, 55%)`,
                   display: 'flex',
@@ -222,81 +194,100 @@ export default function ChannelDetailPage() {
                   flexShrink: 0,
                 }}
               >
-                <span style={{ color: 'var(--color-static-white)', fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
+                <span style={{ color: 'var(--color-static-white)', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
               </div>
-              <div style={{ maxWidth: '100%', minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <Text type="title1" weight="bold">
-                    {channel.title}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Text type="title2" weight="bold">
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                      {channel.title}
+                    </span>
                   </Text>
                   {channel.isVerified && (
                     <VerifiedIcon
-                      style={{ width: 18, height: 18, color: 'var(--color-accent-primary)', flexShrink: 0 }}
+                      style={{ width: 16, height: 16, color: 'var(--color-accent-primary)', flexShrink: 0 }}
                       title={t('catalog.channel.verified')}
                     />
                   )}
-                </div>
-                {channel.username && (
-                  <div style={{ marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', padding: '0 24px' }}>
-                    <Text type="subheadline1" color="secondary">
-                      @{channel.username}
-                    </Text>
-                  </div>
-                )}
-                {/* Language badges */}
-                {langs.length > 0 && (
-                  <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 6 }}>
-                    {langs.map((code) => (
-                      <LanguageBadge key={code} code={code} />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Topic badges */}
-              {channel.topics.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
-                  {channel.topics.map((topic) => (
-                    <span
-                      key={topic.slug}
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: 12,
-                        background: 'var(--color-background-secondary)',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        color: 'var(--color-foreground-secondary)',
-                      }}
-                    >
-                      {topic.name}
-                    </span>
+                  {langs.map((code) => (
+                    <LanguageBadge key={code} code={code} />
                   ))}
                 </div>
-              )}
-
-              {/* Share button */}
-              <motion.button
-                {...pressScale}
-                onClick={handleShare}
-                style={{
-                  background: 'var(--color-accent-primary)',
-                  border: 'none',
-                  borderRadius: 20,
-                  padding: '6px 16px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-                aria-label={t('catalog.channel.share')}
-              >
-                <ShareIcon style={{ width: 14, height: 14, color: 'var(--color-static-white)' }} />
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-static-white)' }}>
-                  {t('catalog.channel.share')}
-                </span>
-              </motion.button>
+                {channel.username && (
+                  <Text type="subheadline1" color="secondary">
+                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      @{channel.username}
+                    </span>
+                  </Text>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                <motion.button
+                  {...pressScale}
+                  onClick={handleShare}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    border: '1px solid var(--color-border-separator)',
+                    background: 'var(--color-background-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent',
+                    padding: 0,
+                  }}
+                  aria-label={t('catalog.channel.share')}
+                >
+                  <ShareIcon style={{ width: 16, height: 16, color: 'var(--color-foreground-secondary)' }} />
+                </motion.button>
+                {isOwner && (
+                  <motion.button
+                    {...pressScale}
+                    type="button"
+                    onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      border: '1px solid var(--color-border-separator)',
+                      background: 'var(--color-background-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                      padding: 0,
+                    }}
+                    aria-label={t('catalog.channel.edit')}
+                  >
+                    <EditIcon style={{ width: 16, height: 16, color: 'var(--color-foreground-secondary)' }} />
+                  </motion.button>
+                )}
+              </div>
             </div>
+
+            {/* Topic badges */}
+            {channel.topics.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                {channel.topics.map((topic) => (
+                  <span
+                    key={topic.slug}
+                    style={{
+                      padding: '3px 10px',
+                      borderRadius: 10,
+                      background: 'var(--color-background-secondary)',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: 'var(--color-foreground-secondary)',
+                    }}
+                  >
+                    {topic.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -396,32 +387,29 @@ export default function ChannelDetailPage() {
           </motion.div>
         )}
 
-        {/* Open in Telegram button */}
+        {/* Open in Telegram link */}
         {channel.username && (
-          <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
+          <motion.div {...slideUp} style={{ padding: '0 16px 8px' }}>
             <motion.button
               {...pressScale}
               type="button"
               onClick={handleOpenTelegram}
               style={{
-                width: '100%',
-                padding: '14px 16px',
-                background: 'var(--color-accent-primary)',
+                background: 'none',
                 border: 'none',
-                borderRadius: 12,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
+                gap: 6,
+                padding: '4px 0',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <TelegramIcon style={{ width: 18, height: 18, color: 'var(--color-static-white)' }} />
-              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-static-white)' }}>
+              <TelegramIcon style={{ width: 16, height: 16, color: 'var(--color-link)' }} />
+              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-link)' }}>
                 {t('catalog.channel.openInTelegram')}
               </span>
-              <ArrowRightIcon style={{ width: 16, height: 16, color: 'var(--color-static-white)', opacity: 0.7 }} />
+              <ArrowRightIcon style={{ width: 14, height: 14, color: 'var(--color-link)', opacity: 0.6 }} />
             </motion.button>
           </motion.div>
         )}
@@ -503,11 +491,11 @@ export default function ChannelDetailPage() {
         )}
 
         {/* Channel rules */}
-        {channel.rules && (
-          <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-            <Text type="body" weight="bold" style={{ marginBottom: 12 }}>
-              {t('catalog.channel.rules')}
-            </Text>
+        <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
+          <Text type="body" weight="bold" style={{ marginBottom: 12 }}>
+            {t('catalog.channel.rules')}
+          </Text>
+          {channel.rules ? (
             <div
               style={{
                 background: 'var(--color-background-base)',
@@ -562,8 +550,20 @@ export default function ChannelDetailPage() {
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
+          ) : (
+            <div
+              style={{
+                padding: '12px 16px',
+                background: 'var(--color-background-section)',
+                borderRadius: 12,
+              }}
+            >
+              <Text type="caption1" color="tertiary">
+                {t('catalog.channel.noRules')}
+              </Text>
+            </div>
+          )}
+        </motion.div>
 
         {/* Social proof */}
         <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
@@ -590,22 +590,44 @@ export default function ChannelDetailPage() {
             bottom: 0,
             left: 0,
             right: 0,
-            padding: 16,
+            padding: '10px 16px',
             background: 'var(--color-background-base)',
             borderTop: '1px solid var(--color-border-separator)',
             display: 'flex',
+            alignItems: 'center',
             gap: 12,
             zIndex: 10,
           }}
         >
+          {minPrice != null && (
+            <div style={{ flexShrink: 0 }}>
+              <Text type="callout" weight="bold">
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {t('catalog.channel.from', { price: formatTon(minPrice) })}
+                </span>
+              </Text>
+            </div>
+          )}
           <div style={{ flex: 1 }}>
-            <motion.div {...pressScale}>
-              <Button
-                text={t('catalog.channel.createDeal')}
-                type="primary"
-                onClick={() => navigate(`/deals/new?channelId=${channel.id}`)}
-              />
-            </motion.div>
+            <motion.button
+              {...pressScale}
+              type="button"
+              onClick={() => navigate(`/deals/new?channelId=${channel.id}`)}
+              style={{
+                width: '100%',
+                padding: '10px 16px',
+                background: 'var(--color-accent-primary)',
+                border: 'none',
+                borderRadius: 10,
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+                color: 'var(--color-static-white)',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              {t('catalog.channel.createDeal')}
+            </motion.button>
           </div>
         </div>
       )}

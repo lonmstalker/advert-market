@@ -21,9 +21,9 @@ function formatSubscribers(count: number): string {
 }
 
 function erColor(rate: number): string {
-  if (rate > 5) return 'var(--color-accent-primary)';
-  if (rate >= 2) return 'var(--color-foreground-secondary)';
-  return 'var(--color-foreground-tertiary)';
+  if (rate >= 5) return 'var(--color-state-success)';
+  if (rate >= 2) return 'var(--color-foreground-primary)';
+  return 'var(--color-state-destructive)';
 }
 
 function getChannelLanguages(channel: Channel): string[] {
