@@ -281,6 +281,102 @@ class CodingRulesArchTest {
                 .check(classes);
     }
 
+    // --- Localization enforcement ---
+
+    @Test
+    @DisplayName("GlobalExceptionHandler methods setting title/detail"
+            + " must use LocalizationService or buildProblem")
+    void globalExceptionHandlerMustLocalizeMessages() {
+        methods()
+                .that().areDeclaredInClassesThat()
+                .haveSimpleName("GlobalExceptionHandler")
+                .should(useLocalizationForProblemDetails())
+                .because("all error messages in GlobalExceptionHandler"
+                        + " must go through LocalizationService"
+                        + " for i18n support")
+                .check(classes);
+    }
+
+    // --- Guava anti-pattern bans ---
+
+    @Test
+    @DisplayName("No Guava Strings — use JDK or Commons StringUtils")
+    void noGuavaStrings() {
+        noClasses()
+                .that().resideInAPackage("com.advertmarket..")
+                .should().dependOnClassesThat()
+                .haveFullyQualifiedName(
+                        "com.google.common.base.Strings")
+                .because("use JDK String.isBlank()/isEmpty()"
+                        + " or Commons StringUtils instead")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("No Guava collection factories"
+            + " — use JDK List.of/Set.of/Map.of")
+    void noGuavaCollectionFactories() {
+        noClasses()
+                .that().resideInAPackage("com.advertmarket..")
+                .should().dependOnClassesThat()
+                .haveFullyQualifiedName(
+                        "com.google.common.collect.Lists")
+                .orShould().dependOnClassesThat()
+                .haveFullyQualifiedName(
+                        "com.google.common.collect.Sets")
+                .orShould().dependOnClassesThat()
+                .haveFullyQualifiedName(
+                        "com.google.common.collect.Maps")
+                .because("use JDK List.of(), Set.of(), Map.of()"
+                        + " or new ArrayList<>() in Java 25")
+                .check(classes);
+    }
+
+    private static ArchCondition<JavaMethod>
+            useLocalizationForProblemDetails() {
+        return new ArchCondition<>(
+                "use LocalizationService.msg() or delegate"
+                        + " to buildProblem() when calling"
+                        + " setTitle/setDetail") {
+            @Override
+            public void check(JavaMethod method,
+                    ConditionEvents events) {
+                boolean callsSetTitleOrDetail = method
+                        .getMethodCallsFromSelf().stream()
+                        .anyMatch(call -> {
+                            String target = call.getTargetOwner()
+                                    .getSimpleName();
+                            String name = call.getName();
+                            return "ProblemDetail".equals(target)
+                                    && ("setTitle".equals(name)
+                                    || "setDetail".equals(name));
+                        });
+                if (!callsSetTitleOrDetail) {
+                    return;
+                }
+                boolean usesLocalization = method
+                        .getMethodCallsFromSelf().stream()
+                        .anyMatch(call -> {
+                            String target = call.getTargetOwner()
+                                    .getSimpleName();
+                            String name = call.getName();
+                            return ("LocalizationService"
+                                    .equals(target)
+                                    && "msg".equals(name))
+                                    || "buildProblem".equals(name);
+                        });
+                if (!usesLocalization) {
+                    events.add(SimpleConditionEvent.violated(
+                            method,
+                            method.getFullName()
+                                    + " sets ProblemDetail"
+                                    + " title/detail without"
+                                    + " using LocalizationService"));
+                }
+            }
+        };
+    }
+
     private static ArchCondition<JavaClass> havePropertyGroupDocAnnotation() {
         return new ArchCondition<>(
                 "have @PropertyGroupDoc annotation") {

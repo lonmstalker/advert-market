@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.MDC;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -81,16 +82,17 @@ public class GlobalExceptionHandler
     /** Safety net for access denied propagated through @PreAuthorize. */
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(
-            AccessDeniedException ex) {
+            AccessDeniedException ex, Locale locale) {
         log.debug("Access denied in controller advice: {}",
                 ex.getMessage());
         metrics.incrementCounter(MetricNames.AUTH_ACCESS_DENIED);
         var code = ErrorCode.AUTH_INSUFFICIENT_PERMISSIONS;
         var problem = ProblemDetail.forStatus(code.httpStatus());
         problem.setType(URI.create(code.typeUri()));
-        problem.setTitle("Access denied");
-        problem.setDetail(
-                "You do not have permission to perform this action");
+        problem.setTitle(localization.msg(
+                code.titleKey(), locale));
+        problem.setDetail(localization.msg(
+                code.detailKey(), locale));
         addCommonProperties(problem, code.name());
         return problem;
     }
@@ -119,16 +121,19 @@ public class GlobalExceptionHandler
             HttpHeaders headers,
             HttpStatusCode status,
             WebRequest request) {
+        var locale = LocaleContextHolder.getLocale();
         var code = ErrorCode.VALIDATION_FAILED;
         var problem = ProblemDetail.forStatus(code.httpStatus());
         problem.setType(URI.create(code.typeUri()));
-        problem.setTitle("Validation failed");
+        problem.setTitle(localization.msg(
+                code.titleKey(), locale));
         problem.setDetail(ex.getBindingResult()
                 .getFieldErrors().stream()
                 .map(e -> e.getField() + ": "
                         + e.getDefaultMessage())
                 .reduce((a, b) -> a + "; " + b)
-                .orElse("Validation failed"));
+                .orElse(localization.msg(
+                        code.detailKey(), locale)));
         addCommonProperties(problem, code.name());
         return ResponseEntity.status(code.httpStatus())
                 .body(problem);
@@ -141,13 +146,15 @@ public class GlobalExceptionHandler
             HttpHeaders headers,
             HttpStatusCode status,
             WebRequest request) {
+        var locale = LocaleContextHolder.getLocale();
         var code = ErrorCode.VALIDATION_FAILED;
         var problem = ProblemDetail.forStatus(
                 HttpStatus.BAD_REQUEST);
         problem.setType(URI.create(code.typeUri()));
-        problem.setTitle("Malformed request body");
-        problem.setDetail("Request body is missing or"
-                + " contains invalid JSON");
+        problem.setTitle(localization.msg(
+                code.titleKey(), locale));
+        problem.setDetail(localization.msg(
+                code.detailKey(), locale));
         addCommonProperties(problem, code.name());
         return ResponseEntity.badRequest().body(problem);
     }
