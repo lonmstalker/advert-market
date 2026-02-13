@@ -1,8 +1,8 @@
-# Онбординг
+# Onboarding
 
-> 3 экрана при первом запуске. Показывается по флагу `onboardingCompleted == false` из ответа auth.
+> 3 screens on first launch. Indicated by the `onboardingCompleted == false` flag from the auth response.
 
-## Навигация
+## Navigation
 
 ```
 /onboarding → /onboarding/interest → /onboarding/tour → redirect
@@ -10,111 +10,111 @@
 
 ---
 
-## 1.1 Приветствие
+## 1.1 Greetings
 
 | | |
 |---|---|
 | **Route** | `/onboarding` |
-| **Цель** | Познакомить с платформой при первом запуске |
-| **Кто видит** | Пользователь с `onboardingCompleted == false` |
-| **Данные** | Нет |
+| **Target** | Get to know the platform when you first launch |
+| **Who sees** | User with `onboardingCompleted == false` |
+| **Data** | No |
 
 ### UI
 
-- Иллюстрация (TON/Telegram стилистика)
-- Заголовок: `t('onboarding.welcome.title')` — "Ad Market"
-- Подзаголовок: `t('onboarding.welcome.subtitle')` — "Безопасная реклама в Telegram с TON эскроу"
-- Кнопка `t('onboarding.welcome.start')` (`primary`, full-width)
+- Illustration (TON/Telegram style)
+- Header: `t('onboarding.welcome.title')` - "Ad Market"
+- Subtitle: `t('onboarding.welcome.subtitle')` - "Safe advertising in Telegram with TON escrow"
+- Button `t('onboarding.welcome.start')` (`primary`, full-width)
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Начать" | → `/onboarding/interest` |
+| "Start" | → `/onboarding/interest` |
 
-### Компоненты
+### Components
 
 - `Button` (primary)
-- Статичная иллюстрация (SVG/Lottie)
+- Static illustration (SVG/Lottie)
 
 ---
 
-## 1.2 Выбор интереса
+## 1.2 Selecting an interest
 
 | | |
 |---|---|
 | **Route** | `/onboarding/interest` |
-| **Цель** | Понять сценарии пользователя для персонализации |
-| **Кто видит** | Пользователь с `onboardingCompleted == false` |
-| **Данные** | Нет |
+| **Target** | Understand User Scenarios for Personalization |
+| **Who sees** | User with `onboardingCompleted == false` |
+| **Data** | No |
 
 ### UI
 
-- Заголовок: `t('onboarding.interest.title')` — "Что вас интересует?"
-- Две крупные карточки (**toggle**, можно выбрать одну или обе):
-  - **`t('onboarding.interest.advertiser')`** — "Хочу рекламу" — подзаголовок: `t('onboarding.interest.advertiser.description')` — "Найдите каналы и разместите рекламу"
-  - **`t('onboarding.interest.owner')`** — "Владею каналом" — подзаголовок: `t('onboarding.interest.owner.description')` — "Получайте заказы на рекламу"
-- Мелкий текст: `t('onboarding.interest.hint')` — "Можно выбрать оба варианта"
-- Кнопка `t('common.continue')` (`primary`, full-width) — активна при выборе хотя бы одной карточки
+- Title: `t('onboarding.interest.title')` - "What are you interested in?"
+- Two large cards (**toggle**, you can choose one or both):
+  - **`t('onboarding.interest.advertiser')`** - "I want advertising" - subtitle: `t('onboarding.interest.advertiser.description')` - "Find channels and place advertising"
+  - **`t('onboarding.interest.owner')`** - "I own the channel" - subtitle: `t('onboarding.interest.owner.description')` - "Receive orders for advertising"
+- Small text: `t('onboarding.interest.hint')` - "You can choose both options"
+- Button `t('common.continue')` (`primary`, full-width) - active when at least one card is selected
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Тап по карточке | Toggle selection (вкл/выкл). Карточка подсвечивается при выборе |
-| "Продолжить" | → `/onboarding/tour` |
+| Tap on card | Toggle selection (on/off). The card is highlighted when selected |
+| "Continue" | → `/onboarding/tour` |
 
-### Состояние
+### State
 
 ```typescript
 type OnboardingInterest = 'advertiser' | 'owner' | 'both';
 
-// Локальный state, отправляется на сервер при завершении онбординга
+// \u041b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 state, \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440 \u043f\u0440\u0438 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0438 \u043e\u043d\u0431\u043e\u0440\u0434\u0438\u043d\u0433\u0430
 const [selected, setSelected] = useState<Set<'advertiser' | 'owner'>>(new Set());
 
-// Результат:
+// \u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442:
 // selected = {'advertiser'} → 'advertiser'
 // selected = {'owner'} → 'owner'
 // selected = {'advertiser', 'owner'} → 'both'
 ```
 
-### Компоненты
+### Components
 
-- Кастомные карточки выбора с toggle-поведением (не `GroupItem` — крупный формат с иконками)
+- Custom choice cards with toggle behavior (not `GroupItem` - large format with icons)
 
 ---
 
-## 1.3 Обзор возможностей
+## 1.3 Features overview
 
 | | |
 |---|---|
 | **Route** | `/onboarding/tour` |
-| **Цель** | Краткий тур по 3 ключевым функциям |
-| **Кто видит** | Пользователь с `onboardingCompleted == false` |
-| **Данные** | `selected` interest из предыдущего шага |
+| **Target** | A Quick Tour of 3 Key Features |
+| **Who sees** | User with `onboardingCompleted == false` |
+| **Data** | `selected` interest from the previous step |
 
 ### UI
 
-Swipeable карусель из 3 слайдов:
+Swipeable carousel of 3 slides:
 
-| # | Заголовок (i18n) | Описание (i18n) |
+| # | Header (i18n) | Description (i18n) |
 |---|------------------|-----------------|
 | 1 | `t('onboarding.tour.slide1.title')` | `t('onboarding.tour.slide1.description')` |
 | 2 | `t('onboarding.tour.slide2.title')` | `t('onboarding.tour.slide2.description')` |
 | 3 | `t('onboarding.tour.slide3.title')` | `t('onboarding.tour.slide3.description')` |
 
-- Индикатор точек (dot indicator)
-- Кнопка `t('onboarding.tour.finish')` (`primary`, full-width) — видна на последнем слайде
-- Кнопка `t('onboarding.tour.skip')` (`link`, `secondary`) — видна на 1 и 2 слайде
+- Dot indicator
+- Button `t('onboarding.tour.finish')` (`primary`, full-width) - visible on the last slide
+- Button `t('onboarding.tour.skip')` (`link`, `secondary`) - visible on slides 1 and 2
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Свайп | Переход между слайдами |
-| "Завершить" / "Пропустить" | `PUT /api/v1/profile/onboarding` → redirect по interest |
+| Swipe | Transition between slides |
+| "Finish" / "Skip" | `PUT /api/v1/profile/onboarding` → redirect by interest |
 
-### Сохранение на сервере
+### Saving on the server
 
 ```
 PUT /api/v1/profile/onboarding
@@ -126,12 +126,12 @@ PUT /api/v1/profile/onboarding
 }
 ```
 
-Сервер устанавливает `onboardingCompleted = true` + сохраняет `interest` в профиле пользователя.
+The server sets `onboardingCompleted = true` + stores `interest` in the user profile.
 
-### Логика редиректа
+### Redirect logic
 
 ```typescript
-const interest = getOnboardingInterest(); // из state предыдущего шага
+const interest = getOnboardingInterest(); // \u0438\u0437 state \u043f\u0440\u0435\u0434\u044b\u0434\u0443\u0449\u0435\u0433\u043e \u0448\u0430\u0433\u0430
 
 switch (interest) {
   case 'advertiser':
@@ -141,27 +141,27 @@ switch (interest) {
     navigate('/profile/channels/new');
     break;
   case 'both':
-    navigate('/catalog'); // основной сценарий — поиск каналов
+    navigate('/catalog'); // \u043e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u0441\u0446\u0435\u043d\u0430\u0440\u0438\u0439 — \u043f\u043e\u0438\u0441\u043a \u043a\u0430\u043d\u0430\u043b\u043e\u0432
     break;
 }
 ```
 
-### Компоненты
+### Components
 
-- Карусель (swipeable, touch-friendly)
+- Carousel (swipeable, touch-friendly)
 - Dot indicator
 - `Button` (primary + link)
 
 ---
 
-## Общие заметки
+## General notes
 
 ### Guard route
 
-Пользователь **уже создан** при команде `/start` в боте или при `POST /api/v1/auth/login` (upsert). Онбординг показывается **только** если `onboardingCompleted == false` в ответе auth.
+The user has **already been created** with the `/start` command in the bot or with `POST /api/v1/auth/login` (upsert). Onboarding is shown **only** if `onboardingCompleted == false` is in the auth response.
 
 ```typescript
-// В корневом роутере
+// \u0412 \u043a\u043e\u0440\u043d\u0435\u0432\u043e\u043c \u0440\u043e\u0443\u0442\u0435\u0440\u0435
 const { data: authData } = useAuth();
 
 if (!authData.onboardingCompleted) {
@@ -169,22 +169,22 @@ if (!authData.onboardingCompleted) {
 }
 ```
 
-После завершения онбординга (`PUT /api/v1/profile/onboarding`) — инвалидация auth query, guard пропускает пользователя дальше.
+After onboarding is completed (`PUT /api/v1/profile/onboarding`) - auth query invalidation, guard allows the user to continue.
 
-### Анимации
+### Animations
 
-- Fade-in при первом появлении
-- Slide-transition между экранами
-- Карусель с momentum scrolling
+- Fade-in on first appearance
+- Slide-transition between screens
+- Carousel with momentum scrolling
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
 | `PUT /api/v1/profile/onboarding` failed | Toast `t('errors.network')` + retry |
 | Offline | Banner `t('errors.offline')` |
 
-### Файловая структура
+### File structure
 
 ```
 src/pages/onboarding/

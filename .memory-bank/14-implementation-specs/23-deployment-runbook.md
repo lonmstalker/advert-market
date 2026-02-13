@@ -198,7 +198,7 @@ docker exec redis redis-cli DEL system:pause_payouts
 
 ### Shutdown Order
 
-При получении SIGTERM (Docker stop, Kubernetes termination):
+When receiving SIGTERM (Docker stop, Kubernetes termination):
 
 ```
 1. Stop accepting new HTTP requests (Spring marks unhealthy)
@@ -269,19 +269,19 @@ services:
 
 ### Kafka Consumer Shutdown Details
 
-1. `container.stop()` вызывает `consumer.wakeup()`
-2. Текущий poll() выбрасывает WakeupException
-3. Consumer commitSync() для обработанных offsets
-4. Consumer закрывает соединение, покидает consumer group
-5. Rebalance происходит на оставшихся consumers
+1. `container.stop()` calls `consumer.wakeup()`
+2. The current poll() throws a WakeupException
+3. Consumer commitSync() for processed offsets
+4. Consumer closes the connection, leaves the consumer group
+5. Rebalance occurs on the remaining consumers
 
 ### Health Check During Shutdown
 
 ```
-Шаг 1: /actuator/health возвращает 503 (OUT_OF_SERVICE)
-Шаг 2: Load balancer (nginx) перестаёт направлять трафик
-Шаг 3: In-flight requests завершаются
-Шаг 4: Remaining shutdown steps execute
+\u0428\u0430\u0433 1: /actuator/health \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 503 (OUT_OF_SERVICE)
+\u0428\u0430\u0433 2: Load balancer (nginx) \u043f\u0435\u0440\u0435\u0441\u0442\u0430\u0451\u0442 \u043d\u0430\u043f\u0440\u0430\u0432\u043b\u044f\u0442\u044c \u0442\u0440\u0430\u0444\u0438\u043a
+\u0428\u0430\u0433 3: In-flight requests \u0437\u0430\u0432\u0435\u0440\u0448\u0430\u044e\u0442\u0441\u044f
+\u0428\u0430\u0433 4: Remaining shutdown steps execute
 ```
 
 ### Pre-Stop Hook (Kubernetes, future)

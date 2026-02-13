@@ -2,7 +2,7 @@
 
 ## Overview
 
-3 внешних зависимости с разным SLA и failure modes. Для каждой — circuit breaker, fallback, monitoring. Реализация: Resilience4j (Spring Boot интеграция).
+3 external dependencies with different SLA and failure modes. For each - circuit breaker, fallback, monitoring. Implementation: Resilience4j (Spring Boot integration).
 
 ---
 
@@ -117,7 +117,7 @@ resilience4j:
 
 ### 429 Handling (Rate Limit, NOT Circuit Breaker)
 
-Telegram 429 с `retry_after` — это не failure, а rate control. НЕ считается как failure для circuit breaker. Обрабатывается отдельно через `Retry`:
+Telegram 429 with `retry_after` is not a failure, but rate control. It does NOT count as a failure for the circuit breaker. Handled separately via `Retry`:
 
 ```yaml
 resilience4j:
@@ -182,7 +182,7 @@ resilience4j:
 
 ## Bulkhead (Concurrency Isolation)
 
-Предотвращает одну медленную зависимость от исчерпания thread pool:
+Prevents one slow dependency from running out of thread pool:
 
 ```yaml
 resilience4j:
@@ -200,7 +200,7 @@ resilience4j:
 
 ## Monitoring
 
-### Metrics (автоматически через Resilience4j + Micrometer)
+### Metrics (automatically via Resilience4j + Micrometer)
 
 | Metric | Type | Description |
 |--------|------|-------------|
@@ -258,7 +258,7 @@ resilience4j:
 
 ## Degraded Mode Behavior
 
-Когда circuit open, система продолжает работать в degraded mode:
+When the circuit is open, the system continues to operate in degraded mode:
 
 | Dependency Down | What Works | What Doesn't |
 |----------------|------------|-------------|

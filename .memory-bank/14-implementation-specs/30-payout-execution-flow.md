@@ -79,7 +79,7 @@ After ledger entries recorded, OutboxPublisher emits to `escrow.commands`:
 | PAYOUT_SENT | After tx submitted to blockchain |
 | PAYOUT_CONFIRMED | After 1 confirmation received |
 
-Notification sent at PAYOUT_CONFIRMED: owner gets "Выплата {amount} TON" message.
+Notification sent at PAYOUT_CONFIRMED: owner gets "Payout {amount} TON" message.
 
 ## Idempotency Guarantees
 

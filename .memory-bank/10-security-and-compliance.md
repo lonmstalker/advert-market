@@ -74,7 +74,7 @@ Personally identifiable information is stored in an isolated `pii_store` with fi
 | `ton_payout_address` | AES-256-GCM | `pii_store` table |
 | Telegram profile (`first_name`, `last_name`, `username`) | None (public Telegram data) | `users` table |
 
-Telegram profile data (`first_name`, `last_name`, `username`) хранится в таблице `users` для отображения в UI. Это публичные данные Telegram-профиля. Чувствительные данные (адреса кошельков) хранятся только в зашифрованном `pii_store`.
+Telegram profile data (`first_name`, `last_name`, `username`) is stored in the `users` table for display in the UI. This is public Telegram profile data. Sensitive data (wallet addresses) is stored only in the encrypted `pii_store`.
 
 ### Encryption
 

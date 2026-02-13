@@ -212,7 +212,7 @@ Partition key: `recipient_id` (not deal_id).
       "deal_id_short": "550e8400"
     },
     "buttons": [
-      {"text": "Открыть сделку", "url": "https://t.me/bot?startapp=deal_550e8400"}
+      {"text": "\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0441\u0434\u0435\u043b\u043a\u0443", "url": "https://t.me/bot?startapp=deal_550e8400"}
     ]
   }
 }

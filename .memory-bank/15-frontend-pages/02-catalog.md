@@ -1,25 +1,25 @@
-# Каталог каналов
+# Channel catalog
 
-> Tab 1. Поиск и выбор каналов для размещения рекламы + создание сделки.
+> Tab 1. Search and select channels for advertising + create a deal.
 
-## Навигация
+## Navigation
 
 ```
 /catalog
-  ├── [Sheet] Фильтры
+  ├── [Sheet] \u0424\u0438\u043b\u044c\u0442\u0440\u044b
   ├── /catalog/channels/:channelId
   └── /deals/new?channelId=:channelId
 ```
 
 ---
 
-## 2.1 Список каналов
+## 2.1 Channel list
 
 | | |
 |---|---|
 | **Route** | `/catalog` |
-| **Цель** | Поиск и просмотр каналов для размещения рекламы |
-| **Кто видит** | Все авторизованные |
+| **Target** | Search and view channels for advertising |
+| **Who sees** | All authorized |
 
 ### API
 
@@ -29,30 +29,30 @@ GET /api/v1/channels?cursor=&limit=20&q=&topic=&minSubs=&maxSubs=&minPrice=&maxP
 
 **Query keys:** `channelKeys.list(params)`
 
-### Deep link при входе
+### Deep link at login
 
-При наличии `startapp=channel_{id}` в параметрах Telegram Mini App — автоматический роутинг на `/catalog/channels/:id` (обработка в корневом роутере, см. 6.4).
+If there is `startapp=channel_{id}` in the Telegram Mini App parameters, automatic routing to `/catalog/channels/:id` (processing in the root router, see 6.4).
 
 ### UI
 
-- **Поисковая строка** — сверху, debounce 300ms, placeholder: `t('catalog.search.placeholder')`
-- **Кнопка `t('catalog.filters.button')`** — справа от поиска, badge с количеством активных фильтров
-- **Список каналов** — `Group` + `GroupItem`:
-  - `before`: аватар канала (40×40)
-  - Заголовок: название канала
+- **Search line** - top, debounce 300ms, placeholder: `t('catalog.search.placeholder')`
+- **Button `t('catalog.filters.button')`** - to the right of the search, badge with the number of active filters
+- **Channel list** — `Group` + `GroupItem`:
+  - `before`: channel avatar (40×40)
+  - Title: channel name
   - `subtitle`: `t('catalog.channel.subscribers', { count })`
-  - `after`: цена (мин. из pricing rules, формат `<Amount>`)
-- **Infinite scroll** — skeleton загрузка (3 GroupItem placeholder)
+  - `after`: price (min. from pricing rules, format `<Amount>`)
+- **Infinite scroll** — skeleton loading (3 GroupItem placeholder)
 - **Pull-to-refresh**
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Ввод в поиск | Debounce → перезапрос с `q=` |
-| "Фильтры" | → Sheet 2.2 |
-| Тап по каналу | → `/catalog/channels/:channelId` |
-| Pull-to-refresh | Инвалидация `channelKeys.lists()` |
+| Entering search | Debounce → requery with `q=` |
+| "Filters" | → Sheet 2.2 |
+| Tap on channel | → `/catalog/channels/:channelId` |
+| Pull-to-refresh | Invalidate `channelKeys.lists()` |
 
 ### Empty state
 
@@ -60,7 +60,7 @@ GET /api/v1/channels?cursor=&limit=20&q=&topic=&minSubs=&maxSubs=&minPrice=&maxP
 |-------|------------|------------------|-----|
 | `🔍` | `catalog.empty.title` | `catalog.empty.description` | `catalog.empty.cta` → Reset filters |
 
-### Состояние фильтров
+### Filter status
 
 ```typescript
 type CatalogFilters = {
@@ -74,56 +74,56 @@ type CatalogFilters = {
 };
 ```
 
-Хранение: URL search params (shareable, back-compatible).
+Storage: URL search params (shareable, back-compatible).
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка загрузки списка | `ErrorScreen` + retry |
+| Error loading list | `ErrorScreen` + retry |
 | Offline | Banner `t('errors.offline')` |
 
 ---
 
-## 2.2 Фильтры (Sheet)
+## 2.2 Filters (Sheet)
 
 | | |
 |---|---|
-| **Route** | N/A (Sheet overlay над каталогом) |
-| **Цель** | Настройка параметров поиска каналов |
-| **Кто видит** | Все, кто открыл фильтры |
+| **Route** | N/A (Sheet overlay above the directory) |
+| **Target** | Setting channel search parameters |
+| **Who sees** | Everyone who opened filters |
 
 ### API
 
 ```
-GET /api/v1/channels/topics   # Список тематик (или enum на клиенте)
+GET /api/v1/channels/topics   # \u0421\u043f\u0438\u0441\u043e\u043a \u0442\u0435\u043c\u0430\u0442\u0438\u043a (\u0438\u043b\u0438 enum \u043d\u0430 \u043a\u043b\u0438\u0435\u043d\u0442\u0435)
 ```
 
 ### UI
 
-- Заголовок: `t('catalog.filters.title')`
-- **Тематика** — `Select`, `t('catalog.filters.topic')`
-- **Подписчики** — два `Input` (numeric): `t('catalog.filters.from')` / `t('catalog.filters.to')`
-- **Цена за пост** — два `Input` (numeric, TON): `t('catalog.filters.from')` / `t('catalog.filters.to')`
-- **Сортировка** — `Select`, `t('catalog.filters.sort')`:
+- Header: `t('catalog.filters.title')`
+- **Topic** — `Select`, `t('catalog.filters.topic')`
+- **Subscribers** - two `Input` (numeric): `t('catalog.filters.from')` / `t('catalog.filters.to')`
+- **Price per post** - two `Input` (numeric, TON): `t('catalog.filters.from')` / `t('catalog.filters.to')`
+- **Sorting** — `Select`, `t('catalog.filters.sort')`:
   - `t('catalog.filters.sort.relevance')` (default)
   - `t('catalog.filters.sort.subscribers')`
   - `t('catalog.filters.sort.priceAsc')`
   - `t('catalog.filters.sort.priceDesc')`
   - `t('catalog.filters.sort.er')`
-- Кнопка `t('catalog.filters.show', { count: N })` (`primary`, full-width) — N обновляется при изменении фильтров
-- Кнопка `t('catalog.filters.reset')` (`link`)
+- Button `t('catalog.filters.show', { count: N })` (`primary`, full-width) - N is updated when filters are changed
+- Button `t('catalog.filters.reset')` (`link`)
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Изменение фильтров | Локальное состояние sheet. Prefetch count для "Показать N" |
-| "Показать" | Применить фильтры → закрыть sheet → перезагрузить каталог |
-| "Сбросить" | Очистить все фильтры |
-| Свайп вниз | Закрыть без применения |
+| Changing filters | Local state sheet. Prefetch count for "Show N" |
+| "Show" | Apply filters → close sheet → reload catalog |
+| "Reset" | Clear all filters |
+| Swipe down | Close without application |
 
-### Компоненты
+### Components
 
 - `Sheet`
 - `Select`
@@ -132,25 +132,25 @@ GET /api/v1/channels/topics   # Список тематик (или enum на к
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка загрузки тематик | Inline error + retry |
+| Error loading themes | Inline error + retry |
 
 ---
 
-## 2.3 Карточка канала
+## 2.3 Channel card
 
 | | |
 |---|---|
 | **Route** | `/catalog/channels/:channelId` |
-| **Цель** | Полная информация о канале перед созданием сделки |
-| **Кто видит** | Все |
+| **Target** | Complete channel information before creating a deal |
+| **Who sees** | All |
 
 ### API
 
 ```
 GET /api/v1/channels/:channelId
-GET /api/v1/channels/:channelId/team   # Проверка: роль пользователя
+GET /api/v1/channels/:channelId/team   # \u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430: \u0440\u043e\u043b\u044c \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f
 ```
 
 **Query keys:** `channelKeys.detail(channelId)`, `channelKeys.team(channelId)`
@@ -158,43 +158,43 @@ GET /api/v1/channels/:channelId/team   # Проверка: роль пользо
 ### UI
 
 - **Header row:**
-  - **Аватар** — крупный (80×80)
-  - **Название** — `title1`
-  - **ShareButton** — иконка share, рядом с заголовком (см. 6.4)
-- **Описание** — `body`
+  - **Avatar** – large (80×80)
+  - **Name** — `title1`
+  - **ShareButton** — share icon, next to the title (see 6.4)
+- **Description** — `body`
 - **Group `t('catalog.channel.stats')`** — `GroupItem`:
   - `t('catalog.channel.subscribers')` (formatted number)
   - `t('catalog.channel.avgReach')`
   - `t('catalog.channel.er')` (%)
-- **Group `t('catalog.channel.pricing')`** — `GroupItem` для каждого pricing rule:
-  - Название типа поста
-  - `after`: цена в TON (`<Amount>`)
-- **Тематики** — caption badges
-- **Кнопки** (sticky bottom, full-width):
-  - Если НЕ member: `t('catalog.channel.createDeal')` (`primary`) → 2.4
-  - Если **owner**: ОБЕ кнопки — `t('catalog.channel.edit')` (`secondary`) + `t('catalog.channel.createDeal')` (`primary`)
-  - Если manager: только `t('catalog.channel.createDeal')` (`primary`)
+- **Group `t('catalog.channel.pricing')`** — `GroupItem` for each pricing rule:
+  - Post type name
+  - `after`: price in TON (`<Amount>`)
+- **Topics** — caption badges
+- **Buttons** (sticky bottom, full-width):
+  - If NOT member: `t('catalog.channel.createDeal')` (`primary`) → 2.4
+  - If **owner**: BOTH buttons - `t('catalog.channel.edit')` (`secondary`) + `t('catalog.channel.createDeal')` (`primary`)
+  - If manager: only `t('catalog.channel.createDeal')` (`primary`)
 
 ### ABAC
 
-| Роль | Кнопки |
+| Role | Buttons |
 |------|--------|
-| Посторонний | "Создать сделку" |
-| Owner | "Редактировать" + "Создать сделку" (может тестировать как рекламодатель) |
-| Manager (любые права) | "Создать сделку" |
+| Outsider | "Create deal" |
+| Owner | "Edit" + "Create deal" (can test as an advertiser) |
+| Manager (any rights) | "Create deal" |
 
-> "Редактировать" — **OWNER-ONLY** (`@channelAuth.isOwner` на бэкенде). Менеджеры НЕ видят эту кнопку, даже с `manage_listings`.
+> "Edit" - **OWNER-ONLY** (`@channelAuth.isOwner` on the backend). Managers DO NOT see this button, even with `manage_listings`.
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Создать сделку" | → `/deals/new?channelId=:channelId` |
-| "Редактировать" | → `/profile/channels/:channelId/edit` (только owner) |
-| ShareButton | Deep link `t.me/AdvertMarketBot/app?startapp=channel_{channelId}` → `switchInlineQuery()` или clipboard + toast |
+| "Create deal" | → `/deals/new?channelId=:channelId` |
+| "Edit" | → `/profile/channels/:channelId/edit` (owner only) |
+| ShareButton | Deep link `t.me/AdvertMarketBot/app?startapp=channel_{channelId}` → `switchInlineQuery()` or clipboard + toast |
 | BackButton | → `/catalog` |
 
-### Определение роли
+### Role Definition
 
 ```typescript
 const { isOwner, hasRight } = useChannelRights(channelId);
@@ -202,70 +202,70 @@ const { isOwner, hasRight } = useChannelRights(channelId);
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| 404 канал не найден | `ErrorScreen` `t('errors.notFound.title')` + navigate `/catalog` |
-| Ошибка загрузки | `ErrorScreen` + retry |
+| 404 channel not found | `ErrorScreen` `t('errors.notFound.title')` + navigate `/catalog` |
+| Loading Error | `ErrorScreen` + retry |
 
 ---
 
-## 2.4 Создание сделки
+## 2.4 Creating a deal
 
 | | |
 |---|---|
 | **Route** | `/deals/new?channelId=:channelId` |
-| **Цель** | Создать оффер на размещение рекламы |
-| **Кто видит** | Любой авторизованный (становится рекламодателем) |
+| **Target** | Create an offer for advertising |
+| **Who sees** | Anyone authorized (becomes an advertiser) |
 
 ### API
 
 ```
 GET  /api/v1/channels/:channelId    # Pricing rules
-POST /api/v1/deals                   # Создание сделки
+POST /api/v1/deals                   # \u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0441\u0434\u0435\u043b\u043a\u0438
 ```
 
 **Mutation:** invalidates `dealKeys.lists()`
 
 ### UI
 
-- **Карточка канала** (read-only, compact): аватар + название + подписчики
-- **Select `t('deals.create.postType')`** — из pricing rules канала
-- **Цена** — `title2`, `tabular-nums`, read-only (обновляется при выборе типа)
-- **Input `t('deals.create.message')`** — `textarea`, optional, max 2000 символов, placeholder: `t('deals.create.messagePlaceholder')`
-- Кнопка `t('deals.create.submit')` (`primary`, full-width)
+- **Channel card** (read-only, compact): avatar + name + subscribers
+- **Select `t('deals.create.postType')`** — from the pricing rules of the channel
+- **Price** — `title2`, `tabular-nums`, read-only (updated when selecting type)
+- **Input `t('deals.create.message')`** — `textarea`, optional, max 2000 characters, placeholder: `t('deals.create.messagePlaceholder')`
+- Button `t('deals.create.submit')` (`primary`, full-width)
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Выбор типа поста | Обновление отображаемой цены из pricing rule |
-| "Отправить оффер" | `POST /api/v1/deals` → navigate `/deals/:newDealId` |
+| Selecting a post type | Update displayed price from pricing rule |
+| "Send offer" | `POST /api/v1/deals` → navigate `/deals/:newDealId` |
 
 ### Request body
 
 ```typescript
 {
-  channelId: number;      // из URL params
-  pricingRuleId: number;  // из Select
-  message?: string;       // из textarea
+  channelId: number;      // \u0438\u0437 URL params
+  pricingRuleId: number;  // \u0438\u0437 Select
+  message?: string;       // \u0438\u0437 textarea
 }
 ```
 
-### Валидация
+### Validation
 
-- `pricingRuleId` — обязательно (Select не может быть пустым)
-- `message` — опционально, max 2000 символов
+- `pricingRuleId` — required (Select cannot be empty)
+- `message` — optional, max 2000 characters
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
 | 409 (deal already exists) | Toast `t('deals.error.alreadyExists')` |
-| Ошибка создания | Toast `t('common.toast.saveFailed')` |
+| Creation Error | Toast `t('common.toast.saveFailed')` |
 
 ---
 
-## Файловая структура
+## File structure
 
 ```
 src/pages/catalog/
@@ -281,9 +281,9 @@ src/features/channels/
   components/
     ChannelCard.tsx             # Compact channel card (reused in deal pages)
     ChannelFiltersSheet.tsx     # Sheet overlay
-    ChannelListItem.tsx         # GroupItem для списка
-    ChannelStats.tsx            # Группа статистики
-    PricingRulesList.tsx        # Список цен
+    ChannelListItem.tsx         # GroupItem \u0434\u043b\u044f \u0441\u043f\u0438\u0441\u043a\u0430
+    ChannelStats.tsx            # \u0413\u0440\u0443\u043f\u043f\u0430 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0438
+    PricingRulesList.tsx        # \u0421\u043f\u0438\u0441\u043e\u043a \u0446\u0435\u043d
   hooks/
     useChannelFilters.ts        # URL search params state
     useChannelRights.ts         # ABAC hook (isOwner, hasRight)

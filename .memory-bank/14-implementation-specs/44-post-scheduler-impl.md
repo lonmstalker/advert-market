@@ -2,22 +2,22 @@
 
 ## Overview
 
-Worker, потребляющий `PUBLISH_POST` из `delivery.commands` Kafka topic. Публикует одобренный рекламный контент в Telegram-каналы.
+Worker consuming `PUBLISH_POST` from `delivery.commands` Kafka topic. Publishes approved advertising content to Telegram channels.
 
 **Module**: `delivery-impl`
 
 ## Telegram API Send Logic
 
-Выбор метода по `creative_draft.media[]`:
+Selecting a method by `creative_draft.media[]`:
 
-| Условие | Telegram метод | Примечание |
+| Condition | Telegram method | Note |
 |---------|---------------|------------|
-| Нет медиа | `sendMessage` | text + InlineKeyboardMarkup |
+| No media | `sendMessage` | text + InlineKeyboardMarkup |
 | 1 photo | `sendPhoto` | caption + reply_markup |
 | 1 video | `sendVideo` | caption + reply_markup |
 | 1 document | `sendDocument` | caption + reply_markup |
 | 1 animation | `sendAnimation` | caption + reply_markup |
-| 2-10 media | `sendMediaGroup` + `sendMessage` | MediaGroup не поддерживает InlineKeyboard — кнопки отдельным сообщением |
+| 2-10 media | `sendMediaGroup` + `sendMessage` | MediaGroup does not support InlineKeyboard - buttons with separate message |
 
 **InlineKeyboardMarkup**: `creative_draft.buttons[]` → `InlineKeyboardButton.url(text, url)`.
 
@@ -25,9 +25,9 @@ Worker, потребляющий `PUBLISH_POST` из `delivery.commands` Kafka t
 
 ```
 1. CREATIVE_APPROVED → SCHEDULED:
-   - Deal.scheduled_at = выбранное время
+   - Deal.scheduled_at = \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0435 \u0432\u0440\u0435\u043c\u044f
 
-2. Deal Timeout Scheduler (cron каждую минуту):
+2. Deal Timeout Scheduler (cron \u043a\u0430\u0436\u0434\u0443\u044e \u043c\u0438\u043d\u0443\u0442\u0443):
    SELECT deal_id FROM deals
    WHERE status = 'SCHEDULED' AND scheduled_at <= NOW()
    FOR UPDATE SKIP LOCKED
@@ -51,14 +51,14 @@ Worker, потребляющий `PUBLISH_POST` из `delivery.commands` Kafka t
 | `buttons[]` | `reply_markup` | InlineKeyboardMarkup |
 | `disable_web_page_preview` | `disable_web_page_preview` | Boolean, default `false` |
 
-Caption применяется только к первому элементу в MediaGroup (ограничение Telegram).
+Caption only applies to the first element in the MediaGroup (Telegram limitation).
 
 ## Error Handling
 
 | Error | HTTP Code | Recovery |
 |-------|-----------|----------|
 | Bot not in channel | 403 | Alert operator, DLQ |
-| Rate limit | 429 | Retry с `Retry-After` header (max 3) |
+| Rate limit | 429 | Retry with `Retry-After` header (max 3) |
 | File_id expired | 400 | Notify owner, pause deal |
 | MediaGroup partial failure | 400 | Retry entire group atomically |
 | Channel restricted | 403 | Alert operator |
@@ -69,7 +69,7 @@ Retry: max 3, exponential backoff 1s→2s→4s. Non-retryable (403, invalid file
 
 **Key**: `publish:{deal_id}`
 
-Проверка выполняется через уникальность бизнес-ключа `publish:{deal_id}` и optimistic locking по сделке. После успеха сохраняется `message_id`, повторная публикация для того же ключа возвращает idempotent no-op.
+Verification is performed through the uniqueness of the business key `publish:{deal_id}` and optimistic locking for the transaction. After success, `message_id` is saved, republishing for the same key returns idempotent no-op.
 
 ## Configuration
 

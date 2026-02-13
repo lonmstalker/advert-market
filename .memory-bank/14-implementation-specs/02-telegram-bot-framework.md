@@ -78,23 +78,23 @@ All messages use **MarkdownV2 parse mode**. User-provided data is escaped via `M
 
 | # | Type | Recipient | Template (RU, MarkdownV2) |
 |---|------|-----------|---------------|
-| 1 | NEW_OFFER | Owner | *Новое предложение* Канал: {channel\_name} Сумма: {amount} TON |
-| 2 | OFFER_ACCEPTED | Advertiser | *Предложение принято* Внесите депозит {amount} TON |
-| 3 | OFFER_REJECTED | Advertiser | Предложение для {channel\_name} отклонено |
-| 4 | ESCROW_FUNDED | Owner | *Эскроу пополнен* \#{deal\_id\_short} Подготовьте креатив |
-| 5 | CREATIVE_SUBMITTED | Advertiser | Черновик креатива готов к проверке |
-| 6 | CREATIVE_APPROVED | Owner | Креатив одобрен\! Публикуйте |
-| 7 | REVISION_REQUESTED | Owner | Запрошена доработка креатива |
-| 8 | PUBLISHED | Advertiser | Реклама опубликована в {channel\_name}\! Верификация 24ч |
-| 9 | DELIVERY_VERIFIED | Both | *Доставка подтверждена* Выплата обрабатывается |
-| 10 | PAYOUT_SENT | Owner | *Выплата {amount} TON* TX: {tx\_hash\_short} |
-| 11 | DISPUTE_OPENED | Both | *Открыт спор* \#{deal\_id\_short} |
-| 12 | DISPUTE_RESOLVED | Both | Спор разрешён: {outcome} |
-| 13 | DEAL_EXPIRED | Both | Сделка \#{deal\_id\_short} истекла |
-| 14 | DEAL_CANCELLED | Other | Сделка \#{deal\_id\_short} отменена |
-| 15 | RECONCILIATION_ALERT | Operator | *ALERT: Расхождение при сверке* Тип: {check\_type} |
+| 1 | NEW_OFFER | Owner | *New offer* Channel: {channel\_name} Amount: {amount} TON |
+| 2 | OFFER_ACCEPTED | Advertiser | *Offer accepted* Deposit {amount} TON |
+| 3 | OFFER_REJECTED | Advertiser | Offer for {channel\_name} rejected |
+| 4 | ESCROW_FUNDED | Owner | *Escrow is replenished* \#{deal\_id\_short} Prepare your creative |
+| 5 | CREATIVE_SUBMITTED | Advertiser | Draft creative is ready for review |
+| 6 | CREATIVE_APPROVED | Owner | Creative approved! Publish |
+| 7 | REVISION_REQUESTED | Owner | Creative revision requested |
+| 8 | PUBLISHED | Advertiser | Advertising published in {channel\_name}\! Verification 24h |
+| 9 | DELIVERY_VERIFIED | Both | *Delivery confirmed* Payment processed |
+| 10 | PAYOUT_SENT | Owner | *Payout {amount} TON* TX: {tx\_hash\_short} |
+| 11 | DISPUTE_OPENED | Both | *Dispute open* \#{deal\_id\_short} |
+| 12 | DISPUTE_RESOLVED | Both | Dispute resolved: {outcome} |
+| 13 | DEAL_EXPIRED | Both | Deal \#{deal\_id\_short} expired |
+| 14 | DEAL_CANCELLED | Other | Deal \#{deal\_id\_short} canceled |
+| 15 | RECONCILIATION_ALERT | Operator | *ALERT: Reconciliation discrepancy* Type: {check\_type} |
 
-Each message may include an inline keyboard button: `InlineKeyboardButton("Открыть сделку").url(dealUrl)`.
+Each message may include an inline keyboard button: `InlineKeyboardButton("Open deal").url(dealUrl)`.
 
 ---
 
@@ -173,7 +173,7 @@ Commands are registered via `setMyCommands` on bot startup (public commands only
 - Send message with inline WebApp button routing to specific screen
 
 ### /language
-- Inline keyboard: `[RU Русский] [EN English]`
+- Inline keyboard: `[RU Russian] [EN English]`
 - Callback: save preference to user record, confirm with localized message
 
 ### /help
@@ -210,7 +210,7 @@ Inline keyboard callbacks follow pattern: `{action}:{entity_id}`:
 
 ### Overview
 
-Telegram Mini App deep links: `https://t.me/AdvertMarketBot/app?startapp=<payload>`. Параметр `startapp` передаётся в Mini App через `Telegram.WebApp.initDataUnsafe.start_param`.
+Telegram Mini App deep links: `https://t.me/AdvertMarketBot/app?startapp=<payload>`. The `startapp` parameter is passed to the Mini App via `Telegram.WebApp.initDataUnsafe.start_param`.
 
 ### Link Format
 
@@ -225,11 +225,11 @@ https://t.me/{BotUsername}/app?startapp={action}_{id}
 | `dispute_{uuid_short}` | `startapp=dispute_550e8400` | Dispute details page |
 | `deposit_{uuid_short}` | `startapp=deposit_550e8400` | Deposit status page |
 
-`uuid_short` = первые 8 символов UUID (как в notification templates).
+`uuid_short` = first 8 characters of UUID (as in notification templates).
 
 ### Bot-Side Routing
 
-При получении `/start {startapp}` через webhook:
+When receiving `/start {startapp}` via webhook:
 
 ```java
 public void handleStartCommand(Update update) {
@@ -241,9 +241,9 @@ public void handleStartCommand(Update update) {
 
     // Parse deep link
     String webAppUrl = buildDeepLinkUrl(startParam);
-    var button = new InlineKeyboardButton("Открыть")
+    var button = new InlineKeyboardButton("\u041e\u0442\u043a\u0440\u044b\u0442\u044c")
             .webApp(new WebAppInfo(webAppUrl));
-    bot.execute(new SendMessage(chatId, "Открываю...")
+    bot.execute(new SendMessage(chatId, "\u041e\u0442\u043a\u0440\u044b\u0432\u0430\u044e...")
             .replyMarkup(new InlineKeyboardMarkup(button)));
 }
 
@@ -275,19 +275,19 @@ if (startParam) {
 
 ### Notification Template Integration
 
-Все notification templates с кнопкой "Открыть сделку" используют deep link:
+All notification templates with an "Open trade" button use deep link:
 
 ```java
 String dealUrl = String.format("https://t.me/%s/app?startapp=deal_%s",
     botUsername, dealId.toString().substring(0, 8));
-var button = new InlineKeyboardButton("Открыть сделку").url(dealUrl);
+var button = new InlineKeyboardButton("\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0441\u0434\u0435\u043b\u043a\u0443").url(dealUrl);
 ```
 
 ### Security
 
-- `startapp` параметр НЕ содержит чувствительных данных (только тип + short ID)
-- Авторизация проверяется на уровне API при запросе данных (ABAC)
-- Short UUID недостаточен для brute-force (перебор 16^8 = 4 млрд вариантов), но доступ контролируется через auth
+- `startapp` parameter does NOT contain sensitive data (only type + short ID)
+- Authorization is checked at the API level when requesting data (ABAC)
+- Short UUID is not enough for brute-force (searching 16^8 = 4 billion options), but access is controlled via auth
 
 ---
 

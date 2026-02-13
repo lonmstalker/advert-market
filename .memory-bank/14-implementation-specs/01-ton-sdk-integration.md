@@ -201,7 +201,7 @@ For each ton_transactions WHERE direction=OUT AND status=SUBMITTED:
 
 ### Operator Manual Resolution
 
-Для `ABANDONED` транзакций:
+For `ABANDONED` transactions:
 
 | Action | Endpoint | Description |
 |--------|----------|-------------|

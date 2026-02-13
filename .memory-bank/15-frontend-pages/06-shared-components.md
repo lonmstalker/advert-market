@@ -1,35 +1,35 @@
-# Общие компоненты
+# Common components
 
-> Переиспользуемые UI-элементы, системные политики (локализация, ошибки, ABAC, deep links).
+> Reused UI elements, system policies (localization, errors, ABAC, deep links).
 
 ---
 
-## 6.1 Локализация (i18n)
+## 6.1 Localization (i18n)
 
-### Стратегия — двухуровневая
+### Strategy - two-level
 
-| Уровень | Отвечает за | Технология | Хранение |
+| Level | Responsible for | Technology | Storage |
 |---------|-------------|------------|----------|
-| **Frontend** | UI labels, кнопки, навигация, validation messages, empty states, placeholder-ы | `i18next` + `react-i18next` | `src/shared/i18n/ru.json`, `en.json` |
-| **Backend** | Уведомления, email-шаблоны, описания ошибок API, динамические тексты | Spring `MessageSource` | `messages/` (properties-файлы) |
+| **Frontend** | UI labels, buttons, navigation, validation messages, empty states, placeholders | `i18next` + `react-i18next` | `src/shared/i18n/ru.json`, `en.json` |
+| **Backend** | Notifications, email templates, API error descriptions, dynamic texts | Spring `MessageSource` | `messages/` (properties files) |
 
-### Правило: ZERO hardcoded strings
+### Rule: ZERO hardcoded strings
 
-Все user-facing строки — только через `t('key')`. Исключения: технические константы (форматы дат, regex patterns).
+All user-facing lines are only via `t('key')`. Exceptions: technical constants (date formats, regex patterns).
 
 ```typescript
-// Правильно
+// \u041f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u043e
 <Button>{t('common.save')}</Button>
 <EmptyState title={t('catalog.empty.title')} />
 
-// Неправильно
-<Button>Сохранить</Button>
-<EmptyState title="Ничего не найдено" />
+// \u041d\u0435\u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u043e
+<Button>\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c</Button>
+<EmptyState title="\u041d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e" />
 ```
 
-### Ошибки API
+### API errors
 
-RFC 7807 `title` приходит с бэкенда **уже локализованным** (по `Accept-Language` header). Frontend НЕ переводит ошибки API — отображает `problem.title` as-is.
+RFC 7807 `title` comes from the backend **already localized** (by `Accept-Language` header). Frontend does NOT translate API errors - displays `problem.title` as-is.
 
 ### Namespace structure
 
@@ -39,42 +39,42 @@ catalog.*        — 02-catalog
 deals.*          — 03-deals
 wallet.*         — 04-wallet
 profile.*        — 05-profile
-common.*         — общие (save, cancel, confirm, back, loading, copied)
-errors.*         — ошибки frontend-only (validation, offline, timeout)
+common.*         — \u043e\u0431\u0449\u0438\u0435 (save, cancel, confirm, back, loading, copied)
+errors.*         — \u043e\u0448\u0438\u0431\u043a\u0438 frontend-only (validation, offline, timeout)
 ```
 
-### Определение языка
+###Language Definition
 
-1. `Telegram.WebApp.initDataUnsafe.user.language_code` при первом входе
-2. `GET /api/v1/profile` → `preferredLanguage` при последующих входах
+1. `Telegram.WebApp.initDataUnsafe.user.language_code` at first login
+2. `GET /api/v1/profile` → `preferredLanguage` on subsequent logins
 3. Fallback: `ru`
 
 ---
 
-## 6.2 Системные ошибки (Error States)
+## 6.2 System errors (Error States)
 
-### Глобальная таблица ошибок
+### Global error table
 
-| Тип ошибки | UI | Действие пользователя | Автоматическое поведение |
+| Error type | UI | User action | Automatic behavior |
 |------------|----|-----------------------|--------------------------|
-| **Offline** (нет сети) | Banner вверху: `t('errors.offline')` + retry | Retry button | Auto-retry при восстановлении (`navigator.onLine`) |
-| **500 Server Error** | Full-screen: иллюстрация + `t('errors.server')` + `t('common.retry')` | Retry → перезагрузка данных | — |
+| **Offline** (no network) | Banner at the top: `t('errors.offline')` + retry | Retry button | Auto-retry on recovery (`navigator.onLine`) |
+| **500 Server Error** | Full-screen: illustration + `t('errors.server')` + `t('common.retry')` | Retry → data reload | — |
 | **403 Forbidden** | Full-screen: `t('errors.forbidden.title')` + `t('errors.forbidden.description')` + `t('common.back')` | Navigate back | — |
 | **404 Not Found** | Full-screen: `t('errors.notFound.title')` + `t('errors.notFound.description')` + `t('common.home')` | Navigate to tab root | — |
-| **409 Conflict** (state machine) | Toast error: `t('errors.conflict')` | — | Auto-refetch данных |
-| **401 Unauthorized** (token expired) | Без UI (transparent) | — | Re-auth через `initData` → повтор запроса |
-| **429 Rate Limited** | Toast: `t('errors.rateLimited')` | — | Auto-retry после `Retry-After` delay |
+| **409 Conflict** (state machine) | Toast error: `t('errors.conflict')` | — | Auto-refetch data |
+| **401 Unauthorized** (token expired) | Without UI (transparent) | — | Re-auth via `initData` → repeat request |
+| **429 Rate Limited** | Toast: `t('errors.rateLimited')` | — | Auto-retry after `Retry-After` delay |
 | **Timeout** | Toast: `t('errors.timeout')` + retry | Retry button | — |
 
-### Компоненты
+### Components
 
 ```typescript
-// ErrorBoundary — оборачивает каждый route
+// ErrorBoundary — \u043e\u0431\u043e\u0440\u0430\u0447\u0438\u0432\u0430\u0435\u0442 \u043a\u0430\u0436\u0434\u044b\u0439 route
 <ErrorBoundary fallback={<ErrorScreen />}>
   <Outlet />
 </ErrorBoundary>
 
-// ErrorScreen — full-screen ошибка (403, 404, 500)
+// ErrorScreen — full-screen \u043e\u0448\u0438\u0431\u043a\u0430 (403, 404, 500)
 type ErrorScreenProps = {
   illustration?: ReactNode;
   title: string;
@@ -82,14 +82,14 @@ type ErrorScreenProps = {
   action?: { label: string; onClick: () => void };
 };
 
-// OfflineBanner — sticky banner при потере сети
-// Отображается глобально, поверх любого контента
+// OfflineBanner — sticky banner \u043f\u0440\u0438 \u043f\u043e\u0442\u0435\u0440\u0435 \u0441\u0435\u0442\u0438
+// \u041e\u0442\u043e\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044f \u0433\u043b\u043e\u0431\u0430\u043b\u044c\u043d\u043e, \u043f\u043e\u0432\u0435\u0440\u0445 \u043b\u044e\u0431\u043e\u0433\u043e \u043a\u043e\u043d\u0442\u0435\u043d\u0442\u0430
 ```
 
-### Обработка в React Query
+### Processing in React Query
 
 ```typescript
-// Глобальный onError в QueryClient
+// \u0413\u043b\u043e\u0431\u0430\u043b\u044c\u043d\u044b\u0439 onError \u0432 QueryClient
 queryCache: new QueryCache({
   onError: (error) => {
     if (error.status === 401) reAuth();
@@ -101,37 +101,37 @@ queryCache: new QueryCache({
 
 ---
 
-## 6.3 ABAC-матрица
+## 6.3 ABAC matrix
 
-### Права менеджера — видимость UI
+### Manager rights - UI visibility
 
-| Право | Что доступно | Без права |
+| Right | What's available | Without right |
 |-------|-------------|-----------|
-| `moderate` | Кнопки accept/reject/negotiate (3.2), форма креатива (3.5) | Кнопки скрыты |
-| `publish` | Кнопки publish/schedule (3.7) | Кнопки скрыты |
-| `view_deals` | Список сделок канала, детали, timeline (3.1, 3.2) | Сделки канала скрыты |
-| `manage_listings` | — (см. OWNER-exclusive ниже) | — |
-| `manage_team` | Секция "Команда" (5.5), invite (5.8), remove (5.9) | Секция скрыта |
+| `moderate` | Accept/reject/negotiate buttons (3.2), creative form (3.5) | Buttons hidden |
+| `publish` | Publish/schedule buttons (3.7) | Buttons hidden |
+| `view_deals` | List of channel deals, details, timeline (3.1, 3.2) | Channel deals hidden |
+| `manage_listings` | — (see OWNER-exclusive below) | — |
+| `manage_team` | Section "Team" (5.5), invite (5.8), remove (5.9) | Section hidden |
 
-### OWNER-exclusive (НЕ делегируемые)
+### OWNER-exclusive (NOT delegated)
 
-| Действие | API | Почему |
+| Action | API | Why |
 |----------|-----|--------|
-| Редактирование канала | `PUT /api/v1/channels/:id` | `@channelAuth.isOwner` |
-| Изменение прав участников | `PUT /api/v1/channels/:id/team/:userId` | Только owner меняет toggle-ы |
+| Editing a channel | `PUT /api/v1/channels/:id` | `@channelAuth.isOwner` |
+| Changing participant rights | `PUT /api/v1/channels/:id/team/:userId` | Only the owner changes toggle s |
 
-> `manage_listings` в ABAC backend реализован как `@channelAuth.isOwner`. Менеджеры НЕ могут редактировать канал, несмотря на наличие этого права.
+> `manage_listings` in ABAC backend is implemented as `@channelAuth.isOwner`. Managers cannot edit the channel, despite having this right.
 
-### Правило для UI
+### Rule for UI
 
-**Отсутствие права = кнопка скрыта (hidden)**, а НЕ disabled.
+**No right = button is hidden**, NOT disabled.
 
-Единственное исключение: страница 5.9 "Права участника" — toggle-ы прав **disabled** с tooltip `t('profile.team.ownerOnly')` для менеджеров с `manage_team`.
+The only exception: page 5.9 "Participant rights" - toggle rights **disabled** with tooltip `t('profile.team.ownerOnly')` for managers with `manage_team`.
 
-### Проверка прав на клиенте
+### Checking rights on the client
 
 ```typescript
-// Hook для ABAC
+// Hook \u0434\u043b\u044f ABAC
 function useChannelRights(channelId: number) {
   const { data: team } = useQuery(channelKeys.team(channelId));
   const userId = useCurrentUser().id;
@@ -145,38 +145,38 @@ function useChannelRights(channelId: number) {
 }
 ```
 
-### ABAC по подстраницам сделки (для менеджеров)
+### ABAC by deal subpages (for managers)
 
-| Страница | Required right | Кто ещё видит |
+| Page | Required right | Who else sees |
 |----------|---------------|---------------|
-| 3.3 Переговоры | `moderate` | Рекламодатель |
-| 3.5 Креатив | `moderate` | — |
-| 3.6 Ревью | — | Рекламодатель only |
-| 3.7 Планирование | `publish` | — |
-| 3.8 Оплата | — | Рекламодатель only |
-| 3.9 Спор (открытие) | `view_deals` | Рекламодатель |
-| 3.11 Доказательства | `view_deals` | Рекламодатель |
+| 3.3 Negotiations | `moderate` | Advertiser |
+| 3.5 Creative | `moderate` | — |
+| 3.6 Review | — | Advertiser only |
+| 3.7 Planning | `publish` | — |
+| 3.8 Payment | — | Advertiser only |
+| 3.9 Dispute (opening) | `view_deals` | Advertiser |
+| 3.11 Evidence | `view_deals` | Advertiser |
 
 ---
 
-## 6.4 Deep Links и Sharing
+## 6.4 Deep Links and Sharing
 
-### Формат deep link
+### Deep link format
 
 ```
 t.me/AdvertMarketBot/app?startapp={type}_{id}
 ```
 
-| Тип | Пример | Роутинг |
+| Type | Example | Routing |
 |-----|--------|---------|
 | `channel_{id}` | `channel_12345` | `/catalog/channels/12345` |
 | `deal_{uuid_short}` | `deal_abc123` | `/deals/abc123` |
 | `dispute_{uuid_short}` | `dispute_abc123` | `/deals/abc123/dispute` |
 
-### Обработка при входе
+### Login Processing
 
 ```typescript
-// В корневом роутере, до рендера
+// \u0412 \u043a\u043e\u0440\u043d\u0435\u0432\u043e\u043c \u0440\u043e\u0443\u0442\u0435\u0440\u0435, \u0434\u043e \u0440\u0435\u043d\u0434\u0435\u0440\u0430
 const startParam = Telegram.WebApp.initDataUnsafe.start_param;
 
 if (startParam) {
@@ -189,7 +189,7 @@ if (startParam) {
 }
 ```
 
-### Компонент ShareButton
+### ShareButton Component
 
 ```typescript
 type ShareButtonProps = {
@@ -197,30 +197,30 @@ type ShareButtonProps = {
   id: string;
 };
 
-// Поведение:
-// 1. Формирует deep link URL
-// 2. Вызывает switchInlineQuery() (если доступен в Telegram)
+// \u041f\u043e\u0432\u0435\u0434\u0435\u043d\u0438\u0435:
+// 1. \u0424\u043e\u0440\u043c\u0438\u0440\u0443\u0435\u0442 deep link URL
+// 2. \u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442 switchInlineQuery() (\u0435\u0441\u043b\u0438 \u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u0432 Telegram)
 // 3. Fallback: navigator.clipboard → toast t('common.copied')
 ```
 
-**Где используется:**
-- 2.3 Карточка канала (рядом с заголовком)
-- 3.2 Детали сделки (в header)
+**Where used:**
+- 2.3 Channel card (next to the title)
+- 3.2 Transaction details (in header)
 
 ---
 
 ## Sheet overlays
 
-Все sheets используют компонент `Sheet` из UI Kit.
+All sheets use the `Sheet` component from the UI Kit.
 
-| Sheet | Где используется | Содержимое |
+| Sheet | Where is it used | Contents |
 |-------|-----------------|------------|
-| Фильтры каталога | 2.2 (`CatalogPage`) | Тематика, подписчики, цена, сортировка |
-| Оплата TON Connect | 3.8 (`DealDetailPage`) | Сумма, кошелёк, кнопка оплаты |
-| Фильтры истории | 4.4 (`HistoryPage`) | Тип транзакции, период |
-| Поддержка сделки | 3.2 (`DealDetailPage`) | Тема, описание, контекст сделки |
+| Catalog filters | 2.2 (`CatalogPage`) | Subject, subscribers, price, sorting |
+| Payment TON Connect | 3.8 (`DealDetailPage`) | Amount, wallet, payment button |
+| History filters | 4.4 (`HistoryPage`) | Transaction type, period |
+| Deal support | 3.2 (`DealDetailPage`) | Subject, description, context of the transaction |
 
-### Паттерн
+### Pattern
 
 ```typescript
 <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -228,28 +228,28 @@ type ShareButtonProps = {
 </Sheet>
 ```
 
-Sheets закрываются:
-- Свайп вниз
-- Кнопка действия (применить/оплатить)
-- Тап по backdrop
+Sheets close:
+- Swipe down
+- Action button (apply/pay)
+- Tap on backdrop
 
 ---
 
-## DialogModal (подтверждение)
+## DialogModal (confirmation)
 
-Для деструктивных действий. Используется компонент `DialogModal` из UI Kit.
+For destructive actions. The `DialogModal` component from the UI Kit is used.
 
-### Случаи использования
+### Use Cases
 
-| Действие | Заголовок | Описание | Confirm | Cancel |
+| Action | Title | Description | Confirm | Cancel |
 |----------|-----------|----------|---------|--------|
-| Отмена сделки | `t('deals.confirm.cancel.title')` | `t('deals.confirm.cancel.description')` | destructive | secondary |
-| Отклонение оффера | `t('deals.confirm.reject.title')` | `t('deals.confirm.reject.description')` | destructive | secondary |
-| Подача спора | `t('deals.confirm.dispute.title')` | `t('deals.confirm.dispute.description')` | destructive | secondary |
-| Вывод средств | `t('wallet.confirm.withdraw.title')` | `t('wallet.confirm.withdraw.description', { amount, address })` | primary | secondary |
-| Удаление из команды | `t('profile.confirm.removeMember.title')` | `t('profile.confirm.removeMember.description', { name })` | destructive | secondary |
+| Cancel deal | `t('deals.confirm.cancel.title')` | `t('deals.confirm.cancel.description')` | destructive | secondary |
+| Offer Rejection | `t('deals.confirm.reject.title')` | `t('deals.confirm.reject.description')` | destructive | secondary |
+| Filing a Dispute | `t('deals.confirm.dispute.title')` | `t('deals.confirm.dispute.description')` | destructive | secondary |
+| Withdrawal | `t('wallet.confirm.withdraw.title')` | `t('wallet.confirm.withdraw.description', { amount, address })` | primary | secondary |
+| Removal from a team | `t('profile.confirm.removeMember.title')` | `t('profile.confirm.removeMember.description', { name })` | destructive | secondary |
 
-### Паттерн
+### Pattern
 
 ```typescript
 <DialogModal
@@ -265,59 +265,59 @@ Sheets закрываются:
 
 ---
 
-## Toast уведомления
+## Toast notifications
 
-Используется компонент `Toast` из UI Kit.
+The `Toast` component from the UI Kit is used.
 
-### Типы
+### Types
 
-| Тип | Примеры ключей |
+| Type | Key examples |
 |-----|----------------|
 | **Success** | `deals.toast.created`, `deals.toast.creativeApproved`, `wallet.toast.paymentSent`, `profile.toast.channelRegistered`, `common.toast.saved` |
 | **Error** | `wallet.toast.paymentFailed`, `wallet.toast.insufficientFunds`, `errors.network`, `common.toast.saveFailed` |
 | **Info** | `common.copied`, `profile.toast.inviteSent`, `wallet.toast.topUpProcessing` |
 
-### Паттерн
+### Pattern
 
 ```typescript
 const { toast } = useToast();
 toast({ type: 'success', message: t('deals.toast.created') });
 ```
 
-Toast автоматически скрывается через 3 секунды. Error — через 5 секунд.
+Toast automatically hides after 3 seconds. Error - after 5 seconds.
 
 ---
 
 ## Skeleton loading
 
-Каждая страница с данными имеет skeleton-состояние, повторяющее структуру контента.
+Each page with data has a skeleton state that follows the structure of the content.
 
-### Паттерн
+### Pattern
 
 ```typescript
 if (isLoading) return <PageSkeleton />;
 ```
 
-### Skeleton-компоненты
+### Skeleton components
 
-| Страница | Skeleton |
+| Page | Skeleton |
 |----------|----------|
-| Список каналов | 3× `GroupItem` skeleton (avatar circle + 2 text lines + price rect) |
-| Карточка канала | Large avatar circle + text blocks + stats grid + pricing list |
-| Список сделок | 3× `GroupItem` skeleton (avatar + text + badge rect) |
-| Детали сделки | Badge rect + card skeleton + amount rect + action buttons + timeline list |
-| Кошелёк | Balance rect (large) + 2 circle buttons + 5× transaction items |
-| Профиль | Avatar + text + channel list + settings list |
+| Channel list | 3× `GroupItem` skeleton (avatar circle + 2 text lines + price rect) |
+| Channel card | Large avatar circle + text blocks + stats grid + pricing list |
+| List of deals | 3× `GroupItem` skeleton (avatar + text + badge rect) |
+| Deal details | Badge rect + card skeleton + amount rect + action buttons + timeline list |
+| Wallet | Balance rect (large) + 2 circle buttons + 5× transaction items |
+| Profile | Avatar + text + channel list + settings list |
 
-Используется `SkeletonElement` из UI Kit с `pulse` анимацией.
+Used `SkeletonElement` from UI Kit with `pulse` animation.
 
 ---
 
 ## Empty states
 
-Единый компонент для всех пустых состояний.
+A single component for all empty states.
 
-### Компонент
+### Component
 
 ```typescript
 type EmptyStateProps = {
@@ -331,70 +331,70 @@ type EmptyStateProps = {
 };
 ```
 
-### Полная таблица
+### Full table
 
-| Страница | Emoji | Заголовок (i18n) | Описание (i18n) | CTA (i18n) | Навигация |
+| Page | Emoji | Header (i18n) | Description (i18n) | CTA (i18n) | Navigation |
 |----------|-------|------------------|-----------------|------------|-----------|
-| Каталог (нет результатов) | `🔍` | `catalog.empty.title` | `catalog.empty.description` | `catalog.empty.cta` | Reset filters |
-| Сделки (рекламодатель) | `📬` | `deals.empty.advertiser.title` | `deals.empty.advertiser.description` | `deals.empty.advertiser.cta` | `/catalog` |
-| Сделки (канал) | `📬` | `deals.empty.channel.title` | `deals.empty.channel.description` | `deals.empty.channel.cta` | `/profile/channels/new` |
-| Финансы | `📜` | `wallet.empty.title` | `wallet.empty.description` | `wallet.empty.cta` | каталог каналов |
-| История (с фильтрами) | `📜` | `wallet.history.empty.title` | `wallet.history.empty.description` | `wallet.history.empty.cta` | Reset filters |
-| Каналы профиля | `📡` | `profile.channels.empty.title` | `profile.channels.empty.description` | `profile.channels.empty.cta` | `/profile/channels/new` |
-| Команда канала | `👥` | `profile.team.empty.title` | `profile.team.empty.description` | `profile.team.empty.cta` | `team/invite` |
+| Catalog (no results) | `🔍` | `catalog.empty.title` | `catalog.empty.description` | `catalog.empty.cta` | Reset filters |
+| Deals (advertiser) | `📬` | `deals.empty.advertiser.title` | `deals.empty.advertiser.description` | `deals.empty.advertiser.cta` | `/catalog` |
+| Transactions (channel) | `📬` | `deals.empty.channel.title` | `deals.empty.channel.description` | `deals.empty.channel.cta` | `/profile/channels/new` |
+| Finance | `📜` | `wallet.empty.title` | `wallet.empty.description` | `wallet.empty.cta` | channel directory |
+| History (with filters) | `📜` | `wallet.history.empty.title` | `wallet.history.empty.description` | `wallet.history.empty.cta` | Reset filters |
+| Profile Channels | `📡` | `profile.channels.empty.title` | `profile.channels.empty.description` | `profile.channels.empty.cta` | `/profile/channels/new` |
+| Channel Team | `👥` | `profile.team.empty.title` | `profile.team.empty.description` | `profile.team.empty.cta` | `team/invite` |
 
 ---
 
 ## Bottom Tab Navigation
 
-4 таба, всегда видны (кроме онбординга).
+4 tabs, always visible (except for onboarding).
 
-| # | Label (i18n) | Иконка | Route | Badge |
+| # | Label (i18n) | Icon | Route | Badge |
 |---|-------------|--------|-------|-------|
 | 1 | `common.tabs.catalog` | Search / Grid | `/catalog` | — |
-| 2 | `common.tabs.deals` | FileText / Handshake | `/deals` | Количество сделок, требующих действий |
+| 2 | `common.tabs.deals` | FileText/Handshake | `/deals` | Number of transactions requiring action |
 | 3 | `common.tabs.wallet` | Wallet | `/wallet` | — |
 | 4 | `common.tabs.profile` | User | `/profile` | — |
 
-Badge на табе "Сделки" — количество сделок, где текущий пользователь должен выполнить действие.
+Badge on the "Transactions" tab - the number of transactions where the current user must perform an action.
 
 ---
 
 ## Telegram BackButton
 
-Используется `@tma.js/sdk-react` `BackButton`.
+`@tma.js/sdk-react` `BackButton` is used.
 
 | Route | BackButton target |
 |-------|-------------------|
-| `/catalog` | Нет (tab root) |
+| `/catalog` | No (tab root) |
 | `/catalog/channels/:id` | `/catalog` |
-| `/deals` | Нет (tab root) |
+| `/deals` | No (tab root) |
 | `/deals/:id` | `/deals` |
 | `/deals/:id/*` | `/deals/:id` |
-| `/wallet` | Нет (tab root) |
+| `/wallet` | No (tab root) |
 | `/wallet/*` | `/wallet` |
-| `/profile` | Нет (tab root) |
-| `/profile/*` | `/profile` (или parent level) |
-| `/onboarding/*` | Нет (disabled) |
+| `/profile` | No (tab root) |
+| `/profile/*` | `/profile` (or parent level) |
+| `/onboarding/*` | No (disabled) |
 
 ---
 
-## Маршрутизация
+## Routing
 
-### Полная таблица routes
+### Full routes table
 
 ```typescript
 const routes = [
-  // Онбординг
+  // \u041e\u043d\u0431\u043e\u0440\u0434\u0438\u043d\u0433
   { path: '/onboarding', page: 'OnboardingPage' },
   { path: '/onboarding/interest', page: 'OnboardingInterestPage' },
   { path: '/onboarding/tour', page: 'OnboardingTourPage' },
 
-  // Каталог (Tab 1)
+  // \u041a\u0430\u0442\u0430\u043b\u043e\u0433 (Tab 1)
   { path: '/catalog', page: 'CatalogPage' },
   { path: '/catalog/channels/:channelId', page: 'ChannelDetailPage' },
 
-  // Сделки (Tab 2)
+  // \u0421\u0434\u0435\u043b\u043a\u0438 (Tab 2)
   { path: '/deals', page: 'DealsPage' },
   { path: '/deals/new', page: 'CreateDealPage' },
   { path: '/deals/:dealId', page: 'DealDetailPage' },
@@ -406,13 +406,13 @@ const routes = [
   { path: '/deals/:dealId/dispute', page: 'DisputePage' },
   { path: '/deals/:dealId/dispute/evidence', page: 'DisputeEvidencePage' },
 
-  // Финансы (Tab 3)
+  // \u0424\u0438\u043d\u0430\u043d\u0441\u044b (Tab 3)
   { path: '/wallet', page: 'WalletPage' },
   { path: '/wallet/withdraw', page: 'WithdrawPage' },       // Channel Owner only
   { path: '/wallet/history', page: 'HistoryPage' },
   { path: '/wallet/history/:txId', page: 'TransactionDetailPage' },
 
-  // Профиль (Tab 4)
+  // \u041f\u0440\u043e\u0444\u0438\u043b\u044c (Tab 4)
   { path: '/profile', page: 'ProfilePage' },
   { path: '/profile/language', page: 'LanguagePage' },
   { path: '/profile/notifications', page: 'NotificationsPage' },
@@ -425,13 +425,13 @@ const routes = [
 ];
 ```
 
-**Итого: 27 routes** (3 онбординг + 2 каталог + 10 сделки + 4 финансы + 8 профиль).
+**Total: 27 routes** (3 onboarding + 2 catalog + 10 deals + 4 finance + 8 profile).
 
-Все pages — `lazy()` для code splitting (кроме root layout).
+All pages are `lazy()` for code splitting (except root layout).
 
 ---
 
-## i18n ключи (структура)
+## i18n keys (structure)
 
 ```
 onboarding.welcome.title
@@ -502,35 +502,35 @@ errors.timeout
 
 ---
 
-## Верификация
+## Verification
 
-### 1. Deal state machine — все 16 статусов покрыты в матрице 3.2
+### 1. Deal state machine - all 16 statuses are covered in matrix 3.2
 
-| # | Статус | Рекламодатель | Канал (Owner) | Канал (Manager) | Покрыт |
+| # | Status | Advertiser | Channel (Owner) | Channel (Manager) | Covered |
 |---|--------|--------------|---------------|-----------------|--------|
 | 1 | `DRAFT` | — | — | — | N/A |
-| 2 | `OFFER_PENDING` | Отменить | Принять/Переговоры/Отклонить | moderate: то же | Yes |
-| 3 | `NEGOTIATING` | Ответить/Отменить | Ответить/Отклонить | moderate: то же | Yes |
-| 4 | `ACCEPTED` | — | Отменить | — | Yes |
-| 5 | `AWAITING_PAYMENT` | Оплатить | — | — | Yes |
-| 6 | `FUNDED` | Отправить бриф | Отправить креатив | moderate: то же | Yes |
-| 7 | `CREATIVE_SUBMITTED` | Одобрить/Ревизия | — | — | Yes |
-| 8 | `CREATIVE_APPROVED` | — | Опубликовать/Запланировать | publish: то же | Yes |
+| 2 | `OFFER_PENDING` | Cancel | Accept/Negotiate/Reject | moderate: same | Yes |
+| 3 | `NEGOTIATING` | Reply/Cancel | Reply/Reject | moderate: same | Yes |
+| 4 | `ACCEPTED` | — | Cancel | — | Yes |
+| 5 | `AWAITING_PAYMENT` | Pay | — | — | Yes |
+| 6 | `FUNDED` | Send brief | Submit creative | moderate: same | Yes |
+| 7 | `CREATIVE_SUBMITTED` | Approve/Revision | — | — | Yes |
+| 8 | `CREATIVE_APPROVED` | — | Publish/Schedule | publish: same | Yes |
 | 9 | `SCHEDULED` | — | — | — | Yes |
 | 10 | `PUBLISHED` | — | — | — | Yes |
 | 11 | `DELIVERY_VERIFYING` | — | — | — | Yes |
-| 12 | `COMPLETED_RELEASED` | Отзыв (v2) | — | — | Yes |
-| 13 | `DISPUTED` | Доказательства | Доказательства | view_deals: то же | Yes |
+| 12 | `COMPLETED_RELEASED` | Feedback (v2) | — | — | Yes |
+| 13 | `DISPUTED` | Evidence | Evidence | view_deals: same | Yes |
 | 14 | `CANCELLED` | — | — | — | Yes |
 | 15 | `REFUNDED` | — | — | — | Yes |
 | 16 | `EXPIRED` | — | — | — | Yes |
 
-### 2. Empty states — все 7 задокументированы (таблица выше), все через i18n
+### 2. Empty states - all 7 are documented (table above), all via i18n
 
-### 3. ABAC — полная матрица в 6.3 + per-page указания в каждом файле
+### 3. ABAC - full matrix in 6.3 + per-page instructions in each file
 
-### 4. Deep links — все 3 типа задокументированы в 6.4, обработка входа описана
+### 4. Deep links - all 3 types are documented in 6.4, input processing is described
 
-### 5. Локализация — ZERO hardcoded strings, namespace structure в 6.1
+### 5. Localization - ZERO hardcoded strings, namespace structure in 6.1
 
-### 6. Error states — глобальная таблица в 6.2 + per-page ошибки во всех файлах (01-06)
+### 6. Error states - global table in 6.2 + per-page errors in all files (01-06)

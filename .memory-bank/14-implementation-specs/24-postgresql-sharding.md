@@ -46,7 +46,7 @@ Simplified for MVP->Scaled migration:
 
 ## ShardedDslContextProvider (jOOQ Abstraction)
 
-Все взаимодействие с БД через **jOOQ**. Абстракция шардирования встроена в провайдер `DSLContext`.
+All interaction with the database is via **jOOQ**. The sharding abstraction is built into the `DSLContext` provider.
 
 ### Interface
 
@@ -72,7 +72,7 @@ public interface ShardedDslContextProvider {
 
 ### MVP Implementation
 
-Все методы возвращают один и тот же `DSLContext` (единая БД):
+All methods return the same `DSLContext` (single database):
 
 ```java
 @Component
@@ -97,11 +97,11 @@ public class SingleDatabaseDslContextProvider implements ShardedDslContextProvid
 
 ### Scaled Implementation
 
-Каждый метод возвращает `DSLContext` подключённый к соответствующему шарду `DataSource`.
+Each method returns `DSLContext` connected to the corresponding shard `DataSource`.
 
-### Repository Pattern с ShardedDslContextProvider
+### Repository Pattern with ShardedDslContextProvider
 
-Все репозитории получают `DSLContext` через провайдер:
+All repositories receive `DSLContext` through the provider:
 
 ```java
 @Repository

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Многоуровневая стратегия тестирования для Java 25 + Spring Boot 4.0.2. Охватывает unit, integration, contract и end-to-end уровни с фокусом на финансовую точность, state machine корректность и Kafka consumer идемпотентность.
+Multi-level testing strategy for Java 25 + Spring Boot 4.0.2. Covers unit, integration, contract and end-to-end levels with a focus on financial accuracy, state machine correctness and Kafka consumer idempotency.
 
 ---
 
@@ -13,10 +13,10 @@
 | JUnit 5 | Test framework |
 | AssertJ | Fluent assertions |
 | Mockito | Unit test mocks |
-| Testcontainers | PostgreSQL, Redis, Kafka для integration tests |
+| Testcontainers | PostgreSQL, Redis, Kafka for integration tests |
 | Spring Boot Test | `@SpringBootTest`, `@DataJpaTest`, `@WebMvcTest` |
 | Awaitility | Async assertion (Kafka consumers, scheduled tasks) |
-| ArchUnit | Архитектурные constraints |
+| ArchUnit | Architectural constraints |
 | WireMock | HTTP mock (TON Center API, Telegram Bot API) |
 
 ### Gradle
@@ -39,7 +39,7 @@ dependencies {
 
 ### 1. Unit Tests
 
-**Scope**: Чистая бизнес-логика без Spring context.
+**Scope**: Pure business logic without Spring context.
 
 | Target | Examples | Coverage Goal |
 |--------|----------|---------------|
@@ -138,7 +138,7 @@ abstract class IntegrationTestBase {
 
 #### Invalid Transition Tests (must throw `InvalidStateTransitionException`)
 
-Parameterized test: для каждого состояния проверить все НЕвалидные переходы.
+Parameterized test: for each state, check all INVALID transitions.
 
 ```java
 @ParameterizedTest
@@ -151,11 +151,11 @@ void shouldRejectInvalidTransition(DealStatus from, DealStatus to, ActorType act
 
 #### Actor Authorization Tests
 
-Для каждого перехода проверить: правильный актор — ОК, неправильный актор — `ForbiddenException`.
+For each transition, check: the correct actor is OK, the incorrect actor is `ForbiddenException`.
 
 ### 4. Financial Accuracy Tests
 
-**Invariant**: `commission_nano + owner_payout_nano == deal_amount_nano` для ЛЮБЫХ входных данных.
+**Invariant**: `commission_nano + owner_payout_nano == deal_amount_nano` for ANY input.
 
 #### Double-Entry Balance Tests
 

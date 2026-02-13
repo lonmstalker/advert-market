@@ -19,7 +19,7 @@ shared (value objects, events, exceptions)
 
 ### API Module Dependencies
 
-Все `-api` модули зависят **только** от `shared`:
+All `-api` modules depend **only** on `shared`:
 
 | API Module | Dependencies |
 |------------|-------------|
@@ -41,30 +41,30 @@ shared (value objects, events, exceptions)
 | delivery | delivery-api | shared, db |
 | communication | communication-api | shared, db |
 
-**Правила:**
-- Impl модули **не зависят** друг от друга — только через API
-- `financial` изолирован: никаких зависимостей на deal/marketplace/delivery/communication
-- `deal` — единственный модуль, зависящий от 3 API (financial, identity, marketplace)
-- `delivery` и `communication` полностью изолированы; взаимодействие через Kafka
+**Rules:**
+- Impl modules **do not depend** on each other - only through the API
+- `financial` isolated: no dependencies on deal/marketplace/delivery/communication
+- `deal` is the only module that depends on 3 APIs (financial, identity, marketplace)
+- `delivery` and `communication` are completely isolated; interaction via Kafka
 
 ---
 
 ## Port Catalog
 
-### Exported Ports (из API модулей)
+### Exported Ports (from API modules)
 
 | Port | Module | Methods | Consumers |
 |------|--------|---------|-----------|
 | `NotificationPort` | communication-api | `send(NotificationRequest)` | deal, financial |
 
-> Остальные Port-интерфейсы будут добавлены по мере реализации бизнес-логики:
+> Other Port interfaces will be added as the business logic is implemented:
 > `EscrowPort` (financial-api), `UserPort` (identity-api), `ChannelPort` (marketplace-api), `DealPort` (deal-api), `DeliveryPort` (delivery-api).
 
-### Internal Ports (внутри impl модулей)
+### Internal Ports (inside impl modules)
 
 | Port | Module | Purpose |
 |------|--------|---------|
-| `UpdateDeduplicationPort` | communication | Webhook update дедупликация (Redis) |
+| `UpdateDeduplicationPort` | communication | Webhook update deduplication (Redis) |
 | `RateLimiterPort` | communication | Rate limiting Telegram API |
 | `UserStatePort` | communication | Bot state machine (Redis) |
 | `UserBlockPort` | communication | Block/unblock users |
@@ -73,7 +73,7 @@ shared (value objects, events, exceptions)
 
 ## Synchronous Interactions (Port Calls)
 
-Sync вызовы через DI — impl модуль реализует Port из API:
+Sync calls via DI - impl module implements Port from API:
 
 ```
 deal-impl ──→ EscrowPort (financial-api) ──→ financial-impl
@@ -82,7 +82,7 @@ deal-impl ──→ ChannelPort (marketplace-api) ──→ marketplace-impl
 deal-impl ──→ NotificationPort (communication-api) ──→ communication-impl
 ```
 
-Spring собирает зависимости в `app` модуле, где все impl на classpath.
+Spring collects dependencies in the `app` module, where everything is impl on the classpath.
 
 ---
 
@@ -210,12 +210,12 @@ Outbox: deal.deadlines (DEADLINE_SET, scheduled)
 
 ## Adapter Package Structure
 
-Каждый impl модуль организован по слоям:
+Each impl module is organized into layers:
 
 ```
 com.advertmarket.<module>/
-├── api/           # Реализации Port интерфейсов
-├── internal/      # Внутренняя логика
+├── api/           # \u0420\u0435\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 Port \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u043e\u0432
+├── internal/      # \u0412\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u044f\u044f \u043b\u043e\u0433\u0438\u043a\u0430
 │   ├── config/    # @Configuration, @ConfigurationProperties
 │   ├── adapter/   # Kafka listeners, external API clients
 │   ├── service/   # Domain services
@@ -223,7 +223,7 @@ com.advertmarket.<module>/
 └── package-info.java
 ```
 
-### Адаптеры по модулям
+### Adapters by module
 
 | Module | Inbound Adapters | Outbound Adapters |
 |--------|-----------------|-------------------|

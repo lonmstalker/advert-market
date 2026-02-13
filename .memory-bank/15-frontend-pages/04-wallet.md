@@ -1,19 +1,19 @@
-# Финансы
+#Finance
 
-> Tab 3. Финансовый кабинет: сводка по сделкам, история транзакций, вывод заработка (владелец канала).
+> Tab 3. Financial account: summary of transactions, transaction history, withdrawal of earnings (channel owner).
 >
-> **Архитектурное решение**: платформенного кошелька нет. Все TON-операции привязаны к сделкам (per-deal escrow).
-> Рекламодатель оплачивает каждую сделку напрямую на уникальный эскроу-адрес.
-> Владелец канала получает выплаты из `OWNER_PENDING` после завершения сделок.
+> **Architectural decision**: no platform wallet. All TON transactions are tied to transactions (per-deal escrow).
+> The advertiser pays each transaction directly to a unique escrow address.
+> The channel owner receives payments from `OWNER_PENDING` after transactions are completed.
 
-## Навигация
+## Navigation
 
 ```
 /wallet
-  ├── /wallet/withdraw          # Только для владельцев каналов
+  ├── /wallet/withdraw          # \u0422\u043e\u043b\u044c\u043a\u043e \u0434\u043b\u044f \u0432\u043b\u0430\u0434\u0435\u043b\u044c\u0446\u0435\u0432 \u043a\u0430\u043d\u0430\u043b\u043e\u0432
   ├── /wallet/history
   │   └── /wallet/history/:txId
-  └── [Sheet] Фильтры истории
+  └── [Sheet] \u0424\u0438\u043b\u044c\u0442\u0440\u044b \u0438\u0441\u0442\u043e\u0440\u0438\u0438
 ```
 
 ---
@@ -22,12 +22,12 @@
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `GET` | `/api/v1/wallet/summary` | Финансовая сводка | Authenticated |
-| `GET` | `/api/v1/wallet/transactions` | Список транзакций | Authenticated |
-| `GET` | `/api/v1/wallet/transactions/:txId` | Детали транзакции | Owner |
-| `POST` | `/api/v1/wallet/withdraw` | Запрос на вывод | Channel Owner |
+| `GET` | `/api/v1/wallet/summary` | Financial Summary | Authenticated |
+| `GET` | `/api/v1/wallet/transactions` | List of transactions | Authenticated |
+| `GET` | `/api/v1/wallet/transactions/:txId` | Transaction details | Owner |
+| `POST` | `/api/v1/wallet/withdraw` | Withdrawal request | Channel Owner |
 
-### Query keys (добавить в `query-keys.ts`)
+### Query keys (add to `query-keys.ts`)
 
 ```typescript
 export const walletKeys = {
@@ -41,13 +41,13 @@ export const walletKeys = {
 
 ---
 
-## 4.1 Главная финансов
+## 4.1 Home Finance
 
 | | |
 |---|---|
 | **Route** | `/wallet` |
-| **Цель** | Финансовая сводка, быстрые действия, последние транзакции |
-| **Кто видит** | Все авторизованные |
+| **Target** | Financial Summary, Quick Actions, Latest Transactions |
+| **Who sees** | All authorized |
 
 ### API
 
@@ -58,87 +58,87 @@ GET /api/v1/wallet/transactions?limit=5
 
 **Query keys:** `walletKeys.summary`, `walletKeys.transactionList({ limit: 5 })`
 
-**Network mode:** `{ networkMode: 'online', staleTime: 0 }` для summary (финансовые данные).
+**Network mode:** `{ networkMode: 'online', staleTime: 0 }` for summary (financial data).
 
 ### Response: `GET /api/v1/wallet/summary`
 
 ```typescript
 const WalletSummarySchema = z.object({
-  // Для владельца канала
-  earnedTotalNano: z.string(),      // Всего заработано за всё время
-  pendingPayoutNano: z.string(),    // Доступно для вывода (OWNER_PENDING)
-  inEscrowNano: z.string(),        // Заморожено в активных сделках
-  withdrawnTotalNano: z.string(),   // Выведено за всё время
+  // \u0414\u043b\u044f \u0432\u043b\u0430\u0434\u0435\u043b\u044c\u0446\u0430 \u043a\u0430\u043d\u0430\u043b\u0430
+  earnedTotalNano: z.string(),      // \u0412\u0441\u0435\u0433\u043e \u0437\u0430\u0440\u0430\u0431\u043e\u0442\u0430\u043d\u043e \u0437\u0430 \u0432\u0441\u0451 \u0432\u0440\u0435\u043c\u044f
+  pendingPayoutNano: z.string(),    // \u0414\u043e\u0441\u0442\u0443\u043f\u043d\u043e \u0434\u043b\u044f \u0432\u044b\u0432\u043e\u0434\u0430 (OWNER_PENDING)
+  inEscrowNano: z.string(),        // \u0417\u0430\u043c\u043e\u0440\u043e\u0436\u0435\u043d\u043e \u0432 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0445 \u0441\u0434\u0435\u043b\u043a\u0430\u0445
+  withdrawnTotalNano: z.string(),   // \u0412\u044b\u0432\u0435\u0434\u0435\u043d\u043e \u0437\u0430 \u0432\u0441\u0451 \u0432\u0440\u0435\u043c\u044f
 
-  // Для рекламодателя
-  spentTotalNano: z.string(),       // Всего потрачено за всё время
-  activeEscrowNano: z.string(),     // Заморожено в активных сделках
+  // \u0414\u043b\u044f \u0440\u0435\u043a\u043b\u0430\u043c\u043e\u0434\u0430\u0442\u0435\u043b\u044f
+  spentTotalNano: z.string(),       // \u0412\u0441\u0435\u0433\u043e \u043f\u043e\u0442\u0440\u0430\u0447\u0435\u043d\u043e \u0437\u0430 \u0432\u0441\u0451 \u0432\u0440\u0435\u043c\u044f
+  activeEscrowNano: z.string(),     // \u0417\u0430\u043c\u043e\u0440\u043e\u0436\u0435\u043d\u043e \u0432 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0445 \u0441\u0434\u0435\u043b\u043a\u0430\u0445
 
-  // Общее
+  // \u041e\u0431\u0449\u0435\u0435
   activeDealsCount: z.number(),
   completedDealsCount: z.number(),
 });
 ```
 
-Поля зависят от роли пользователя (бэкенд возвращает релевантные, остальные = "0").
+The fields depend on the user's role (the backend returns the relevant ones, the rest = "0").
 
 ### UI
 
-**Для владельца канала:**
-- **Доступно для вывода** — hero / `title1`, bold, по центру, `tabular-nums`, `<Amount>` (формат: "1 250.00 TON")
-- **Сводка** — `Group` с 3 `GroupItem`:
-  - `t('wallet.summary.earned')` — всего заработано
-  - `t('wallet.summary.inEscrow')` — в активных сделках
-  - `t('wallet.summary.withdrawn')` — выведено
-- **Быстрые действия** — кнопка `t('wallet.withdraw')` (↑ иконка) → `/wallet/withdraw`
-  - Показывать только если `pendingPayoutNano > 0`
+**For channel owner:**
+- **Available for output** - hero / `title1`, bold, centered, `tabular-nums`, `<Amount>` (format: "1 250.00 TON")
+- **Summary** — `Group` with 3 `GroupItem`:
+  - `t('wallet.summary.earned')` — total earned
+  - `t('wallet.summary.inEscrow')` — in active transactions
+  - `t('wallet.summary.withdrawn')` — displayed
+- **Quick actions** - button `t('wallet.withdraw')` (↑ icon) → `/wallet/withdraw`
+  - Show only if `pendingPayoutNano > 0`
 
-**Для рекламодателя:**
-- **В активных сделках** — hero / `title1`
-- **Сводка** — `Group` с 2 `GroupItem`:
-  - `t('wallet.summary.spent')` — всего потрачено
-  - `t('wallet.summary.activeEscrow')` — в эскроу
-- Кнопки вывода **нет** (рекламодатель не получает выплаты)
+**For advertiser:**
+- **In active transactions** — hero / `title1`
+- **Summary** — `Group` with 2 `GroupItem`:
+  - `t('wallet.summary.spent')` — total spent
+  - `t('wallet.summary.activeEscrow')` — in escrow
+- Withdraw buttons **none** (advertiser does not receive payment)
 
-**Общее:**
-- **Group `t('wallet.recentTransactions')`** — до 5 последних транзакций (`GroupItem`):
-  - `before`: иконка типа (escrow_deposit/payout/refund/commission)
-  - Заголовок: описание операции + название канала/сделки
-  - `after`: сумма с цветом (зелёная = доход, красная = расход) + дата (`caption`)
+**General:**
+- **Group `t('wallet.recentTransactions')`** — up to the last 5 transactions (`GroupItem`):
+  - `before`: icon type (escrow_deposit/payout/refund/commission)
+  - Header: description of the operation + name of the channel/deal
+  - `after`: amount with color (green = income, red = expense) + date (`caption`)
 - Link `t('wallet.allHistory')` → `/wallet/history`
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Вывести" (владелец) | → `/wallet/withdraw` |
-| Тап по транзакции | → `/wallet/history/:txId` |
-| "Вся история" | → `/wallet/history` |
-| Pull-to-refresh | Инвалидация `walletKeys.summary` + `walletKeys.transactions()` |
+| "Withdraw" (owner) | → `/wallet/withdraw` |
+| Tap on transaction | → `/wallet/history/:txId` |
+| "The Whole Story" | → `/wallet/history` |
+| Pull-to-refresh | Invalidation `walletKeys.summary` + `walletKeys.transactions()` |
 
 ### Empty state
 
 | Emoji | i18n title | i18n description | CTA |
 |-------|------------|------------------|-----|
-| `📜` | `wallet.empty.title` | `wallet.empty.description` | `wallet.empty.cta` → каталог каналов |
+| `📜` | `wallet.empty.title` | `wallet.empty.description` | `wallet.empty.cta` → channel directory |
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка загрузки summary | `ErrorScreen` + retry |
-| Ошибка загрузки транзакций | Секция транзакций: inline error + retry |
+| Loading error summary | `ErrorScreen` + retry |
+| Error loading transactions | Transaction section: inline error + retry |
 | Offline | Banner `t('errors.offline')` |
 
 ---
 
-## 4.2 Вывод средств (только владелец канала)
+## 4.2 Withdrawal of funds (channel owner only)
 
 | | |
 |---|---|
 | **Route** | `/wallet/withdraw` |
-| **Цель** | Вывести заработанные средства из `OWNER_PENDING` на внешний TON-кошелёк |
-| **Кто видит** | Владельцы каналов с `pendingPayoutNano > 0` |
+| **Target** | Withdraw earned funds from `OWNER_PENDING` to an external TON wallet |
+| **Who sees** | Owners of channels with `pendingPayoutNano > 0` |
 
 ### API
 
@@ -149,23 +149,23 @@ POST /api/v1/wallet/withdraw
 
 **Query keys:** `walletKeys.summary`
 
-**Headers:** `Idempotency-Key: {uuid}` — генерируется при монтировании формы, обновляется после успешной отправки.
+**Headers:** `Idempotency-Key: {uuid}` - generated when the form is mounted, updated after successful submission.
 
 ### UI
 
-- **Доступно для вывода** — `title2`, bold, `<Amount>`
-- **Input `t('wallet.withdraw.amount')`** — numeric, max = pendingPayoutNano, кнопка `t('wallet.withdraw.max')` (inline)
-- **Input `t('wallet.withdraw.address')`** — если TON Connect подключён: pre-filled, иначе: ручной ввод
-- **Расчёт комиссии сети** — `caption`, `secondary` (фиксированная или обновляется при вводе суммы)
-- **Итого к получению** — `title3`
-- Кнопка `t('wallet.withdraw.submit')` (`primary`, full-width)
+- **Available for output** — `title2`, bold, `<Amount>`
+- **Input `t('wallet.withdraw.amount')`** — numeric, max = pendingPayoutNano, button `t('wallet.withdraw.max')` (inline)
+- **Input `t('wallet.withdraw.address')`** — if TON Connect is connected: pre-filled, otherwise: manual input
+- **Network commission calculation** — `caption`, `secondary` (fixed or updated when you enter the amount)
+- **Total receivable** — `title3`
+- Button `t('wallet.withdraw.submit')` (`primary`, full-width)
 
 ### Request body
 
 ```typescript
 const WithdrawRequestSchema = z.object({
   amountNano: z.string(),               // bigint as string, > 0, <= pendingPayoutNano
-  destinationAddress: z.string(),        // valid TON address (EQ... или UQ...)
+  destinationAddress: z.string(),        // valid TON address (EQ... \u0438\u043b\u0438 UQ...)
 });
 ```
 
@@ -173,7 +173,7 @@ const WithdrawRequestSchema = z.object({
 
 ```typescript
 const WithdrawResponseSchema = z.object({
-  withdrawalId: z.string(),              // UUID для отслеживания
+  withdrawalId: z.string(),              // UUID \u0434\u043b\u044f \u043e\u0442\u0441\u043b\u0435\u0436\u0438\u0432\u0430\u043d\u0438\u044f
   status: z.enum(['PENDING', 'SUBMITTED', 'CONFIRMED', 'FAILED']),
   estimatedFeeNano: z.string(),
 });
@@ -182,7 +182,7 @@ const WithdrawResponseSchema = z.object({
 ### Idempotency-Key
 
 ```typescript
-// Генерируем при монтировании формы, НЕ при клике
+// \u0413\u0435\u043d\u0435\u0440\u0438\u0440\u0443\u0435\u043c \u043f\u0440\u0438 \u043c\u043e\u043d\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0438 \u0444\u043e\u0440\u043c\u044b, \u041d\u0415 \u043f\u0440\u0438 \u043a\u043b\u0438\u043a\u0435
 const idempotencyKey = useRef(crypto.randomUUID());
 
 const withdraw = useMutation({
@@ -191,47 +191,47 @@ const withdraw = useMutation({
       headers: { 'Idempotency-Key': idempotencyKey.current },
     }),
   onSuccess: () => {
-    idempotencyKey.current = crypto.randomUUID(); // новый ключ для следующей операции
+    idempotencyKey.current = crypto.randomUUID(); // \u043d\u043e\u0432\u044b\u0439 \u043a\u043b\u044e\u0447 \u0434\u043b\u044f \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0435\u0439 \u043e\u043f\u0435\u0440\u0430\u0446\u0438\u0438
     queryClient.invalidateQueries({ queryKey: walletKeys.summary });
   },
 });
 ```
 
-Backend при получении `Idempotency-Key`:
-- Первый запрос — выполняет, сохраняет `(key, response)` в Redis (TTL 24h)
-- Повторный — возвращает сохранённый response без повторного выполнения
+Backend when receiving `Idempotency-Key`:
+- First request - executes, saves `(key, response)` in Redis (TTL 24h)
+- Repeated - returns the saved response without re-executing
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Макс" | Заполнить максимальную сумму (pendingPayout - комиссия) |
-| "Вывести" | → `DialogModal` подтверждения → `POST /api/v1/wallet/withdraw` → toast → navigate `/wallet` |
+| "Max" | Fill in the maximum amount (pendingPayout - commission) |
+| "Withdraw" | → `DialogModal` confirmations → `POST /api/v1/wallet/withdraw` → toast → navigate `/wallet` |
 
-### Валидация
+### Validation
 
-- Сумма > 0 и <= доступного для вывода (`pendingPayoutNano`)
-- Адрес — валидный TON address (формат `EQ...` или `UQ...`)
+- Sum > 0 and <= available for withdrawal (`pendingPayoutNano`)
+- Address - valid TON address (format `EQ...` or `UQ...`)
 
 ### Error states
 
-| Ошибка | UI | Описание |
+| Error | UI | Description |
 |--------|----|----------|
-| Недостаточно средств | Toast `t('wallet.error.insufficientFunds')` | Баланс изменился между загрузкой и отправкой |
-| Невалидный адрес | Inline error `t('wallet.error.invalidAddress')` | Формат адреса не соответствует TON |
-| Лимит вывода | Toast `t('wallet.error.withdrawLimit')` | Превышен дневной/разовый лимит |
-| 429 rate limit | Toast `t('errors.rateLimited')` | Слишком частые запросы на вывод |
-| Дубликат (Idempotency-Key) | Возвращает предыдущий ответ | Прозрачно для пользователя |
+| Insufficient funds | Toast `t('wallet.error.insufficientFunds')` | The balance has changed between downloading and sending |
+| Invalid address | Inline error `t('wallet.error.invalidAddress')` | The address format does not match TON |
+| Withdrawal limit | Toast `t('wallet.error.withdrawLimit')` | Daily/one-time limit exceeded |
+| 429 rate limit | Toast `t('errors.rateLimited')` | Too frequent withdrawal requests |
+| Duplicate (Idempotency-Key) | Returns the previous response | Transparent to the user |
 
 ---
 
-## 4.3 История транзакций
+## 4.3 Transaction history
 
 | | |
 |---|---|
 | **Route** | `/wallet/history` |
-| **Цель** | Полная история финансовых операций по сделкам |
-| **Кто видит** | Все авторизованные |
+| **Target** | Complete history of financial transactions for transactions |
+| **Who sees** | All authorized |
 
 ### API
 
@@ -241,36 +241,36 @@ GET /api/v1/wallet/transactions?cursor=&limit=20&type=&from=&to=
 
 **Query keys:** `walletKeys.transactionList(params)`
 
-### Типы транзакций
+### Transaction types
 
-| Тип | Описание | Кто видит |
+| Type | Description | Who sees |
 |-----|----------|-----------|
-| `escrow_deposit` | Оплата сделки (TON → эскроу) | Рекламодатель |
-| `payout` | Выплата владельцу канала | Владелец |
-| `withdrawal` | Вывод из OWNER_PENDING на внешний кошелёк | Владелец |
-| `refund` | Возврат из эскроу рекламодателю | Рекламодатель |
-| `commission` | Комиссия платформы | Оба (информационно) |
+| `escrow_deposit` | Payment for the transaction (TON → escrow) | Advertiser |
+| `payout` | Payment to the channel owner | Owner |
+| `withdrawal` | Withdrawal from OWNER_PENDING to an external wallet | Owner |
+| `refund` | Return from escrow to advertiser | Advertiser |
+| `commission` | Platform commission | Both (informational) |
 
 ### UI
 
-- **Кнопка `t('wallet.history.filter')`** — с badge количества активных фильтров
-- **Список транзакций** — `GroupItem`, группировка по дням:
-  - `before`: иконка типа
-  - Заголовок: описание + связанная сделка/канал
-  - `after`: сумма (зелёная = доход, красная = расход) + дата
-- **Infinite scroll** — skeleton загрузка
+- **Button `t('wallet.history.filter')`** — with badge number of active filters
+- **List of transactions** — `GroupItem`, grouped by day:
+  - `before`: type icon
+  - Title: description + related deal/channel
+  - `after`: amount (green = income, red = expense) + date
+- **Infinite scroll** — skeleton loading
 
-### Sheet фильтров
+### Sheet of filters
 
-- **Тип** — multi-select: `escrow_deposit` / `payout` / `withdrawal` / `refund` / `commission`
-- **Период** — select: `t('wallet.history.filter.week')` / `t('wallet.history.filter.month')` / `t('wallet.history.filter.all')`
+- **Type** - multi-select: `escrow_deposit` / `payout` / `withdrawal` / `refund` / `commission`
+- **Period** — select: `t('wallet.history.filter.week')` / `t('wallet.history.filter.month')` / `t('wallet.history.filter.all')`
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Фильтр" | → Sheet фильтров |
-| Тап по транзакции | → `/wallet/history/:txId` |
+| "Filter" | → Sheet of filters |
+| Tap on transaction | → `/wallet/history/:txId` |
 
 ### Empty state
 
@@ -280,20 +280,20 @@ GET /api/v1/wallet/transactions?cursor=&limit=20&type=&from=&to=
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка загрузки | `ErrorScreen` + retry button |
+| Loading Error | `ErrorScreen` + retry button |
 | Offline | Banner `t('errors.offline')` |
 
 ---
 
-## 4.4 Детали транзакции
+## 4.4 Transaction details
 
 | | |
 |---|---|
 | **Route** | `/wallet/history/:txId` |
-| **Цель** | Полная информация о транзакции |
-| **Кто видит** | Участник связанной сделки |
+| **Target** | Full transaction details |
+| **Who sees** | Participant in a related transaction |
 
 ### API
 
@@ -305,34 +305,34 @@ GET /api/v1/wallet/transactions/:txId
 
 ### UI
 
-- **Сумма** — `title1`, bold, цветовая: +зелёная / -красная, `<Amount>`
-- **Статус** — badge: `pending` / `confirmed` / `failed`
+- **Amount** — `title1`, bold, color: +green / -red, `<Amount>`
+- **Status** — badge: `pending` / `confirmed` / `failed`
 - **Group `t('wallet.transaction.details')`** — `GroupItem`:
   - `t('wallet.transaction.type')`
   - `t('wallet.transaction.date')` (formatted)
-  - `t('wallet.transaction.hash')` (copyable, truncated с `...`)
-  - `t('wallet.transaction.deal')` (link → `/deals/:dealId`, если есть)
-  - `t('wallet.transaction.commission')` (если есть)
+  - `t('wallet.transaction.hash')` (copyable, truncated with `...`)
+  - `t('wallet.transaction.deal')` (link → `/deals/:dealId`, if available)
+  - `t('wallet.transaction.commission')` (if available)
   - `t('wallet.transaction.from')` / `t('wallet.transaction.to')` (truncated addresses)
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Копировать hash | `navigator.clipboard` → toast `t('common.copied')` |
-| Тап "Сделка" | → `/deals/:dealId` |
-| "Открыть в TON Explorer" | External link (Telegram `openLink`) |
+| Copy hash | `navigator.clipboard` → toast `t('common.copied')` |
+| Tap "Deal" | → `/deals/:dealId` |
+| "Open in TON Explorer" | External link (Telegram `openLink`) |
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| 404 транзакция не найдена | `ErrorScreen` `t('errors.notFound.title')` + navigate `/wallet/history` |
-| Ошибка загрузки | `ErrorScreen` + retry |
+| 404 transaction not found | `ErrorScreen` `t('errors.notFound.title')` + navigate `/wallet/history` |
+| Loading Error | `ErrorScreen` + retry |
 
 ---
 
-## Файловая структура
+## File structure
 
 ```
 src/pages/wallet/
@@ -346,23 +346,23 @@ src/features/wallet/
     contracts.ts              # Zod schemas: WalletSummary, WithdrawRequest/Response, Transaction
     wallet-api.ts             # API functions: getWalletSummary, getTransactions, withdraw
     wallet-queries.ts         # TanStack Query hooks: useWalletSummary, useTransactions
-    wallet-mutations.ts       # useMutation: useWithdraw (с Idempotency-Key)
+    wallet-mutations.ts       # useMutation: useWithdraw (\u0441 Idempotency-Key)
   components/
-    SummaryHero.tsx           # Hero-блок с основной суммой (зависит от роли)
-    SummaryStats.tsx          # Сводка (earned/spent/escrow/withdrawn)
+    SummaryHero.tsx           # Hero-\u0431\u043b\u043e\u043a \u0441 \u043e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u0441\u0443\u043c\u043c\u043e\u0439 (\u0437\u0430\u0432\u0438\u0441\u0438\u0442 \u043e\u0442 \u0440\u043e\u043b\u0438)
+    SummaryStats.tsx          # \u0421\u0432\u043e\u0434\u043a\u0430 (earned/spent/escrow/withdrawn)
     TransactionListItem.tsx
     TransactionFiltersSheet.tsx
   types/
-    wallet.ts                 # Общие типы (TransactionType enum, etc.)
+    wallet.ts                 # \u041e\u0431\u0449\u0438\u0435 \u0442\u0438\u043f\u044b (TransactionType enum, etc.)
 ```
 
 ---
 
-## Связи с другими документами
+## Links to other documents
 
-| Документ | Что использует |
+| Document | What uses |
 |----------|---------------|
 | [07-ton-connect-integration.md](07-ton-connect-integration.md) | Flow 1 (escrow deposit), Flow 2 (withdrawal) |
 | [06-shared-components.md](06-shared-components.md) | Error states, i18n namespace, Amount, toast |
 | [05-account-types.md](../07-financial-system/05-account-types.md) | OWNER_PENDING, ESCROW, ledger model |
-| [07-idempotency-strategy.md](../05-patterns-and-decisions/07-idempotency-strategy.md) | Idempotency-Key для withdraw |
+| [07-idempotency-strategy.md](../05-patterns-and-decisions/07-idempotency-strategy.md) | Idempotency-Key for withdraw |

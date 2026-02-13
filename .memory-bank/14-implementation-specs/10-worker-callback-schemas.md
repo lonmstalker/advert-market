@@ -201,17 +201,17 @@ After max retries: send to DLT, create alert.
 
 ### Authentication Model
 
-Workers и Backend API находятся в одном Docker Compose (MVP). Коммуникация идёт через Kafka topics, а НЕ через HTTP.
+Workers and Backend API are in one Docker Compose (MVP). Communication occurs via Kafka topics, and NOT via HTTP.
 
 | Layer | Mechanism |
 |-------|-----------|
-| Network | Docker internal network (workers не доступны извне) |
-| Kafka | SASL/PLAIN auth (когда Kafka развёрнут с аутентификацией) |
-| Message-level | HMAC signature в Kafka header |
+| Network | Docker internal network (workers are not accessible from outside) |
+| Kafka | SASL/PLAIN auth (when Kafka is deployed with authentication) |
+| Message-level | HMAC signature in Kafka header |
 
 ### HMAC Message Signing
 
-Каждое сообщение от worker содержит HMAC-SHA256 подпись в Kafka header:
+Each message from a worker contains an HMAC-SHA256 signature in the Kafka header:
 
 ```
 Header: X-Worker-Signature = HMAC-SHA256(shared_secret, message_body)
@@ -219,20 +219,20 @@ Header: X-Worker-Id = worker-name
 Header: X-Worker-Timestamp = epoch_ms
 ```
 
-Consumer верифицирует:
-1. `X-Worker-Timestamp` не старше 5 минут (replay protection)
-2. HMAC совпадает с пересчитанным из `shared_secret + body`
-3. `X-Worker-Id` в allow-list
+Consumer verifies:
+1. `X-Worker-Timestamp` not older than 5 minutes (replay protection)
+2. HMAC matches the one recalculated from `shared_secret + body`
+3. `X-Worker-Id` in allow-list
 
-### Internal HTTP API (если используется)
+### Internal HTTP API (if used)
 
-Для `POST /internal/v1/worker-events` (fallback):
+For `POST /internal/v1/worker-events` (fallback):
 
 | Mechanism | Details |
 |-----------|---------|
-| Network policy | Доступен только из Docker internal network |
+| Network policy | Only accessible from Docker internal network |
 | API key | `X-Internal-Api-Key` header (env var `INTERNAL_API_KEY`) |
-| IP whitelist | Только 172.18.0.0/16 (Docker bridge) |
+| IP whitelist | Only 172.18.0.0/16 (Docker bridge) |
 
 ```yaml
 internal:
@@ -245,9 +245,9 @@ internal:
 
 ### Production Path (Scaled Deployment)
 
-При переходе на Kubernetes:
-- mTLS между сервисами (Istio/Linkerd)
-- Kafka с SASL/SCRAM + TLS
+When migrating to Kubernetes:
+- mTLS between services (Istio/Linkerd)
+- Kafka with SASL/SCRAM + TLS
 - Network policies (Kubernetes NetworkPolicy)
 
 ---

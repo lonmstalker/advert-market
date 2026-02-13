@@ -80,8 +80,8 @@ The platform exposes two API surfaces: a **public REST API** for the Mini App an
 
 ### Wallet (Financial Summary & Withdrawal)
 
-> Платформенного кошелька нет. Все TON-операции привязаны к сделкам (per-deal escrow).
-> Wallet endpoints предоставляют **агрегированный обзор** финансов и вывод заработка.
+> There is no platform wallet. All TON transactions are tied to transactions (per-deal escrow).
+> Wallet endpoints provide an **aggregated overview** of finances and withdrawal of earnings.
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
@@ -155,7 +155,7 @@ RFC 7807 Problem Details:
 {
   "channelId": 123456789,
   "pricingRuleId": 42,
-  "message": "Хочу разместить рекламу криптопроекта"
+  "message": "\u0425\u043e\u0447\u0443 \u0440\u0430\u0437\u043c\u0435\u0441\u0442\u0438\u0442\u044c \u0440\u0435\u043a\u043b\u0430\u043c\u0443 \u043a\u0440\u0438\u043f\u0442\u043e\u043f\u0440\u043e\u0435\u043a\u0442\u0430"
 }
 ```
 
@@ -184,7 +184,7 @@ RFC 7807 Problem Details:
 {
   "proposedAmountNano": 40000000000,
   "pricingRuleId": 42,
-  "message": "Предлагаю цену со скидкой"
+  "message": "\u041f\u0440\u0435\u0434\u043b\u0430\u0433\u0430\u044e \u0446\u0435\u043d\u0443 \u0441\u043e \u0441\u043a\u0438\u0434\u043a\u043e\u0439"
 }
 ```
 
@@ -199,10 +199,10 @@ RFC 7807 Problem Details:
 **Request:**
 ```json
 {
-  "text": "Текст рекламного поста...",
+  "text": "\u0422\u0435\u043a\u0441\u0442 \u0440\u0435\u043a\u043b\u0430\u043c\u043d\u043e\u0433\u043e \u043f\u043e\u0441\u0442\u0430...",
   "mediaUrls": ["https://example.com/image.png"],
   "buttons": [
-    {"text": "Перейти", "url": "https://example.com"}
+    {"text": "\u041f\u0435\u0440\u0435\u0439\u0442\u0438", "url": "https://example.com"}
   ],
   "format": "STANDARD"
 }
@@ -221,7 +221,7 @@ RFC 7807 Problem Details:
 ```json
 {
   "reason": "POST_DELETED",
-  "description": "Пост был удалён через 2 часа после публикации"
+  "description": "\u041f\u043e\u0441\u0442 \u0431\u044b\u043b \u0443\u0434\u0430\u043b\u0451\u043d \u0447\u0435\u0440\u0435\u0437 2 \u0447\u0430\u0441\u0430 \u043f\u043e\u0441\u043b\u0435 \u043f\u0443\u0431\u043b\u0438\u043a\u0430\u0446\u0438\u0438"
 }
 ```
 
@@ -238,7 +238,7 @@ RFC 7807 Problem Details:
   "evidenceType": "SCREENSHOT",
   "content": {
     "url": "https://...",
-    "caption": "Скриншот удалённого поста"
+    "caption": "\u0421\u043a\u0440\u0438\u043d\u0448\u043e\u0442 \u0443\u0434\u0430\u043b\u0451\u043d\u043d\u043e\u0433\u043e \u043f\u043e\u0441\u0442\u0430"
   }
 }
 ```
@@ -262,10 +262,10 @@ RFC 7807 Problem Details:
 ```json
 {
   "channelId": 123456789,
-  "description": "Крупнейший канал о криптовалютах",
+  "description": "\u041a\u0440\u0443\u043f\u043d\u0435\u0439\u0448\u0438\u0439 \u043a\u0430\u043d\u0430\u043b \u043e \u043a\u0440\u0438\u043f\u0442\u043e\u0432\u0430\u043b\u044e\u0442\u0430\u0445",
   "topic": "crypto",
   "pricingRules": [
-    {"name": "Стандартный пост", "postType": "STANDARD", "priceNano": 50000000000}
+    {"name": "\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u043d\u044b\u0439 \u043f\u043e\u0441\u0442", "postType": "STANDARD", "priceNano": 50000000000}
   ]
 }
 ```

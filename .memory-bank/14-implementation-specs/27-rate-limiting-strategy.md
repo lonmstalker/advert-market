@@ -2,7 +2,7 @@
 
 ## Overview
 
-Многоуровневый rate limiting для защиты от abuse: API endpoints, authentication, notifications, внешние API. Реализуется через Redis + Spring filter chain.
+Multi-level rate limiting to protect against abuse: API endpoints, authentication, notifications, external APIs. Implemented via Redis + Spring filter chain.
 
 ---
 
@@ -59,7 +59,7 @@ server {
 
 ### Redis Token Bucket Algorithm
 
-Lua-скрипт для атомарной проверки + обновления:
+Lua script for atomic check + update:
 
 ```lua
 -- KEYS[1] = rate limit key
@@ -132,7 +132,7 @@ Retry-After: 30  (only on 429)
 
 ### Enforcement
 
-Проверяется в service layer до создания сущности. Не через Redis — через DB COUNT query.
+It is checked in the service layer before the entity is created. Not through Redis - through DB COUNT query.
 
 ```java
 long activeDealCount = dealRepo.countByAdvertiserAndStatusNotIn(
@@ -170,7 +170,7 @@ public TonResponse callTonApi(TonRequest request) {
 | Same chat | 1 msg/s | Per-chatId RateLimiter |
 | Same group | 20 msg/min | Per-groupId RateLimiter |
 
-Реализация описана в [02-telegram-bot-framework.md](./02-telegram-bot-framework.md).
+The implementation is described in [02-telegram-bot-framework.md](./02-telegram-bot-framework.md).
 
 ---
 
@@ -199,7 +199,7 @@ Value: failed attempt count
 Redis SET: rl:blacklist:ip
 ```
 
-При DDoS — nginx `deny` + Redis SET check в Spring filter.
+For DDoS - nginx `deny` + Redis SET check in Spring filter.
 
 ---
 

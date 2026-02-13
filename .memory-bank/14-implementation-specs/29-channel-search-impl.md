@@ -2,7 +2,7 @@
 
 ## Overview
 
-Реализация поиска каналов в маркетплейсе: jOOQ dynamic query building, индексная стратегия, keyset cursor pagination.
+Implementation of channel search in the marketplace: jOOQ dynamic query building, index strategy, keyset cursor pagination.
 
 ---
 
@@ -157,7 +157,7 @@ private Condition decodeCursorCondition(String cursor, ChannelSort sort) {
 
 ### Tie-Breaker
 
-`channel_id` (BIGINT PK) — гарантирует уникальность при одинаковых sort key values.
+`channel_id` (BIGINT PK) - guarantees uniqueness with the same sort key values.
 
 ---
 
@@ -174,7 +174,7 @@ ALTER TABLE channels ADD COLUMN tsv tsvector
     ) STORED;
 ```
 
-Weight A для title/topic (более релевантно), weight B для description.
+Weight A for title/topic (more relevant), weight B for description.
 
 ### Query Parsing
 

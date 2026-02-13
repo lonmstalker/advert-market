@@ -1,8 +1,8 @@
-# Профиль
+# Profile
 
-> Tab 4. Настройки пользователя, управление каналами, команда.
+> Tab 4. User settings, channel management, command.
 
-## Навигация
+## Navigation
 
 ```
 /profile
@@ -18,19 +18,19 @@
 
 ---
 
-## Новые API endpoints
+## New API endpoints
 
-> Endpoints **отсутствующие** в `11-api-contracts.md`.
+> Endpoints **missing** in `11-api-contracts.md`.
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `GET` | `/api/v1/profile` | Данные профиля | Authenticated |
-| `PUT` | `/api/v1/profile/language` | Сменить язык | Authenticated |
-| `PUT` | `/api/v1/profile/onboarding` | Завершить онбординг | Authenticated |
-| `GET` | `/api/v1/profile/notifications` | Настройки уведомлений | Authenticated |
-| `PUT` | `/api/v1/profile/notifications` | Обновить настройки | Authenticated |
+| `GET` | `/api/v1/profile` | Profile details | Authenticated |
+| `PUT` | `/api/v1/profile/language` | Change language | Authenticated |
+| `PUT` | `/api/v1/profile/onboarding` | Complete onboarding | Authenticated |
+| `GET` | `/api/v1/profile/notifications` | Notification settings | Authenticated |
+| `PUT` | `/api/v1/profile/notifications` | Update settings | Authenticated |
 
-### Новые query keys (добавить в `query-keys.ts`)
+### New query keys (add to `query-keys.ts`)
 
 ```typescript
 export const profileKeys = {
@@ -41,13 +41,13 @@ export const profileKeys = {
 
 ---
 
-## 5.1 Главная профиля
+## 5.1 Home profile
 
 | | |
 |---|---|
 | **Route** | `/profile` |
-| **Цель** | Настройки пользователя, управление каналами |
-| **Кто видит** | Все авторизованные |
+| **Target** | User settings, channel management |
+| **Who sees** | All authorized |
 
 ### API
 
@@ -61,32 +61,32 @@ GET /api/v1/channels?owner=me
 ### UI
 
 - **Group `t('profile.account')`**:
-  - Аватар (из Telegram) + имя + username
-- **Group `t('profile.channels')`** — список каналов пользователя (`GroupItem`):
-  - `before`: аватар канала
-  - Заголовок: название канала
+  - Avatar (from Telegram) + name + username
+- **Group `t('profile.channels')`** — list of user channels (`GroupItem`):
+  - `before`: channel avatar
+  - Title: channel name
   - `subtitle`: `t('profile.channel.subscribers', { count })`
-  - `after`: статус листинга badge (active/inactive)
+  - `after`: badge listing status (active/inactive)
   - `chevron`
-- **GroupItem `t('profile.addChannel')`** — иконка `+`
+- **GroupItem `t('profile.addChannel')`** — icon `+`
 - **Group `t('profile.settings')`**:
-  - GroupItem `t('profile.language')` — `chevron`, `after`: текущий язык
+  - GroupItem `t('profile.language')` — `chevron`, `after`: current language
   - GroupItem `t('profile.notifications')` — `chevron`
-- **Group `t('profile.stats')`** (если есть сделки):
+- **Group `t('profile.stats')`** (if there are transactions):
   - `t('profile.stats.totalDeals')`
   - `t('profile.stats.gmv')` (`<Amount>`)
-  - `t('profile.stats.earned')` (`<Amount>`, для владельцев каналов)
+  - `t('profile.stats.earned')` (`<Amount>`, for channel owners)
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Тап канал | → `/profile/channels/:channelId` |
-| "Добавить канал" | → `/profile/channels/new` |
-| "Язык" | → `/profile/language` |
-| "Уведомления" | → `/profile/notifications` |
+| Tap channel | → `/profile/channels/:channelId` |
+| "Add channel" | → `/profile/channels/new` |
+| "Language" | → `/profile/language` |
+| "Notifications" | → `/profile/notifications` |
 
-### Empty state (каналы)
+### Empty state (channels)
 
 | Emoji | i18n title | i18n description | CTA |
 |-------|------------|------------------|-----|
@@ -94,59 +94,59 @@ GET /api/v1/channels?owner=me
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка загрузки профиля | `ErrorScreen` + retry |
+| Error loading profile | `ErrorScreen` + retry |
 | Offline | Banner `t('errors.offline')` |
 
 ---
 
-## 5.2 Регистрация канала
+## 5.2 Channel registration
 
 | | |
 |---|---|
 | **Route** | `/profile/channels/new` |
-| **Цель** | Зарегистрировать канал на платформе |
-| **Кто видит** | Все авторизованные |
+| **Target** | Register a channel on the platform |
+| **Who sees** | All authorized |
 
 ### API
 
 ```
-POST /api/v1/channels         # Регистрация
-GET  /api/v1/channels/topics   # Тематики (enum)
+POST /api/v1/channels         # \u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f
+GET  /api/v1/channels/topics   # \u0422\u0435\u043c\u0430\u0442\u0438\u043a\u0438 (enum)
 ```
 
-### UI — Двухшаговая форма
+### UI - Two-Step Form
 
-**Шаг 1: Проверка канала**
-- **Input `t('profile.register.channelLink')`** — формат `@username` или `t.me/...`
-- Кнопка `t('profile.register.verify')` (`secondary`)
-- Инструкция: `t('profile.register.addBotInstruction')` — "Добавьте @AdvertMarketBot как администратора канала"
-- **Кнопка копирования** рядом с "@AdvertMarketBot": иконка copy → `navigator.clipboard.writeText('@AdvertMarketBot')` → toast `t('common.copied')`
-- **Кнопка `t('profile.register.openBot')`** — `openTelegramLink('https://t.me/AdvertMarketBot')`
+**Step 1: Channel Check**
+- **Input `t('profile.register.channelLink')`** — format `@username` or `t.me/...`
+- Button `t('profile.register.verify')` (`secondary`)
+- Instructions: `t('profile.register.addBotInstruction')` — "Add @AdvertMarketBot as a channel administrator"
+- **Copy button** next to "@AdvertMarketBot": copy icon → `navigator.clipboard.writeText('@AdvertMarketBot')` → toast `t('common.copied')`
+- **Button `t('profile.register.openBot')`** — `openTelegramLink('https://t.me/AdvertMarketBot')`
 
-**Шаг 2: Настройка (после проверки)**
-- Название канала — read-only, из API
-- Подписчики — read-only, из API
-- **Input `t('profile.register.description')`** — `textarea`, max 5000 символов
-- **Select `t('profile.register.topic')`** — из enum/API
-- **Builder `t('profile.register.pricing')`** — динамический список:
-  - Каждое правило:
-    - `Select` тип поста (`STANDARD`/`PINNED`/`STORY`/`REPOST`/`NATIVE`)
-    - `Input` цена в TON
-    - `Input` `t('profile.pricing.description')` — `textarea`, что включено в размещение
-    - **Group `t('profile.pricing.limits')`** — ограничения:
-      - `Input` `t('profile.pricing.maxTextLength')` — числовой, default по типу поста (см. таблицу)
-      - `Input` `t('profile.pricing.maxButtons')` — числовой, default по типу поста
-      - `Input` `t('profile.pricing.maxMedia')` — числовой, default по типу поста
-  - Кнопка `t('profile.pricing.addRule')` (`link`)
-  - Кнопка удаления (×) на каждом правиле
-  - Min 1 правило
-- Кнопка `t('profile.register.submit')` (`primary`, full-width)
+**Step 2: Setup (after verification)**
+- Channel name - read-only, from API
+- Subscribers - read-only, from API
+- **Input `t('profile.register.description')`** — `textarea`, max 5000 characters
+- **Select `t('profile.register.topic')`** - from enum/API
+- **Builder `t('profile.register.pricing')`** — dynamic list:
+  - Each rule:
+    - `Select` post type (`STANDARD`/`PINNED`/`STORY`/`REPOST`/`NATIVE`)
+    - `Input` price in TON
+    - `Input` `t('profile.pricing.description')` - `textarea`, what is included in the placement
+    - **Group `t('profile.pricing.limits')`** — restrictions:
+      - `Input` `t('profile.pricing.maxTextLength')` — numeric, default by post type (see table)
+      - `Input` `t('profile.pricing.maxButtons')` — numeric, default by post type
+      - `Input` `t('profile.pricing.maxMedia')` — numeric, default by post type
+  - Button `t('profile.pricing.addRule')` (`link`)
+  - Delete button (×) on each rule
+  - Min 1 rule
+- Button `t('profile.register.submit')` (`primary`, full-width)
 
-### Дефолтные лимиты по типу поста
+### Default limits by post type
 
-| Тип поста | Макс. текст | Макс. кнопок | Макс. медиа |
+| Post type | Max. text | Max. buttons | Max. media |
 |-----------|-------------|--------------|-------------|
 | `STANDARD` | 4096 | 9 (3×3) | 10 |
 | `PINNED` | 4096 | 9 (3×3) | 10 |
@@ -154,7 +154,7 @@ GET  /api/v1/channels/topics   # Тематики (enum)
 | `REPOST` | 4096 | 0 | 0 |
 | `NATIVE` | 4096 | 9 (3×3) | 10 |
 
-> Дефолты заполняются автоматически при выборе типа поста. Пользователь может ужесточить (уменьшить), но НЕ может превысить Telegram-лимиты.
+> Defaults are filled in automatically when you select a post type. The user can tighten (decrease), but cannot exceed Telegram limits.
 
 ### Request body
 
@@ -167,7 +167,7 @@ GET  /api/v1/channels/topics   # Тематики (enum)
     name: string;
     postType: 'STANDARD' | 'PINNED' | 'STORY' | 'REPOST' | 'NATIVE';
     priceNano: bigint;
-    description?: string;  // что включено
+    description?: string;  // \u0447\u0442\u043e \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u043e
     limits: {
       maxTextLength: number;   // <= Telegram limit
       maxButtons: number;      // <= Telegram limit
@@ -177,37 +177,37 @@ GET  /api/v1/channels/topics   # Тематики (enum)
 }
 ```
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Проверить" | Валидация через API → показать Шаг 2 |
-| Выбор типа поста в правиле | Автозаполнение дефолтных лимитов |
-| "Зарегистрировать" | `POST /api/v1/channels` → navigate `/profile/channels/:newId` |
+| "Check" | Validation via API → show Step 2 |
+| Selecting a post type in a rule | Autofill default limits |
+| "Register" | `POST /api/v1/channels` → navigate `/profile/channels/:newId` |
 
-### Предусловие
+### Precondition
 
-Бот `@AdMarketBot` должен быть добавлен как admin в канал. Если нет:
-- Ошибка с инструкцией: `t('profile.register.botNotAdmin')`
-- Кнопки копирования и открытия бота
+The bot `@AdMarketBot` must be added as admin to the channel. If not:
+- Error with instructions: `t('profile.register.botNotAdmin')`
+- Copy and open bot buttons
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Бот не admin | Inline error `t('profile.register.botNotAdmin')` |
-| Канал не найден | Inline error `t('profile.register.channelNotFound')` |
-| Канал уже зарегистрирован | Toast `t('profile.register.alreadyRegistered')` |
+| Bot is not admin | Inline error `t('profile.register.botNotAdmin')` |
+| Channel not found | Inline error `t('profile.register.channelNotFound')` |
+| The channel is already registered | Toast `t('profile.register.alreadyRegistered')` |
 
 ---
 
-## 5.3 Язык
+## 5.3 Language
 
 | | |
 |---|---|
 | **Route** | `/profile/language` |
-| **Цель** | Переключение языка интерфейса |
-| **Кто видит** | Все |
+| **Target** | Switching interface language |
+| **Who sees** | All |
 
 ### API
 
@@ -217,31 +217,31 @@ PUT /api/v1/profile/language
 
 ### UI
 
-- **Group** с `RadioGroup`:
-  - `t('profile.language.ru')` (default из `Telegram.WebApp.initDataUnsafe.user.language_code`)
+- **Group** with `RadioGroup`:
+  - `t('profile.language.ru')` (default from `Telegram.WebApp.initDataUnsafe.user.language_code`)
   - `t('profile.language.en')`
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Выбор языка | `i18n.changeLanguage()` + `PUT /api/v1/profile/language` + BackButton |
+| Language selection | `i18n.changeLanguage()` + `PUT /api/v1/profile/language` + BackButton |
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка сохранения языка | Toast `t('common.toast.saveFailed')` + rollback `i18n.changeLanguage()` |
+| Error saving language | Toast `t('common.toast.saveFailed')` + rollback `i18n.changeLanguage()` |
 
 ---
 
-## 5.4 Уведомления
+## 5.4 Notifications
 
 | | |
 |---|---|
 | **Route** | `/profile/notifications` |
-| **Цель** | Настроить какие уведомления получать в боте |
-| **Кто видит** | Все |
+| **Target** | Configure which notifications to receive in the bot |
+| **Who sees** | All |
 
 ### API
 
@@ -266,11 +266,11 @@ PUT /api/v1/profile/notifications
   - Toggle: `t('profile.notifications.opened')`
   - Toggle: `t('profile.notifications.resolved')`
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Toggle | Автосохранение: optimistic update + `PUT /api/v1/profile/notifications` |
+| Toggle | Autosave: optimistic update + `PUT /api/v1/profile/notifications` |
 
 ### Request body
 
@@ -295,83 +295,83 @@ PUT /api/v1/profile/notifications
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка сохранения | Toast `t('common.toast.saveFailed')` + rollback optimistic update |
+| Save error | Toast `t('common.toast.saveFailed')` + rollback optimistic update |
 
 ---
 
-## 5.5 Управление каналом
+## 5.5 Channel management
 
 | | |
 |---|---|
 | **Route** | `/profile/channels/:channelId` |
-| **Цель** | Управление листингом, статистика, команда |
-| **Кто видит** | Owner или Manager (с любым правом) |
+| **Target** | Listing management, statistics, team |
+| **Who sees** | Owner or Manager (with any right) |
 
 ### API
 
 ```
 GET /api/v1/channels/:channelId
 GET /api/v1/channels/:channelId/team
-PUT /api/v1/channels/:channelId       # Toggle листинга
+PUT /api/v1/channels/:channelId       # Toggle \u043b\u0438\u0441\u0442\u0438\u043d\u0433\u0430
 ```
 
 **Query keys:** `channelKeys.detail(channelId)`, `channelKeys.team(channelId)`
 
 ### UI
 
-- **Аватар + название**
-- **Toggle `t('profile.channel.active')`** — вкл/выкл листинг в каталоге (**OWNER-ONLY**)
-- **Group `t('profile.channel.stats')`** — `GroupItem` (видна всем members):
+- **Avatar + name**
+- **Toggle `t('profile.channel.active')`** — on/off listing in the directory (**OWNER-ONLY**)
+- **Group `t('profile.channel.stats')`** — `GroupItem` (visible to all members):
   - `t('profile.channel.subscribers')`
   - `t('profile.channel.dealCount')`
   - `t('profile.channel.earned')` (`<Amount>`)
-- **Group `t('profile.channel.pricing')`** — список правил: тип поста + цена, `chevron`
-- **Group `t('profile.channel.team')`** — список участников (`GroupItem`):
-  - `before`: аватар
-  - Заголовок: имя
-  - `after`: роль badge
+- **Group `t('profile.channel.pricing')`** — list of rules: post type + price, `chevron`
+- **Group `t('profile.channel.team')`** — list of participants (`GroupItem`):
+  - `before`: avatar
+  - Title: name
+  - `after`: badge role
   - `chevron`
-- **GroupItem `t('profile.channel.invite')`** — иконка `+`
-- Кнопка `t('profile.channel.edit')` (`secondary`) — **OWNER-ONLY**
+- **GroupItem `t('profile.channel.invite')`** — icon `+`
+- Button `t('profile.channel.edit')` (`secondary`) - **OWNER-ONLY**
 
-### ABAC — видимость секций для менеджеров
+### ABAC - visibility of sections for managers
 
-| Право менеджера | Видимые секции |
+| Manager's right | Visible sections |
 |-----------------|----------------|
-| `view_deals` | Статистика (количество сделок, заработок) |
-| `manage_listings` | — (OWNER-ONLY, см. 6.3) |
-| `manage_team` | Секция "Команда" + "Пригласить" |
-| Без прав | Только базовая информация (аватар, название, статус) |
+| `view_deals` | Statistics (number of transactions, earnings) |
+| `manage_listings` | — (OWNER-ONLY, see 6.3) |
+| `manage_team` | Section "Team" + "Invite" |
+| Without rights | Only basic information (avatar, title, status) |
 
-> Toggle листинга и кнопка "Редактировать" — **OWNER-ONLY**. Manager видит текущий статус листинга (read-only badge), но не может его изменить.
+> Listing Toggle and "Edit" button - **OWNER-ONLY**. Manager sees the current status of the listing (read-only badge), but cannot change it.
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Toggle листинг | `PUT /api/v1/channels/:id` (optimistic update) — только owner |
-| Тап участник | → `/profile/channels/:channelId/team/:userId` |
-| "Пригласить" | → `/profile/channels/:channelId/team/invite` |
-| "Редактировать" | → `/profile/channels/:channelId/edit` — только owner |
+| Toggle listing | `PUT /api/v1/channels/:id` (optimistic update) — owner only |
+| Tap Member | → `/profile/channels/:channelId/team/:userId` |
+| "Invite" | → `/profile/channels/:channelId/team/invite` |
+| "Edit" | → `/profile/channels/:channelId/edit` — owner only |
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| 403 нет доступа | `ErrorScreen` `t('errors.forbidden.title')` + navigate back |
-| Ошибка загрузки | `ErrorScreen` + retry |
+| 403 no access | `ErrorScreen` `t('errors.forbidden.title')` + navigate back |
+| Loading Error | `ErrorScreen` + retry |
 
 ---
 
-## 5.6 Редактирование канала
+## 5.6 Editing a channel
 
 | | |
 |---|---|
 | **Route** | `/profile/channels/:channelId/edit` |
-| **Цель** | Обновить описание, тематику, цены |
-| **Кто видит** | **Owner ONLY** (`@channelAuth.isOwner`) |
+| **Target** | Update description, subject, prices |
+| **Who sees** | **Owner ONLY** (`@channelAuth.isOwner`) |
 
 ### API
 
@@ -384,37 +384,37 @@ PUT /api/v1/channels/:channelId
 
 - **Input `t('profile.edit.description')`** — `textarea`, pre-filled, max 5000
 - **Select `t('profile.edit.topic')`** — pre-filled
-- **Builder `t('profile.edit.pricing')`** — редактируемый список:
-  - Каждое правило:
-    - `Select` тип + `Input` цена
-    - `Input` `t('profile.pricing.description')` — что включено
-    - **Group `t('profile.pricing.limits')`**: макс. текст / кнопки / медиа (с дефолтами по типу, см. 5.2)
+- **Builder `t('profile.edit.pricing')`** - editable list:
+  - Each rule:
+    - `Select` type + `Input` price
+    - `Input` `t('profile.pricing.description')` — what is included
+    - **Group `t('profile.pricing.limits')`**: max. text / buttons / media (with defaults by type, see 5.2)
   - `t('profile.pricing.addRule')` (`link`)
-  - Кнопка удаления (×)
-- Кнопка `t('common.save')` (`primary`)
+  - Delete button (×)
+- Button `t('common.save')` (`primary`)
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Сохранить" | `PUT /api/v1/channels/:channelId` → navigate back `/profile/channels/:channelId` |
+| "Save" | `PUT /api/v1/channels/:channelId` → navigate back `/profile/channels/:channelId` |
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| 403 не owner | `ErrorScreen` `t('errors.forbidden.title')` + navigate back |
-| Ошибка сохранения | Toast `t('common.toast.saveFailed')` |
+| 403 not owner | `ErrorScreen` `t('errors.forbidden.title')` + navigate back |
+| Save error | Toast `t('common.toast.saveFailed')` |
 
 ---
 
-## 5.7 Команда канала
+## 5.7 Channel command
 
 | | |
 |---|---|
 | **Route** | `/profile/channels/:channelId/team` |
-| **Цель** | Управление менеджерами канала |
-| **Кто видит** | Owner или Manager (`manage_team`) |
+| **Target** | Channel Manager Management |
+| **Who sees** | Owner or Manager (`manage_team`) |
 
 ### API
 
@@ -426,19 +426,19 @@ GET /api/v1/channels/:channelId/team
 
 ### UI
 
-- Список участников (`GroupItem`):
-  - `before`: аватар
-  - Заголовок: имя
-  - `subtitle`: роль badge + права summary (например: `t('profile.team.rightsSummary', { rights })`)
+- List of participants (`GroupItem`):
+  - `before`: avatar
+  - Title: name
+  - `subtitle`: badge role + summary rights (for example: `t('profile.team.rightsSummary', { rights })`)
   - `chevron`
-- **GroupItem `t('profile.team.invite')`** — иконка `+`
+- **GroupItem `t('profile.team.invite')`** — icon `+`
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| Тап участник | → `/profile/channels/:channelId/team/:userId` |
-| "Пригласить" | → `/profile/channels/:channelId/team/invite` |
+| Tap Member | → `/profile/channels/:channelId/team/:userId` |
+| "Invite" | → `/profile/channels/:channelId/team/invite` |
 
 ### Empty state
 
@@ -448,20 +448,20 @@ GET /api/v1/channels/:channelId/team
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Ошибка загрузки команды | `ErrorScreen` + retry |
-| 403 нет доступа | `ErrorScreen` `t('errors.forbidden.title')` + navigate back |
+| Command loading error | `ErrorScreen` + retry |
+| 403 no access | `ErrorScreen` `t('errors.forbidden.title')` + navigate back |
 
 ---
 
-## 5.8 Приглашение в команду
+## 5.8 Invitation to the team
 
 | | |
 |---|---|
 | **Route** | `/profile/channels/:channelId/team/invite` |
-| **Цель** | Пригласить нового менеджера |
-| **Кто видит** | Owner или Manager (`manage_team`) |
+| **Target** | Invite a new manager |
+| **Who sees** | Owner or Manager (`manage_team`) |
 
 ### API
 
@@ -472,19 +472,19 @@ POST /api/v1/channels/:channelId/team
 ### UI
 
 - **Input `t('profile.invite.username')`** — text
-- **Group `t('profile.invite.rights')`** — Toggle для каждого:
+- **Group `t('profile.invite.rights')`** — Toggle for each:
   - `publish` — `t('profile.rights.publish')`
   - `moderate` — `t('profile.rights.moderate')`
   - `view_deals` — `t('profile.rights.viewDeals')`
-  - `manage_listings` — `t('profile.rights.manageListings')` (**скрыт** если inviter — manager; виден только owner, т.к. OWNER-ONLY на бэкенде)
+  - `manage_listings` — `t('profile.rights.manageListings')` (**hidden** if inviter is manager; only owner is visible, because OWNER-ONLY on the backend)
   - `manage_team` — `t('profile.rights.manageTeam')`
-- Кнопка `t('profile.invite.submit')` (`primary`)
+- Button `t('profile.invite.submit')` (`primary`)
 
 ### Request body
 
 ```typescript
 {
-  username: string;  // или userId
+  username: string;  // \u0438\u043b\u0438 userId
   rights: {
     publish: boolean;
     moderate: boolean;
@@ -495,70 +495,70 @@ POST /api/v1/channels/:channelId/team
 }
 ```
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Пригласить" | `POST /api/v1/channels/:id/team` → toast `t('profile.toast.inviteSent')` → navigate back |
+| "Invite" | `POST /api/v1/channels/:id/team` → toast `t('profile.toast.inviteSent')` → navigate back |
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| Пользователь не найден | Inline error `t('profile.invite.userNotFound')` |
-| Уже в команде | Toast `t('profile.invite.alreadyMember')` |
+| User not found | Inline error `t('profile.invite.userNotFound')` |
+| Already on the team | Toast `t('profile.invite.alreadyMember')` |
 
 ---
 
-## 5.9 Права участника
+## 5.9 Participant rights
 
 | | |
 |---|---|
 | **Route** | `/profile/channels/:channelId/team/:userId` |
-| **Цель** | Просмотр и редактирование прав менеджера |
-| **Кто видит** | Owner или Manager (`manage_team`) |
+| **Target** | Viewing and editing manager rights |
+| **Who sees** | Owner or Manager (`manage_team`) |
 
 ### API
 
 ```
-GET    /api/v1/channels/:channelId/team           # Найти участника
-PUT    /api/v1/channels/:channelId/team/:userId    # Обновить права
-DELETE /api/v1/channels/:channelId/team/:userId    # Удалить
+GET    /api/v1/channels/:channelId/team           # \u041d\u0430\u0439\u0442\u0438 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u0430
+PUT    /api/v1/channels/:channelId/team/:userId    # \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u0440\u0430\u0432\u0430
+DELETE /api/v1/channels/:channelId/team/:userId    # \u0423\u0434\u0430\u043b\u0438\u0442\u044c
 ```
 
 ### UI
 
-- **Аватар + имя + роль** — read-only
-- **Group `t('profile.member.rights')`** — Toggle для каждого (как в 5.8):
-  - **Если owner**: toggle-ы активны, изменения сохраняются
-  - **Если manager с `manage_team`**: toggle-ы **disabled** с tooltip `t('profile.team.ownerOnly')` — "Только владелец может изменять права". Права видны read-only
-- Кнопка `t('common.save')` (`primary`) — **только для owner**
-- Кнопка `t('profile.member.remove')` (`secondary`, `destructive`) — доступна owner И manager с `manage_team`
+- **Avatar + name + role** — read-only
+- **Group `t('profile.member.rights')`** — Toggle for each (as in 5.8):
+  - **If owner**: toggles are active, changes are saved
+  - **If manager with `manage_team`**: toggle-s **disabled** with tooltip `t('profile.team.ownerOnly')` - “Only the owner can change rights.” Rights are visible read-only
+- Button `t('common.save')` (`primary`) — **only for owner**
+- Button `t('profile.member.remove')` (`secondary`, `destructive`) - available to owner AND manager with `manage_team`
 
 ### ABAC
 
-| Роль просматривающего | Toggle-ы прав | Кнопка "Сохранить" | Кнопка "Удалить" |
+| Role of the reviewer | Toggle rights | Save button | Delete button |
 |-----------------------|---------------|--------------------|--------------------|
 | Owner | Enabled (editable) | Visible | Visible |
 | Manager (`manage_team`) | **Disabled** + tooltip | **Hidden** | Visible |
 
-### Действия
+### Actions
 
-| Действие | Результат |
+| Action | Result |
 |----------|-----------|
-| "Сохранить" | `PUT /api/v1/channels/:id/team/:userId` → navigate back — только owner |
-| "Удалить" | → `DialogModal` подтверждения → `DELETE` → navigate `/profile/channels/:channelId/team` |
+| "Save" | `PUT /api/v1/channels/:id/team/:userId` → navigate back — owner only |
+| "Delete" | → `DialogModal` confirmations → `DELETE` → navigate `/profile/channels/:channelId/team` |
 
 ### Error states
 
-| Ошибка | UI |
+| Error | UI |
 |--------|----|
-| 403 не owner (при PUT) | Toast `t('errors.forbidden.title')` |
-| Удаление последнего менеджера | Toast `t('profile.member.cannotRemoveSelf')` (если пытается удалить себя) |
+| 403 not owner (on PUT) | Toast `t('errors.forbidden.title')` |
+| Removing the last manager | Toast `t('profile.member.cannotRemoveSelf')` (if trying to delete itself) |
 
 ---
 
-## Файловая структура
+## File structure
 
 ```
 src/pages/profile/
@@ -574,9 +574,9 @@ src/pages/profile/
 
 src/features/channels/
   components/
-    PricingRulesBuilder.tsx     # Динамический builder цен с лимитами (reused in new + edit)
+    PricingRulesBuilder.tsx     # \u0414\u0438\u043d\u0430\u043c\u0438\u0447\u0435\u0441\u043a\u0438\u0439 builder \u0446\u0435\u043d \u0441 \u043b\u0438\u043c\u0438\u0442\u0430\u043c\u0438 (reused in new + edit)
     TeamMemberListItem.tsx
-    RightToggles.tsx            # Группа Toggle-ов прав (reused in invite + member)
+    RightToggles.tsx            # \u0413\u0440\u0443\u043f\u043f\u0430 Toggle-\u043e\u0432 \u043f\u0440\u0430\u0432 (reused in invite + member)
   hooks/
     useChannelRights.ts         # ABAC hook (isOwner, hasRight) — shared with catalog
 ```

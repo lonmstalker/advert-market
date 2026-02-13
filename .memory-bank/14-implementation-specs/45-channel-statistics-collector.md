@@ -2,7 +2,7 @@
 
 ## Overview
 
-Background scheduled task для обновления статистики каналов (subscriber count, avg views, engagement rate) из Telegram API для поиска и отображения в маркетплейсе.
+Background scheduled task to update channel statistics (subscriber count, avg views, engagement rate) from the Telegram API for search and display in the marketplace.
 
 **Module**: `marketplace-impl`
 
@@ -27,30 +27,30 @@ CREATE INDEX idx_channels_stats_updated
 
 ### Manual Input (MVP)
 
-- `avg_views` — owner self-reports при регистрации канала
+- `avg_views` — owner self-reports when registering a channel
 - Validation: `avg_views <= subscriber_count`
 
 ### Post-MVP
 
-- TGStat API для автоматического `avg_views` и `engagement_rate`
+- TGStat API for automatic `avg_views` and `engagement_rate`
 
 ## Collection Schedule
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |----------|----------|
-| Interval | 6 часов |
-| Batch size | 100 каналов за цикл |
-| Rate limit | 1 req/sec к Telegram API |
-| Приоритет | `stats_updated_at NULLS FIRST` (никогда не обновлявшиеся) |
-| Stale threshold | 24h — получают приоритет |
+| Interval | 6 hours |
+| Batch size | 100 channels per cycle |
+| Rate limit | 1 req/sec to Telegram API |
+| Priority | `stats_updated_at NULLS FIRST` (never updated) |
+| Stale threshold | 24h - get priority |
 
 ## Freshness Policy
 
-| Условие | Поведение |
+| Condition | Behavior |
 |---------|-----------|
-| `stats_updated_at < NOW() - 12h` | Badge "Обновлено X часов назад" |
+| `stats_updated_at < NOW() - 12h` | Badge "Updated X hours ago" |
 | `stats_updated_at < NOW() - 24h` | Marked as stale |
-| `stats_updated_at < NOW() - 7d` | Исключен из поиска по умолчанию |
+| `stats_updated_at < NOW() - 7d` | Excluded from search by default |
 
 ## Error Handling
 

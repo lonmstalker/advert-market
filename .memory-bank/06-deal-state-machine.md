@@ -177,14 +177,14 @@ Table is **partitioned by `created_at`** for efficient range queries and archiva
 
 ### Problem
 
-Concurrent state transitions могут привести к невалидным состояниям:
-- Два worker'а одновременно пытаются перевести deal в разные состояния
-- Advertiser отменяет deal одновременно с подтверждением deposit'а
-- Два оператора одновременно разрешают dispute в разные стороны
+Concurrent state transitions can lead to invalid states:
+- Two workers simultaneously try to transfer the deal to different states
+- Advertiser cancels the deal simultaneously with confirmation of the deposit
+- Two operators simultaneously resolve disputes in different directions
 
 ### Strategy: Optimistic Locking + Status Guard
 
-**Уровень 1: Optimistic Locking (DB)**
+**Level 1: Optimistic Locking (DB)**
 
 ```sql
 -- deals table has version column for optimistic locking
@@ -226,25 +226,25 @@ public DealTransitionResult transition(UUID dealId, DealStatus expectedFrom,
 }
 ```
 
-**Уровень 2: Redis Distributed Lock (для long-running operations)**
+**Level 2: Redis Distributed Lock (for long-running operations)**
 
-Для операций с side effects (payout, refund), где нужно гарантировать, что только один процесс выполняет операцию:
+For operations with side effects (payout, refund), where you need to ensure that only one process performs the operation:
 
 ```
 Lock key: lock:deal:{dealId}:transition
 TTL: 30 seconds
 ```
 
-Используется для:
+Used for:
 - Payout execution (TX build + submit)
 - Refund execution
 - Deposit confirmation + ledger entry creation
 
-НЕ используется для:
-- Простые status transitions (optimistic locking достаточно)
+NOT used for:
+- Simple status transitions (optimistic locking is enough)
 - Read operations
 
-**Уровень 3: Database Transaction Isolation**
+**Level 3: Database Transaction Isolation**
 
 ```yaml
 spring:
@@ -257,7 +257,7 @@ spring:
       transaction-isolation: TRANSACTION_READ_COMMITTED
 ```
 
-`READ COMMITTED` — достаточно для optimistic locking. `SERIALIZABLE` избыточен и создаёт contention.
+`READ COMMITTED` - enough for optimistic locking. `SERIALIZABLE` is redundant and creates contention.
 
 ### Race Condition Scenarios & Resolutions
 
@@ -271,7 +271,7 @@ spring:
 
 ### Idempotency at Transition Level
 
-Каждый transition проверяет: если deal уже в target state — возвращает success (idempotent), а не ошибку. Это критически важно для Kafka consumer retries.
+Each transition checks: if the deal is already in the target state, it returns success (idempotent), not an error. This is critical for Kafka consumer retries.
 
 ---
 

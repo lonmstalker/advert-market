@@ -1,6 +1,6 @@
 ---
 description: Canonical memory bank entrypoint. Use this file first, then navigate to 00-index.md.
-language_policy: bilingual_legacy
+language_policy: english_only
 frontmatter_policy: required_for_new_or_rewritten_docs
 ---
 
@@ -9,6 +9,6 @@ frontmatter_policy: required_for_new_or_rewritten_docs
 Use [00-index.md](./00-index.md) as the canonical navigation map.
 
 Policy notes:
-- New or heavily rewritten documentation must be written in English.
-- Legacy bilingual content is allowed until migration is complete.
+- All memory bank documentation is English-only.
+- Russian i18n examples are allowed only in escaped `\uXXXX` form (no Cyrillic glyphs).
 - Consistency is enforced by `scripts/check-memory-bank-consistency.mjs`.

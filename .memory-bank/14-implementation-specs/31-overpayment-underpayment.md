@@ -122,10 +122,10 @@ escrow:
 
 | Event | Recipient | Template |
 |-------|-----------|----------|
-| Overpayment detected | Advertiser + Operator | "Получен перевод {received} TON вместо {expected} TON. Излишек {excess} TON будет возвращён" |
-| Underpayment detected | Advertiser | "Получен частичный перевод {received} из {expected} TON. Доплатите {shortfall} TON" |
-| Excess refunded | Advertiser | "Возврат излишка {excess} TON. TX: {tx_hash}" |
-| Top-up received | Advertiser | "Дополнительный платёж получен. Сделка переведена в статус FUNDED" |
+| Overpayment detected | Advertiser + Operator | "Received transfer {received} TON instead of {expected} TON. Excess {excess} TON will be returned" |
+| Underpayment detected | Advertiser | "Received a partial transfer {received} from {expected} TON. Please pay additional {shortfall} TON" |
+| Excess refunded | Advertiser | "Return of excess {excess} TON. TX: {tx_hash}" |
+| Top-up received | Advertiser | "An additional payment has been received. The transaction has been transferred to FUNDED status" |
 
 ## Metrics
 
