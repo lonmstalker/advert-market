@@ -198,7 +198,10 @@
         "er": "Engagement"
       },
       "show": "Show {{count}}",
+      "showChannels_one": "Show {{count}} channel",
+      "showChannels_other": "Show {{count}} channels",
       "showButton": "Show",
+      "nothingFound": "Nothing found",
       "reset": "Reset"
     },
     "channel": {
@@ -210,7 +213,8 @@
       "pricing": "Pricing",
       "createDeal": "Create deal",
       "edit": "Edit",
-      "share": "Share"
+      "share": "Share",
+      "description": "Description"
     },
     "empty": {
       "title": "Nothing found",

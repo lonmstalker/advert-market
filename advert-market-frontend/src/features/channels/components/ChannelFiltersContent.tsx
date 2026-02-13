@@ -20,6 +20,19 @@ export function setFiltersContentProps(props: ChannelFiltersContentProps) {
   filtersContentProps = props;
 }
 
+function FilterSection({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        borderBottom: '1px solid var(--color-border-separator)',
+        paddingBottom: 16,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function ChannelFiltersContent() {
   const propsRef = useRef(filtersContentProps);
   propsRef.current = filtersContentProps;
@@ -63,6 +76,9 @@ export function ChannelFiltersContent() {
     placeholderData: (prev) => prev,
   });
 
+  const hasActiveFilters =
+    topic != null || minSubs !== '' || maxSubs !== '' || minPrice !== '' || maxPrice !== '' || sort != null;
+
   const topicOptions = [
     { label: t('catalog.filters.topicAll'), value: null },
     ...topics.map((tp) => ({ label: tp.name, value: tp.slug })),
@@ -90,56 +106,61 @@ export function ChannelFiltersContent() {
     propsRef.current?.onReset();
   };
 
+  const showButtonText =
+    count != null
+      ? count === 0
+        ? t('catalog.filters.nothingFound')
+        : t('catalog.filters.showChannels', { count })
+      : t('catalog.filters.showButton');
+
   return (
     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Text type="title2" weight="bold">
         {t('catalog.filters.title')}
       </Text>
 
-      <div>
-        <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
+      <FilterSection>
+        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
           {t('catalog.filters.topic')}
         </Text>
         <Select options={topicOptions} value={topic} onChange={setTopic} />
-      </div>
+      </FilterSection>
 
-      <div>
-        <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
+      <FilterSection>
+        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
           {t('catalog.filters.subscribers')}
         </Text>
         <div style={{ display: 'flex', gap: 8 }}>
           <Input value={minSubs} onChange={setMinSubs} numeric placeholder={t('catalog.filters.from')} />
           <Input value={maxSubs} onChange={setMaxSubs} numeric placeholder={t('catalog.filters.to')} />
         </div>
-      </div>
+      </FilterSection>
 
-      <div>
-        <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
+      <FilterSection>
+        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
           {t('catalog.filters.pricePerPost')}
         </Text>
         <div style={{ display: 'flex', gap: 8 }}>
           <Input value={minPrice} onChange={setMinPrice} placeholder={`${t('catalog.filters.from')} TON`} />
           <Input value={maxPrice} onChange={setMaxPrice} placeholder={`${t('catalog.filters.to')} TON`} />
         </div>
-      </div>
+      </FilterSection>
 
       <div>
-        <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
+        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
           {t('catalog.filters.sortLabel')}
         </Text>
         <Select options={sortOptions} value={sort} onChange={setSort} />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-        <Button
-          text={count != null ? t('catalog.filters.show', { count }) : t('catalog.filters.showButton')}
-          type="primary"
-          onClick={handleApply}
-        />
-        <div style={{ textAlign: 'center' }}>
-          <Text type="subheadline1" color="secondary" onClick={handleReset}>
-            <span style={{ color: 'var(--color-link)', cursor: 'pointer' }}>{t('catalog.filters.reset')}</span>
-          </Text>
+      <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+        {hasActiveFilters && (
+          <div style={{ flex: 1 }}>
+            <Button text={t('catalog.filters.reset')} type="secondary" onClick={handleReset} />
+          </div>
+        )}
+        <div style={{ flex: 2 }}>
+          <Button text={showButtonText} type="primary" disabled={count === 0} onClick={handleApply} />
         </div>
       </div>
     </div>

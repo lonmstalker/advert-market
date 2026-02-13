@@ -6,8 +6,8 @@ export {
   fetchChannelTopics,
 } from './api/channels';
 export { ChannelCard } from './components/ChannelCard';
+export { ChannelCatalogCard } from './components/ChannelCatalogCard';
 export { ChannelFiltersContent, setFiltersContentProps } from './components/ChannelFiltersContent';
-export { ChannelListItem } from './components/ChannelListItem';
 export { ChannelStats } from './components/ChannelStats';
 export { PricingRulesList } from './components/PricingRulesList';
 export { useChannelFilters } from './hooks/useChannelFilters';

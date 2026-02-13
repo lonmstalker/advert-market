@@ -198,7 +198,11 @@
         "er": "По вовлечённости"
       },
       "show": "Показать {{count}}",
+      "showChannels_one": "Показать {{count}} канал",
+      "showChannels_few": "Показать {{count}} канала",
+      "showChannels_many": "Показать {{count}} каналов",
       "showButton": "Показать",
+      "nothingFound": "Ничего не найдено",
       "reset": "Сбросить"
     },
     "channel": {
@@ -210,7 +214,8 @@
       "pricing": "Цены",
       "createDeal": "Создать сделку",
       "edit": "Редактировать",
-      "share": "Поделиться"
+      "share": "Поделиться",
+      "description": "Описание"
     },
     "empty": {
       "title": "Ничего не найдено",

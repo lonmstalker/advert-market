@@ -1,12 +1,12 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Button, Group, GroupItem, Input, Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
+import { Button, Input, Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import {
+  ChannelCatalogCard,
   ChannelFiltersContent,
-  ChannelListItem,
   fetchChannels,
   setFiltersContentProps,
   useChannelFilters,
@@ -15,6 +15,36 @@ import { channelKeys } from '@/shared/api/query-keys';
 import { useDebounce } from '@/shared/hooks/use-debounce';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
+
+function SkeletonCard() {
+  return (
+    <div
+      style={{
+        background: 'var(--color-background-base)',
+        border: '1px solid var(--color-border-separator)',
+        borderRadius: 16,
+        padding: 16,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <SkeletonElement style={{ width: 44, height: 44, borderRadius: '50%' }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <SkeletonElement style={{ width: 120, height: 16, borderRadius: 6 }} />
+          <SkeletonElement style={{ width: 80, height: 12, borderRadius: 6 }} />
+        </div>
+        <SkeletonElement style={{ width: 60, height: 16, borderRadius: 6 }} />
+      </div>
+      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <SkeletonElement style={{ width: '100%', height: 12, borderRadius: 6 }} />
+        <SkeletonElement style={{ width: '70%', height: 12, borderRadius: 6 }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+        <SkeletonElement style={{ width: 60, height: 20, borderRadius: 10 }} />
+        <SkeletonElement style={{ width: 40, height: 14, borderRadius: 6 }} />
+      </div>
+    </div>
+  );
+}
 
 export default function CatalogPage() {
   const { t } = useTranslation();
@@ -130,18 +160,14 @@ export default function CatalogPage() {
 
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <motion.div key="skeleton" {...fadeIn}>
-            <Group>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <GroupItem
-                  key={i}
-                  before={<SkeletonElement style={{ width: 40, height: 40, borderRadius: '50%' }} />}
-                  text={<SkeletonElement style={{ width: 120, height: 16, borderRadius: 6 }} />}
-                  description={<SkeletonElement style={{ width: 80, height: 12, borderRadius: 6 }} />}
-                  after={<SkeletonElement style={{ width: 60, height: 16, borderRadius: 6 }} />}
-                />
-              ))}
-            </Group>
+          <motion.div
+            key="skeleton"
+            {...fadeIn}
+            style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
+          >
+            {[1, 2, 3].map((i) => (
+              <SkeletonCard key={i} />
+            ))}
           </motion.div>
         ) : isError ? (
           <motion.div key="error" {...fadeIn}>
@@ -168,27 +194,27 @@ export default function CatalogPage() {
           </motion.div>
         ) : (
           <motion.div key="list" {...staggerChildren}>
-            <Group
-              footer={
-                totalCount != null ? (
-                  <Text type="footnote" color="secondary">
-                    {t('catalog.filters.show', { count: totalCount })}
-                  </Text>
-                ) : undefined
-              }
-            >
+            {totalCount != null && (
+              <div style={{ padding: '8px 16px 4px' }}>
+                <Text type="footnote" color="secondary">
+                  {t('catalog.filters.show', { count: totalCount })}
+                </Text>
+              </div>
+            )}
+
+            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {channels.map((channel) => (
-                <ChannelListItem
+                <ChannelCatalogCard
                   key={channel.id}
                   channel={channel}
                   onClick={() => navigate(`/catalog/channels/${channel.id}`)}
                 />
               ))}
-            </Group>
+            </div>
 
             {isFetchingNextPage && (
-              <div style={{ padding: 16, display: 'flex', justifyContent: 'center' }}>
-                <SkeletonElement style={{ width: '100%', height: 48, borderRadius: 12 }} />
+              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <SkeletonCard />
               </div>
             )}
 

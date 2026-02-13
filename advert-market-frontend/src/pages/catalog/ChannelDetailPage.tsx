@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { Button, Group, GroupItem, Spinner, Text } from '@telegram-tools/ui-kit';
+import { Button, Spinner, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
-import { ChannelStats, fetchChannelDetail, PricingRulesList, useChannelRights } from '@/features/channels';
+import { fetchChannelDetail, useChannelRights } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { copyToClipboard } from '@/shared/lib/clipboard';
+import { formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
 
@@ -75,12 +76,31 @@ export default function ChannelDetailPage() {
     }
   };
 
+  const statCardStyle: React.CSSProperties = {
+    flex: 1,
+    background: 'var(--color-background-base)',
+    border: '1px solid var(--color-border-separator)',
+    borderRadius: 12,
+    padding: 12,
+    textAlign: 'center',
+  };
+
+  const pricingCardStyle: React.CSSProperties = {
+    background: 'var(--color-background-base)',
+    border: '1px solid var(--color-border-separator)',
+    borderRadius: 12,
+    padding: 16,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  };
+
   return (
     <>
       <BackButtonHandler />
       <div style={{ paddingBottom: 88 }}>
         <motion.div {...fadeIn}>
-          {/* Header card */}
+          {/* Header */}
           <div
             style={{
               padding: '24px 16px 20px',
@@ -115,47 +135,6 @@ export default function ChannelDetailPage() {
                 <Text type="subheadline1" color="secondary">
                   @{channel.username}
                 </Text>
-              )}
-            </div>
-
-            {/* Quick stats row */}
-            <div
-              style={{
-                display: 'flex',
-                gap: 24,
-                justifyContent: 'center',
-                padding: '4px 0',
-              }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <Text type="body" weight="bold">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                    {formatSubscribers(channel.subscriberCount)}
-                  </span>
-                </Text>
-                <Text type="caption1" color="secondary">
-                  {t('catalog.channel.subscribersStat')}
-                </Text>
-              </div>
-              {channel.avgReach != null && (
-                <div style={{ textAlign: 'center' }}>
-                  <Text type="body" weight="bold">
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatSubscribers(channel.avgReach)}</span>
-                  </Text>
-                  <Text type="caption1" color="secondary">
-                    {t('catalog.channel.avgReach')}
-                  </Text>
-                </div>
-              )}
-              {channel.engagementRate != null && (
-                <div style={{ textAlign: 'center' }}>
-                  <Text type="body" weight="bold">
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{channel.engagementRate.toFixed(1)}%</span>
-                  </Text>
-                  <Text type="caption1" color="secondary">
-                    {t('catalog.channel.er')}
-                  </Text>
-                </div>
               )}
             </div>
 
@@ -203,28 +182,67 @@ export default function ChannelDetailPage() {
               </Text>
             </motion.button>
           </div>
+        </motion.div>
 
-          {/* Description */}
-          {channel.description && (
-            <motion.div {...slideUp}>
-              <Group>
-                <GroupItem text={channel.description} />
-              </Group>
-            </motion.div>
+        {/* Quick stats row — 3 visual cards */}
+        <motion.div {...slideUp} style={{ padding: '16px 16px 0', display: 'flex', gap: 8 }}>
+          <div style={statCardStyle}>
+            <Text type="title2" weight="bold">
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatSubscribers(channel.subscriberCount)}</span>
+            </Text>
+            <Text type="caption1" color="secondary">
+              {t('catalog.channel.subscribersStat')}
+            </Text>
+          </div>
+          {channel.avgReach != null && (
+            <div style={statCardStyle}>
+              <Text type="title2" weight="bold">
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatSubscribers(channel.avgReach)}</span>
+              </Text>
+              <Text type="caption1" color="secondary">
+                {t('catalog.channel.avgReach')}
+              </Text>
+            </div>
+          )}
+          {channel.engagementRate != null && (
+            <div style={statCardStyle}>
+              <Text type="title2" weight="bold">
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{channel.engagementRate.toFixed(1)}%</span>
+              </Text>
+              <Text type="caption1" color="secondary">
+                {t('catalog.channel.er')}
+              </Text>
+            </div>
           )}
         </motion.div>
 
-        {/* Pricing */}
-        {channel.pricingRules.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <PricingRulesList pricingRules={channel.pricingRules} />
-          </div>
+        {/* Description */}
+        {channel.description && (
+          <motion.div {...slideUp} style={{ padding: 16 }}>
+            <Text type="subheadline1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+              {channel.description}
+            </Text>
+          </motion.div>
         )}
 
-        {/* Detailed Stats */}
-        <div style={{ marginTop: 16 }}>
-          <ChannelStats channel={channel} />
-        </div>
+        {/* Pricing cards */}
+        {channel.pricingRules.length > 0 && (
+          <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
+            <Text type="body" weight="bold" style={{ marginBottom: 12 }}>
+              {t('catalog.channel.pricing')}
+            </Text>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {channel.pricingRules.map((rule) => (
+                <div key={rule.id} style={pricingCardStyle}>
+                  <Text type="body">{rule.postType}</Text>
+                  <Text type="callout" weight="bold">
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+                  </Text>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Sticky bottom CTA */}
@@ -242,24 +260,21 @@ export default function ChannelDetailPage() {
           zIndex: 10,
         }}
       >
-        {isOwner && (
-          <div style={{ flex: 1, flexShrink: 0 }}>
-            <motion.div {...pressScale}>
+        <div style={{ flex: 1 }}>
+          <motion.div {...pressScale}>
+            {isOwner ? (
               <Button
                 text={t('catalog.channel.edit')}
-                type="secondary"
+                type="primary"
                 onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
               />
-            </motion.div>
-          </div>
-        )}
-        <div style={{ flex: 1, flexShrink: 0 }}>
-          <motion.div {...pressScale}>
-            <Button
-              text={t('catalog.channel.createDeal')}
-              type="primary"
-              onClick={() => navigate(`/deals/new?channelId=${channel.id}`)}
-            />
+            ) : (
+              <Button
+                text={t('catalog.channel.createDeal')}
+                type="primary"
+                onClick={() => navigate(`/deals/new?channelId=${channel.id}`)}
+              />
+            )}
           </motion.div>
         </div>
       </div>
