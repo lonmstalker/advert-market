@@ -71,7 +71,8 @@ public class WorkerCallbackController {
                             + callback.callbackType());
         }
 
-        var payload = json.convertValue(callback.payload(),
+        var payload = (DomainEvent) json.convertValue(
+                callback.payload(),
                 json.typeFactory().constructType(payloadClass));
         var envelope = buildEnvelope(callback, payload);
 

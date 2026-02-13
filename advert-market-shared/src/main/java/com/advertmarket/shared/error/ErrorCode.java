@@ -93,7 +93,12 @@ public enum ErrorCode {
     EVENT_DESERIALIZATION_ERROR(500),
     JSON_ERROR(500),
     LOCK_ACQUISITION_FAILED(409),
-    OUTBOX_PUBLISH_FAILED(500);
+    OUTBOX_PUBLISH_FAILED(500),
+
+    // --- Internal API ---
+    INTERNAL_API_KEY_INVALID(401),
+    INTERNAL_IP_DENIED(403),
+    UNKNOWN_CALLBACK_TYPE(400);
 
     private static final Map<String, ErrorCode> LOOKUP =
             Arrays.stream(values())

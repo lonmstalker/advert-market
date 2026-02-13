@@ -70,10 +70,13 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
         }
     }
 
+    private static final int BITS_PER_BYTE = 8;
+    private static final int BYTE_MASK = 0xFF;
+
     private boolean constantTimeEquals(String a, String b) {
-        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
-        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(aBytes, bBytes);
+        var expected = a.getBytes(StandardCharsets.UTF_8);
+        var actual = b.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(expected, actual);
     }
 
     private boolean isIpAllowed(String remoteAddr) {
@@ -104,8 +107,8 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
                 return false;
             }
 
-            int fullBytes = prefixLength / 8;
-            int remainingBits = prefixLength % 8;
+            int fullBytes = prefixLength / BITS_PER_BYTE;
+            int remainingBits = prefixLength % BITS_PER_BYTE;
 
             for (int i = 0; i < fullBytes; i++) {
                 if (addrBytes[i] != networkBytes[i]) {
@@ -114,7 +117,8 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
             }
 
             if (remainingBits > 0 && fullBytes < addrBytes.length) {
-                int mask = 0xFF << (8 - remainingBits);
+                int mask = BYTE_MASK
+                        << (BITS_PER_BYTE - remainingBits);
                 return (addrBytes[fullBytes] & mask)
                         == (networkBytes[fullBytes] & mask);
             }

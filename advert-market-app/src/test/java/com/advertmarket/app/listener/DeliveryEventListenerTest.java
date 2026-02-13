@@ -2,9 +2,9 @@ package com.advertmarket.app.listener;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 import com.advertmarket.delivery.api.event.DeliveryFailedEvent;
 import com.advertmarket.delivery.api.event.DeliveryFailureReason;
@@ -55,7 +55,7 @@ class DeliveryEventListenerTest {
                 EventTypes.PUBLICATION_RESULT, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -75,7 +75,7 @@ class DeliveryEventListenerTest {
                 EventTypes.DELIVERY_VERIFIED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -93,7 +93,7 @@ class DeliveryEventListenerTest {
                 EventTypes.DELIVERY_FAILED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -111,7 +111,7 @@ class DeliveryEventListenerTest {
                 Instant.now(), 1, UUID.randomUUID(), payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 

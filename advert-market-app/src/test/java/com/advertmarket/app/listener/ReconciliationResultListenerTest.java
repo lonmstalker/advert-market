@@ -2,9 +2,9 @@ package com.advertmarket.app.listener;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 import com.advertmarket.financial.api.event.ReconciliationResultEvent;
 import com.advertmarket.financial.api.port.ReconciliationResultPort;
@@ -49,7 +49,7 @@ class ReconciliationResultListenerTest {
                 EventTypes.RECONCILIATION_RESULT, null, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -73,7 +73,7 @@ class ReconciliationResultListenerTest {
                 UUID.randomUUID(), payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 

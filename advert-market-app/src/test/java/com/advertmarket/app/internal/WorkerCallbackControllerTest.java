@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,15 +68,15 @@ class WorkerCallbackControllerTest {
                 EventTypes.PAYOUT_COMPLETED, null,
                 UUID.randomUUID(), payloadNode);
 
-        when(eventTypeRegistry.resolve(
-                EventTypes.PAYOUT_COMPLETED))
-                .thenReturn(PayoutCompletedEvent.class);
+        doReturn(PayoutCompletedEvent.class)
+                .when(eventTypeRegistry)
+                .resolve(EventTypes.PAYOUT_COMPLETED);
         when(json.typeFactory())
                 .thenReturn(TypeFactory.defaultInstance());
-        when(json.convertValue(eq(payloadNode), any()))
-                .thenReturn(new PayoutCompletedEvent(
-                        "tx1", 1_000_000_000L, 50_000_000L,
-                        "addr", 3));
+        doReturn(new PayoutCompletedEvent(
+                "tx1", 1_000_000_000L, 50_000_000L,
+                "addr", 3))
+                .when(json).convertValue(eq(payloadNode), any());
 
         var response = controller.handleCallback(callback);
 
@@ -97,8 +98,9 @@ class WorkerCallbackControllerTest {
                 UUID.randomUUID(),
                 objectMapper.createObjectNode());
 
-        when(eventTypeRegistry.resolve("INVALID_TYPE"))
-                .thenReturn(null);
+        doReturn(null)
+                .when(eventTypeRegistry)
+                .resolve("INVALID_TYPE");
 
         assertThatThrownBy(
                 () -> controller.handleCallback(callback))

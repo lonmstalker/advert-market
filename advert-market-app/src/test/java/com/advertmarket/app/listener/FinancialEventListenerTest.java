@@ -2,9 +2,9 @@ package com.advertmarket.app.listener;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 import com.advertmarket.financial.api.event.DepositConfirmedEvent;
 import com.advertmarket.financial.api.event.DepositFailedEvent;
@@ -18,6 +18,7 @@ import com.advertmarket.shared.event.EventTypes;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.DealId;
+import java.time.Instant;
 import java.util.UUID;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +55,7 @@ class FinancialEventListenerTest {
                 EventTypes.DEPOSIT_CONFIRMED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -74,7 +75,7 @@ class FinancialEventListenerTest {
                 EventTypes.DEPOSIT_FAILED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -91,7 +92,7 @@ class FinancialEventListenerTest {
                 EventTypes.PAYOUT_COMPLETED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -108,7 +109,7 @@ class FinancialEventListenerTest {
                 EventTypes.REFUND_COMPLETED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
@@ -123,11 +124,11 @@ class FinancialEventListenerTest {
                 "tx1", 1_000_000_000L, 3, "from", "deposit");
         var envelope = new EventEnvelope<>(
                 UUID.randomUUID(), "UNKNOWN_TYPE", DEAL_ID,
-                java.time.Instant.now(), 1,
+                Instant.now(), 1,
                 UUID.randomUUID(), payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
-        when(deserializer.deserialize("json")).thenReturn(envelope);
+        doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
