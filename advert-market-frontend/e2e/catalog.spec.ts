@@ -1,17 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-async function completeOnboarding(page: import('@playwright/test').Page) {
-  await page.goto('/');
-  // Welcome
-  await page.getByRole('button', { name: 'Get Started' }).click();
-  // Interest
-  await page.getByRole('button', { name: /advertiser/i }).click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  // Tour — skip
-  await page.getByText('Skip').click();
-  // Should redirect to catalog
-  await page.waitForURL('**/catalog');
-}
+import { completeOnboarding } from './helpers';
 
 test.describe('Catalog Page', () => {
   test.beforeEach(async ({ page }) => {

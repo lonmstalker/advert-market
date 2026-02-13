@@ -401,6 +401,12 @@
       "messagePlaceholder": "Explain your offer...",
       "submit": "Send offer"
     },
+    "transition": {
+      "success": "Done",
+      "error": "Action failed",
+      "negotiateSuccess": "Counter-offer sent",
+      "negotiateError": "Failed to send counter-offer"
+    },
     "confirm": {
       "title": "Are you sure?",
       "reject": "This deal will be rejected. The advertiser will be notified.",

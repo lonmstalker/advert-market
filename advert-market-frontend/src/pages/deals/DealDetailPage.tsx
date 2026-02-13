@@ -1,22 +1,24 @@
-import { Sheet, Spinner, Text } from '@telegram-tools/ui-kit';
+import { Sheet, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { DealActions } from '@/features/deals/components/DealActions';
 import { DealStatusBadge } from '@/features/deals/components/DealStatusBadge';
 import { DealTimeline } from '@/features/deals/components/DealTimeline';
+import { NegotiateProvider } from '@/features/deals/components/NegotiateContext';
 import { NegotiateSheetContent } from '@/features/deals/components/NegotiateSheet';
-import { setNegotiateSheetProps } from '@/features/deals/components/negotiate-sheet-props';
 import { useDealDetail } from '@/features/deals/hooks/useDealDetail';
 import { useDealTransition } from '@/features/deals/hooks/useDealTransition';
 import type { DealActionType } from '@/features/deals/lib/deal-actions';
 import { getDealActions } from '@/features/deals/lib/deal-actions';
 import { buildTimelineSteps, getStatusConfig, statusBgVar } from '@/features/deals/lib/deal-status';
+import { useCountdown } from '@/shared/hooks/use-countdown';
 import { formatDate } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
+import { buildOverlapLabel } from '@/shared/lib/overlap-label';
 import { formatTon } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState, Popover } from '@/shared/ui';
+import { BackButtonHandler, EmptyState, PageLoader, Popover } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
 import { InfoIcon, TelegramIcon, TonDiamondIcon } from '@/shared/ui/icons';
 
@@ -28,45 +30,6 @@ const TERMINAL_STATUSES = new Set([
   'PARTIALLY_REFUNDED',
   'DISPUTED',
 ]);
-
-function useCountdown(
-  deadlineAt: string | null,
-  t: (key: string, opts?: Record<string, unknown>) => string,
-): string | null {
-  const [remaining, setRemaining] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!deadlineAt) {
-      setRemaining(null);
-      return;
-    }
-
-    function update() {
-      const diff = new Date(deadlineAt as string).getTime() - Date.now();
-      if (diff <= 0) {
-        setRemaining(null);
-        return;
-      }
-      const totalHours = Math.floor(diff / 3_600_000);
-      const minutes = Math.floor((diff % 3_600_000) / 60_000);
-      if (totalHours >= 24) {
-        const days = Math.floor(totalHours / 24);
-        const hours = totalHours % 24;
-        setRemaining(t('deals.detail.deadlineDays', { days, hours }));
-      } else if (totalHours > 0) {
-        setRemaining(t('deals.detail.deadlineHours', { hours: totalHours, minutes }));
-      } else {
-        setRemaining(t('deals.detail.deadlineMinutes', { minutes }));
-      }
-    }
-
-    update();
-    const interval = setInterval(update, 60_000);
-    return () => clearInterval(interval);
-  }, [deadlineAt, t]);
-
-  return remaining;
-}
 
 const sheetMap = {
   negotiate: NegotiateSheetContent,
@@ -94,17 +57,7 @@ export default function DealDetailPage() {
 
   const handleAction = (type: DealActionType) => {
     if (type === 'counter_offer' || type === 'reply') {
-      if (deal) {
-        setNegotiateSheetProps({
-          currentPriceNano: deal.priceNano,
-          onSubmit: (priceNano, message) => {
-            negotiate({ priceNano, message });
-            setSheetOpen(false);
-          },
-          isPending,
-        });
-        setSheetOpen(true);
-      }
+      setSheetOpen(true);
       return;
     }
     transition({ action: type });
@@ -114,9 +67,7 @@ export default function DealDetailPage() {
     return (
       <>
         <BackButtonHandler />
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <Spinner size="32px" color="accent" />
-        </div>
+        <PageLoader />
       </>
     );
   }
@@ -143,18 +94,11 @@ export default function DealDetailPage() {
 
   const telegramLink = deal.channelUsername ? `https://t.me/${deal.channelUsername}` : null;
 
-  // N/D format
-  const freq = deal.postFrequencyHours;
-  const dur = deal.durationHours;
-  const overlapLabel =
-    freq && dur
-      ? t('catalog.channel.overlapFormat', { freq, dur })
-      : dur
-        ? t('catalog.channel.onlyDuration', { dur })
-        : freq
-          ? t('catalog.channel.onlyFrequency', { freq })
-          : null;
-  const hasOverlapTooltip = !!(freq && dur);
+  const overlap = buildOverlapLabel(deal.postFrequencyHours, deal.durationHours, t);
+  const overlapLabel = overlap?.label ?? null;
+  const hasOverlapTooltip = overlap?.hasTooltip ?? false;
+  const freq = overlap?.freq;
+  const dur = overlap?.dur;
 
   return (
     <>
@@ -396,7 +340,16 @@ export default function DealDetailPage() {
       )}
 
       {/* Negotiate Sheet */}
-      <Sheet sheets={sheetMap} activeSheet="negotiate" opened={sheetOpen} onClose={() => setSheetOpen(false)} />
+      <NegotiateProvider
+        currentPriceNano={deal?.priceNano ?? 0}
+        onSubmit={(priceNano, message) => {
+          negotiate({ priceNano, message });
+          setSheetOpen(false);
+        }}
+        isPending={isPending}
+      >
+        <Sheet sheets={sheetMap} activeSheet="negotiate" opened={sheetOpen} onClose={() => setSheetOpen(false)} />
+      </NegotiateProvider>
     </>
   );
 }

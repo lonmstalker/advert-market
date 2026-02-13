@@ -8,22 +8,18 @@ import {
   CategoryChipRow,
   ChannelCatalogCard,
   ChannelFiltersContent,
+  ChannelFiltersProvider,
   fetchChannels,
-  setFiltersContentProps,
   useChannelFilters,
 } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useDebounce } from '@/shared/hooks/use-debounce';
+import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
+import { formatCompactNumber } from '@/shared/lib/format-number';
 import { computeCpm, formatCpm } from '@/shared/lib/ton-format';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
 import { FilterIcon, SearchIcon, SearchOffIcon } from '@/shared/ui/icons';
-
-function formatCompact(count: number): string {
-  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
-  if (count >= 1_000) return `${Math.round(count / 1_000)}K`;
-  return String(count);
-}
 
 function SkeletonCard() {
   return (
@@ -76,26 +72,9 @@ export default function CatalogPage() {
     getNextPageParam: (lastPage) => (lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined),
   });
 
-  const observerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage, threshold: 0.1 });
 
-  useEffect(() => {
-    const el = observerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const channels = data?.pages.flatMap((page) => page.items) ?? [];
+  const channels = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
   const totalCount = data?.pages[0]?.total;
 
   const summary = useMemo(() => {
@@ -117,20 +96,8 @@ export default function CatalogPage() {
   }, [channels]);
 
   const handleOpenFilters = useCallback(() => {
-    setFiltersContentProps({
-      currentFilters: filters,
-      onApply: (next) => {
-        setFilters(next);
-        setSheetOpened(false);
-      },
-      onReset: () => {
-        resetFilters();
-        setSearchInput('');
-        setSheetOpened(false);
-      },
-    });
     setSheetOpened(true);
-  }, [filters, setFilters, resetFilters]);
+  }, []);
 
   const sheets = { filters: ChannelFiltersContent };
 
@@ -309,8 +276,8 @@ export default function CatalogPage() {
                     ? t('catalog.summary', {
                         count: totalCount,
                         avgCpm: formatCpm(summary.avgCpm),
-                        minSubs: formatCompact(summary.minSubs),
-                        maxSubs: formatCompact(summary.maxSubs),
+                        minSubs: formatCompactNumber(summary.minSubs),
+                        maxSubs: formatCompactNumber(summary.maxSubs),
                       })
                     : t('catalog.filters.show', { count: totalCount })}
                 </Text>
@@ -353,7 +320,20 @@ export default function CatalogPage() {
         )}
       </AnimatePresence>
 
-      <Sheet sheets={sheets} activeSheet="filters" opened={sheetOpened} onClose={() => setSheetOpened(false)} />
+      <ChannelFiltersProvider
+        currentFilters={filters}
+        onApply={(next) => {
+          setFilters(next);
+          setSheetOpened(false);
+        }}
+        onReset={() => {
+          resetFilters();
+          setSearchInput('');
+          setSheetOpened(false);
+        }}
+      >
+        <Sheet sheets={sheets} activeSheet="filters" opened={sheetOpened} onClose={() => setSheetOpened(false)} />
+      </ChannelFiltersProvider>
     </div>
   );
 }

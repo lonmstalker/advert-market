@@ -1,15 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+import { completeOnboarding } from './helpers';
 
-async function completeOnboarding(page: import('@playwright/test').Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Get Started' }).click();
-  await page.getByRole('button', { name: /advertiser/i }).click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByText('Skip').click();
-  await page.waitForURL('**/catalog');
-}
-
-async function navigateToChannel(page: import('@playwright/test').Page, channelName: string) {
+async function navigateToChannel(page: Page, channelName: string) {
   await expect(page.getByText(channelName)).toBeVisible();
   await page.getByText(channelName).click();
 }

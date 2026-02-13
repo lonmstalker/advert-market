@@ -1,14 +1,15 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Spinner, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { fetchDeals } from '@/features/deals/api/deals';
 import { DealListItem } from '@/features/deals/components/DealListItem';
 import type { DealRole } from '@/features/deals/types/deal';
 import { dealKeys } from '@/shared/api/query-keys';
-import { EmptyState, SegmentControl } from '@/shared/ui';
+import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
+import { EmptyState, EndOfList, SegmentControl } from '@/shared/ui';
 import { staggerChildren } from '@/shared/ui/animations';
 
 const TABS: { value: DealRole; label: string }[] = [
@@ -20,7 +21,6 @@ export default function DealsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeRole, setActiveRole] = useState<DealRole>('ADVERTISER');
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: [...dealKeys.lists(), { role: activeRole }],
@@ -29,24 +29,9 @@ export default function DealsPage() {
     getNextPageParam: (lastPage) => (lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined),
   });
 
-  const deals = data?.pages.flatMap((p) => p.items) ?? [];
+  const deals = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
 
-  const handleIntersection = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage],
-  );
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(handleIntersection, { rootMargin: '200px' });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [handleIntersection]);
+  const sentinelRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage });
 
   const translatedTabs = TABS.map((tab) => ({ value: tab.value, label: t(tab.label) }));
 
@@ -94,15 +79,7 @@ export default function DealsPage() {
             </div>
           )}
 
-          {!hasNextPage && deals.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 24px 8px' }}>
-              <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
-              <Text type="caption1" color="tertiary" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
-                {t('deals.endOfList')}
-              </Text>
-              <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
-            </div>
-          )}
+          {!hasNextPage && deals.length > 0 && <EndOfList label={t('deals.endOfList')} />}
         </motion.div>
       )}
     </div>

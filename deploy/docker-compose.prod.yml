@@ -71,10 +71,14 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       JWT_SECRET: ${JWT_SECRET}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
       TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL}
       TON_API_KEY: ${TON_API_KEY}
       CANARY_ADMIN_TOKEN: ${CANARY_ADMIN_TOKEN}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
       INSTANCE_ID: blue
       DEPLOY_COLOR: blue
       JAVA_OPTS: >-
@@ -113,10 +117,14 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       JWT_SECRET: ${JWT_SECRET}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
       TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL}
       TON_API_KEY: ${TON_API_KEY}
       CANARY_ADMIN_TOKEN: ${CANARY_ADMIN_TOKEN}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
       INSTANCE_ID: green
       DEPLOY_COLOR: green
       JAVA_OPTS: >-
@@ -151,6 +159,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/upstream-active.conf:/etc/nginx/upstream-active.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
     depends_on:
       - app-blue
     healthcheck:

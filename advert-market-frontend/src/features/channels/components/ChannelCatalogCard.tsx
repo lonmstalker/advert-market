@@ -1,10 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
+import { getChannelLanguages } from '@/shared/lib/channel-utils';
+import { engagementRateColor } from '@/shared/lib/engagement-rate';
+import { formatCompactNumber } from '@/shared/lib/format-number';
 import { computeCpm, formatCpm, formatTonCompact } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
+import { ChannelAvatar } from '@/shared/ui/components/channel-avatar';
+import { LanguageBadge } from '@/shared/ui/components/language-badge';
 import { VerifiedIcon } from '@/shared/ui/icons';
 import { fetchCategories } from '../api/channels';
 import type { Category, Channel } from '../types/channel';
@@ -13,48 +19,6 @@ type ChannelCatalogCardProps = {
   channel: Channel;
   onClick: () => void;
 };
-
-function formatSubscribers(count: number): string {
-  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
-  if (count >= 1_000) return `${Math.round(count / 1_000)}K`;
-  return String(count);
-}
-
-function erColor(rate: number): string {
-  if (rate >= 5) return 'var(--color-state-success)';
-  if (rate >= 2) return 'var(--color-foreground-primary)';
-  return 'var(--color-state-destructive)';
-}
-
-function getChannelLanguages(channel: Channel): string[] {
-  if (channel.languages && channel.languages.length > 0) return channel.languages;
-  if (channel.language) return [channel.language];
-  return [];
-}
-
-function LanguageBadge({ code }: { code: string }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '1px 5px',
-        borderRadius: 4,
-        background: 'var(--color-background-secondary)',
-        border: '1px solid var(--color-border-separator)',
-        fontSize: 10,
-        fontWeight: 600,
-        color: 'var(--color-foreground-secondary)',
-        letterSpacing: '0.02em',
-        lineHeight: 1.4,
-        textTransform: 'uppercase',
-        flexShrink: 0,
-      }}
-    >
-      {code}
-    </span>
-  );
-}
 
 function MetricPill({ value, label, valueColor }: { value: string; label: string; valueColor?: string }) {
   return (
@@ -85,28 +49,6 @@ function MetricPill({ value, label, valueColor }: { value: string; label: string
   );
 }
 
-function ChannelAvatar({ title }: { title: string }) {
-  const letter = title.charAt(0).toUpperCase();
-  const hue = (title.charCodeAt(0) * 37 + (title.charCodeAt(1) || 0) * 53) % 360;
-
-  return (
-    <div
-      style={{
-        width: 44,
-        height: 44,
-        borderRadius: '50%',
-        background: `hsl(${hue}, 55%, 55%)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      <span style={{ color: 'var(--color-static-white)', fontSize: 18, fontWeight: 600, lineHeight: 1 }}>{letter}</span>
-    </div>
-  );
-}
-
 function CategoryBadge({ slug, categories }: { slug: string; categories: Category[] }) {
   const { i18n } = useTranslation();
   const lang = i18n.language;
@@ -130,7 +72,7 @@ function CategoryBadge({ slug, categories }: { slug: string; categories: Categor
   );
 }
 
-export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps) {
+export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps) {
   const { t } = useTranslation();
 
   const { data: categories = [] } = useQuery({
@@ -177,7 +119,7 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
               />
             )}
             {langs.map((code) => (
-              <LanguageBadge key={code} code={code} />
+              <LanguageBadge key={code} code={code} size="sm" />
             ))}
           </div>
           {channel.username && (
@@ -208,15 +150,15 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
 
       {/* Row 2: metric pills */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-        <MetricPill value={formatSubscribers(channel.subscriberCount)} label={t('catalog.channel.subs')} />
+        <MetricPill value={formatCompactNumber(channel.subscriberCount)} label={t('catalog.channel.subs')} />
         {channel.avgViews != null && (
-          <MetricPill value={formatSubscribers(channel.avgViews)} label={t('catalog.channel.reach')} />
+          <MetricPill value={formatCompactNumber(channel.avgViews)} label={t('catalog.channel.reach')} />
         )}
         {channel.engagementRate != null && (
           <MetricPill
             value={`${channel.engagementRate.toFixed(1)}%`}
             label="ER"
-            valueColor={erColor(channel.engagementRate)}
+            valueColor={engagementRateColor(channel.engagementRate)}
           />
         )}
       </div>
@@ -231,4 +173,4 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
       )}
     </motion.div>
   );
-}
+});

@@ -4,17 +4,15 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTon } from '@/shared/lib/ton-format';
 import { pressScale } from '@/shared/ui/animations';
-import { getNegotiateSheetProps } from './negotiate-sheet-props';
+import { TextareaField } from '@/shared/ui/components/textarea-field';
+import { useNegotiateContext } from './NegotiateContext';
 
 export function NegotiateSheetContent() {
   const { t } = useTranslation();
   const [price, setPrice] = useState('');
   const [message, setMessage] = useState('');
 
-  const sheetProps = getNegotiateSheetProps();
-  if (!sheetProps) return null;
-
-  const { currentPriceNano, onSubmit, isPending } = sheetProps;
+  const { currentPriceNano, onSubmit, isPending } = useNegotiateContext();
 
   const handleSubmit = () => {
     const priceNum = Number.parseFloat(price);
@@ -47,32 +45,14 @@ export function NegotiateSheetContent() {
         <Input type="number" value={price} onChange={(v) => setPrice(v)} placeholder="0.00" />
       </div>
 
-      <div>
-        <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
-          {t('deals.negotiate.message')}
-        </Text>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={t('deals.negotiate.messagePlaceholder')}
-          maxLength={500}
-          rows={3}
-          style={{
-            width: '100%',
-            padding: '12px 16px',
-            borderRadius: 12,
-            border: '1px solid var(--color-border-separator)',
-            background: 'var(--color-background-base)',
-            color: 'var(--color-foreground-primary)',
-            fontSize: 16,
-            fontFamily: 'inherit',
-            lineHeight: 1.4,
-            resize: 'vertical',
-            outline: 'none',
-            boxSizing: 'border-box',
-          }}
-        />
-      </div>
+      <TextareaField
+        value={message}
+        onChange={setMessage}
+        label={t('deals.negotiate.message')}
+        placeholder={t('deals.negotiate.messagePlaceholder')}
+        maxLength={500}
+        rows={3}
+      />
 
       <motion.div {...pressScale}>
         <Button

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, Select, Spinner, Text } from '@telegram-tools/ui-kit';
+import { Button, Select, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,7 @@ import { ApiError } from '@/shared/api/types';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { formatTon } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState } from '@/shared/ui';
+import { BackButtonHandler, EmptyState, PageLoader, TextareaField } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
 
 export default function CreateDealPage() {
@@ -64,9 +64,7 @@ export default function CreateDealPage() {
     return (
       <>
         <BackButtonHandler />
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <Spinner size="32px" color="accent" />
-        </div>
+        <PageLoader />
       </>
     );
   }
@@ -140,37 +138,14 @@ export default function CreateDealPage() {
             </div>
           )}
 
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <Text type="subheadline2" color="secondary">
-                {t('deals.create.message')}
-              </Text>
-              <Text type="caption1" color="tertiary">
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{message.length}/2000</span>
-              </Text>
-            </div>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={t('deals.create.messagePlaceholder')}
-              maxLength={2000}
-              rows={4}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: 12,
-                border: '1px solid var(--color-border-separator)',
-                background: 'var(--color-background-base)',
-                color: 'var(--color-foreground-primary)',
-                fontSize: 16,
-                fontFamily: 'inherit',
-                lineHeight: 1.4,
-                resize: 'vertical',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
+          <TextareaField
+            value={message}
+            onChange={setMessage}
+            label={t('deals.create.message')}
+            placeholder={t('deals.create.messagePlaceholder')}
+            maxLength={2000}
+            rows={4}
+          />
         </div>
 
         {/* Bottom CTA */}

@@ -349,7 +349,17 @@ describe('ChannelDetailPage', () => {
             ownerId: 99,
             createdAt: '2025-01-01T00:00:00Z',
             avgReach: 1500,
-            pricingRules: [{ id: 510, channelId: 51, name: 'Native', postTypes: ['NATIVE'], priceNano: 1_000_000_000, isActive: true, sortOrder: 1 }],
+            pricingRules: [
+              {
+                id: 510,
+                channelId: 51,
+                name: 'Native',
+                postTypes: ['NATIVE'],
+                priceNano: 1_000_000_000,
+                isActive: true,
+                sortOrder: 1,
+              },
+            ],
             topics: [],
           });
         }),
@@ -375,7 +385,17 @@ describe('ChannelDetailPage', () => {
             ownerId: 99,
             createdAt: '2025-01-01T00:00:00Z',
             avgReach: 3000,
-            pricingRules: [{ id: 500, channelId: 50, name: 'Native', postTypes: ['NATIVE'], priceNano: 1_000_000_000, isActive: true, sortOrder: 1 }],
+            pricingRules: [
+              {
+                id: 500,
+                channelId: 50,
+                name: 'Native',
+                postTypes: ['NATIVE'],
+                priceNano: 1_000_000_000,
+                isActive: true,
+                sortOrder: 1,
+              },
+            ],
             topics: [],
           });
         }),

@@ -1,10 +1,13 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatRelativeTime } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
+import { buildOverlapLabel } from '@/shared/lib/overlap-label';
 import { formatTon } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
+import { ChannelAvatar } from '@/shared/ui/components/channel-avatar';
 import type { DealListItem as DealListItemType } from '../types/deal';
 import { DealStatusBadge } from './DealStatusBadge';
 
@@ -13,41 +16,10 @@ type DealListItemProps = {
   onClick: () => void;
 };
 
-function DealAvatar({ title }: { title: string }) {
-  const letter = title.charAt(0).toUpperCase();
-  const hue = (title.charCodeAt(0) * 37 + (title.charCodeAt(1) || 0) * 53) % 360;
-
-  return (
-    <div
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: '50%',
-        background: `hsl(${hue}, 55%, 55%)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      <span style={{ color: '#fff', fontSize: 16, fontWeight: 600, lineHeight: 1 }}>{letter}</span>
-    </div>
-  );
-}
-
-export function DealListItem({ deal, onClick }: DealListItemProps) {
+export const DealListItem = memo(function DealListItem({ deal, onClick }: DealListItemProps) {
   const { t, i18n } = useTranslation();
 
-  const freq = deal.postFrequencyHours;
-  const dur = deal.durationHours;
-  const overlapLabel =
-    freq && dur
-      ? t('catalog.channel.overlapFormat', { freq, dur })
-      : dur
-        ? t('catalog.channel.onlyDuration', { dur })
-        : freq
-          ? t('catalog.channel.onlyFrequency', { freq })
-          : null;
+  const overlapLabel = buildOverlapLabel(deal.postFrequencyHours, deal.durationHours, t)?.label ?? null;
 
   return (
     <motion.div {...listItem} {...pressScale} onClick={onClick} style={{ cursor: 'pointer' }}>
@@ -64,7 +36,7 @@ export function DealListItem({ deal, onClick }: DealListItemProps) {
       >
         {/* Row 1: avatar + title + price */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <DealAvatar title={deal.channelTitle} />
+          <ChannelAvatar title={deal.channelTitle} size="sm" />
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text type="body" weight="medium">
               <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -97,4 +69,4 @@ export function DealListItem({ deal, onClick }: DealListItemProps) {
       </div>
     </motion.div>
   );
-}
+});

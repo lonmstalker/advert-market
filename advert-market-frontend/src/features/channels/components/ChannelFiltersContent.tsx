@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button, Input, Text } from '@telegram-tools/ui-kit';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
 import { parseTonToNano } from '@/shared/lib/ton-format';
 import { fetchCategories, fetchChannelCount } from '../api/channels';
 import type { CatalogFilters, ChannelSort } from '../types/channel';
 import { channelSortValues } from '../types/channel';
-import { getFiltersContentProps } from './channel-filters-props';
+import { useChannelFiltersContext } from './ChannelFiltersContext';
 
 const AVAILABLE_LANGUAGES = [
   { code: 'ru', label: 'RU' },
@@ -55,28 +55,26 @@ function ToggleChip({ label, active, onClick }: { label: string; active: boolean
 }
 
 export function ChannelFiltersContent() {
-  const currentProps = getFiltersContentProps();
-  const propsRef = useRef(currentProps);
-  propsRef.current = currentProps;
-  const initial = currentProps;
+  const filtersContext = useChannelFiltersContext();
 
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
-  const initialCategories =
-    initial?.currentFilters.categories ?? (initial?.currentFilters.category ? [initial.currentFilters.category] : []);
+  const { currentFilters, onApply, onReset } = filtersContext;
+
+  const initialCategories = currentFilters.categories ?? (currentFilters.category ? [currentFilters.category] : []);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(initial?.currentFilters.languages ?? []);
-  const [minSubs, setMinSubs] = useState(initial?.currentFilters.minSubs?.toString() ?? '');
-  const [maxSubs, setMaxSubs] = useState(initial?.currentFilters.maxSubs?.toString() ?? '');
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(currentFilters.languages ?? []);
+  const [minSubs, setMinSubs] = useState(currentFilters.minSubs?.toString() ?? '');
+  const [maxSubs, setMaxSubs] = useState(currentFilters.maxSubs?.toString() ?? '');
   const [minPrice, setMinPrice] = useState(
-    initial?.currentFilters.minPrice ? (initial.currentFilters.minPrice / 1_000_000_000).toString() : '',
+    currentFilters.minPrice ? (currentFilters.minPrice / 1_000_000_000).toString() : '',
   );
   const [maxPrice, setMaxPrice] = useState(
-    initial?.currentFilters.maxPrice ? (initial.currentFilters.maxPrice / 1_000_000_000).toString() : '',
+    currentFilters.maxPrice ? (currentFilters.maxPrice / 1_000_000_000).toString() : '',
   );
-  const [sort, setSort] = useState<string | null>(initial?.currentFilters.sort ?? null);
+  const [sort, setSort] = useState<string | null>(currentFilters.sort ?? null);
 
   const { data: categories = [] } = useQuery({
     queryKey: channelKeys.categories(),
@@ -86,7 +84,7 @@ export function ChannelFiltersContent() {
 
   const draftFilters: CatalogFilters = useMemo(
     () => ({
-      q: propsRef.current?.currentFilters.q,
+      q: currentFilters.q,
       categories: selectedCategories.length > 0 ? selectedCategories : undefined,
       languages: selectedLanguages.length > 0 ? selectedLanguages : undefined,
       minSubs: minSubs ? Number(minSubs) : undefined,
@@ -95,7 +93,7 @@ export function ChannelFiltersContent() {
       maxPrice: maxPrice ? Number(parseTonToNano(maxPrice)) : undefined,
       sort: (sort as ChannelSort) || undefined,
     }),
-    [selectedCategories, selectedLanguages, minSubs, maxSubs, minPrice, maxPrice, sort],
+    [selectedCategories, selectedLanguages, minSubs, maxSubs, minPrice, maxPrice, sort, currentFilters.q],
   );
 
   const { data: count } = useQuery({
@@ -130,7 +128,7 @@ export function ChannelFiltersContent() {
   ];
 
   const handleApply = () => {
-    propsRef.current?.onApply(draftFilters);
+    onApply(draftFilters);
   };
 
   const handleReset = () => {
@@ -141,7 +139,7 @@ export function ChannelFiltersContent() {
     setMinPrice('');
     setMaxPrice('');
     setSort(null);
-    propsRef.current?.onReset();
+    onReset();
   };
 
   const showButtonText =

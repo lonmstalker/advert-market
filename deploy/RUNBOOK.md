@@ -39,10 +39,14 @@ Telegram ──HTTPS──▶ │  nginx  │
 | `DB_PASSWORD` | Yes | PostgreSQL password |
 | `JWT_SECRET` | Yes | >= 32 bytes |
 | `TELEGRAM_BOT_TOKEN` | Yes | BotFather token |
-| `TELEGRAM_WEBHOOK_URL` | Yes | `https://bot.advertmarket.com/api/v1/bot/webhook` |
+| `TELEGRAM_BOT_USERNAME` | Yes | Bot username (without `@`) |
+| `TELEGRAM_WEBHOOK_URL` | Yes | `https://teleinsight.in/api/v1/bot/webhook` |
 | `TELEGRAM_WEBHOOK_SECRET` | Yes | Random hex for webhook verification |
+| `TELEGRAM_WEBAPP_URL` | Yes | Mini App public URL (`https://teleinsight.in`) |
 | `TON_API_KEY` | Yes | TON Center API key |
 | `CANARY_ADMIN_TOKEN` | Yes | Bearer token for canary admin endpoint |
+| `INTERNAL_API_KEY` | Yes | Shared key for internal endpoints |
+| `APP_MARKETPLACE_CHANNEL_BOT_USER_ID` | Yes | Telegram bot user id (numeric) |
 | `APP_IMAGE` | No | Docker image tag (default: `advertmarket:latest`) |
 
 ---
@@ -61,10 +65,15 @@ docker compose -f docker-compose.prod.yml up -d postgres redis kafka
 # Wait for health
 docker compose -f docker-compose.prod.yml up -d app-blue nginx
 
-# Register Telegram webhook
-curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
-  -H "Content-Type: application/json" \
-  -d "{\"url\":\"${TELEGRAM_WEBHOOK_URL}\",\"secret_token\":\"${TELEGRAM_WEBHOOK_SECRET}\",\"allowed_updates\":[\"message\",\"callback_query\"]}"
+# Deploy Mini App frontend (optional, but required for / to not return 403)
+# 1) Build: (in repo root) cd advert-market-frontend && npm ci && npm run build
+# 2) Copy dist/ into deploy/nginx/html/ (mounted into nginx as /usr/share/nginx/html)
+
+# Telegram webhook is registered automatically by the application on startup.
+# Manual fallback (debug only):
+# curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
+#   -H "Content-Type: application/json" \
+#   -d "{\"url\":\"${TELEGRAM_WEBHOOK_URL}\",\"secret_token\":\"${TELEGRAM_WEBHOOK_SECRET}\",\"allowed_updates\":[\"message\",\"callback_query\"]}"
 ```
 
 ## 2. Blue-Green Deployment (New Version)

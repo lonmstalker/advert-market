@@ -1,15 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+import { completeOnboarding } from './helpers';
 
-async function completeOnboarding(page: import('@playwright/test').Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Get Started' }).click();
-  await page.getByRole('button', { name: /advertiser/i }).click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByText('Skip').click();
-  await page.waitForURL('**/catalog');
-}
-
-async function navigateToDeals(page: import('@playwright/test').Page) {
+async function navigateToDeals(page: Page) {
   await completeOnboarding(page);
   await page.getByRole('link', { name: 'Deals' }).click();
   await page.waitForURL('**/deals');

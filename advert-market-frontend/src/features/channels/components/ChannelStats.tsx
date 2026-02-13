@@ -1,14 +1,11 @@
 import { Group, GroupItem, Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
+import { formatLocaleNumber } from '@/shared/lib/format-number';
 import type { ChannelDetail } from '../types/channel';
 
 type ChannelStatsProps = {
   channel: ChannelDetail;
 };
-
-function formatNumber(n: number): string {
-  return n.toLocaleString('ru-RU');
-}
 
 export function ChannelStats({ channel }: ChannelStatsProps) {
   const { t } = useTranslation();
@@ -19,7 +16,7 @@ export function ChannelStats({ channel }: ChannelStatsProps) {
         text={t('catalog.channel.subscribersStat')}
         after={
           <Text type="body" weight="medium">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatNumber(channel.subscriberCount)}</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatLocaleNumber(channel.subscriberCount)}</span>
           </Text>
         }
       />
@@ -28,7 +25,7 @@ export function ChannelStats({ channel }: ChannelStatsProps) {
           text={t('catalog.channel.avgReach')}
           after={
             <Text type="body" weight="medium">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatNumber(channel.avgReach)}</span>
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatLocaleNumber(channel.avgReach)}</span>
             </Text>
           }
         />

@@ -4,1552 +4,1595 @@
  */
 
 export interface paths {
-    "/internal/v1/canary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get canary status */
-        get: operations["getCanary"];
-        /** Update canary settings */
-        put: operations["setCanary"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/internal/v1/canary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/profile/onboarding": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Complete user onboarding */
-        put: operations["completeOnboarding"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get canary status */
+    get: operations['getCanary'];
+    /** Update canary settings */
+    put: operations['setCanary'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/profile/onboarding': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get channel detail
-         * @description Full channel info including pricing rules
-         */
-        get: operations["getDetail"];
-        /**
-         * Update channel
-         * @description Update channel details (owner only)
-         */
-        put: operations["update"];
-        post?: never;
-        /**
-         * Deactivate channel
-         * @description Soft-delete a channel (owner only)
-         */
-        delete: operations["deactivate"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    /** Complete user onboarding */
+    put: operations['completeOnboarding'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels/{channelId}/team/{userId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update member rights
-         * @description Updates rights for a MANAGER (owner only)
-         */
-        put: operations["updateRights"];
-        post?: never;
-        /**
-         * Remove team member
-         * @description Removes a MANAGER (owner or self-removal)
-         */
-        delete: operations["remove"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get channel detail
+     * @description Full channel info including pricing rules
+     */
+    get: operations['getDetail'];
+    /**
+     * Update channel
+     * @description Update channel details (owner only)
+     */
+    put: operations['update'];
+    post?: never;
+    /**
+     * Deactivate channel
+     * @description Soft-delete a channel (owner only)
+     */
+    delete: operations['deactivate'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/{channelId}/team/{userId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels/{channelId}/pricing/{ruleId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update pricing rule
-         * @description Updates a pricing rule (owner only)
-         */
-        put: operations["update_1"];
-        post?: never;
-        /**
-         * Delete pricing rule
-         * @description Soft-deletes a pricing rule (owner only)
-         */
-        delete: operations["delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    /**
+     * Update member rights
+     * @description Updates rights for a MANAGER (owner only)
+     */
+    put: operations['updateRights'];
+    post?: never;
+    /**
+     * Remove team member
+     * @description Removes a MANAGER (owner or self-removal)
+     */
+    delete: operations['remove'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/{channelId}/pricing/{ruleId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/internal/v1/worker-events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["handleCallback"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    /**
+     * Update pricing rule
+     * @description Updates a pricing rule (owner only)
+     */
+    put: operations['update_1'];
+    post?: never;
+    /**
+     * Delete pricing rule
+     * @description Soft-deletes a pricing rule (owner only)
+     */
+    delete: operations['delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/internal/v1/worker-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search channels
-         * @description Public channel catalog with filters and BM25 search
-         */
-        get: operations["search"];
-        put?: never;
-        /**
-         * Register a channel
-         * @description Registers a previously verified channel
-         */
-        post: operations["register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['handleCallback'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels/{channelId}/team": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List team members
-         * @description Lists all team members (requires manage_team right)
-         */
-        get: operations["list"];
-        put?: never;
-        /**
-         * Invite team member
-         * @description Invites a user as MANAGER (owner only)
-         */
-        post: operations["invite"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Search channels
+     * @description Public channel catalog with filters and BM25 search
+     */
+    get: operations['search'];
+    put?: never;
+    /**
+     * Register a channel
+     * @description Registers a previously verified channel
+     */
+    post: operations['register'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/{channelId}/team': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels/{channelId}/pricing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List pricing rules
-         * @description Lists active pricing rules for a channel
-         */
-        get: operations["list_1"];
-        put?: never;
-        /**
-         * Create pricing rule
-         * @description Creates a pricing rule for a channel (owner only)
-         */
-        post: operations["create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List team members
+     * @description Lists all team members (requires manage_team right)
+     */
+    get: operations['list'];
+    put?: never;
+    /**
+     * Invite team member
+     * @description Invites a user as MANAGER (owner only)
+     */
+    post: operations['invite'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/{channelId}/pricing': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify channel for registration
-         * @description Checks that the bot is an admin and the user owns the channel
-         */
-        post: operations["verify"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List pricing rules
+     * @description Lists active pricing rules for a channel
+     */
+    get: operations['list_1'];
+    put?: never;
+    /**
+     * Create pricing rule
+     * @description Creates a pricing rule for a channel (owner only)
+     */
+    post: operations['create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/bot/webhook": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["handleWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Verify channel for registration
+     * @description Checks that the bot is an admin and the user owns the channel
+     */
+    post: operations['verify'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bot/webhook': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Logout and revoke current JWT
-         * @description Blacklists the current JWT token so it can no longer be used
-         */
-        post: operations["logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['handleWebhook'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login via Telegram initData
-         * @description Validates Telegram Mini App initData using HMAC-SHA256 and issues a JWT token
-         */
-        post: operations["login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Logout and revoke current JWT
+     * @description Blacklists the current JWT token so it can no longer be used
+     */
+    post: operations['logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get current user profile */
-        get: operations["getProfile"];
-        put?: never;
-        post?: never;
-        /** Delete user account (soft delete) */
-        delete: operations["deleteAccount"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Login via Telegram initData
+     * @description Validates Telegram Mini App initData using HMAC-SHA256 and issues a JWT token
+     */
+    post: operations['login'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/profile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/post-types": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List all post types with labels */
-        get: operations["listPostTypes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get current user profile */
+    get: operations['getProfile'];
+    put?: never;
+    post?: never;
+    /** Delete user account (soft delete) */
+    delete: operations['deleteAccount'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/post-types': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/channels/count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Count channels
-         * @description Returns channel count for given search filters
-         */
-        get: operations["count"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List all post types with labels */
+    get: operations['listPostTypes'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/count': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List all active categories */
-        get: operations["listCategories"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Count channels
+     * @description Returns channel count for given search filters
+     */
+    get: operations['count'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /** List all active categories */
+    get: operations['listCategories'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        CanaryUpdate: {
-            /** Format: int32 */
-            percent?: number;
-            salt?: string;
-        };
-        CanaryStatus: {
-            /** Format: int32 */
-            percent?: number;
-            salt?: string;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        /** @description User onboarding completion request */
-        OnboardingRequest: {
-            /**
-             * @description Selected interest tags
-             * @example [
-             *       "tech",
-             *       "gaming"
-             *     ]
-             */
-            interests: string[];
-        };
-        /** @description Full user profile */
-        UserProfile: {
-            /**
-             * Format: int64
-             * @description Telegram user ID
-             * @example 42
-             */
-            id?: number;
-            /**
-             * @description Telegram username
-             * @example johndoe
-             */
-            username?: string;
-            /**
-             * @description Display name
-             * @example John Doe
-             */
-            displayName?: string;
-            /**
-             * @description IETF language tag
-             * @example en
-             */
-            languageCode?: string;
-            /** @description Whether onboarding is completed */
-            onboardingCompleted?: boolean;
-            /** @description Selected interest tags */
-            interests?: string[];
-            /**
-             * Format: date-time
-             * @description Registration timestamp
-             */
-            createdAt?: string;
-        };
-        /** @description Channel update request */
-        ChannelUpdateRequest: {
-            description?: string;
-            categories?: string[];
-            /** Format: int64 */
-            pricePerPostNano?: number;
-            language?: string;
-            isActive?: boolean;
-        };
-        /** @description Registered channel */
-        ChannelResponse: {
-            /** Format: int64 */
-            id?: number;
-            title?: string;
-            username?: string;
-            description?: string;
-            /** Format: int32 */
-            subscriberCount?: number;
-            categories?: string[];
-            /** Format: int64 */
-            pricePerPostNano?: number;
-            isActive?: boolean;
-            /** Format: int64 */
-            ownerId?: number;
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        /** @description Team rights update request */
-        TeamUpdateRightsRequest: {
-            rights: ("MODERATE" | "PUBLISH" | "MANAGE_TEAM" | "VIEW_STATS")[];
-        };
-        /** @description Channel team member */
-        TeamMemberDto: {
-            /** Format: int64 */
-            userId?: number;
-            username?: string;
-            firstName?: string;
-            /** @enum {string} */
-            role?: "OWNER" | "MANAGER";
-            rights?: ("MODERATE" | "PUBLISH" | "MANAGE_TEAM" | "VIEW_STATS")[];
-            /** Format: int64 */
-            invitedBy?: number;
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        /** @description Pricing rule update request */
-        PricingRuleUpdateRequest: {
-            name?: string;
-            description?: string;
-            postTypes?: ("REPOST" | "NATIVE" | "STORY" | "INTEGRATION" | "REVIEW" | "MENTION" | "GIVEAWAY" | "PINNED" | "POLL" | "FORWARD")[];
-            /** Format: int64 */
-            priceNano?: number;
-            /** Format: int32 */
-            sortOrder?: number;
-            isActive?: boolean;
-        };
-        /** @description Channel pricing rule */
-        PricingRuleDto: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            channelId?: number;
-            name?: string;
-            description?: string;
-            postTypes?: ("REPOST" | "NATIVE" | "STORY" | "INTEGRATION" | "REVIEW" | "MENTION" | "GIVEAWAY" | "PINNED" | "POLL" | "FORWARD")[];
-            /** Format: int64 */
-            priceNano?: number;
-            isActive?: boolean;
-            /** Format: int32 */
-            sortOrder?: number;
-        };
-        JsonNode: unknown;
-        WorkerCallback: {
-            callbackType?: string;
-            /** Format: uuid */
-            dealId?: string;
-            /** Format: uuid */
-            correlationId?: string;
-            payload?: components["schemas"]["JsonNode"];
-        };
-        WorkerCallbackResponse: {
-            /** Format: uuid */
-            eventId?: string;
-            /** Format: uuid */
-            correlationId?: string;
-            status?: string;
-        };
-        /** @description Channel registration request */
-        ChannelRegistrationRequest: {
-            /**
-             * Format: int64
-             * @description Telegram chat ID from verify step
-             */
-            channelId?: number;
-            /**
-             * @description Category slugs
-             * @example [
-             *       "tech"
-             *     ]
-             */
-            categories?: string[];
-            /**
-             * Format: int64
-             * @description Price per post in nanoTON
-             */
-            pricePerPostNano?: number;
-        };
-        /** @description Team invite request */
-        TeamInviteRequest: {
-            /** Format: int64 */
-            userId?: number;
-            rights: ("MODERATE" | "PUBLISH" | "MANAGE_TEAM" | "VIEW_STATS")[];
-        };
-        /** @description Pricing rule creation request */
-        PricingRuleCreateRequest: {
-            name: string;
-            description?: string;
-            postTypes: ("REPOST" | "NATIVE" | "STORY" | "INTEGRATION" | "REVIEW" | "MENTION" | "GIVEAWAY" | "PINNED" | "POLL" | "FORWARD")[];
-            /** Format: int64 */
-            priceNano?: number;
-            /** Format: int32 */
-            sortOrder?: number;
-        };
-        /** @description Channel verification request */
-        ChannelVerifyRequest: {
-            /**
-             * @description Public channel username without @
-             * @example mychannel
-             */
-            channelUsername: string;
-        };
-        /** @description Bot status in the channel */
-        BotStatus: {
-            isAdmin?: boolean;
-            canPostMessages?: boolean;
-            canEditMessages?: boolean;
-            missingPermissions?: string[];
-        };
-        /** @description Channel verification result */
-        ChannelVerifyResponse: {
-            /** Format: int64 */
-            channelId?: number;
-            title?: string;
-            username?: string;
-            /** Format: int32 */
-            subscriberCount?: number;
-            botStatus?: components["schemas"]["BotStatus"];
-            userStatus?: components["schemas"]["UserStatus"];
-        };
-        /** @description User status in the channel */
-        UserStatus: {
-            isMember?: boolean;
-            role?: string;
-        };
-        /** @description Telegram Mini App login request */
-        LoginRequest: {
-            /**
-             * @description Raw Telegram initData query string
-             * @example query_id=AAH...&auth_date=1700000000&hash=abc
-             */
-            initData: string;
-        };
-        /** @description Successful login response with JWT and user info */
-        LoginResponse: {
-            /**
-             * @description JWT access token
-             * @example eyJhbGciOiJIUzI1NiJ9...
-             */
-            accessToken?: string;
-            /**
-             * Format: int64
-             * @description Token lifetime in seconds
-             * @example 3600
-             */
-            expiresIn?: number;
-            /** @description Summary of the authenticated user */
-            user?: components["schemas"]["UserSummary"];
-        };
-        /** @description Compact user info returned with the token */
-        UserSummary: {
-            /**
-             * Format: int64
-             * @description Telegram user ID
-             * @example 42
-             */
-            id?: number;
-            /**
-             * @description Telegram username (without @)
-             * @example johndoe
-             */
-            username?: string;
-            /**
-             * @description Display name from first + last name
-             * @example John Doe
-             */
-            displayName?: string;
-        };
-        /** @description Post type with localized labels */
-        PostTypeDto: {
-            /** @enum {string} */
-            value?: "REPOST" | "NATIVE" | "STORY" | "INTEGRATION" | "REVIEW" | "MENTION" | "GIVEAWAY" | "PINNED" | "POLL" | "FORWARD";
-            localizedName?: {
-                [key: string]: string;
-            };
-        };
-        /** @description Channel search result item */
-        ChannelListItem: {
-            /** Format: int64 */
-            id?: number;
-            title?: string;
-            username?: string;
-            categories?: string[];
-            /** Format: int32 */
-            subscriberCount?: number;
-            /** Format: int32 */
-            avgViews?: number;
-            engagementRate?: number;
-            /** Format: int64 */
-            pricePerPostNano?: number;
-            isActive?: boolean;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        CursorPageChannelListItem: {
-            items?: components["schemas"]["ChannelListItem"][];
-            nextCursor?: string;
-        };
-        /** @description Full channel detail with pricing rules */
-        ChannelDetailResponse: {
-            /** Format: int64 */
-            id?: number;
-            title?: string;
-            username?: string;
-            description?: string;
-            /** Format: int32 */
-            subscriberCount?: number;
-            categories?: string[];
-            /** Format: int64 */
-            pricePerPostNano?: number;
-            isActive?: boolean;
-            /** Format: int64 */
-            ownerId?: number;
-            engagementRate?: number;
-            /** Format: int32 */
-            avgViews?: number;
-            language?: string;
-            pricingRules?: components["schemas"]["PricingRuleDto"][];
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        /** @description Channel category with localized names */
-        CategoryDto: {
-            /** Format: int32 */
-            id?: number;
-            slug?: string;
-            localizedName?: {
-                [key: string]: string;
-            };
-            /** Format: int32 */
-            sortOrder?: number;
-        };
+  schemas: {
+    CanaryUpdate: {
+      /** Format: int32 */
+      percent?: number;
+      salt?: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    CanaryStatus: {
+      /** Format: int32 */
+      percent?: number;
+      salt?: string;
+      /** Format: date-time */
+      timestamp?: string;
+    };
+    /** @description User onboarding completion request */
+    OnboardingRequest: {
+      /**
+       * @description Selected interest tags
+       * @example [
+       *       "tech",
+       *       "gaming"
+       *     ]
+       */
+      interests: string[];
+    };
+    /** @description Full user profile */
+    UserProfile: {
+      /**
+       * Format: int64
+       * @description Telegram user ID
+       * @example 42
+       */
+      id?: number;
+      /**
+       * @description Telegram username
+       * @example johndoe
+       */
+      username?: string;
+      /**
+       * @description Display name
+       * @example John Doe
+       */
+      displayName?: string;
+      /**
+       * @description IETF language tag
+       * @example en
+       */
+      languageCode?: string;
+      /** @description Whether onboarding is completed */
+      onboardingCompleted?: boolean;
+      /** @description Selected interest tags */
+      interests?: string[];
+      /**
+       * Format: date-time
+       * @description Registration timestamp
+       */
+      createdAt?: string;
+    };
+    /** @description Channel update request */
+    ChannelUpdateRequest: {
+      description?: string;
+      categories?: string[];
+      /** Format: int64 */
+      pricePerPostNano?: number;
+      language?: string;
+      isActive?: boolean;
+    };
+    /** @description Registered channel */
+    ChannelResponse: {
+      /** Format: int64 */
+      id?: number;
+      title?: string;
+      username?: string;
+      description?: string;
+      /** Format: int32 */
+      subscriberCount?: number;
+      categories?: string[];
+      /** Format: int64 */
+      pricePerPostNano?: number;
+      isActive?: boolean;
+      /** Format: int64 */
+      ownerId?: number;
+      /** Format: date-time */
+      createdAt?: string;
+    };
+    /** @description Team rights update request */
+    TeamUpdateRightsRequest: {
+      rights: ('MODERATE' | 'PUBLISH' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
+    };
+    /** @description Channel team member */
+    TeamMemberDto: {
+      /** Format: int64 */
+      userId?: number;
+      username?: string;
+      firstName?: string;
+      /** @enum {string} */
+      role?: 'OWNER' | 'MANAGER';
+      rights?: ('MODERATE' | 'PUBLISH' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
+      /** Format: int64 */
+      invitedBy?: number;
+      /** Format: date-time */
+      createdAt?: string;
+    };
+    /** @description Pricing rule update request */
+    PricingRuleUpdateRequest: {
+      name?: string;
+      description?: string;
+      postTypes?: (
+        | 'REPOST'
+        | 'NATIVE'
+        | 'STORY'
+        | 'INTEGRATION'
+        | 'REVIEW'
+        | 'MENTION'
+        | 'GIVEAWAY'
+        | 'PINNED'
+        | 'POLL'
+        | 'FORWARD'
+      )[];
+      /** Format: int64 */
+      priceNano?: number;
+      /** Format: int32 */
+      sortOrder?: number;
+      isActive?: boolean;
+    };
+    /** @description Channel pricing rule */
+    PricingRuleDto: {
+      /** Format: int64 */
+      id?: number;
+      /** Format: int64 */
+      channelId?: number;
+      name?: string;
+      description?: string;
+      postTypes?: (
+        | 'REPOST'
+        | 'NATIVE'
+        | 'STORY'
+        | 'INTEGRATION'
+        | 'REVIEW'
+        | 'MENTION'
+        | 'GIVEAWAY'
+        | 'PINNED'
+        | 'POLL'
+        | 'FORWARD'
+      )[];
+      /** Format: int64 */
+      priceNano?: number;
+      isActive?: boolean;
+      /** Format: int32 */
+      sortOrder?: number;
+    };
+    JsonNode: unknown;
+    WorkerCallback: {
+      callbackType?: string;
+      /** Format: uuid */
+      dealId?: string;
+      /** Format: uuid */
+      correlationId?: string;
+      payload?: components['schemas']['JsonNode'];
+    };
+    WorkerCallbackResponse: {
+      /** Format: uuid */
+      eventId?: string;
+      /** Format: uuid */
+      correlationId?: string;
+      status?: string;
+    };
+    /** @description Channel registration request */
+    ChannelRegistrationRequest: {
+      /**
+       * Format: int64
+       * @description Telegram chat ID from verify step
+       */
+      channelId?: number;
+      /**
+       * @description Category slugs
+       * @example [
+       *       "tech"
+       *     ]
+       */
+      categories?: string[];
+      /**
+       * Format: int64
+       * @description Price per post in nanoTON
+       */
+      pricePerPostNano?: number;
+    };
+    /** @description Team invite request */
+    TeamInviteRequest: {
+      /** Format: int64 */
+      userId?: number;
+      rights: ('MODERATE' | 'PUBLISH' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
+    };
+    /** @description Pricing rule creation request */
+    PricingRuleCreateRequest: {
+      name: string;
+      description?: string;
+      postTypes: (
+        | 'REPOST'
+        | 'NATIVE'
+        | 'STORY'
+        | 'INTEGRATION'
+        | 'REVIEW'
+        | 'MENTION'
+        | 'GIVEAWAY'
+        | 'PINNED'
+        | 'POLL'
+        | 'FORWARD'
+      )[];
+      /** Format: int64 */
+      priceNano?: number;
+      /** Format: int32 */
+      sortOrder?: number;
+    };
+    /** @description Channel verification request */
+    ChannelVerifyRequest: {
+      /**
+       * @description Public channel username without @
+       * @example mychannel
+       */
+      channelUsername: string;
+    };
+    /** @description Bot status in the channel */
+    BotStatus: {
+      isAdmin?: boolean;
+      canPostMessages?: boolean;
+      canEditMessages?: boolean;
+      missingPermissions?: string[];
+    };
+    /** @description Channel verification result */
+    ChannelVerifyResponse: {
+      /** Format: int64 */
+      channelId?: number;
+      title?: string;
+      username?: string;
+      /** Format: int32 */
+      subscriberCount?: number;
+      botStatus?: components['schemas']['BotStatus'];
+      userStatus?: components['schemas']['UserStatus'];
+    };
+    /** @description User status in the channel */
+    UserStatus: {
+      isMember?: boolean;
+      role?: string;
+    };
+    /** @description Telegram Mini App login request */
+    LoginRequest: {
+      /**
+       * @description Raw Telegram initData query string
+       * @example query_id=AAH...&auth_date=1700000000&hash=abc
+       */
+      initData: string;
+    };
+    /** @description Successful login response with JWT and user info */
+    LoginResponse: {
+      /**
+       * @description JWT access token
+       * @example eyJhbGciOiJIUzI1NiJ9...
+       */
+      accessToken?: string;
+      /**
+       * Format: int64
+       * @description Token lifetime in seconds
+       * @example 3600
+       */
+      expiresIn?: number;
+      /** @description Summary of the authenticated user */
+      user?: components['schemas']['UserSummary'];
+    };
+    /** @description Compact user info returned with the token */
+    UserSummary: {
+      /**
+       * Format: int64
+       * @description Telegram user ID
+       * @example 42
+       */
+      id?: number;
+      /**
+       * @description Telegram username (without @)
+       * @example johndoe
+       */
+      username?: string;
+      /**
+       * @description Display name from first + last name
+       * @example John Doe
+       */
+      displayName?: string;
+    };
+    /** @description Post type with localized labels */
+    PostTypeDto: {
+      /** @enum {string} */
+      value?:
+        | 'REPOST'
+        | 'NATIVE'
+        | 'STORY'
+        | 'INTEGRATION'
+        | 'REVIEW'
+        | 'MENTION'
+        | 'GIVEAWAY'
+        | 'PINNED'
+        | 'POLL'
+        | 'FORWARD';
+      localizedName?: {
+        [key: string]: string;
+      };
+    };
+    /** @description Channel search result item */
+    ChannelListItem: {
+      /** Format: int64 */
+      id?: number;
+      title?: string;
+      username?: string;
+      categories?: string[];
+      /** Format: int32 */
+      subscriberCount?: number;
+      /** Format: int32 */
+      avgViews?: number;
+      engagementRate?: number;
+      /** Format: int64 */
+      pricePerPostNano?: number;
+      isActive?: boolean;
+      /** Format: date-time */
+      updatedAt?: string;
+    };
+    CursorPageChannelListItem: {
+      items?: components['schemas']['ChannelListItem'][];
+      nextCursor?: string;
+    };
+    /** @description Full channel detail with pricing rules */
+    ChannelDetailResponse: {
+      /** Format: int64 */
+      id?: number;
+      title?: string;
+      username?: string;
+      description?: string;
+      /** Format: int32 */
+      subscriberCount?: number;
+      categories?: string[];
+      /** Format: int64 */
+      pricePerPostNano?: number;
+      isActive?: boolean;
+      /** Format: int64 */
+      ownerId?: number;
+      engagementRate?: number;
+      /** Format: int32 */
+      avgViews?: number;
+      language?: string;
+      pricingRules?: components['schemas']['PricingRuleDto'][];
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: date-time */
+      updatedAt?: string;
+    };
+    /** @description Channel category with localized names */
+    CategoryDto: {
+      /** Format: int32 */
+      id?: number;
+      slug?: string;
+      localizedName?: {
+        [key: string]: string;
+      };
+      /** Format: int32 */
+      sortOrder?: number;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getCanary: {
-        parameters: {
-            query?: never;
-            header: {
-                Authorization: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current canary configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["CanaryStatus"];
-                };
-            };
-        };
+  getCanary: {
+    parameters: {
+      query?: never;
+      header: {
+        Authorization: string;
+      };
+      path?: never;
+      cookie?: never;
     };
-    setCanary: {
-        parameters: {
-            query?: never;
-            header: {
-                Authorization: string;
-            };
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current canary configuration */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CanaryUpdate"];
-            };
+        content: {
+          '*/*': components['schemas']['CanaryStatus'];
         };
-        responses: {
-            /** @description Updated canary configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["CanaryStatus"];
-                };
-            };
-        };
+      };
     };
-    completeOnboarding: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OnboardingRequest"];
-            };
-        };
-        responses: {
-            /** @description Onboarding completed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["UserProfile"];
-                };
-            };
-            /** @description Invalid interests */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["UserProfile"];
-                };
-            };
-            /** @description Not authenticated */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["UserProfile"];
-                };
-            };
-        };
+  };
+  setCanary: {
+    parameters: {
+      query?: never;
+      header: {
+        Authorization: string;
+      };
+      path?: never;
+      cookie?: never;
     };
-    getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Channel detail */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelDetailResponse"];
-                };
-            };
-            /** @description Channel not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelDetailResponse"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CanaryUpdate'];
+      };
     };
-    update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Updated canary configuration */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChannelUpdateRequest"];
-            };
+        content: {
+          '*/*': components['schemas']['CanaryStatus'];
         };
-        responses: {
-            /** @description Channel updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelResponse"];
-                };
-            };
-            /** @description Not the owner of the channel */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelResponse"];
-                };
-            };
-            /** @description Channel not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelResponse"];
-                };
-            };
-        };
+      };
     };
-    deactivate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Channel deactivated */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not the owner of the channel */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Channel not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  completeOnboarding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    updateRights: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-                userId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TeamUpdateRightsRequest"];
-            };
-        };
-        responses: {
-            /** @description Rights updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"];
-                };
-            };
-            /** @description Not the owner or target is OWNER */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"];
-                };
-            };
-            /** @description Team member not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OnboardingRequest'];
+      };
     };
-    remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-                userId: number;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Onboarding completed */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Member removed */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not authorized or target is OWNER */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Team member not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
         };
+      };
+      /** @description Invalid interests */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Not authenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
     };
-    update_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-                ruleId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PricingRuleUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Rule updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PricingRuleDto"];
-                };
-            };
-            /** @description Not the owner of the channel */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PricingRuleDto"];
-                };
-            };
-            /** @description Pricing rule not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PricingRuleDto"];
-                };
-            };
-        };
+  };
+  getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
     };
-    delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-                ruleId: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Channel detail */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Rule deleted */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not the owner of the channel */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Pricing rule not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          '*/*': components['schemas']['ChannelDetailResponse'];
         };
+      };
+      /** @description Channel not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelDetailResponse'];
+        };
+      };
     };
-    handleCallback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkerCallback"];
-            };
-        };
-        responses: {
-            /** @description Accepted */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["WorkerCallbackResponse"];
-                };
-            };
-        };
+  };
+  update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
     };
-    search: {
-        parameters: {
-            query?: {
-                query?: string;
-                q?: string;
-                category?: string;
-                minSubscribers?: number;
-                minSubs?: number;
-                maxSubscribers?: number;
-                maxSubs?: number;
-                minPrice?: number;
-                maxPrice?: number;
-                minEngagement?: number;
-                language?: string;
-                sort?: string;
-                cursor?: string;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Search results */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["CursorPageChannelListItem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChannelUpdateRequest'];
+      };
     };
-    register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Channel updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChannelRegistrationRequest"];
-            };
+        content: {
+          '*/*': components['schemas']['ChannelResponse'];
         };
-        responses: {
-            /** @description Channel registered */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelResponse"];
-                };
-            };
-            /** @description User is not an admin of the channel */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelResponse"];
-                };
-            };
-            /** @description Channel already registered */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelResponse"];
-                };
-            };
+      };
+      /** @description Not the owner of the channel */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          '*/*': components['schemas']['ChannelResponse'];
+        };
+      };
+      /** @description Channel not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelResponse'];
+        };
+      };
     };
-    list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of team members */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"][];
-                };
-            };
-            /** @description Insufficient rights */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"][];
-                };
-            };
-        };
+  };
+  deactivate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
     };
-    invite: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Channel deactivated */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TeamInviteRequest"];
-            };
+        content?: never;
+      };
+      /** @description Not the owner of the channel */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
-        responses: {
-            /** @description Member invited */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"];
-                };
-            };
-            /** @description Not the owner of the channel */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"];
-                };
-            };
-            /** @description User is already a team member */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"];
-                };
-            };
-            /** @description Manager limit exceeded */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TeamMemberDto"];
-                };
-            };
+        content?: never;
+      };
+      /** @description Channel not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    list_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of pricing rules */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PricingRuleDto"][];
-                };
-            };
-        };
+  };
+  updateRights: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+        userId: number;
+      };
+      cookie?: never;
     };
-    create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channelId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PricingRuleCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Rule created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PricingRuleDto"];
-                };
-            };
-            /** @description Not the owner of the channel */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PricingRuleDto"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TeamUpdateRightsRequest'];
+      };
     };
-    verify: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Rights updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChannelVerifyRequest"];
-            };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'];
         };
-        responses: {
-            /** @description Verification result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelVerifyResponse"];
-                };
-            };
-            /** @description Bot or user lacks required permissions */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelVerifyResponse"];
-                };
-            };
-            /** @description Channel not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ChannelVerifyResponse"];
-                };
-            };
+      };
+      /** @description Not the owner or target is OWNER */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'];
+        };
+      };
+      /** @description Team member not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'];
+        };
+      };
     };
-    handleWebhook: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Telegram-Bot-Api-Secret-Token"?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": string;
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+        userId: number;
+      };
+      cookie?: never;
     };
-    logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Member removed */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Logged out successfully */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not authenticated */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content?: never;
+      };
+      /** @description Not authorized or target is OWNER */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
+      /** @description Team member not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
-        };
-        responses: {
-            /** @description Authentication successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["LoginResponse"];
-                };
-            };
-            /** @description Invalid request body */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["LoginResponse"];
-                };
-            };
-            /** @description Invalid or expired initData */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["LoginResponse"];
-                };
-            };
-            /** @description Too many login attempts */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["LoginResponse"];
-                };
-            };
-        };
+  };
+  update_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+        ruleId: number;
+      };
+      cookie?: never;
     };
-    getProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Profile retrieved */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["UserProfile"];
-                };
-            };
-            /** @description Not authenticated */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["UserProfile"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PricingRuleUpdateRequest'];
+      };
     };
-    deleteAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Rule updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Account deleted */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not authenticated */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          '*/*': components['schemas']['PricingRuleDto'];
         };
+      };
+      /** @description Not the owner of the channel */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['PricingRuleDto'];
+        };
+      };
+      /** @description Pricing rule not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['PricingRuleDto'];
+        };
+      };
     };
-    listPostTypes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PostTypeDto"][];
-                };
-            };
-        };
+  };
+  delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+        ruleId: number;
+      };
+      cookie?: never;
     };
-    count: {
-        parameters: {
-            query?: {
-                query?: string;
-                q?: string;
-                category?: string;
-                minSubscribers?: number;
-                minSubs?: number;
-                maxSubscribers?: number;
-                maxSubs?: number;
-                minPrice?: number;
-                maxPrice?: number;
-                minEngagement?: number;
-                language?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Rule deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Channel count */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": number;
-                };
-            };
+        content?: never;
+      };
+      /** @description Not the owner of the channel */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
+      /** @description Pricing rule not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    listCategories: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["CategoryDto"][];
-                };
-            };
-        };
+  };
+  handleCallback: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorkerCallback'];
+      };
+    };
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['WorkerCallbackResponse'];
+        };
+      };
+    };
+  };
+  search: {
+    parameters: {
+      query?: {
+        query?: string;
+        q?: string;
+        category?: string;
+        minSubscribers?: number;
+        minSubs?: number;
+        maxSubscribers?: number;
+        maxSubs?: number;
+        minPrice?: number;
+        maxPrice?: number;
+        minEngagement?: number;
+        language?: string;
+        sort?: string;
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Search results */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CursorPageChannelListItem'];
+        };
+      };
+    };
+  };
+  register: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChannelRegistrationRequest'];
+      };
+    };
+    responses: {
+      /** @description Channel registered */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelResponse'];
+        };
+      };
+      /** @description User is not an admin of the channel */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelResponse'];
+        };
+      };
+      /** @description Channel already registered */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelResponse'];
+        };
+      };
+    };
+  };
+  list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of team members */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'][];
+        };
+      };
+      /** @description Insufficient rights */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'][];
+        };
+      };
+    };
+  };
+  invite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TeamInviteRequest'];
+      };
+    };
+    responses: {
+      /** @description Member invited */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'];
+        };
+      };
+      /** @description Not the owner of the channel */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'];
+        };
+      };
+      /** @description User is already a team member */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'];
+        };
+      };
+      /** @description Manager limit exceeded */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['TeamMemberDto'];
+        };
+      };
+    };
+  };
+  list_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of pricing rules */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['PricingRuleDto'][];
+        };
+      };
+    };
+  };
+  create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channelId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PricingRuleCreateRequest'];
+      };
+    };
+    responses: {
+      /** @description Rule created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['PricingRuleDto'];
+        };
+      };
+      /** @description Not the owner of the channel */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['PricingRuleDto'];
+        };
+      };
+    };
+  };
+  verify: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChannelVerifyRequest'];
+      };
+    };
+    responses: {
+      /** @description Verification result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelVerifyResponse'];
+        };
+      };
+      /** @description Bot or user lacks required permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelVerifyResponse'];
+        };
+      };
+      /** @description Channel not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelVerifyResponse'];
+        };
+      };
+    };
+  };
+  handleWebhook: {
+    parameters: {
+      query?: never;
+      header?: {
+        'X-Telegram-Bot-Api-Secret-Token'?: string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Logged out successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Not authenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginRequest'];
+      };
+    };
+    responses: {
+      /** @description Authentication successful */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['LoginResponse'];
+        };
+      };
+      /** @description Invalid request body */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['LoginResponse'];
+        };
+      };
+      /** @description Invalid or expired initData */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['LoginResponse'];
+        };
+      };
+      /** @description Too many login attempts */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['LoginResponse'];
+        };
+      };
+    };
+  };
+  getProfile: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Profile retrieved */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Not authenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+    };
+  };
+  deleteAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Account deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Not authenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listPostTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['PostTypeDto'][];
+        };
+      };
+    };
+  };
+  count: {
+    parameters: {
+      query?: {
+        query?: string;
+        q?: string;
+        category?: string;
+        minSubscribers?: number;
+        minSubs?: number;
+        maxSubscribers?: number;
+        maxSubs?: number;
+        minPrice?: number;
+        maxPrice?: number;
+        minEngagement?: number;
+        language?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Channel count */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': number;
+        };
+      };
+    };
+  };
+  listCategories: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CategoryDto'][];
+        };
+      };
+    };
+  };
 }

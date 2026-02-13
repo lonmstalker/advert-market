@@ -1,8 +1,9 @@
 import { Text } from '@telegram-tools/ui-kit';
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useCountdown } from '@/shared/hooks/use-countdown';
 import { formatDate } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
+import { buildOverlapLabel } from '@/shared/lib/overlap-label';
 import { formatTon } from '@/shared/lib/ton-format';
 import { Popover } from '@/shared/ui';
 import { InfoIcon } from '@/shared/ui/icons';
@@ -12,60 +13,15 @@ type DealInfoCardProps = {
   deal: Deal;
 };
 
-function useCountdown(
-  deadlineAt: string | null,
-  t: (key: string, opts?: Record<string, unknown>) => string,
-): string | null {
-  const [remaining, setRemaining] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!deadlineAt) {
-      setRemaining(null);
-      return;
-    }
-
-    function update() {
-      const diff = new Date(deadlineAt as string).getTime() - Date.now();
-      if (diff <= 0) {
-        setRemaining(null);
-        return;
-      }
-      const totalHours = Math.floor(diff / 3_600_000);
-      const minutes = Math.floor((diff % 3_600_000) / 60_000);
-      if (totalHours >= 24) {
-        const days = Math.floor(totalHours / 24);
-        const hours = totalHours % 24;
-        setRemaining(t('deals.detail.deadlineDays', { days, hours }));
-      } else if (totalHours > 0) {
-        setRemaining(t('deals.detail.deadlineHours', { hours: totalHours, minutes }));
-      } else {
-        setRemaining(t('deals.detail.deadlineMinutes', { minutes }));
-      }
-    }
-
-    update();
-    const interval = setInterval(update, 60_000);
-    return () => clearInterval(interval);
-  }, [deadlineAt, t]);
-
-  return remaining;
-}
-
 export function DealInfoCard({ deal }: DealInfoCardProps) {
   const { t, i18n } = useTranslation();
   const countdown = useCountdown(deal.deadlineAt, t);
 
-  const freq = deal.postFrequencyHours;
-  const dur = deal.durationHours;
-  const overlapLabel =
-    freq && dur
-      ? t('catalog.channel.overlapFormat', { freq, dur })
-      : dur
-        ? t('catalog.channel.onlyDuration', { dur })
-        : freq
-          ? t('catalog.channel.onlyFrequency', { freq })
-          : null;
-  const hasOverlapTooltip = !!(freq && dur);
+  const overlap = buildOverlapLabel(deal.postFrequencyHours, deal.durationHours, t);
+  const overlapLabel = overlap?.label ?? null;
+  const hasOverlapTooltip = overlap?.hasTooltip ?? false;
+  const freq = overlap?.freq;
+  const dur = overlap?.dur;
 
   const chips: { key: string; label: string; tooltip?: boolean }[] = [
     { key: 'type', label: t(`catalog.channel.postType.${deal.postType}`) },
