@@ -164,6 +164,32 @@ class IdempotencyKeyTest {
     }
 
     @Test
+    @DisplayName("payout key format")
+    void payout_keyFormat() {
+        assertThat(
+                IdempotencyKey.payout(DEAL_ID).value())
+                .isEqualTo("payout:" + DEAL_ID.value());
+    }
+
+    @Test
+    @DisplayName("publish key format")
+    void publish_keyFormat() {
+        assertThat(
+                IdempotencyKey.publish(DEAL_ID).value())
+                .isEqualTo("publish:" + DEAL_ID.value());
+    }
+
+    @Test
+    @DisplayName("reconciliation key format")
+    void reconciliation_keyFormat() {
+        var triggerId = UUID.fromString(
+                "660e8400-e29b-41d4-a716-446655440001");
+        assertThat(
+                IdempotencyKey.reconciliation(triggerId).value())
+                .isEqualTo("recon:" + triggerId);
+    }
+
+    @Test
     @DisplayName("toString returns the value")
     void toString_returnsValue() {
         assertThat(IdempotencyKey.deposit("hash").toString())
