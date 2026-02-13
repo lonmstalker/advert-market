@@ -18,6 +18,32 @@ function getInitData(): string {
   }
 }
 
+function deriveCanaryKey(initData: string): string {
+  if (!initData) return '';
+  try {
+    const params = new URLSearchParams(initData);
+
+    // Prefer stable Telegram user.id when available (best for per-user canary routing).
+    const userJson = params.get('user');
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson) as { id?: unknown };
+        const id = user?.id;
+        if (typeof id === 'number' || typeof id === 'string') {
+          return String(id);
+        }
+      } catch {
+        // Ignore invalid user JSON.
+      }
+    }
+
+    // Fallback: chat_instance is stable within Telegram context.
+    return params.get('chat_instance') ?? '';
+  } catch {
+    return '';
+  }
+}
+
 type RequestOptions<T> = {
   body?: unknown;
   schema?: z.ZodType<T>;
@@ -64,11 +90,12 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     Accept: 'application/json',
   };
 
+  const initData = getInitData();
+
   const token = getAuthToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   } else {
-    const initData = getInitData();
     if (initData) {
       headers['X-Telegram-Init-Data'] = initData;
     }
@@ -76,6 +103,11 @@ async function request<T>(method: string, path: string, options?: RequestOptions
 
   if (options?.body) {
     headers['Content-Type'] = 'application/json';
+  }
+
+  const canaryKey = deriveCanaryKey(initData);
+  if (canaryKey) {
+    headers['X-Canary-Key'] = canaryKey;
   }
 
   const response = await fetch(url.toString(), {

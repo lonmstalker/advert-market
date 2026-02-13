@@ -3,25 +3,20 @@
 ## Architecture Overview
 
 ```
-                    ┌─────────┐
-Telegram ──HTTPS──▶ │  nginx  │
-                    └────┬────┘
-                         │ upstream-active.conf
-              ┌──────────┼──────────┐
-              ▼                     ▼
-        ┌──────────┐         ┌──────────┐
-        │ app-blue │         │app-green │
-        │  :8080   │         │  :8080   │
-        └────┬─────┘         └────┬─────┘
-             │                     │
-        ┌────┴─────────────────────┴────┐
-        │   PostgreSQL / Redis / Kafka  │
-        └───────────────────────────────┘
+Mini App / Telegram ──HTTPS──▶ nginx
+                              │
+                              ├─ stable_backend  (active color)
+                              └─ canary_backend  (inactive color; used only for Mini App API canary)
+
+stable_backend + canary_backend resolve to app-blue/app-green via:
+- nginx/upstream-active.conf (managed by switch-color.sh)
+
+Both app containers share: PostgreSQL / Redis / Kafka
 ```
 
 - **Blue-green**: Two app containers behind nginx. Only one receives traffic at a time.
-- **Canary**: Feature-flag inside a single running instance. Sticky routing by `hash(user_id) % 100`.
-- Both mechanisms are independent and composable.
+- **Mini App API canary (edge)**: nginx splits `/api/**` traffic between stable/canary by `X-Canary-Key` (recommended: Telegram user.id).
+- **Bot feature canary (app-level)**: feature-flag inside the app. Sticky routing by `hash(user_id) % 100`.
 
 ## Prerequisites
 
@@ -110,11 +105,63 @@ docker compose -f docker-compose.prod.yml stop app-blue
 
 Rollback = one file copy + nginx reload. No container restart needed if old container is still running.
 
-## 4. Canary Rollout by % of Users
+## 4. Canary
 
-Canary is a feature-flag mechanism **inside** a running instance. It determines which code path a user gets based on `hash(user_id) % 100`.
+### 4.1 Mini App API Canary (Edge, nginx)
 
-### Set Canary Percent
+Use this when you want to roll out a **new backend image** to a **percentage of Mini App users** without switching all traffic.
+
+**What it affects**
+- Only `/api/**` requests (Mini App API).
+- Telegram webhook `/api/v1/bot/webhook` stays on `stable_backend` (not affected).
+
+**How users are bucketed**
+- Sticky key: `X-Canary-Key` header (recommended: Telegram user.id).
+- Fallback: client IP (if header is missing).
+- Tester override:
+  - Cookie `am_canary=1` forces canary
+  - Cookie `am_canary=0` forces stable
+
+**Rollout steps**
+
+```bash
+cd deploy
+
+# 1) Start the inactive color with the NEW image (do not switch yet)
+#    Figure out which color is active:
+head -1 nginx/upstream-active.conf
+
+# Example: if active=blue -> start green
+APP_IMAGE=advertmarket:v0.2.0 docker compose -f docker-compose.prod.yml --profile green up -d app-green
+
+# 2) Wait for readiness
+docker exec am-app-green curl -sf http://localhost:8080/actuator/health/readiness
+
+# 3) Start canary at 1%
+./scripts/api-canary-set.sh 1
+
+# 4) Ramp up: 5 -> 10 -> 25 -> 50 -> 100
+./scripts/api-canary-set.sh 5
+./scripts/api-canary-set.sh 10
+```
+
+**Rollback (instant)**
+
+```bash
+./scripts/api-canary-set.sh 0
+```
+
+**Promote (finish rollout)**
+1. Set `100%` canary for `/api/**`.
+2. Switch active color to the new container (`./scripts/switch-color.sh <new-color>`).
+3. Set canary back to `0%` (now stable points to the new color).
+4. Stop old color.
+
+### 4.2 Bot Feature Canary (App-level)
+
+Bot canary is a feature-flag mechanism **inside** the running app. It determines which code path a user gets based on `hash(user_id) % 100`.
+
+### Set Canary Percent (App-level)
 
 ```bash
 # Via script
