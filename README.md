@@ -4,7 +4,7 @@ Telegram Mini App marketplace for advertising in Telegram channels with TON escr
 
 ![Java 25](https://img.shields.io/badge/Java-25-orange)
 ![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.0-green)
-![CI](https://github.com/nickkochnev/advert-market/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/lonmstalker/advert-market/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-TBD-lightgrey)
 
 ## About

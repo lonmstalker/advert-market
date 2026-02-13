@@ -164,7 +164,7 @@ All 20+ services from C4 Level 3 mapped to modules:
 
 ## Implementation Spec Coverage
 
-All 36 specs from `14-implementation-specs/` are covered:
+All 45 specs from `14-implementation-specs/` are covered:
 
 | Spec | Module |
 |---|---|
@@ -196,5 +196,15 @@ All 36 specs from `14-implementation-specs/` are covered:
 | 31-overpayment-underpayment | financial |
 | 32-worker-monitoring-dlq | app (cross-cutting) |
 | 33-partition-automation | db |
+| 34-inter-module-interaction | shared + all `-impl` modules (dependency rules) |
 | 35-deal-workflow-engine | deal |
 | 36-logging-strategy | app (cross-cutting) |
+| 37-hot-wallet-management | financial |
+| 38-network-fee-accounting | financial |
+| 39-late-deposit-handling | financial + deal |
+| 40-payout-wallet-architecture | financial |
+| 41-unclaimed-payouts | financial + communication |
+| 42-partial-refund-accounting | financial + deal |
+| 43-seqno-management | financial |
+| 44-post-scheduler-impl | delivery |
+| 45-channel-statistics-collector | marketplace |

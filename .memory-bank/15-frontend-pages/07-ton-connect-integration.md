@@ -250,7 +250,7 @@ function getErrorI18nKey(error: TonTransactionError): string;
 
 ## 7.4 Flow 1: Оплата сделки (Escrow Deposit)
 
-> UI-детали: [03-deals.md#3.8](03-deals.md#38-оплата-sheet--ton-connect)
+> UI-детали: [03-deals.md](03-deals.md) (section 3.8)
 
 ### Trigger
 
@@ -365,7 +365,7 @@ const DepositInfoSchema = z.object({
 
 ## 7.5 Flow 2: Вывод средств (Owner Withdrawal)
 
-> UI-детали: [04-wallet.md#4.2](04-wallet.md#42-вывод-средств-только-владелец-канала)
+> UI-детали: [04-wallet.md](04-wallet.md) (section 4.2)
 
 ### Особенность
 

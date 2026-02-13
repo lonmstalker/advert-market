@@ -1,0 +1,73 @@
+{
+  "memoryBankRoot": ".memory-bank",
+  "rootIndex": "00-index.md",
+  "entryIndex": "index.md",
+  "excludeFromIndex": [
+    "index.md"
+  ],
+  "excludeFromFooterCount": [
+    "index.md"
+  ],
+  "orphanExclusions": [
+    "00-index.md",
+    "index.md"
+  ],
+  "requiredFrontmatter": [
+    "index.md"
+  ],
+  "language": {
+    "mode": "bilingual"
+  },
+  "requiredPhrases": [
+    {
+      "file": "00-index.md",
+      "pattern": "PostgreSQL 18: 20 base tables"
+    },
+    {
+      "file": "15-module-architecture.md",
+      "pattern": "All 45 specs from `14-implementation-specs/` are covered:"
+    },
+    {
+      "file": "03-feature-specs/02-deal-lifecycle.md",
+      "pattern": "state machine with 17 states"
+    },
+    {
+      "file": "04-architecture/05-data-stores.md",
+      "pattern": "housing 20 base tables"
+    },
+    {
+      "file": "04-architecture/05-data-stores.md",
+      "pattern": "status (17 states)"
+    },
+    {
+      "file": "04-architecture/01-system-landscape.md",
+      "pattern": "20 base tables"
+    },
+    {
+      "file": "04-architecture/02-containers.md",
+      "pattern": "20 base tables"
+    },
+    {
+      "file": "09-deployment.md",
+      "pattern": "20 base tables"
+    }
+  ],
+  "forbiddenPhrases": [
+    {
+      "file": "15-module-architecture.md",
+      "pattern": "All 36 specs"
+    },
+    {
+      "file": "03-feature-specs/02-deal-lifecycle.md",
+      "pattern": "16 states"
+    },
+    {
+      "file": "04-architecture/05-data-stores.md",
+      "pattern": "status (16 states"
+    },
+    {
+      "file": "14-implementation-specs/05-ddl-migrations.md",
+      "pattern": "### 17. processed_events"
+    }
+  ]
+}

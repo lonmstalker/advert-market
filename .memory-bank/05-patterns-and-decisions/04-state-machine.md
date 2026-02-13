@@ -6,7 +6,7 @@ Implement deal lifecycle as a formal state machine with actor-checked, idempoten
 
 ## Context
 
-The deal lifecycle has 16 states and many transition paths involving multiple actors, timeouts, and financial side-effects. A formal state machine ensures:
+The deal lifecycle has 17 states and many transition paths involving multiple actors, timeouts, and financial side-effects. A formal state machine ensures:
 
 - Only valid transitions are allowed
 - Only authorized actors can trigger transitions

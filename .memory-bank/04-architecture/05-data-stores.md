@@ -2,7 +2,7 @@
 
 ## Overview
 
-PostgreSQL 18 is the primary data store, housing 14 tables organized by concern. Several tables use partitioning for efficient range queries and archival. The schema follows CQRS principles — `ledger_entries` (write model) and `account_balances` (read model) are separate.
+PostgreSQL 18 is the primary data store, housing 20 base tables organized by concern (14 primary operational tables plus 6 support/lookup tables). Several tables use partitioning for efficient range queries and archival. The schema follows CQRS principles — `ledger_entries` (write model) and `account_balances` (read model) are separate.
 
 ## Entity-Relationship Diagram
 
@@ -201,7 +201,7 @@ erDiagram
 |-------|------|------|-------------|
 | `users` | Component | — | PK = Telegram user ID (BIGINT). No fixed role column — actor role is contextual (ABAC). `is_operator` flag for platform admins |
 | `channels` | Component | — | PK = Telegram channel ID. Owner FK → users. Statistics, pricing, availability JSONB |
-| `deals` | Component | — | Deal aggregate: status (16 states), version (optimistic locking), escrow fields, creative data |
+| `deals` | Component | — | Deal aggregate: status (17 states), version (optimistic locking), escrow fields, creative data |
 | `channel_memberships` | Component | — | Team ABAC: (channel_id, user_id), role (OWNER/MANAGER), JSONB rights |
 
 ### Financial Tables

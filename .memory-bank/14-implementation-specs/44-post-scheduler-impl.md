@@ -69,7 +69,7 @@ Retry: max 3, exponential backoff 1s→2s→4s. Non-retryable (403, invalid file
 
 **Key**: `publish:{deal_id}`
 
-Проверка `processed_events` перед отправкой. После успеха — сохранение `message_id` и запись в `processed_events`.
+Проверка выполняется через уникальность бизнес-ключа `publish:{deal_id}` и optimistic locking по сделке. После успеха сохраняется `message_id`, повторная публикация для того же ключа возвращает idempotent no-op.
 
 ## Configuration
 

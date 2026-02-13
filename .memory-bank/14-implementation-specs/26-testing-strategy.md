@@ -44,7 +44,7 @@ dependencies {
 | Target | Examples | Coverage Goal |
 |--------|----------|---------------|
 | Commission calculation | Tiered rate lookup, rounding, overflow guard | 100% branches |
-| State machine transitions | Valid/invalid transitions, actor checks | All 16 states x transitions |
+| State machine transitions | Valid/invalid transitions, actor checks | All 17 states x transitions |
 | Amount validation | Exact, overpayment, underpayment, multiple deposits | All cases |
 | Cursor codec | Encode/decode, malformed input | Edge cases |
 | ABAC permission checks | Owner/admin/advertiser/operator decisions | All actor-resource pairs |
@@ -101,7 +101,7 @@ abstract class IntegrationTestBase {
 
 ### 3. State Machine Test Matrix
 
-**Critical coverage**: 16 состояний, ~30 валидных переходов, ~200+ невалидных.
+**Critical coverage**: 17 states, ~30 valid transitions, ~200+ invalid transitions.
 
 #### Valid Transitions (must succeed)
 

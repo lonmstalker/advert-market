@@ -82,7 +82,7 @@ The **Ad Marketplace** system boundary contains:
 - 1 backend container (Backend API — Java 25 + Spring Boot 4)
 - 1 bot container (Telegram Bot)
 - 1 worker container (Workers — 7 Kafka consumers)
-- 1 database (PostgreSQL 18 — 14 tables, partitioned)
+- 1 database (PostgreSQL 18 — 20 base tables, partitioned)
 - 1 message broker (Kafka 4.1 KRaft — 8 topics)
 - 1 cache (Redis 8.4 — balance cache, distributed locks, canary config)
 

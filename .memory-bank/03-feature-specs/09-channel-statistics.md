@@ -129,4 +129,5 @@ channel:
 - [Channel Marketplace](./01-channel-marketplace.md)
 - [Backend API Components](../04-architecture/03-backend-api-components.md)
 - [Telegram Bot Framework](../14-implementation-specs/02-telegram-bot-framework.md)
+- [Channel Statistics Collector](../14-implementation-specs/45-channel-statistics-collector.md)
 - [Rate Limiting](../14-implementation-specs/27-rate-limiting-strategy.md)

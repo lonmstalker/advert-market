@@ -34,7 +34,7 @@
 | [04-architecture/02-containers.md](./04-architecture/02-containers.md) | C4 L2: 8 containers (incl. Nginx) and interactions |
 | [04-architecture/03-backend-api-components.md](./04-architecture/03-backend-api-components.md) | C4 L3: 20+ Backend API services |
 | [04-architecture/04-workers.md](./04-architecture/04-workers.md) | 7 async workers, callback pattern, DLQ strategy |
-| [04-architecture/05-data-stores.md](./04-architecture/05-data-stores.md) | PostgreSQL 18: 14 tables, partitioning |
+| [04-architecture/05-data-stores.md](./04-architecture/05-data-stores.md) | PostgreSQL 18: 20 base tables (14 primary + 6 support), partitioning |
 | [04-architecture/06-kafka-topology.md](./04-architecture/06-kafka-topology.md) | 8 Kafka topics, consumer groups |
 | [04-architecture/07-redis-usage.md](./04-architecture/07-redis-usage.md) | Balance cache, distributed locks, canary config, update dedup, heartbeats |
 
@@ -85,9 +85,10 @@
 | [15-frontend-pages/01-onboarding.md](./15-frontend-pages/01-onboarding.md) | Onboarding: welcome, interest, tour (3 screens) |
 | [15-frontend-pages/02-catalog.md](./15-frontend-pages/02-catalog.md) | Catalog: channel list, filters, channel detail, create deal |
 | [15-frontend-pages/03-deals.md](./15-frontend-pages/03-deals.md) | Deals: list, detail, negotiate, brief, creative, review, schedule, payment, dispute |
-| [15-frontend-pages/04-wallet.md](./15-frontend-pages/04-wallet.md) | Финансы: summary, withdraw (owner only), history, transaction detail |
+| [15-frontend-pages/04-wallet.md](./15-frontend-pages/04-wallet.md) | Wallet: summary, withdraw (owner only), history, transaction detail |
 | [15-frontend-pages/05-profile.md](./15-frontend-pages/05-profile.md) | Profile: settings, channel registration, management, team |
 | [15-frontend-pages/06-shared-components.md](./15-frontend-pages/06-shared-components.md) | Shared: sheets, modals, toasts, skeletons, empty states, navigation, routing |
+| [15-frontend-pages/07-ton-connect-integration.md](./15-frontend-pages/07-ton-connect-integration.md) | TON Connect lifecycle, hooks, error mapping, deposit/withdraw flows |
 
 ### Infrastructure & Operations
 
@@ -136,6 +137,7 @@
 | [14-implementation-specs/31-overpayment-underpayment.md](./14-implementation-specs/31-overpayment-underpayment.md) | Overpayment & Underpayment Handling |
 | [14-implementation-specs/32-worker-monitoring-dlq.md](./14-implementation-specs/32-worker-monitoring-dlq.md) | Worker Monitoring, Health Checks & DLQ Strategy |
 | [14-implementation-specs/33-partition-automation.md](./14-implementation-specs/33-partition-automation.md) | Partition Auto-Creation & Archival |
+| [14-implementation-specs/34-inter-module-interaction.md](./14-implementation-specs/34-inter-module-interaction.md) | Module dependency rules and allowed interaction patterns |
 | [14-implementation-specs/35-deal-workflow-engine.md](./14-implementation-specs/35-deal-workflow-engine.md) | Deal Workflow Engine (post-transition side-effects) |
 | [14-implementation-specs/36-logging-strategy.md](./14-implementation-specs/36-logging-strategy.md) | Structured Logging, Redaction & Retention |
 | [14-implementation-specs/37-hot-wallet-management.md](./14-implementation-specs/37-hot-wallet-management.md) | Treasury wallet monitoring, balance alerts, replenishment |
@@ -144,7 +146,10 @@
 | [14-implementation-specs/40-payout-wallet-architecture.md](./14-implementation-specs/40-payout-wallet-architecture.md) | Subwallet -> recipient direct payout, commission sweep |
 | [14-implementation-specs/41-unclaimed-payouts.md](./14-implementation-specs/41-unclaimed-payouts.md) | Owner without TON address: notifications, 30-day timeout |
 | [14-implementation-specs/42-partial-refund-accounting.md](./14-implementation-specs/42-partial-refund-accounting.md) | Time-based split, PARTIALLY_REFUNDED state, commission rules |
+| [14-implementation-specs/43-seqno-management.md](./14-implementation-specs/43-seqno-management.md) | TON wallet seqno handling, nonce locking, recovery strategy |
+| [14-implementation-specs/44-post-scheduler-impl.md](./14-implementation-specs/44-post-scheduler-impl.md) | Post Scheduler worker: publish flow, idempotency, retries |
+| [14-implementation-specs/45-channel-statistics-collector.md](./14-implementation-specs/45-channel-statistics-collector.md) | Channel statistics refresh and freshness policy |
 
 ---
 
-*Generated from C4 architecture model. 89 files total.*
+*Generated from C4 architecture model. 97 files total.*

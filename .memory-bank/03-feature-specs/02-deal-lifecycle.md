@@ -2,7 +2,7 @@
 
 ## Overview
 
-A deal represents a single advertising agreement between an Advertiser and a Channel Owner. It is the central aggregate of the system, governed by a state machine with 16 states and multiple transition paths.
+A deal represents a single advertising agreement between an Advertiser and a Channel Owner. It is the central aggregate of the system, governed by a state machine with 17 states and multiple transition paths.
 
 ## Lifecycle Sequence
 

@@ -146,5 +146,6 @@ In the MVP deployment, all workers run in the **same JVM process** as the Backen
 - [Containers](./02-containers.md) — container overview
 - [Kafka Topology](./06-kafka-topology.md) — topics and routing
 - [Deployment](../09-deployment.md) — MVP vs Scaled worker deployment
+- [Post Scheduler Worker](../14-implementation-specs/44-post-scheduler-impl.md) — publish flow, retries, idempotency
 - [Idempotency Strategy](../05-patterns-and-decisions/07-idempotency-strategy.md)
 - [Worker Monitoring & DLQ](../14-implementation-specs/32-worker-monitoring-dlq.md) — health checks, DLQ, alerting

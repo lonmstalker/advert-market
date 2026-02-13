@@ -21,7 +21,7 @@ flowchart TB
         API[Backend API<br/>Java 25 + Spring Boot 4<br/>REST API, domain services]
         BOT[Telegram Bot<br/>Webhook handler<br/>notification dispatcher]
         WORK[Workers<br/>Kafka consumers<br/>financial ops, delivery]
-        PG[(PostgreSQL 18<br/>Primary data store<br/>14 tables, partitioned)]
+        PG[(PostgreSQL 18<br/>Primary data store<br/>20 base tables, partitioned)]
         KF[Kafka 4.1<br/>Event streaming<br/>worker queues]
         RD[(Redis 8.4<br/>Balance cache<br/>distributed locks)]
     end
@@ -111,7 +111,7 @@ Async processors for financial operations, delivery verification, timeouts, and 
 |-----------|-------|
 | **Technology** | PostgreSQL 18 |
 | **Tags** | `#mvp` |
-| **Tables** | 14 tables across 4 categories (see [Data Stores](./05-data-stores.md)) |
+| **Tables** | 20 base tables (14 primary + 6 support) across 4 categories (see [Data Stores](./05-data-stores.md)) |
 
 Primary data store with partitioned tables for events and verification checks.
 

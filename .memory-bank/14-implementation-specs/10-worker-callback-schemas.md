@@ -256,18 +256,12 @@ internal:
 
 ### Idempotency Key Storage
 
-```sql
-CREATE TABLE processed_events (
-    idempotency_key VARCHAR(200) PRIMARY KEY,
-    event_type      VARCHAR(50) NOT NULL,
-    deal_id         UUID,
-    processed_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    result          VARCHAR(20) NOT NULL  -- SUCCESS, SKIPPED, FAILED
-);
+Current schema uses domain-specific deduplication points instead of a global `processed_events` table:
 
--- Cleanup: remove records older than 30 days
--- Handled by scheduled task
-```
+- `ton_transactions.tx_hash` UNIQUE for blockchain-level dedup
+- `ledger_idempotency_keys.idempotency_key` for ledger write dedup
+- `notification_outbox.idempotency_key` for outbox publish dedup
+- `deals.version` optimistic locking for transition-level dedup
 
 ### Processing Algorithm
 
@@ -276,18 +270,16 @@ CREATE TABLE processed_events (
 public void processWorkerEvent(WorkerEvent event) {
     String key = event.idempotencyKey();
 
-    // 1. Check if already processed
-    if (processedEventRepo.existsByKey(key)) {
-        log.info("Duplicate event ignored: {}", key);
-        metrics.counter("worker.events.duplicate").increment();
-        return;
+    // 1. Route to dedup boundary by event type
+    if (isBlockchainEvent(event) && txRepo.existsByTxHash(event.txHash())) {
+        return; // duplicate callback from external API
+    }
+    if (isLedgerEvent(event) && ledgerIdempotencyRepo.existsByKey(key)) {
+        return; // duplicate financial command
     }
 
-    // 2. Process event (state transition, ledger entries, etc.)
-    processEvent(event);
-
-    // 3. Record as processed (within same transaction)
-    processedEventRepo.insert(key, event.eventType(), event.dealId(), "SUCCESS");
+    // 2. Process event (state transition, ledger entries, outbox)
+    processEvent(event); // guarded by deals.version optimistic lock
 }
 ```
 

@@ -86,7 +86,7 @@ Notification sent at PAYOUT_CONFIRMED: owner gets "Выплата {amount} TON" 
 | Layer | Mechanism | Protects Against |
 |-------|-----------|------------------|
 | Redis lock | `lock:payout:{deal_id}` (TTL 60s) | Concurrent execution |
-| DB idempotency | `processed_events` table, key `payout:{deal_id}` | Re-execution after restart |
+| DB idempotency | `ton_transactions.tx_hash` UNIQUE + `deals.version` optimistic lock | Re-execution after restart |
 | TON TX hash | `ton_transactions.tx_hash` UNIQUE | Duplicate recording |
 | Outbox | Transactional outbox + `FOR UPDATE SKIP LOCKED` | Double-emit |
 

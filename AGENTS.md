@@ -4,7 +4,7 @@
 - This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 - MUST use TDD when write code
 - MUST update .memory-bank and Hindsight when have new insights, opinions, decisions
-- MUST use english for .memory-bank, docs (include java, typescript docs)
+- MUST use English for new or heavily rewritten `.memory-bank` and docs; legacy bilingual content is temporarily allowed until migration is complete
 - NEVER overengineering
 - ALWAYS remember KISS, DRY, YAGNI, SOLID, high-cohesion, low coupling
 - MUST remember `agents-md` skill when write new large module/package
@@ -48,4 +48,3 @@ bd sync               # Sync with git
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
-

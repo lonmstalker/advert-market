@@ -41,7 +41,7 @@ flowchart TB
 | **Nginx** | TLS termination, upstream switching (blue/green), `/internal` and `/actuator` access control |
 | **App Process** | Single JVM: Backend API + Telegram Bot + Workers (blue-green: two instances, one active) |
 | **Mini App** | Static SPA on nginx/CDN |
-| **PostgreSQL** | Managed single instance (PostgreSQL 18), all 14 tables |
+| **PostgreSQL** | Managed single instance (PostgreSQL 18), all 20 base tables |
 | **Redis** | Managed single instance (Redis 8.4) — balance cache + distributed locks + canary config + update dedup |
 | **Kafka** | Managed Kafka 4.1 KRaft (no ZooKeeper) |
 | **Cost** | Minimal — one VPS + managed services |

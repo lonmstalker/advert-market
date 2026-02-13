@@ -42,6 +42,11 @@ src/main/resources/db/changelog/
     003-partitions.sql              # Monthly partitions (2026)
     004-seed-data.sql               # Default commission tiers
     005-comments.sql                # COMMENT ON TABLE/COLUMN/FUNCTION
+    006-financial-fixes.sql         # tx_ref, subwallet sequence, financial constraints
+    007-audit-findings.sql          # Audit-driven corrective changes
+    008-user-soft-delete.sql        # User soft-delete fields
+    009-channel-search.sql          # Search and ranking fields
+    010-enums-categories-pricing.sql # Categories, many-to-many, enum normalization
 ```
 
 Master changelog:
@@ -444,23 +449,14 @@ Applied to: `users`, `channels`, `deals`.
 ## 005-comments.sql — COMMENT ON
 
 All COMMENT ON TABLE, COMMENT ON COLUMN, and COMMENT ON FUNCTION statements. Comments in English. Covers:
-- 16 tables
+- 17 core tables from the current changelog set
 - Key columns (financial amounts, double-entry, versioning, CQRS, commission, PII)
 - 2 trigger functions
 
-### 17. processed_events (idempotency)
-
-```sql
-CREATE TABLE processed_events (
-    idempotency_key VARCHAR(200) PRIMARY KEY,
-    event_type      VARCHAR(50)  NOT NULL,
-    deal_id         UUID,
-    processed_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    result          VARCHAR(20)  NOT NULL CHECK (result IN ('SUCCESS', 'SKIPPED', 'FAILED'))
-);
-
-CREATE INDEX idx_processed_events_cleanup ON processed_events(processed_at);
-```
+`processed_events` was used in earlier drafts and is no longer part of the active schema. Idempotency responsibilities are handled by:
+- `ledger_idempotency_keys` (ledger-level deduplication),
+- `notification_outbox.idempotency_key` (outbox publish deduplication),
+- transaction hashes and optimistic locking in financial flows.
 
 ---
 
