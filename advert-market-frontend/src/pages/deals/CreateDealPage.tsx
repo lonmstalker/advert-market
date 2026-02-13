@@ -89,7 +89,7 @@ export default function CreateDealPage() {
   const ruleOptions = [
     { label: t('deals.create.selectPostType'), value: null },
     ...channel.pricingRules.map((rule) => ({
-      label: `${rule.postType} — ${formatTon(rule.priceNano)}`,
+      label: `${rule.name} — ${formatTon(rule.priceNano)}`,
       value: String(rule.id),
     })),
   ];

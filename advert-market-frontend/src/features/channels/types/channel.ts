@@ -30,11 +30,13 @@ export type ChannelSort = (typeof channelSortValues)[number];
 
 export const pricingRuleSchema = z.object({
   id: z.number(),
-  postType: z.string(),
+  channelId: z.number(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  postTypes: z.array(z.string()),
   priceNano: z.number(),
-  durationHours: z.number().optional(),
-  postFrequencyHours: z.number().optional(),
-  description: z.string().optional(),
+  isActive: z.boolean(),
+  sortOrder: z.number(),
 });
 
 export type PricingRule = z.infer<typeof pricingRuleSchema>;

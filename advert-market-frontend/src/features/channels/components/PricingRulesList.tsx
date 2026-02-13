@@ -15,7 +15,7 @@ export function PricingRulesList({ pricingRules }: PricingRulesListProps) {
       {pricingRules.map((rule) => (
         <GroupItem
           key={rule.id}
-          text={rule.postType}
+          text={rule.name}
           after={
             <Text type="callout" weight="medium">
               <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>

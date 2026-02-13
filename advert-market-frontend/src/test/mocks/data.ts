@@ -236,20 +236,24 @@ export const mockChannels = [
 
 // --- Channel detail data (pricing rules, topics, stats, description, owner) ---
 
+type MockPricingRule = {
+  id: number;
+  channelId: number;
+  name: string;
+  description?: string | null;
+  postTypes: string[];
+  priceNano: number;
+  isActive: boolean;
+  sortOrder: number;
+};
+
 type MockChannelDetail = {
   description: string;
   ownerId: number;
   createdAt: string;
   avgReach: number;
   postFrequencyHours?: number;
-  pricingRules: {
-    id: number;
-    postType: string;
-    priceNano: number;
-    durationHours?: number;
-    postFrequencyHours?: number;
-    description?: string;
-  }[];
+  pricingRules: MockPricingRule[];
   topics: { slug: string; name: string }[];
   rules?: {
     prohibitedTopics?: string[];
@@ -275,34 +279,42 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     pricingRules: [
       {
         id: 1,
-        postType: 'NATIVE',
+        channelId: 1,
+        name: 'Native 24h',
+        postTypes: ['NATIVE'],
         priceNano: 5_000_000_000,
-        durationHours: 24,
-        postFrequencyHours: 6,
+        isActive: true,
+        sortOrder: 1,
         description: 'Пост в стиле канала с интеграцией продукта',
       },
       {
         id: 2,
-        postType: 'NATIVE',
+        channelId: 1,
+        name: 'Native 48h',
+        postTypes: ['NATIVE'],
         priceNano: 8_000_000_000,
-        durationHours: 48,
-        postFrequencyHours: 6,
+        isActive: true,
+        sortOrder: 2,
         description: 'Нативный пост с удержанием 48ч',
       },
       {
         id: 3,
-        postType: 'STORY',
+        channelId: 1,
+        name: 'Story 24h',
+        postTypes: ['STORY'],
         priceNano: 4_000_000_000,
-        durationHours: 24,
-        postFrequencyHours: 6,
+        isActive: true,
+        sortOrder: 3,
         description: 'Кружок или фото в историях канала',
       },
       {
         id: 4,
-        postType: 'REPOST',
+        channelId: 1,
+        name: 'Repost 72h',
+        postTypes: ['REPOST'],
         priceNano: 3_000_000_000,
-        durationHours: 72,
-        postFrequencyHours: 6,
+        isActive: true,
+        sortOrder: 4,
         description: 'Пересылка вашего поста с комментарием',
       },
     ],
@@ -333,14 +345,32 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     pricingRules: [
       {
         id: 5,
-        postType: 'NATIVE',
+        channelId: 2,
+        name: 'Native 24h',
+        postTypes: ['NATIVE'],
         priceNano: 3_000_000_000,
-        durationHours: 24,
-        postFrequencyHours: 12,
+        isActive: true,
+        sortOrder: 1,
         description: 'Обзор продукта в формате статьи',
       },
-      { id: 6, postType: 'NATIVE', priceNano: 5_000_000_000, durationHours: 48, postFrequencyHours: 12 },
-      { id: 7, postType: 'STORY', priceNano: 2_500_000_000, durationHours: 24, postFrequencyHours: 12 },
+      {
+        id: 6,
+        channelId: 2,
+        name: 'Native 48h',
+        postTypes: ['NATIVE'],
+        priceNano: 5_000_000_000,
+        isActive: true,
+        sortOrder: 2,
+      },
+      {
+        id: 7,
+        channelId: 2,
+        name: 'Story 24h',
+        postTypes: ['STORY'],
+        priceNano: 2_500_000_000,
+        isActive: true,
+        sortOrder: 3,
+      },
     ],
     topics: [{ slug: 'tech', name: 'Технологии' }],
   },
@@ -352,15 +382,22 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     pricingRules: [
       {
         id: 8,
-        postType: 'NATIVE',
+        channelId: 3,
+        name: 'Native 24h',
+        postTypes: ['NATIVE'],
         priceNano: 4_500_000_000,
-        durationHours: 24,
+        isActive: true,
+        sortOrder: 1,
         description: 'Развёрнутый обзор AI-инструмента с примерами',
       },
       {
         id: 9,
-        postType: 'INTEGRATION',
+        channelId: 3,
+        name: 'Integration',
+        postTypes: ['INTEGRATION'],
         priceNano: 6_500_000_000,
+        isActive: true,
+        sortOrder: 2,
         description: 'Упоминание продукта внутри тематической статьи',
       },
     ],
@@ -378,26 +415,41 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     pricingRules: [
       {
         id: 10,
-        postType: 'NATIVE',
+        channelId: 4,
+        name: 'Native 24h',
+        postTypes: ['NATIVE'],
         priceNano: 8_000_000_000,
-        durationHours: 24,
-        postFrequencyHours: 4,
+        isActive: true,
+        sortOrder: 1,
         description: 'Аналитический пост с упоминанием продукта',
       },
       {
         id: 11,
-        postType: 'NATIVE',
+        channelId: 4,
+        name: 'Native 72h',
+        postTypes: ['NATIVE'],
         priceNano: 14_000_000_000,
-        durationHours: 72,
-        postFrequencyHours: 4,
+        isActive: true,
+        sortOrder: 2,
         description: 'Нативный пост с удержанием 72ч',
       },
-      { id: 12, postType: 'STORY', priceNano: 6_000_000_000, durationHours: 24, postFrequencyHours: 4 },
+      {
+        id: 12,
+        channelId: 4,
+        name: 'Story 24h',
+        postTypes: ['STORY'],
+        priceNano: 6_000_000_000,
+        isActive: true,
+        sortOrder: 3,
+      },
       {
         id: 13,
-        postType: 'REVIEW',
+        channelId: 4,
+        name: 'Review',
+        postTypes: ['REVIEW'],
         priceNano: 12_000_000_000,
-        postFrequencyHours: 4,
+        isActive: true,
+        sortOrder: 4,
         description: 'Подробный обзор с личным мнением автора',
       },
     ],
@@ -415,17 +467,22 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     pricingRules: [
       {
         id: 14,
-        postType: 'NATIVE',
+        channelId: 5,
+        name: 'Native 24h',
+        postTypes: ['NATIVE'],
         priceNano: 2_000_000_000,
-        durationHours: 24,
-        postFrequencyHours: 48,
+        isActive: true,
+        sortOrder: 1,
         description: 'Кейс или обзор инструмента',
       },
       {
         id: 15,
-        postType: 'MENTION',
+        channelId: 5,
+        name: 'Mention',
+        postTypes: ['MENTION'],
         priceNano: 1_500_000_000,
-        postFrequencyHours: 48,
+        isActive: true,
+        sortOrder: 2,
         description: 'Упоминание в тематическом посте',
       },
     ],

@@ -172,7 +172,15 @@ export const handlers = [
       avgReach: detail?.avgReach ?? Math.round(channel.subscriberCount * 0.3),
       ...(detail?.postFrequencyHours != null ? { postFrequencyHours: detail.postFrequencyHours } : {}),
       pricingRules: detail?.pricingRules ?? [
-        { id: channelId * 100, postType: 'NATIVE', priceNano: channel.pricePerPostNano ?? 1_000_000_000 },
+        {
+          id: channelId * 100,
+          channelId,
+          name: 'Native',
+          postTypes: ['NATIVE'],
+          priceNano: channel.pricePerPostNano ?? 1_000_000_000,
+          isActive: true,
+          sortOrder: 1,
+        },
       ],
       topics:
         detail?.topics ??

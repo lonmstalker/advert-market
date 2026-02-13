@@ -1,5 +1,6 @@
 package com.advertmarket.shared.pagination;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -35,5 +36,14 @@ public record CursorPage<T>(
     /** Returns {@code true} if there are more pages. */
     public boolean hasMore() {
         return nextCursor != null;
+    }
+
+    /**
+     * Jackson-visible alias for {@link #hasMore()}.
+     * Frontend pagination schema expects this field.
+     */
+    @JsonProperty("hasNext")
+    public boolean hasNext() {
+        return hasMore();
     }
 }

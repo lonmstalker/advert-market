@@ -28,6 +28,9 @@ export const problemDetailSchema = z.object({
   status: z.number(),
   detail: z.string().optional(),
   instance: z.string().optional(),
+  error_code: z.string().optional(),
+  timestamp: z.string().optional(),
+  correlation_id: z.string().optional(),
 });
 
 export type ProblemDetail = z.infer<typeof problemDetailSchema>;

@@ -54,15 +54,11 @@ function getMinPrice(rules: PricingRule[]): number | null {
 }
 
 function getOverlapLabel(
-  rule: PricingRule,
+  _rule: PricingRule,
   channelFreq: number | undefined,
   t: (key: string, opts?: Record<string, unknown>) => string,
-): { label: string; hasTooltip: boolean; freq?: number; dur?: number } | null {
-  const freq = rule.postFrequencyHours ?? channelFreq;
-  const dur = rule.durationHours;
-  if (freq && dur) return { label: t('catalog.channel.overlapFormat', { freq, dur }), hasTooltip: true, freq, dur };
-  if (dur) return { label: t('catalog.channel.onlyDuration', { dur }), hasTooltip: false };
-  if (freq) return { label: t('catalog.channel.onlyFrequency', { freq }), hasTooltip: false };
+): { label: string; hasTooltip: boolean; freq?: number } | null {
+  if (channelFreq) return { label: t('catalog.channel.onlyFrequency', { freq: channelFreq }), hasTooltip: false };
   return null;
 }
 
@@ -991,8 +987,9 @@ function PricingRulesList({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {rules.map((rule) => {
         const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
-        const localizedType = t(`catalog.channel.postType.${rule.postType}`, {
-          defaultValue: rule.postType,
+        const primaryType = rule.postTypes[0] ?? 'NATIVE';
+        const localizedType = t(`catalog.channel.postType.${primaryType}`, {
+          defaultValue: rule.name,
         });
         const overlap = getOverlapLabel(rule, channel.postFrequencyHours, t);
         return (
@@ -1000,7 +997,7 @@ function PricingRulesList({
             <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={postTypeIconContainerStyle}>
                 <PostTypeIcon
-                  postType={rule.postType}
+                  postType={primaryType}
                   style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
                 />
               </div>
