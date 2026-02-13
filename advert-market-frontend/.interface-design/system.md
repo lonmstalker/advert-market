@@ -1,6 +1,7 @@
 # Interface Design System — Ad Marketplace
 
-> Telegram Mini App marketplace for channel advertising with TON escrow payments.
+> Living patterns file. Base design rules are in [DESIGN_GUIDELINES.md](../DESIGN_GUIDELINES.md).
+> This file captures patterns discovered during development that extend the base guidelines.
 
 ---
 
@@ -26,197 +27,6 @@ The product's unique element. A vertical timeline showing deal progress through 
 - Connects to role-specific action buttons below the timeline
 
 This appears on every deal detail page. It's the first thing users look at.
-
----
-
-## Depth Strategy: Borders-only
-
-Telegram Mini Apps live inside a messenger — shadows feel foreign. Structure comes from:
-
-- `--color-border-separator` for list dividers (via Group/GroupItem)
-- `--color-background-base` vs `--color-background-secondary` for surface elevation
-- No drop shadows. No box-shadow. Ever.
-
----
-
-## Surfaces
-
-```
-Page background:     --color-background-secondary
-Card/section:        --color-background-base (via <Group>)
-Modal:               --color-background-modal
-Overlay:             --color-background-overlay
-Input (inset):       --color-background-secondary (slightly recessed)
-```
-
-Sidebar: N/A (mobile-only, tab navigation).
-
----
-
-## Typography
-
-Provided by UI Kit `<Text type="..." weight="...">`. Key mappings:
-
-| Context              | Type          | Weight    |
-|----------------------|---------------|-----------|
-| Wallet balance       | `hero`        | `bold`    |
-| Page heading         | `title1`      | `bold`    |
-| Section heading      | `title2`      | `bold`    |
-| Card title           | `body`        | `medium`  |
-| Card description     | `subheadline1`| `regular` |
-| Amounts in lists     | `callout`     | `medium`  |
-| Metadata/timestamps  | `subheadline2`| `regular` |
-| Group footer         | `footnote`    | `regular` |
-| Badges/labels        | `caption1`    | `medium`  |
-
-**Rule:** Max 3 typography levels per viewport.
-
----
-
-## Spacing
-
-Base unit: **4px**. All spacing is multiples of 4.
-
-| Token           | Value | Use                                |
-|-----------------|-------|------------------------------------|
-| `--space-xs`    | 4px   | Icon-to-text gap                   |
-| `--space-sm`    | 8px   | Intra-component gaps               |
-| `--space-md`    | 12px  | Between paired buttons             |
-| `--space-base`  | 16px  | Page padding, between sections     |
-| `--space-lg`    | 24px  | Empty state CTA gap, major breaks  |
-| `--space-xl`    | 32px  | Hero element breathing room        |
-| `--space-2xl`   | 40px  | Empty state top/bottom padding     |
-
----
-
-## Color Semantics
-
-All from Telegram CSS variables — no custom palette.
-
-| Purpose             | Variable                       |
-|---------------------|--------------------------------|
-| Primary action      | `--color-accent-primary`       |
-| Income/profit       | `--color-state-success`        |
-| Expense/error       | `--color-state-destructive`    |
-| Pending/warning     | `--color-state-warning`        |
-| Primary text        | `--color-foreground-primary`   |
-| Secondary text      | `--color-foreground-secondary` |
-| Hints/placeholder   | `--color-foreground-tertiary`  |
-| Links               | `--color-link`                 |
-
-**Financial color rule:**
-- Green = money received (success)
-- Red = money spent or error (destructive)
-- Accent = active/in-progress deal states
-- Secondary = neutral/cancelled states
-
----
-
-## Financial Data
-
-- All amounts in nanoTON (bigint), formatted as `XX.XX TON`
-- `font-variant-numeric: tabular-nums` on all amounts
-- Balance is the largest element on wallet screen (`hero bold`)
-- Positive changes: `+10.00 TON` in success color
-- Negative changes: `-5.00 TON` in destructive color
-- Thousands separator: space (RU) — `1 250 000`
-- Abbreviations in lists: `125K`, `1.2M`
-
----
-
-## Component Patterns
-
-### List Items (primary pattern)
-
-Everything is a list. GroupItem is the building block.
-
-```
-[avatar/icon]  [title + subtitle]  ...  [value/action]  [chevron?]
-```
-
-Max 4 data points per item:
-- Channel: avatar + name + subscribers + price
-- Deal: channel avatar + channel name + post type + status badge
-- Transaction: type icon + description + date + amount (colored)
-
-### Deal Status Badge
-
-Exhaustive mapping of 16 states to Text `color` prop:
-- New/Active/In-progress: `accent`
-- Completed: success (green)
-- Disputed: `danger` (red)
-- Cancelled/Neutral: `secondary`
-
-### Action Buttons
-
-- One primary CTA per viewport max
-- Action pairs: secondary (left) + primary (right), `gap: 12px`
-- Quick actions (wallet): circular 56px buttons with caption labels
-- All interactive elements wrapped in `pressScale` animation
-
-### Empty States
-
-Every list has one:
-- Emoji (48px) + title (title3 bold) + description (body secondary) + CTA button
-- Animation: `scaleIn`
-- CTA is mandatory (except disputes)
-
-### Modals & Sheets
-
-- Sheet: content-rich (filters, previews) — `slideFromBottom`
-- DialogModal: binary decisions — `scaleIn`
-- Toast: transient feedback — `toast` animation, 3s duration
-- Never nest modals (Sheet -> DialogModal is the only exception)
-
----
-
-## Animation Presets
-
-All defined in `src/shared/ui/animations.ts`. Key mappings:
-
-| Context              | Preset           |
-|----------------------|------------------|
-| Page transition      | `slideFromRight` |
-| Section appear       | `slideUp`        |
-| Empty state          | `scaleIn`        |
-| List items           | `staggerChildren` + `listItem` (max 8-10 items) |
-| Interactive press    | `pressScale`     |
-| Sheet open           | `slideFromBottom` |
-| Toast                | `toast`          |
-| Skeleton shimmer     | `shimmer`        |
-| Loading pulse        | `pulse`          |
-
-**Rules:**
-- No animations during scroll
-- `AnimatePresence mode="wait"` for loading -> content
-- `pressScale` on ALL interactive elements
-
----
-
-## Loading States
-
-| Level              | Component                          |
-|--------------------|------------------------------------|
-| App init           | Centered `Spinner` 40px accent     |
-| Section loading    | `Group skeleton={{ show: true }}`  |
-| Button submitting  | `Button loading`                   |
-| Inline loading     | `Spinner` 20px                     |
-
-Skeleton must mirror the shape of future content.
-
----
-
-## Information Architecture
-
-```
-Tab 1: Catalog     → Channel List → Channel Detail → Create Deal
-Tab 2: Deals       → Deal List → Deal Detail → [10+ sub-pages]
-Tab 3: Wallet      → Summary → Withdraw / History → Transaction Detail
-Tab 4: Profile     → Settings → Channels → Manage → Team
-```
-
-Navigation: Telegram BackButton via SDK. No custom back arrows.
-Deep links: `channel_{id}`, `deal_{id}`, `dispute_{id}`.
 
 ---
 
@@ -277,18 +87,22 @@ State-driven slides instead of scroll-snap:
 
 UI Kit `<Text>` does not inherit `textAlign` from parent. Always pass `align="center"` prop explicitly when centering is needed.
 
----
+### Channel Detail Page (catalog)
 
-## Checklist (every screen)
+Stats displayed as compact icon-stat grid (not GroupItem list):
 
-- [ ] Max 4 data points per list item
-- [ ] Max 3 typography levels in viewport
-- [ ] One primary CTA max
-- [ ] No hardcoded colors (only `--color-*`)
-- [ ] Empty state with CTA for every list
-- [ ] Skeleton matching content shape
-- [ ] 16px between Group sections
-- [ ] `pressScale` on interactive elements
-- [ ] Telegram BackButton (not custom)
-- [ ] `tabular-nums` on financial data
-- [ ] Button in `flexShrink: 0` container (never in stretching flex)
+- 3-column grid: Subscribers | Avg. reach | Engagement
+- Reach rate shown as percentage below avg reach (`36% reach`)
+- Hero CPM calculated from min price / avg reach, shown in pricing section
+- Language badge and channel age shown near username
+- Owner sees Edit button, non-owner sees Create deal CTA
+- Private channels show "Join channel" link instead of "Open channel in Telegram"
+
+### Catalog Page (channel list)
+
+- CategoryChipRow with horizontal scroll, sorted alphabetically with "All topics" first
+- Search with 300ms debounce
+- Infinite scroll via IntersectionObserver
+- Filters in bottom Sheet
+- Empty state with "Reset filters" CTA
+- Channel cards: custom ChannelCatalogCard (not GroupItem) with avatar, title, stats row, price badge
