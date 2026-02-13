@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -31,7 +32,9 @@ class JooqUserRepositoryIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:18-alpine");
+            new PostgreSQLContainer<>(DockerImageName
+                    .parse("paradedb/paradedb:latest")
+                    .asCompatibleSubstituteFor("postgres"));
 
     private static DSLContext dsl;
     private JooqUserRepository repository;

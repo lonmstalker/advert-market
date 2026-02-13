@@ -27,6 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -42,7 +43,9 @@ class JooqPricingRuleRepositoryIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:18-alpine");
+            new PostgreSQLContainer<>(DockerImageName
+                    .parse("paradedb/paradedb:latest")
+                    .asCompatibleSubstituteFor("postgres"));
 
     private static DSLContext dsl;
     private JooqPricingRuleRepository repository;

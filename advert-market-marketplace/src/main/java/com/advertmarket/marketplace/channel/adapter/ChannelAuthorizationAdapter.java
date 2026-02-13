@@ -8,6 +8,7 @@ import com.advertmarket.shared.security.SecurityContextUtil;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,6 +39,15 @@ public class ChannelAuthorizationAdapter implements ChannelAuthorizationPort {
                 dsl.selectOne()
                         .from(CHANNEL_MEMBERSHIPS)
                         .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
-                        .and(CHANNEL_MEMBERSHIPS.USER_ID.eq(userId)));
+                        .and(CHANNEL_MEMBERSHIPS.USER_ID.eq(userId))
+                        .and(CHANNEL_MEMBERSHIPS.ROLE
+                                .eq(ChannelMembershipRole.OWNER.name())
+                                .or(CHANNEL_MEMBERSHIPS.ROLE
+                                        .eq(ChannelMembershipRole.MANAGER.name())
+                                        .and(DSL.field(
+                                                "rights->>{0}",
+                                                String.class,
+                                                DSL.val(right))
+                                                .eq("true")))));
     }
 }

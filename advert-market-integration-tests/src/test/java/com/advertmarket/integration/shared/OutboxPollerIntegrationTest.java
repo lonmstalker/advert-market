@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -38,7 +39,9 @@ class OutboxPollerIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> pg =
-            new PostgreSQLContainer<>("postgres:18-alpine")
+            new PostgreSQLContainer<>(DockerImageName
+                    .parse("paradedb/paradedb:latest")
+                    .asCompatibleSubstituteFor("postgres"))
                     .withDatabaseName("test_outbox");
 
     private JooqOutboxRepository repository;

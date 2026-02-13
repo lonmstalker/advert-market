@@ -81,6 +81,16 @@ public final class ErrorCodes {
     public static final @Fenum(FenumGroup.ERROR_CODE) String PRICING_RULE_NOT_FOUND =
             "PRICING_RULE_NOT_FOUND";
 
+    // --- Team ---
+    public static final @Fenum(FenumGroup.ERROR_CODE) String TEAM_MEMBER_NOT_FOUND =
+            "TEAM_MEMBER_NOT_FOUND";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String TEAM_MEMBER_ALREADY_EXISTS =
+            "TEAM_MEMBER_ALREADY_EXISTS";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String TEAM_LIMIT_EXCEEDED =
+            "TEAM_LIMIT_EXCEEDED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String TEAM_OWNER_PROTECTED =
+            "TEAM_OWNER_PROTECTED";
+
     // --- Dispute ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String DISPUTE_NOT_FOUND =
             "DISPUTE_NOT_FOUND";

@@ -81,6 +81,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -105,7 +106,9 @@ class AuthHttpIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:18-alpine");
+            new PostgreSQLContainer<>(DockerImageName
+                    .parse("paradedb/paradedb:latest")
+                    .asCompatibleSubstituteFor("postgres"));
 
     @Container
     static final GenericContainer<?> redis =
