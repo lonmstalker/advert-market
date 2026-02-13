@@ -27,9 +27,9 @@ class ConsumerGroupsTest {
     }
 
     @Test
-    @DisplayName("Has exactly 10 consumer groups")
+    @DisplayName("Has exactly 13 consumer groups")
     void hasExpectedCount() {
-        assertThat(getConstants()).hasSize(10);
+        assertThat(getConstants()).hasSize(13);
     }
 
     private List<String> getConstants() {
