@@ -60,6 +60,8 @@ export const mockChannels = [
     avgViews: 45000,
     engagementRate: 3.6,
     isActive: true,
+    isVerified: true,
+    language: 'ru',
   },
   {
     id: 2,
@@ -71,6 +73,8 @@ export const mockChannels = [
     avgViews: 28000,
     engagementRate: 3.1,
     isActive: true,
+    isVerified: true,
+    language: 'ru',
   },
   {
     id: 3,
@@ -82,6 +86,8 @@ export const mockChannels = [
     avgViews: 22000,
     engagementRate: 4.8,
     isActive: true,
+    isVerified: false,
+    language: 'en',
   },
   {
     id: 4,
@@ -93,6 +99,8 @@ export const mockChannels = [
     avgViews: 85000,
     engagementRate: 4.1,
     isActive: true,
+    isVerified: true,
+    language: 'ru',
   },
   {
     id: 5,
@@ -104,6 +112,8 @@ export const mockChannels = [
     avgViews: 12000,
     engagementRate: 2.7,
     isActive: true,
+    isVerified: false,
+    language: 'ru',
   },
   {
     id: 6,
@@ -115,6 +125,8 @@ export const mockChannels = [
     avgViews: 9500,
     engagementRate: 5.2,
     isActive: true,
+    isVerified: false,
+    language: 'en',
   },
   {
     id: 7,
@@ -126,6 +138,8 @@ export const mockChannels = [
     avgViews: 52000,
     engagementRate: 3.3,
     isActive: true,
+    isVerified: true,
+    language: 'ru',
   },
   {
     id: 8,
@@ -137,6 +151,8 @@ export const mockChannels = [
     avgViews: 25000,
     engagementRate: 3.2,
     isActive: true,
+    isVerified: false,
+    language: 'ru',
   },
   {
     id: 9,
@@ -148,6 +164,8 @@ export const mockChannels = [
     avgViews: 8000,
     engagementRate: 6.1,
     isActive: true,
+    isVerified: false,
+    language: 'en',
   },
   {
     id: 10,
@@ -159,6 +177,8 @@ export const mockChannels = [
     avgViews: 15000,
     engagementRate: 2.8,
     isActive: true,
+    isVerified: false,
+    language: 'ru',
   },
   {
     id: 11,
@@ -170,6 +190,8 @@ export const mockChannels = [
     avgViews: 110000,
     engagementRate: 3.2,
     isActive: true,
+    isVerified: true,
+    language: 'ru',
   },
   {
     id: 12,
@@ -181,6 +203,8 @@ export const mockChannels = [
     avgViews: 180000,
     engagementRate: 3.7,
     isActive: true,
+    isVerified: true,
+    language: 'ru',
   },
   {
     id: 13,
@@ -192,6 +216,8 @@ export const mockChannels = [
     avgViews: 200000,
     engagementRate: 3.8,
     isActive: true,
+    isVerified: false,
+    language: 'en',
   },
   {
     id: 14,
@@ -203,6 +229,8 @@ export const mockChannels = [
     avgViews: 14000,
     engagementRate: 3.4,
     isActive: true,
+    isVerified: false,
+    language: 'ru',
   },
 ];
 
@@ -215,7 +243,7 @@ export const mockChannelDetails: Record<
     ownerId: number;
     createdAt: string;
     avgReach: number;
-    pricingRules: { id: number; postType: string; priceNano: number }[];
+    pricingRules: { id: number; postType: string; priceNano: number; durationHours?: number; description?: string }[];
     topics: { slug: string; name: string }[];
   }
 > = {
@@ -225,9 +253,9 @@ export const mockChannelDetails: Record<
     createdAt: '2025-06-01T10:00:00Z',
     avgReach: 45000,
     pricingRules: [
-      { id: 1, postType: 'NATIVE', priceNano: 5_000_000_000 },
-      { id: 2, postType: 'STORY', priceNano: 4_000_000_000 },
-      { id: 3, postType: 'REPOST', priceNano: 3_000_000_000 },
+      { id: 1, postType: 'NATIVE', priceNano: 5_000_000_000, description: 'Пост в стиле канала с интеграцией продукта, остаётся навсегда' },
+      { id: 2, postType: 'STORY', priceNano: 4_000_000_000, durationHours: 24, description: 'Кружок или фото в историях канала' },
+      { id: 3, postType: 'REPOST', priceNano: 3_000_000_000, durationHours: 48, description: 'Пересылка вашего поста с комментарием' },
     ],
     topics: [
       { slug: 'crypto', name: 'Криптовалюта' },
@@ -240,8 +268,8 @@ export const mockChannelDetails: Record<
     createdAt: '2025-07-10T12:00:00Z',
     avgReach: 28000,
     pricingRules: [
-      { id: 4, postType: 'NATIVE', priceNano: 3_000_000_000 },
-      { id: 5, postType: 'STORY', priceNano: 2_500_000_000 },
+      { id: 4, postType: 'NATIVE', priceNano: 3_000_000_000, description: 'Обзор продукта в формате статьи' },
+      { id: 5, postType: 'STORY', priceNano: 2_500_000_000, durationHours: 24 },
     ],
     topics: [{ slug: 'tech', name: 'Технологии' }],
   },
@@ -251,8 +279,8 @@ export const mockChannelDetails: Record<
     createdAt: '2025-08-05T09:00:00Z',
     avgReach: 22000,
     pricingRules: [
-      { id: 6, postType: 'NATIVE', priceNano: 4_500_000_000 },
-      { id: 7, postType: 'INTEGRATION', priceNano: 6_500_000_000 },
+      { id: 6, postType: 'NATIVE', priceNano: 4_500_000_000, description: 'Развёрнутый обзор AI-инструмента с примерами' },
+      { id: 7, postType: 'INTEGRATION', priceNano: 6_500_000_000, description: 'Упоминание продукта внутри тематической статьи' },
     ],
     topics: [
       { slug: 'tech', name: 'Технологии' },
@@ -265,9 +293,9 @@ export const mockChannelDetails: Record<
     createdAt: '2025-05-20T14:00:00Z',
     avgReach: 85000,
     pricingRules: [
-      { id: 8, postType: 'NATIVE', priceNano: 8_000_000_000 },
-      { id: 9, postType: 'STORY', priceNano: 6_000_000_000 },
-      { id: 10, postType: 'REVIEW', priceNano: 12_000_000_000 },
+      { id: 8, postType: 'NATIVE', priceNano: 8_000_000_000, description: 'Аналитический пост с упоминанием продукта' },
+      { id: 9, postType: 'STORY', priceNano: 6_000_000_000, durationHours: 24 },
+      { id: 10, postType: 'REVIEW', priceNano: 12_000_000_000, description: 'Подробный обзор с личным мнением автора' },
     ],
     topics: [
       { slug: 'finance', name: 'Финансы' },
