@@ -19,4 +19,9 @@ public record CategoryDto(
         @NonNull Map<String, String> localizedName,
         int sortOrder
 ) {
+
+    /** Creates a DTO with a defensive copy of localizedName. */
+    public CategoryDto {
+        localizedName = Map.copyOf(localizedName);
+    }
 }

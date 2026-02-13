@@ -10,9 +10,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.springframework.stereotype.Repository;
@@ -57,7 +57,7 @@ public class JooqUserRepository implements UserRepository {
     }
 
     @Override
-    public @Nullable UserProfile findById(@NonNull UserId userId) {
+    public @NonNull Optional<UserProfile> findById(@NonNull UserId userId) {
         Record record = dsl.select()
                 .from(USERS)
                 .where(USERS.ID.eq(userId.value()))
@@ -65,11 +65,8 @@ public class JooqUserRepository implements UserRepository {
                         .or(USERS.IS_DELETED.isNull()))
                 .fetchOne();
 
-        if (record == null) {
-            return null;
-        }
-
-        return mapToProfile(record);
+        return Optional.ofNullable(
+                record != null ? mapToProfile(record) : null);
     }
 
     @Override

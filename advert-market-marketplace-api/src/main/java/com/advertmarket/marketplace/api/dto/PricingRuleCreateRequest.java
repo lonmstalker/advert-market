@@ -27,4 +27,9 @@ public record PricingRuleCreateRequest(
         @Positive long priceNano,
         int sortOrder
 ) {
+
+    /** Creates a request with a defensive copy of postTypes. */
+    public PricingRuleCreateRequest {
+        postTypes = Set.copyOf(postTypes);
+    }
 }

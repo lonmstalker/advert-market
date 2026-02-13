@@ -16,4 +16,9 @@ public record PostTypeDto(
         @NonNull PostType value,
         @NonNull Map<String, String> localizedName
 ) {
+
+    /** Creates a DTO with a defensive copy of localizedName. */
+    public PostTypeDto {
+        localizedName = Map.copyOf(localizedName);
+    }
 }

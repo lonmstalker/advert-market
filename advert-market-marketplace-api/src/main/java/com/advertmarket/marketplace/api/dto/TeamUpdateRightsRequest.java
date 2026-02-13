@@ -15,4 +15,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public record TeamUpdateRightsRequest(
         @NotNull @NonNull Set<@NonNull ChannelRight> rights
 ) {
+
+    /** Creates a request with a defensive copy of rights. */
+    public TeamUpdateRightsRequest {
+        rights = Set.copyOf(rights);
+    }
 }

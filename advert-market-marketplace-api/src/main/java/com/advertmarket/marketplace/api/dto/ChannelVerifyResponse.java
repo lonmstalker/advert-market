@@ -40,6 +40,11 @@ public record ChannelVerifyResponse(
             boolean canEditMessages,
             @NonNull List<String> missingPermissions
     ) {
+
+        /** Creates a BotStatus with a defensive copy of missingPermissions. */
+        public BotStatus {
+            missingPermissions = List.copyOf(missingPermissions);
+        }
     }
 
     /**

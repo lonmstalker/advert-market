@@ -3,7 +3,7 @@ package com.advertmarket.identity.service;
 import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
 import com.advertmarket.identity.api.dto.TelegramUserData;
-import com.advertmarket.identity.api.port.AuthService;
+import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
@@ -17,11 +17,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;
 
 /**
- * Default implementation of {@link AuthService}.
+ * Default implementation of {@link AuthPort}.
  */
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService {
+public class AuthServiceImpl implements AuthPort {
 
     private final InitDataValidatorPort initDataValidator;
     private final UserRepository userRepository;

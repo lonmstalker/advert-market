@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
-import com.advertmarket.identity.api.port.AuthService;
+import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.LoginRateLimiterPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,12 +23,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class AuthControllerTest {
 
     private MockMvc mockMvc;
-    private AuthService authService;
+    private AuthPort authService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        authService = mock(AuthService.class);
+        authService = mock(AuthPort.class);
         LoginRateLimiterPort rateLimiter = mock(LoginRateLimiterPort.class);
         mockMvc = MockMvcBuilders
                 .standaloneSetup(

@@ -10,7 +10,6 @@ import com.advertmarket.communication.bot.internal.block.UserBlockProperties;
 import com.advertmarket.identity.adapter.JooqUserRepository;
 import com.advertmarket.identity.adapter.RedisTokenBlacklist;
 import com.advertmarket.identity.api.dto.TelegramUserData;
-import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
@@ -167,9 +166,10 @@ class IdentityWorkflowIntegrationTest {
         userRepository.upsert(new TelegramUserData(
                 userId, "John", "Doe", "johndoe", "en"));
 
-        UserProfile profile = userRepository.findById(new UserId(userId));
-        assertThat(profile).isNotNull();
-        assertThat(profile.username()).isEqualTo("johndoe");
+        assertThat(userRepository.findById(new UserId(userId)))
+                .isPresent()
+                .hasValueSatisfying(profile ->
+                        assertThat(profile.username()).isEqualTo("johndoe"));
 
         String token = jwtTokenProvider.generateToken(
                 new UserId(userId), false);
@@ -178,7 +178,7 @@ class IdentityWorkflowIntegrationTest {
         String jti = auth.getJti();
         authService.logout(jti, auth.getTokenExpSeconds());
 
-        assertThat(userRepository.findById(new UserId(userId))).isNull();
+        assertThat(userRepository.findById(new UserId(userId))).isEmpty();
 
         assertThat(runFilter(token)).isNull();
     }
@@ -189,14 +189,15 @@ class IdentityWorkflowIntegrationTest {
         userRepository.upsert(new TelegramUserData(
                 42L, "John", "Doe", "johndoe", "en"));
         userService.deleteAccount(new UserId(42L));
-        assertThat(userRepository.findById(new UserId(42L))).isNull();
+        assertThat(userRepository.findById(new UserId(42L))).isEmpty();
 
         userRepository.upsert(new TelegramUserData(
                 42L, "John", "Doe", "johndoe", "en"));
 
-        UserProfile profile = userRepository.findById(new UserId(42L));
-        assertThat(profile).isNotNull();
-        assertThat(profile.username()).isEqualTo("johndoe");
+        assertThat(userRepository.findById(new UserId(42L)))
+                .isPresent()
+                .hasValueSatisfying(profile ->
+                        assertThat(profile.username()).isEqualTo("johndoe"));
 
         String newToken = jwtTokenProvider.generateToken(
                 new UserId(42L), false);

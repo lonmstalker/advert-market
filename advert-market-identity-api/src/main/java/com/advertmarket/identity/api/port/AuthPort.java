@@ -7,7 +7,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * Authenticates users via Telegram initData.
  */
-public interface AuthService {
+public interface AuthPort {
 
     /**
      * Validates Telegram initData and issues a JWT.

@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * User profile operations.
  */
-public interface UserService {
+public interface UserPort {
 
     /**
      * Returns the profile for the given user.

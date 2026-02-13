@@ -21,5 +21,5 @@ public interface DealAuthorizationPort {
     boolean isOwner(@NonNull DealId dealId);
 
     /** Returns the channel ID associated with the deal. */
-    long channelId(@NonNull DealId dealId);
+    long getChannelId(@NonNull DealId dealId);
 }

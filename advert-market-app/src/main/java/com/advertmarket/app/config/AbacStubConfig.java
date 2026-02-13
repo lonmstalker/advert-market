@@ -37,7 +37,7 @@ public class AbacStubConfig {
             }
 
             @Override
-            public long channelId(@NonNull DealId dealId) {
+            public long getChannelId(@NonNull DealId dealId) {
                 return 0;
             }
         };

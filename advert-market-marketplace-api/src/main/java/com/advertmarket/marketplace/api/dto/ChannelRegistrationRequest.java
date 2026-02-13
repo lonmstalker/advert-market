@@ -22,4 +22,9 @@ public record ChannelRegistrationRequest(
         @Schema(description = "Price per post in nanoTON")
         @Nullable Long pricePerPostNano
 ) {
+
+    /** Creates a request with a defensive copy of categories. */
+    public ChannelRegistrationRequest {
+        categories = categories != null ? List.copyOf(categories) : null;
+    }
 }

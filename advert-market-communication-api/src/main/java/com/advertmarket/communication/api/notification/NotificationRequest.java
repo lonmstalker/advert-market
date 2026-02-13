@@ -1,6 +1,8 @@
 package com.advertmarket.communication.api.notification;
 
 import java.util.Map;
+import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Request to send a notification to a user.
@@ -11,12 +13,14 @@ import java.util.Map;
  */
 public record NotificationRequest(
         long recipientUserId,
-        NotificationType type,
-        Map<String, String> variables
+        @NonNull NotificationType type,
+        @NonNull Map<String, String> variables
 ) {
 
-    /** Creates a notification request with an immutable copy of variables. */
+    /** Creates a request with null-checks and a defensive copy of variables. */
     public NotificationRequest {
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(variables, "variables");
         variables = Map.copyOf(variables);
     }
 }

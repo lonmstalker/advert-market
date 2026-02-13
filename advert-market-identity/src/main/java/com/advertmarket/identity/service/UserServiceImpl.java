@@ -2,8 +2,8 @@ package com.advertmarket.identity.service;
 
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.port.UserPort;
 import com.advertmarket.identity.api.port.UserRepository;
-import com.advertmarket.identity.api.port.UserService;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.metric.MetricNames;
@@ -14,24 +14,21 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;
 
 /**
- * Default implementation of {@link UserService}.
+ * Default implementation of {@link UserPort}.
  */
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserPort {
 
     private final UserRepository userRepository;
     private final MetricsFacade metricsFacade;
 
     @Override
     public @NonNull UserProfile getProfile(@NonNull UserId userId) {
-        UserProfile profile = userRepository.findById(userId);
-        if (profile == null) {
-            throw new EntityNotFoundException(
-                    ErrorCodes.USER_NOT_FOUND, "User",
-                    String.valueOf(userId.value()));
-        }
-        return profile;
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        ErrorCodes.USER_NOT_FOUND, "User",
+                        String.valueOf(userId.value())));
     }
 
     @Override

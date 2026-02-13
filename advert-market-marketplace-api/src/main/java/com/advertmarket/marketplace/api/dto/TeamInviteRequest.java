@@ -18,4 +18,9 @@ public record TeamInviteRequest(
         @Positive long userId,
         @NotNull @NonNull Set<@NonNull ChannelRight> rights
 ) {
+
+    /** Creates a request with a defensive copy of rights. */
+    public TeamInviteRequest {
+        rights = Set.copyOf(rights);
+    }
 }

@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.identity.adapter.JooqUserRepository;
 import com.advertmarket.identity.api.dto.TelegramUserData;
-import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.shared.model.UserId;
 import java.util.List;
@@ -45,10 +44,12 @@ class JooqUserRepositoryIntegrationTest {
 
         assertThat(isOperator).isFalse();
 
-        UserProfile profile = repository.findById(new UserId(42L));
-        assertThat(profile).isNotNull();
-        assertThat(profile.username()).isEqualTo("johndoe");
-        assertThat(profile.displayName()).isEqualTo("John Doe");
+        assertThat(repository.findById(new UserId(42L)))
+                .isPresent()
+                .hasValueSatisfying(profile -> {
+                    assertThat(profile.username()).isEqualTo("johndoe");
+                    assertThat(profile.displayName()).isEqualTo("John Doe");
+                });
     }
 
     @Test
@@ -62,10 +63,12 @@ class JooqUserRepositoryIntegrationTest {
                 42L, "Johnny", "D", "johnny", "ru");
         repository.upsert(updated);
 
-        UserProfile profile = repository.findById(new UserId(42L));
-        assertThat(profile).isNotNull();
-        assertThat(profile.username()).isEqualTo("johnny");
-        assertThat(profile.displayName()).isEqualTo("Johnny D");
+        assertThat(repository.findById(new UserId(42L)))
+                .isPresent()
+                .hasValueSatisfying(profile -> {
+                    assertThat(profile.username()).isEqualTo("johnny");
+                    assertThat(profile.displayName()).isEqualTo("Johnny D");
+                });
     }
 
     @Test
@@ -78,11 +81,13 @@ class JooqUserRepositoryIntegrationTest {
                 new UserId(42L),
                 List.of("tech", "gaming"));
 
-        UserProfile profile = repository.findById(new UserId(42L));
-        assertThat(profile).isNotNull();
-        assertThat(profile.onboardingCompleted()).isTrue();
-        assertThat(profile.interests())
-                .containsExactly("tech", "gaming");
+        assertThat(repository.findById(new UserId(42L)))
+                .isPresent()
+                .hasValueSatisfying(profile -> {
+                    assertThat(profile.onboardingCompleted()).isTrue();
+                    assertThat(profile.interests())
+                            .containsExactly("tech", "gaming");
+                });
     }
 
     @Test
@@ -93,8 +98,7 @@ class JooqUserRepositoryIntegrationTest {
 
         repository.softDelete(new UserId(42L));
 
-        UserProfile profile = repository.findById(new UserId(42L));
-        assertThat(profile).isNull();
+        assertThat(repository.findById(new UserId(42L))).isEmpty();
     }
 
     @Test
@@ -104,20 +108,20 @@ class JooqUserRepositoryIntegrationTest {
                 42L, "John", "Doe", "johndoe", "en"));
         repository.softDelete(new UserId(42L));
 
-        assertThat(repository.findById(new UserId(42L))).isNull();
+        assertThat(repository.findById(new UserId(42L))).isEmpty();
 
         repository.upsert(new TelegramUserData(
                 42L, "John", "Doe", "johndoe", "en"));
 
-        UserProfile profile = repository.findById(new UserId(42L));
-        assertThat(profile).isNotNull();
-        assertThat(profile.username()).isEqualTo("johndoe");
+        assertThat(repository.findById(new UserId(42L)))
+                .isPresent()
+                .hasValueSatisfying(profile ->
+                        assertThat(profile.username()).isEqualTo("johndoe"));
     }
 
     @Test
-    @DisplayName("Should return null for non-existent user")
-    void shouldReturnNullForNonExistent() {
-        UserProfile profile = repository.findById(new UserId(999L));
-        assertThat(profile).isNull();
+    @DisplayName("Should return empty for non-existent user")
+    void shouldReturnEmptyForNonExistent() {
+        assertThat(repository.findById(new UserId(999L))).isEmpty();
     }
 }

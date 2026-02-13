@@ -2,7 +2,7 @@ package com.advertmarket.identity.web;
 
 import com.advertmarket.identity.api.dto.LoginRequest;
 import com.advertmarket.identity.api.dto.LoginResponse;
-import com.advertmarket.identity.api.port.AuthService;
+import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.LoginRateLimiterPort;
 import com.advertmarket.shared.security.PrincipalAuthentication;
 import com.advertmarket.shared.security.SecurityContextUtil;
@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Auth", description = "Telegram Mini App authentication")
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthPort authService;
     private final LoginRateLimiterPort loginRateLimiter;
 
     /**

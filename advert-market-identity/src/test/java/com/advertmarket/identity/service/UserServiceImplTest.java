@@ -15,6 +15,7 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserId;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Should return user profile by ID")
     void shouldReturnProfile() {
-        when(userRepository.findById(USER_ID)).thenReturn(PROFILE);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(PROFILE));
 
         UserProfile result = userService.getProfile(USER_ID);
 
@@ -52,7 +53,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Should throw EntityNotFoundException when user not found")
     void shouldThrowWhenUserNotFound() {
-        when(userRepository.findById(USER_ID)).thenReturn(null);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getProfile(USER_ID))
                 .isInstanceOf(EntityNotFoundException.class);
@@ -67,7 +68,7 @@ class UserServiceImplTest {
                 true, interests,
                 Instant.parse("2026-01-01T00:00:00Z"));
         when(userRepository.findById(USER_ID))
-                .thenReturn(updatedProfile);
+                .thenReturn(Optional.of(updatedProfile));
 
         UserProfile result = userService.completeOnboarding(
                 USER_ID, new OnboardingRequest(interests));

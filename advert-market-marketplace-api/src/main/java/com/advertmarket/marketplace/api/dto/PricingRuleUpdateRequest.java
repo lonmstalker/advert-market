@@ -26,4 +26,9 @@ public record PricingRuleUpdateRequest(
         @Nullable Integer sortOrder,
         @Nullable Boolean isActive
 ) {
+
+    /** Creates a request with a defensive copy of postTypes. */
+    public PricingRuleUpdateRequest {
+        postTypes = postTypes != null ? Set.copyOf(postTypes) : null;
+    }
 }

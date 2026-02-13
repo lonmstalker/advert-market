@@ -22,4 +22,9 @@ public record ChannelUpdateRequest(
         @Nullable @Size(max = 10) String language,
         @Nullable Boolean isActive
 ) {
+
+    /** Creates a request with a defensive copy of categories. */
+    public ChannelUpdateRequest {
+        categories = categories != null ? List.copyOf(categories) : null;
+    }
 }

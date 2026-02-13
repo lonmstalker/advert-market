@@ -2,8 +2,8 @@ package com.advertmarket.identity.web;
 
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
-import com.advertmarket.identity.api.port.AuthService;
-import com.advertmarket.identity.api.port.UserService;
+import com.advertmarket.identity.api.port.AuthPort;
+import com.advertmarket.identity.api.port.UserPort;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.security.PrincipalAuthentication;
 import com.advertmarket.shared.security.SecurityContextUtil;
@@ -38,8 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "bearerAuth")
 public class ProfileController {
 
-    private final UserService userService;
-    private final AuthService authService;
+    private final UserPort userService;
+    private final AuthPort authService;
 
     /**
      * Returns the profile of the authenticated user.

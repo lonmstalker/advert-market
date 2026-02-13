@@ -4,8 +4,8 @@ import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.shared.model.UserId;
 import java.util.List;
+import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Repository for user persistence operations.
@@ -24,10 +24,10 @@ public interface UserRepository {
      * Finds a user profile by ID.
      *
      * @param userId user identifier
-     * @return user profile, or null if not found
+     * @return user profile, or empty if not found
      */
-    @Nullable
-    UserProfile findById(@NonNull UserId userId);
+    @NonNull
+    Optional<UserProfile> findById(@NonNull UserId userId);
 
     /**
      * Marks onboarding as completed and saves interests.
