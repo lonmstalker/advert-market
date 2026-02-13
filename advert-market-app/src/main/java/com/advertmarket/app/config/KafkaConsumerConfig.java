@@ -8,7 +8,7 @@ import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -26,6 +26,7 @@ import org.springframework.util.backoff.ExponentialBackOff;
  * Kafka consumer infrastructure with three retry profiles.
  */
 @Configuration
+@EnableConfigurationProperties(KafkaClientProperties.class)
 public class KafkaConsumerConfig {
 
     private static final long DEFAULT_INITIAL_MS = 1_000L;
@@ -39,9 +40,8 @@ public class KafkaConsumerConfig {
     private final String bootstrapServers;
 
     KafkaConsumerConfig(
-            @Value("${spring.kafka.bootstrap-servers}")
-            String bootstrapServers) {
-        this.bootstrapServers = bootstrapServers;
+            KafkaClientProperties kafkaProperties) {
+        this.bootstrapServers = kafkaProperties.bootstrapServers();
     }
 
     /** Consumer factory with error-handling deserializer. */

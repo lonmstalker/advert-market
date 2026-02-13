@@ -145,6 +145,7 @@ Individual queries in loops are FORBIDDEN. Use JOINs or batch fetches.
 ### Configuration
 
 - `@ConfigurationProperties` with records
+- `@Value("${...}")` is forbidden for application configuration binding
 - Secrets only through environment variables (never in config files)
 
 ## 4. Payment Guarantees

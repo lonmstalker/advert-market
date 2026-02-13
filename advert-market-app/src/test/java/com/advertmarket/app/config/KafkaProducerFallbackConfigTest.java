@@ -17,7 +17,8 @@ class KafkaProducerFallbackConfigTest {
     @Test
     @DisplayName("Creates producer factory with bootstrap and string serializers")
     void producerFactory() {
-        var producerFactory = config.producerFactory("kafka:9092");
+        var producerFactory = config.producerFactory(
+                new KafkaClientProperties("kafka:9092"));
         assertThat(producerFactory)
                 .isInstanceOf(DefaultKafkaProducerFactory.class);
 
@@ -41,7 +42,8 @@ class KafkaProducerFallbackConfigTest {
     @Test
     @DisplayName("Creates kafka template from producer factory")
     void kafkaTemplate() {
-        var producerFactory = config.producerFactory("localhost:9092");
+        var producerFactory = config.producerFactory(
+                new KafkaClientProperties("localhost:9092"));
         var kafkaTemplate = config.kafkaTemplate(producerFactory);
         assertThat(kafkaTemplate).isNotNull();
     }
