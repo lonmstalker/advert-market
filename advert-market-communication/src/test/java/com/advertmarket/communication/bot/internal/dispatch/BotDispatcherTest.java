@@ -151,10 +151,13 @@ class BotDispatcherTest {
 
         dispatcher.dispatch(ctx);
 
-        verify(errorHandler).handle(
+        verify(errorHandler).handleAndNotify(
                 org.mockito.ArgumentMatchers
                         .any(Exception.class),
-                org.mockito.ArgumentMatchers.eq(42));
+                org.mockito.ArgumentMatchers.eq(42),
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.nullable(
+                        String.class));
     }
 
     @Test

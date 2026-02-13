@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,13 +31,14 @@ public class BotDispatcher {
     private final LocalizationService i18n;
 
     /** Creates the dispatcher with all discovered handlers. */
-    public BotDispatcher(List<BotCommand> commandList,
-            List<CallbackHandler> callbackHandlerList,
-            List<MessageHandler> messageHandlerList,
-            TelegramSender sender,
-            BotErrorHandler errorHandler,
-            UserBlockPort userBlockPort,
-            LocalizationService i18n) {
+    public BotDispatcher(
+            @NonNull List<BotCommand> commandList,
+            @NonNull List<CallbackHandler> callbackHandlerList,
+            @NonNull List<MessageHandler> messageHandlerList,
+            @NonNull TelegramSender sender,
+            @NonNull BotErrorHandler errorHandler,
+            @NonNull UserBlockPort userBlockPort,
+            @NonNull LocalizationService i18n) {
         this.commands = commandList.stream()
                 .collect(Collectors.toMap(
                         BotCommand::command, Function.identity()));
@@ -79,7 +81,9 @@ public class BotDispatcher {
                 dispatchMessage(ctx);
             }
         } catch (Exception e) {
-            errorHandler.handle(e, ctx.update().updateId());
+            errorHandler.handleAndNotify(e,
+                    ctx.update().updateId(),
+                    ctx.userId(), ctx.languageCode());
         }
     }
 

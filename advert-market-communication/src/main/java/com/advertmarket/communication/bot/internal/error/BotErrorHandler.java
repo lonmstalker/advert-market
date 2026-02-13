@@ -2,8 +2,11 @@ package com.advertmarket.communication.bot.internal.error;
 
 import static com.advertmarket.communication.bot.internal.BotConstants.METRIC_HANDLER_ERROR;
 
+import com.advertmarket.communication.bot.internal.sender.TelegramSender;
+import com.advertmarket.shared.i18n.LocalizationService;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.response.BaseResponse;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,6 +22,8 @@ import org.springframework.stereotype.Component;
 public class BotErrorHandler {
 
     private final MetricsFacade metrics;
+    private final TelegramSender sender;
+    private final LocalizationService i18n;
 
     /**
      * Handles an exception thrown during command processing.
@@ -33,6 +38,34 @@ public class BotErrorHandler {
         log.error("Bot handler error update_id={} category={}",
                 updateId, category, exception);
     }
+
+    /**
+     * Handles an exception and sends an i18n error message
+     * to the user.
+     *
+     * @param exception the exception that occurred
+     * @param updateId  the Telegram update id for correlation
+     * @param userId    the Telegram user id to notify
+     * @param lang      user language code, may be null
+     */
+    public void handleAndNotify(Exception exception, int updateId,
+            long userId, @Nullable String lang) {
+        handle(exception, updateId);
+        trySendErrorMessage(userId, lang);
+    }
+
+    // CHECKSTYLE.OFF: IllegalCatch
+    private void trySendErrorMessage(long userId,
+            @Nullable String lang) {
+        try {
+            String msg = i18n.msg("bot.error", lang);
+            sender.send(userId, msg);
+        } catch (Exception e) {
+            log.debug("Could not send error message to user={}",
+                    userId, e);
+        }
+    }
+    // CHECKSTYLE.ON: IllegalCatch
 
     /**
      * Classifies an exception into an error category.
@@ -96,7 +129,7 @@ public class BotErrorHandler {
         if (message == null) {
             return BotErrorCategory.UNKNOWN;
         }
-        String lower = message.toLowerCase(java.util.Locale.ROOT);
+        String lower = message.toLowerCase(Locale.ROOT);
         if (lower.contains("rate limit")) {
             return BotErrorCategory.RATE_LIMITED;
         }
