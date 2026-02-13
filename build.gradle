@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.github.lonmstalker.spring-properties-md:spring-properties-md-gradle-plugin:v0.1.0'
+        classpath 'com.github.lonmstalker.spring-properties-md:spring-properties-md-gradle-plugin:v0.2.0'
     }
 }
 
