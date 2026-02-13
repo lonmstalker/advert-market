@@ -76,6 +76,17 @@ Endpoint `POST /api/v1/bot/webhook`:
 
 All messages use **MarkdownV2 parse mode**. User-provided data is escaped via `MarkdownV2Util.escape()`. Variables: `{channel_name}`, `{amount}`, `{deal_id_short}` (first 8 chars of UUID).
 
+### .properties Escaping Gotcha (MarkdownV2)
+
+If templates are stored in Java/Spring `.properties` bundles, remember that the properties parser treats backslash as an escape character.
+
+To keep a literal backslash for Telegram MarkdownV2 escaping, you must **double-escape** it in the `.properties` file.
+
+Example:
+- File content: `Opening\\.` (two backslashes)
+- Runtime value: `Opening\.` (single backslash)
+- Telegram renders: `Opening.` (dot is escaped and accepted by MarkdownV2)
+
 | # | Type | Recipient | Template (RU, MarkdownV2) |
 |---|------|-----------|---------------|
 | 1 | NEW_OFFER | Owner | *New offer* Channel: {channel\_name} Amount: {amount} TON |
