@@ -11,7 +11,16 @@ import { copyToClipboard } from '@/shared/lib/clipboard';
 import { computeCpm, formatCpm, formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
-import type { PricingRule } from '@/features/channels';
+import {
+  ArrowRightIcon,
+  ClockIcon,
+  EditIcon,
+  PostTypeIcon,
+  ShareIcon,
+  TelegramIcon,
+  VerifiedIcon,
+} from '@/shared/ui/icons';
+import type { ChannelDetail, PricingRule } from '@/features/channels';
 
 function formatSubscribers(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
@@ -29,34 +38,54 @@ function erColor(rate: number): string {
   return 'var(--color-foreground-tertiary)';
 }
 
-const POST_TYPE_ICONS: Record<string, string> = {
-  NATIVE: '\u{1F4DD}',
-  STORY: '\u{1F4F1}',
-  REPOST: '\u{1F504}',
-  FORWARD: '\u{27A1}\uFE0F',
-  INTEGRATION: '\u{1F91D}',
-  REVIEW: '\u{2B50}',
-  MENTION: '\u{1F4AC}',
-  GIVEAWAY: '\u{1F381}',
-  PINNED: '\u{1F4CC}',
-  POLL: '\u{1F4CA}',
-};
-
-const LANG_FLAGS: Record<string, string> = {
-  ru: '\u{1F1F7}\u{1F1FA}',
-  en: '\u{1F1EC}\u{1F1E7}',
-  uk: '\u{1F1FA}\u{1F1E6}',
-  uz: '\u{1F1FA}\u{1F1FF}',
-  kz: '\u{1F1F0}\u{1F1FF}',
-};
-
-function getPostTypeIcon(postType: string): string {
-  return POST_TYPE_ICONS[postType.toUpperCase()] ?? '\u{1F4E2}';
+function getChannelLanguages(channel: ChannelDetail): string[] {
+  if (channel.languages && channel.languages.length > 0) return channel.languages;
+  if (channel.language) return [channel.language];
+  return [];
 }
 
 function getMinPrice(rules: PricingRule[]): number | null {
   if (rules.length === 0) return null;
   return Math.min(...rules.map((r) => r.priceNano));
+}
+
+function formatTimeUntil(isoDate: string): string | null {
+  const target = new Date(isoDate);
+  const now = new Date();
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs <= 0) return null;
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return `${days}d ${hours % 24}h`;
+  }
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function LanguageBadge({ code }: { code: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '2px 6px',
+        borderRadius: 4,
+        background: 'var(--color-background-secondary)',
+        border: '1px solid var(--color-border-separator)',
+        fontSize: 11,
+        fontWeight: 600,
+        color: 'var(--color-foreground-secondary)',
+        letterSpacing: '0.02em',
+        lineHeight: 1.4,
+        textTransform: 'uppercase',
+        flexShrink: 0,
+      }}
+    >
+      {code}
+    </span>
+  );
 }
 
 export default function ChannelDetailPage() {
@@ -107,6 +136,7 @@ export default function ChannelDetailPage() {
 
   const letter = channel.title.charAt(0).toUpperCase();
   const hue = (channel.title.charCodeAt(0) * 37 + (channel.title.charCodeAt(1) || 0) * 53) % 360;
+  const langs = getChannelLanguages(channel);
 
   const minPrice = getMinPrice(channel.pricingRules);
   const heroCpm = minPrice != null && channel.avgReach
@@ -115,6 +145,10 @@ export default function ChannelDetailPage() {
 
   const reachRate = channel.avgReach != null && channel.subscriberCount > 0
     ? (channel.avgReach / channel.subscriberCount * 100)
+    : null;
+
+  const nextSlotTime = channel.nextAvailableSlot
+    ? formatTimeUntil(channel.nextAvailableSlot)
     : null;
 
   const handleShare = async () => {
@@ -143,95 +177,165 @@ export default function ChannelDetailPage() {
               padding: '24px 16px 20px',
               background: 'var(--color-background-base)',
               borderBottom: '1px solid var(--color-border-separator)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 12,
-              textAlign: 'center',
+              position: 'relative',
             }}
           >
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: '50%',
-                background: `hsl(${hue}, 55%, 55%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ color: 'var(--color-static-white)', fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <Text type="title1" weight="bold">
-                  {channel.title}
-                </Text>
-                {channel.isVerified && (
-                  <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1 }} title={t('catalog.channel.verified')}>
-                    {'\u2705'}
-                  </span>
-                )}
-                {channel.language && LANG_FLAGS[channel.language] && (
-                  <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1 }}>
-                    {LANG_FLAGS[channel.language]}
-                  </span>
-                )}
-              </div>
-              {channel.username && (
-                <Text type="subheadline1" color="secondary">
-                  @{channel.username}
-                </Text>
-              )}
-            </div>
-
-            {/* Topic badges */}
-            {channel.topics.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
-                {channel.topics.map((topic) => (
-                  <span
-                    key={topic.slug}
-                    style={{
-                      padding: '4px 12px',
-                      borderRadius: 12,
-                      background: 'var(--color-background-secondary)',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: 'var(--color-foreground-secondary)',
-                    }}
-                  >
-                    {topic.name}
-                  </span>
-                ))}
-              </div>
+            {/* Edit button — SVG icon top-right */}
+            {isOwner && (
+              <motion.button
+                {...pressScale}
+                type="button"
+                onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  border: '1px solid var(--color-border-separator)',
+                  background: 'var(--color-background-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                  padding: 0,
+                  zIndex: 1,
+                }}
+                aria-label={t('catalog.channel.edit')}
+              >
+                <EditIcon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />
+              </motion.button>
             )}
 
-            {/* Share button */}
-            <motion.button
-              {...pressScale}
-              onClick={handleShare}
-              style={{
-                background: 'var(--color-accent-primary)',
-                border: 'none',
-                borderRadius: 20,
-                padding: '6px 16px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                WebkitTapHighlightColor: 'transparent',
-              }}
-              aria-label={t('catalog.channel.share')}
-            >
-              <span style={{ fontSize: 14 }}>{'\u{1F4E4}'}</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-static-white)' }}>
-                {t('catalog.channel.share')}
-              </span>
-            </motion.button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  background: `hsl(${hue}, 55%, 55%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ color: 'var(--color-static-white)', fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
+              </div>
+              <div style={{ maxWidth: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <Text type="title1" weight="bold">
+                    {channel.title}
+                  </Text>
+                  {channel.isVerified && (
+                    <VerifiedIcon
+                      style={{ width: 18, height: 18, color: 'var(--color-accent-primary)', flexShrink: 0 }}
+                      title={t('catalog.channel.verified')}
+                    />
+                  )}
+                </div>
+                {channel.username && (
+                  <div style={{ marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', padding: '0 24px' }}>
+                    <Text type="subheadline1" color="secondary">
+                      @{channel.username}
+                    </Text>
+                  </div>
+                )}
+                {/* Language badges */}
+                {langs.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 6 }}>
+                    {langs.map((code) => (
+                      <LanguageBadge key={code} code={code} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Topic badges */}
+              {channel.topics.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+                  {channel.topics.map((topic) => (
+                    <span
+                      key={topic.slug}
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: 12,
+                        background: 'var(--color-background-secondary)',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: 'var(--color-foreground-secondary)',
+                      }}
+                    >
+                      {topic.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Share button */}
+              <motion.button
+                {...pressScale}
+                onClick={handleShare}
+                style={{
+                  background: 'var(--color-accent-primary)',
+                  border: 'none',
+                  borderRadius: 20,
+                  padding: '6px 16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+                aria-label={t('catalog.channel.share')}
+              >
+                <ShareIcon style={{ width: 14, height: 14, color: 'var(--color-static-white)' }} />
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-static-white)' }}>
+                  {t('catalog.channel.share')}
+                </span>
+              </motion.button>
+            </div>
           </div>
         </motion.div>
+
+        {/* Next available slot */}
+        {channel.nextAvailableSlot && (
+          <motion.div {...slideUp} style={{ padding: '12px 16px 0' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 14px',
+                borderRadius: 10,
+                background: nextSlotTime
+                  ? 'var(--color-background-section)'
+                  : 'color-mix(in srgb, var(--color-state-success) 8%, transparent)',
+                border: nextSlotTime
+                  ? '1px solid var(--color-border-separator)'
+                  : '1px solid color-mix(in srgb, var(--color-state-success) 20%, transparent)',
+              }}
+            >
+              <ClockIcon
+                style={{
+                  width: 16,
+                  height: 16,
+                  color: nextSlotTime ? 'var(--color-foreground-secondary)' : 'var(--color-state-success)',
+                  flexShrink: 0,
+                }}
+              />
+              <Text type="caption1" color={nextSlotTime ? 'secondary' : undefined}>
+                <span style={{ color: nextSlotTime ? undefined : 'var(--color-state-success)', fontWeight: 500 }}>
+                  {nextSlotTime
+                    ? t('catalog.channel.nextSlot', { time: nextSlotTime })
+                    : t('catalog.channel.nextSlotAvailable')}
+                </span>
+              </Text>
+            </div>
+          </motion.div>
+        )}
 
         {/* Hero CPM section */}
         {heroCpm != null && (
@@ -313,11 +417,11 @@ export default function ChannelDetailPage() {
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <span style={{ fontSize: 16 }}>{'\u{1F4F1}'}</span>
+              <TelegramIcon style={{ width: 18, height: 18, color: 'var(--color-static-white)' }} />
               <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-static-white)' }}>
                 {t('catalog.channel.openInTelegram')}
               </span>
-              <span style={{ fontSize: 14, color: 'var(--color-static-white)', opacity: 0.7 }}>{'\u{2192}'}</span>
+              <ArrowRightIcon style={{ width: 16, height: 16, color: 'var(--color-static-white)', opacity: 0.7 }} />
             </motion.button>
           </motion.div>
         )}
@@ -338,7 +442,16 @@ export default function ChannelDetailPage() {
                 return (
                   <div key={rule.id} style={pricingCardStyle}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: 18, flexShrink: 0, marginTop: 2 }}>{getPostTypeIcon(rule.postType)}</span>
+                      <PostTypeIcon
+                        postType={rule.postType}
+                        style={{
+                          width: 20,
+                          height: 20,
+                          color: 'var(--color-foreground-secondary)',
+                          flexShrink: 0,
+                          marginTop: 1,
+                        }}
+                      />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <Text type="body">
@@ -364,7 +477,7 @@ export default function ChannelDetailPage() {
                           )}
                         </div>
                         {rule.description && (
-                          <Text type="caption1" color="tertiary" style={{ marginTop: 2 }}>
+                          <Text type="caption1" color="secondary" style={{ marginTop: 2 }}>
                             {rule.description}
                           </Text>
                         )}
@@ -389,6 +502,69 @@ export default function ChannelDetailPage() {
           </motion.div>
         )}
 
+        {/* Channel rules */}
+        {channel.rules && (
+          <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
+            <Text type="body" weight="bold" style={{ marginBottom: 12 }}>
+              {t('catalog.channel.rules')}
+            </Text>
+            <div
+              style={{
+                background: 'var(--color-background-base)',
+                border: '1px solid var(--color-border-separator)',
+                borderRadius: 12,
+                overflow: 'hidden',
+              }}
+            >
+              {channel.rules.prohibitedTopics && channel.rules.prohibitedTopics.length > 0 && (
+                <div style={ruleRowStyle}>
+                  <Text type="caption1" color="secondary">{t('catalog.channel.rulesProhibited')}</Text>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                    {channel.rules.prohibitedTopics.map((topic) => (
+                      <span
+                        key={topic}
+                        style={{
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          background: 'color-mix(in srgb, var(--color-state-destructive) 8%, transparent)',
+                          fontSize: 12,
+                          fontWeight: 500,
+                          color: 'var(--color-state-destructive)',
+                        }}
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {channel.rules.maxPostChars != null && (
+                <div style={ruleRowStyle}>
+                  <Text type="caption1" color="secondary">{t('catalog.channel.rulesPostSize')}</Text>
+                  <Text type="body">
+                    {t('catalog.channel.rulesMaxChars', { count: channel.rules.maxPostChars })}
+                  </Text>
+                </div>
+              )}
+              {channel.rules.maxButtons != null && (
+                <div style={ruleRowStyle}>
+                  <Text type="caption1" color="secondary">{t('catalog.channel.rulesMaxButtons')}</Text>
+                  <Text type="body">
+                    {t('catalog.channel.rulesButtonsCount', { count: channel.rules.maxButtons })}
+                  </Text>
+                </div>
+              )}
+              {channel.rules.customRules && (
+                <div style={{ ...ruleRowStyle, borderBottom: 'none' }}>
+                  <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                    {channel.rules.customRules}
+                  </Text>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {/* Social proof */}
         <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
           <div
@@ -407,38 +583,32 @@ export default function ChannelDetailPage() {
       </div>
 
       {/* Sticky bottom CTA */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 16,
-          background: 'var(--color-background-base)',
-          borderTop: '1px solid var(--color-border-separator)',
-          display: 'flex',
-          gap: 12,
-          zIndex: 10,
-        }}
-      >
-        <div style={{ flex: 1 }}>
-          <motion.div {...pressScale}>
-            {isOwner ? (
-              <Button
-                text={t('catalog.channel.edit')}
-                type="primary"
-                onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
-              />
-            ) : (
+      {!isOwner && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            background: 'var(--color-background-base)',
+            borderTop: '1px solid var(--color-border-separator)',
+            display: 'flex',
+            gap: 12,
+            zIndex: 10,
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <motion.div {...pressScale}>
               <Button
                 text={t('catalog.channel.createDeal')}
                 type="primary"
                 onClick={() => navigate(`/deals/new?channelId=${channel.id}`)}
               />
-            )}
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
@@ -461,4 +631,9 @@ const pricingCardStyle: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: 12,
+};
+
+const ruleRowStyle: React.CSSProperties = {
+  padding: '12px 16px',
+  borderBottom: '1px solid var(--color-border-separator)',
 };

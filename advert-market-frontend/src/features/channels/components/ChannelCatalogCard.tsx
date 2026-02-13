@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
 import { computeCpm, formatCpm, formatTonCompact } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
+import { VerifiedIcon } from '@/shared/ui/icons';
 import { fetchCategories } from '../api/channels';
 import type { Category, Channel } from '../types/channel';
 
@@ -25,13 +26,35 @@ function erColor(rate: number): string {
   return 'var(--color-foreground-tertiary)';
 }
 
-const LANG_FLAGS: Record<string, string> = {
-  ru: '\u{1F1F7}\u{1F1FA}',
-  en: '\u{1F1EC}\u{1F1E7}',
-  uk: '\u{1F1FA}\u{1F1E6}',
-  uz: '\u{1F1FA}\u{1F1FF}',
-  kz: '\u{1F1F0}\u{1F1FF}',
-};
+function getChannelLanguages(channel: Channel): string[] {
+  if (channel.languages && channel.languages.length > 0) return channel.languages;
+  if (channel.language) return [channel.language];
+  return [];
+}
+
+function LanguageBadge({ code }: { code: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '1px 5px',
+        borderRadius: 4,
+        background: 'var(--color-background-secondary)',
+        border: '1px solid var(--color-border-separator)',
+        fontSize: 10,
+        fontWeight: 600,
+        color: 'var(--color-foreground-secondary)',
+        letterSpacing: '0.02em',
+        lineHeight: 1.4,
+        textTransform: 'uppercase',
+        flexShrink: 0,
+      }}
+    >
+      {code}
+    </span>
+  );
+}
 
 function MetricPill({ value, label, valueColor }: { value: string; label: string; valueColor?: string }) {
   return (
@@ -116,7 +139,7 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
     ? computeCpm(channel.pricePerPostNano, channel.avgViews)
     : null;
 
-  const langFlag = channel.language ? LANG_FLAGS[channel.language] ?? channel.language.toUpperCase() : null;
+  const langs = getChannelLanguages(channel);
 
   return (
     <motion.div
@@ -136,26 +159,27 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <ChannelAvatar title={channel.title} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
             <Text type="body" weight="bold">
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
                 {channel.title}
               </span>
             </Text>
             {channel.isVerified && (
-              <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1 }} title={t('catalog.channel.verified')}>
-                {'\u2705'}
-              </span>
+              <VerifiedIcon
+                style={{ width: 14, height: 14, color: 'var(--color-accent-primary)', flexShrink: 0 }}
+                title={t('catalog.channel.verified')}
+              />
             )}
-            {langFlag && (
-              <span style={{ fontSize: 12, flexShrink: 0, lineHeight: 1 }}>
-                {langFlag}
-              </span>
-            )}
+            {langs.map((code) => (
+              <LanguageBadge key={code} code={code} />
+            ))}
           </div>
           {channel.username && (
             <Text type="caption1" color="secondary">
-              @{channel.username}
+              <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                @{channel.username}
+              </span>
             </Text>
           )}
         </div>

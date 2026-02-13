@@ -5,8 +5,8 @@ import { fetchCategories } from '../api/channels';
 import type { Category } from '../types/channel';
 
 type CategoryChipRowProps = {
-  selected: string | undefined;
-  onSelect: (slug: string | undefined) => void;
+  selected: string[];
+  onSelect: (slugs: string[]) => void;
 };
 
 function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
@@ -52,6 +52,16 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
 
   const sorted = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
 
+  const isAllSelected = selected.length === 0;
+
+  const handleToggle = (slug: string) => {
+    if (selected.includes(slug)) {
+      onSelect(selected.filter((s) => s !== slug));
+    } else {
+      onSelect([...selected, slug]);
+    }
+  };
+
   return (
     <div
       style={{
@@ -65,15 +75,15 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
     >
       <Chip
         label={t('catalog.filters.topicAll')}
-        active={!selected}
-        onClick={() => onSelect(undefined)}
+        active={isAllSelected}
+        onClick={() => onSelect([])}
       />
       {sorted.map((cat: Category) => (
         <Chip
           key={cat.slug}
           label={getCategoryName(cat, lang)}
-          active={selected === cat.slug}
-          onClick={() => onSelect(selected === cat.slug ? undefined : cat.slug)}
+          active={selected.includes(cat.slug)}
+          onClick={() => handleToggle(cat.slug)}
         />
       ))}
     </div>

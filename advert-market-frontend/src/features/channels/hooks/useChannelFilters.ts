@@ -3,14 +3,29 @@ import { useSearchParams } from 'react-router';
 import type { CatalogFilters, ChannelSort } from '../types/channel';
 import { channelSortValues } from '../types/channel';
 
+function parseArray(value: string | null): string[] | undefined {
+  if (!value) return undefined;
+  const arr = value.split(',').filter(Boolean);
+  return arr.length > 0 ? arr : undefined;
+}
+
+function serializeArray(arr: string[] | undefined): string | undefined {
+  if (!arr || arr.length === 0) return undefined;
+  return arr.join(',');
+}
+
 export function useChannelFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const filters: CatalogFilters = useMemo(() => {
     const sort = searchParams.get('sort') as ChannelSort | null;
+    const categories = parseArray(searchParams.get('categories'));
+    const languages = parseArray(searchParams.get('languages'));
     return {
       q: searchParams.get('q') || undefined,
       category: searchParams.get('category') || undefined,
+      categories,
+      languages,
       minSubs: searchParams.get('minSubs') ? Number(searchParams.get('minSubs')) : undefined,
       maxSubs: searchParams.get('maxSubs') ? Number(searchParams.get('maxSubs')) : undefined,
       minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
@@ -27,6 +42,8 @@ export function useChannelFilters() {
           const entries: [string, string | undefined][] = [
             ['q', next.q],
             ['category', next.category],
+            ['categories', serializeArray(next.categories)],
+            ['languages', serializeArray(next.languages)],
             ['minSubs', next.minSubs?.toString()],
             ['maxSubs', next.maxSubs?.toString()],
             ['minPrice', next.minPrice?.toString()],
@@ -54,7 +71,8 @@ export function useChannelFilters() {
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (filters.category) count++;
+    if (filters.category || (filters.categories && filters.categories.length > 0)) count++;
+    if (filters.languages && filters.languages.length > 0) count++;
     if (filters.minSubs || filters.maxSubs) count++;
     if (filters.minPrice || filters.maxPrice) count++;
     if (filters.sort && filters.sort !== 'relevance') count++;

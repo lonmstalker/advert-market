@@ -193,6 +193,8 @@
       "topicAll": "Все тематики",
       "subscribers": "Подписчики",
       "pricePerPost": "Цена за пост",
+      "language": "Язык канала",
+      "languageAll": "Все языки",
       "from": "От",
       "to": "До",
       "sortLabel": "Сортировка",
@@ -234,6 +236,15 @@
       "newChannel": "Новый канал",
       "verified": "Верифицирован",
       "durationHours": "{{hours}}ч",
+      "nextSlot": "Ближайший слот через {{time}}",
+      "nextSlotAvailable": "Слот свободен",
+      "rules": "Правила размещения",
+      "rulesProhibited": "Запрещено к рекламе",
+      "rulesPostSize": "Размер поста",
+      "rulesMaxButtons": "Макс. кнопок",
+      "rulesMaxChars": "{{count}} символов",
+      "rulesButtonsCount": "{{count}} шт.",
+      "noRules": "Правила не указаны",
       "postType": {
         "NATIVE": "Нативный пост",
         "STORY": "Сторис",
@@ -253,7 +264,21 @@
       "description": "Попробуйте изменить параметры поиска или сбросить фильтры",
       "cta": "Сбросить фильтры"
     },
-    "endOfList": "Все каналы загружены"
+    "endOfList": "Все каналы загружены",
+    "languages": {
+      "ru": "RU",
+      "en": "EN",
+      "uk": "UA",
+      "uz": "UZ",
+      "kz": "KZ",
+      "full": {
+        "ru": "Русский",
+        "en": "English",
+        "uk": "Українська",
+        "uz": "O'zbek",
+        "kz": "Қазақ"
+      }
+    }
   },
   "deals": {
     "title": "Сделки",

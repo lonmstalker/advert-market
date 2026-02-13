@@ -19,6 +19,7 @@ export type {
   Category,
   Channel,
   ChannelDetail,
+  ChannelRules,
   ChannelSort,
   ChannelTeam,
   ChannelTopic,

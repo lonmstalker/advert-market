@@ -52,10 +52,22 @@ export const channelSchema = z.object({
   isActive: z.boolean(),
   isVerified: z.boolean().optional(),
   language: z.string().optional(),
+  languages: z.array(z.string()).optional(),
   updatedAt: z.string().optional(),
 });
 
 export type Channel = z.infer<typeof channelSchema>;
+
+// --- Channel rules ---
+
+export const channelRulesSchema = z.object({
+  prohibitedTopics: z.array(z.string()).optional(),
+  maxPostChars: z.number().optional(),
+  maxButtons: z.number().optional(),
+  customRules: z.string().optional(),
+});
+
+export type ChannelRules = z.infer<typeof channelRulesSchema>;
 
 // --- Channel detail ---
 
@@ -66,6 +78,8 @@ export const channelDetailSchema = channelSchema.extend({
   avgReach: z.number().optional(),
   pricingRules: z.array(pricingRuleSchema),
   topics: z.array(channelTopicSchema),
+  rules: channelRulesSchema.optional(),
+  nextAvailableSlot: z.string().optional(),
 });
 
 export type ChannelDetail = z.infer<typeof channelDetailSchema>;
@@ -111,6 +125,8 @@ export type CreateDealResponse = z.infer<typeof createDealResponseSchema>;
 export type CatalogFilters = {
   q?: string;
   category?: string;
+  categories?: string[];
+  languages?: string[];
   minSubs?: number;
   maxSubs?: number;
   minPrice?: number;

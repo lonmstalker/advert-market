@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Button, Input, Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
+import { Button, Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ import { useDebounce } from '@/shared/hooks/use-debounce';
 import { computeCpm, formatCpm } from '@/shared/lib/ton-format';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
+import { FilterIcon, SearchIcon } from '@/shared/ui/icons';
 
 function formatCompact(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
@@ -55,6 +56,7 @@ export default function CatalogPage() {
   const { filters, setFilters, resetFilters, activeFilterCount } = useChannelFilters();
 
   const [searchInput, setSearchInput] = useState(filters.q ?? '');
+  const [searchFocused, setSearchFocused] = useState(false);
   const debouncedSearch = useDebounce(searchInput, 300);
   const [sheetOpened, setSheetOpened] = useState(false);
 
@@ -151,15 +153,88 @@ export default function CatalogPage() {
             alignItems: 'center',
           }}
         >
-          <div style={{ flex: 1 }}>
-            <Input value={searchInput} onChange={setSearchInput} placeholder={t('catalog.search.placeholder')} />
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-          <div style={{ position: 'relative' }}>
-            <motion.div {...pressScale}>
-              <Button text={t('catalog.filters.button')} type="secondary" onClick={handleOpenFilters} />
-            </motion.div>
+          <motion.div
+            style={{ flex: 1 }}
+            animate={{
+              scale: searchFocused ? 1.01 : 1,
+            }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                borderRadius: 12,
+                background: 'var(--color-background-base)',
+                border: `1.5px solid ${searchFocused ? 'var(--color-accent-primary)' : 'var(--color-border-separator)'}`,
+                transition: 'border-color 0.2s ease',
+              }}
+            >
+              <SearchIcon
+                style={{
+                  width: 18,
+                  height: 18,
+                  color: searchFocused ? 'var(--color-accent-primary)' : 'var(--color-foreground-tertiary)',
+                  flexShrink: 0,
+                  transition: 'color 0.2s ease',
+                }}
+              />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder={t('catalog.search.placeholder')}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  fontSize: 15,
+                  color: 'var(--color-foreground-primary)',
+                  lineHeight: 1.3,
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+          </motion.div>
+          <motion.button
+            {...pressScale}
+            type="button"
+            onClick={handleOpenFilters}
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+              border: activeFilterCount > 0
+                ? '1.5px solid var(--color-accent-primary)'
+                : '1.5px solid var(--color-border-separator)',
+              background: activeFilterCount > 0
+                ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)'
+                : 'var(--color-background-base)',
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+              flexShrink: 0,
+              padding: 0,
+            }}
+            aria-label={t('catalog.filters.button')}
+          >
+            <FilterIcon
+              style={{
+                width: 20,
+                height: 20,
+                color: activeFilterCount > 0
+                  ? 'var(--color-accent-primary)'
+                  : 'var(--color-foreground-secondary)',
+              }}
+            />
             {activeFilterCount > 0 && (
               <span
                 style={{
@@ -183,13 +258,13 @@ export default function CatalogPage() {
                 {activeFilterCount}
               </span>
             )}
-          </div>
+          </motion.button>
         </div>
       </div>
 
       <CategoryChipRow
-        selected={filters.category}
-        onSelect={(category) => setFilters({ ...filters, category })}
+        selected={filters.categories ?? (filters.category ? [filters.category] : [])}
+        onSelect={(categories) => setFilters({ ...filters, categories, category: undefined })}
       />
 
       <AnimatePresence mode="wait">
@@ -206,7 +281,7 @@ export default function CatalogPage() {
         ) : isError ? (
           <motion.div key="error" {...fadeIn}>
             <EmptyState
-              emoji="⚠️"
+              emoji="\u26A0\uFE0F"
               title={t('common.error')}
               description={t('errors.server')}
               actionLabel={t('common.retry')}
@@ -216,7 +291,7 @@ export default function CatalogPage() {
         ) : channels.length === 0 ? (
           <motion.div key="empty" {...fadeIn}>
             <EmptyState
-              emoji="🔍"
+              emoji="\u{1F50D}"
               title={t('catalog.empty.title')}
               description={t('catalog.empty.description')}
               actionLabel={t('catalog.empty.cta')}

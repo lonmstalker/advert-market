@@ -193,6 +193,8 @@
       "topicAll": "All topics",
       "subscribers": "Subscribers",
       "pricePerPost": "Price per post",
+      "language": "Channel language",
+      "languageAll": "All languages",
       "from": "From",
       "to": "To",
       "sortLabel": "Sort by",
@@ -233,6 +235,15 @@
       "newChannel": "New channel",
       "verified": "Verified",
       "durationHours": "{{hours}}h",
+      "nextSlot": "Next slot in {{time}}",
+      "nextSlotAvailable": "Slot available",
+      "rules": "Placement rules",
+      "rulesProhibited": "Prohibited content",
+      "rulesPostSize": "Post size",
+      "rulesMaxButtons": "Max buttons",
+      "rulesMaxChars": "{{count}} characters",
+      "rulesButtonsCount": "{{count}} pcs.",
+      "noRules": "No rules specified",
       "postType": {
         "NATIVE": "Native post",
         "STORY": "Story",
@@ -252,7 +263,21 @@
       "description": "Try changing your search parameters or reset filters",
       "cta": "Reset filters"
     },
-    "endOfList": "All channels loaded"
+    "endOfList": "All channels loaded",
+    "languages": {
+      "ru": "RU",
+      "en": "EN",
+      "uk": "UA",
+      "uz": "UZ",
+      "kz": "KZ",
+      "full": {
+        "ru": "Russian",
+        "en": "English",
+        "uk": "Ukrainian",
+        "uz": "Uzbek",
+        "kz": "Kazakh"
+      }
+    }
   },
   "deals": {
     "title": "Deals",

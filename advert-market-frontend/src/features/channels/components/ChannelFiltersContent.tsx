@@ -20,6 +20,14 @@ export function setFiltersContentProps(props: ChannelFiltersContentProps) {
   filtersContentProps = props;
 }
 
+const AVAILABLE_LANGUAGES = [
+  { code: 'ru', label: 'RU' },
+  { code: 'en', label: 'EN' },
+  { code: 'uk', label: 'UA' },
+  { code: 'uz', label: 'UZ' },
+  { code: 'kz', label: 'KZ' },
+];
+
 function FilterSection({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -33,6 +41,30 @@ function FilterSection({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ToggleChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: '6px 14px',
+        borderRadius: 16,
+        border: active ? 'none' : '1px solid var(--color-border-separator)',
+        background: active ? 'var(--color-accent-primary)' : 'var(--color-background-base)',
+        color: active ? 'var(--color-static-white)' : 'var(--color-foreground-secondary)',
+        fontSize: 13,
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        WebkitTapHighlightColor: 'transparent',
+        lineHeight: 1.2,
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function ChannelFiltersContent() {
   const propsRef = useRef(filtersContentProps);
   propsRef.current = filtersContentProps;
@@ -41,7 +73,13 @@ export function ChannelFiltersContent() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
-  const [category, setCategory] = useState<string | null>(initial?.currentFilters.category ?? null);
+  const initialCategories = initial?.currentFilters.categories
+    ?? (initial?.currentFilters.category ? [initial.currentFilters.category] : []);
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
+    initial?.currentFilters.languages ?? [],
+  );
   const [minSubs, setMinSubs] = useState(initial?.currentFilters.minSubs?.toString() ?? '');
   const [maxSubs, setMaxSubs] = useState(initial?.currentFilters.maxSubs?.toString() ?? '');
   const [minPrice, setMinPrice] = useState(
@@ -61,14 +99,15 @@ export function ChannelFiltersContent() {
   const draftFilters: CatalogFilters = useMemo(
     () => ({
       q: propsRef.current?.currentFilters.q,
-      category: category || undefined,
+      categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+      languages: selectedLanguages.length > 0 ? selectedLanguages : undefined,
       minSubs: minSubs ? Number(minSubs) : undefined,
       maxSubs: maxSubs ? Number(maxSubs) : undefined,
       minPrice: minPrice ? Number(parseTonToNano(minPrice)) : undefined,
       maxPrice: maxPrice ? Number(parseTonToNano(maxPrice)) : undefined,
       sort: (sort as ChannelSort) || undefined,
     }),
-    [category, minSubs, maxSubs, minPrice, maxPrice, sort],
+    [selectedCategories, selectedLanguages, minSubs, maxSubs, minPrice, maxPrice, sort],
   );
 
   const { data: count } = useQuery({
@@ -78,15 +117,25 @@ export function ChannelFiltersContent() {
   });
 
   const hasActiveFilters =
-    category != null || minSubs !== '' || maxSubs !== '' || minPrice !== '' || maxPrice !== '' || sort != null;
+    selectedCategories.length > 0
+    || selectedLanguages.length > 0
+    || minSubs !== ''
+    || maxSubs !== ''
+    || minPrice !== ''
+    || maxPrice !== ''
+    || sort != null;
 
-  const categoryOptions = [
-    { label: t('catalog.filters.topicAll'), value: null },
-    ...categories.map((cat) => ({
-      label: cat.localizedName[lang] ?? cat.localizedName.ru ?? cat.slug,
-      value: cat.slug,
-    })),
-  ];
+  const toggleCategory = (slug: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
+    );
+  };
+
+  const toggleLanguage = (code: string) => {
+    setSelectedLanguages((prev) =>
+      prev.includes(code) ? prev.filter((s) => s !== code) : [...prev, code],
+    );
+  };
 
   const sortOptions = [
     { label: t('catalog.filters.sortDefault'), value: null },
@@ -101,7 +150,8 @@ export function ChannelFiltersContent() {
   };
 
   const handleReset = () => {
-    setCategory(null);
+    setSelectedCategories([]);
+    setSelectedLanguages([]);
     setMinSubs('');
     setMaxSubs('');
     setMinPrice('');
@@ -117,17 +167,46 @@ export function ChannelFiltersContent() {
         : t('catalog.filters.showChannels', { count })
       : t('catalog.filters.showButton');
 
+  const sortedCategories = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
+
   return (
     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Text type="title2" weight="bold">
         {t('catalog.filters.title')}
       </Text>
 
+      {/* Categories multi-select */}
       <FilterSection>
         <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
           {t('catalog.filters.topic')}
         </Text>
-        <Select options={categoryOptions} value={category} onChange={setCategory} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {sortedCategories.map((cat) => (
+            <ToggleChip
+              key={cat.slug}
+              label={cat.localizedName[lang] ?? cat.localizedName.ru ?? cat.slug}
+              active={selectedCategories.includes(cat.slug)}
+              onClick={() => toggleCategory(cat.slug)}
+            />
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Languages multi-select */}
+      <FilterSection>
+        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
+          {t('catalog.filters.language')}
+        </Text>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {AVAILABLE_LANGUAGES.map((l) => (
+            <ToggleChip
+              key={l.code}
+              label={t(`catalog.languages.full.${l.code}`, { defaultValue: l.label })}
+              active={selectedLanguages.includes(l.code)}
+              onClick={() => toggleLanguage(l.code)}
+            />
+          ))}
+        </div>
       </FilterSection>
 
       <FilterSection>
