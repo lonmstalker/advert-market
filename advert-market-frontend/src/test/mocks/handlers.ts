@@ -1,5 +1,14 @@
 import { HttpResponse, http } from 'msw';
-import { mockAuthResponse, mockCategories, mockChannelDetails, mockChannels, mockChannelTeams, mockProfile } from './data';
+import {
+  mockAuthResponse,
+  mockCategories,
+  mockChannelDetails,
+  mockChannels,
+  mockChannelTeams,
+  mockDealTimelines,
+  mockDeals,
+  mockProfile,
+} from './data';
 
 const API_BASE = '/api/v1';
 
@@ -28,12 +37,79 @@ export const handlers = [
     return HttpResponse.json(profile);
   }),
 
-  // GET /deals — empty list stub
-  http.get(`${API_BASE}/deals`, () => {
+  // GET /deals — paginated deal list with role filter
+  http.get(`${API_BASE}/deals`, ({ request }) => {
+    const url = new URL(request.url);
+    const role = url.searchParams.get('role');
+    const limit = Number(url.searchParams.get('limit')) || 20;
+    const cursor = url.searchParams.get('cursor');
+
+    let filtered = [...mockDeals];
+    if (role) {
+      filtered = filtered.filter((d) => d.role === role);
+    }
+
+    let startIndex = 0;
+    if (cursor) {
+      startIndex = filtered.findIndex((d) => d.id === cursor) + 1;
+    }
+
+    const page = filtered.slice(startIndex, startIndex + limit);
+    const hasNext = startIndex + limit < filtered.length;
+    const nextCursor = hasNext ? page[page.length - 1].id : null;
+
+    return HttpResponse.json({ items: page, nextCursor, hasNext });
+  }),
+
+  // GET /deals/:dealId — deal detail
+  http.get(`${API_BASE}/deals/:dealId`, ({ params }) => {
+    const deal = mockDeals.find((d) => d.id === params.dealId);
+    if (!deal) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+    return HttpResponse.json(deal);
+  }),
+
+  // GET /deals/:dealId/timeline — deal timeline events
+  http.get(`${API_BASE}/deals/:dealId/timeline`, ({ params }) => {
+    const timeline = mockDealTimelines[params.dealId as string];
+    if (!timeline) {
+      return HttpResponse.json({ events: [] });
+    }
+    return HttpResponse.json(timeline);
+  }),
+
+  // POST /deals/:dealId/transition — deal state transition
+  http.post(`${API_BASE}/deals/:dealId/transition`, async ({ params, request }) => {
+    const deal = mockDeals.find((d) => d.id === params.dealId);
+    if (!deal) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+    const body = (await request.json()) as { action: string };
+    const statusMap: Record<string, string> = {
+      accept: 'ACCEPTED',
+      reject: 'CANCELLED',
+      cancel: 'CANCELLED',
+      approve_creative: 'CREATIVE_APPROVED',
+      publish: 'PUBLISHED',
+      schedule: 'SCHEDULED',
+    };
+    const newStatus = statusMap[body.action] ?? deal.status;
+    return HttpResponse.json({ ...deal, status: newStatus, updatedAt: new Date().toISOString() });
+  }),
+
+  // POST /deals/:dealId/negotiate — counter-offer
+  http.post(`${API_BASE}/deals/:dealId/negotiate`, async ({ params, request }) => {
+    const deal = mockDeals.find((d) => d.id === params.dealId);
+    if (!deal) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+    const body = (await request.json()) as { priceNano: number };
     return HttpResponse.json({
-      items: [],
-      nextCursor: null,
-      hasNext: false,
+      ...deal,
+      status: 'NEGOTIATING',
+      priceNano: body.priceNano,
+      updatedAt: new Date().toISOString(),
     });
   }),
 

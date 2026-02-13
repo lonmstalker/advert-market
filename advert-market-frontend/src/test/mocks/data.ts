@@ -352,6 +352,224 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
   },
 };
 
+// --- Mock deals ---
+
+export const mockDeals = [
+  {
+    id: 'deal-1',
+    status: 'OFFER_PENDING',
+    channelId: 2,
+    channelTitle: 'Tech Digest',
+    channelUsername: 'techdigest',
+    postType: 'NATIVE',
+    priceNano: 3_000_000_000,
+    role: 'ADVERTISER',
+    advertiserId: 1,
+    ownerId: 2,
+    message: 'Interested in native ad placement for our SaaS product',
+    deadlineAt: '2026-02-20T10:00:00Z',
+    createdAt: '2026-02-12T10:00:00Z',
+    updatedAt: '2026-02-12T10:00:00Z',
+  },
+  {
+    id: 'deal-2',
+    status: 'NEGOTIATING',
+    channelId: 3,
+    channelTitle: 'AI Weekly',
+    channelUsername: 'aiweekly',
+    postType: 'NATIVE',
+    priceNano: 4_500_000_000,
+    role: 'ADVERTISER',
+    advertiserId: 1,
+    ownerId: 3,
+    message: 'AI tool review placement',
+    deadlineAt: '2026-02-25T10:00:00Z',
+    createdAt: '2026-02-10T14:00:00Z',
+    updatedAt: '2026-02-11T09:00:00Z',
+  },
+  {
+    id: 'deal-3',
+    status: 'AWAITING_PAYMENT',
+    channelId: 4,
+    channelTitle: 'Finance Pro',
+    channelUsername: 'financepro',
+    postType: 'NATIVE',
+    priceNano: 8_000_000_000,
+    role: 'ADVERTISER',
+    advertiserId: 1,
+    ownerId: 4,
+    message: null,
+    deadlineAt: '2026-02-28T10:00:00Z',
+    createdAt: '2026-02-08T11:00:00Z',
+    updatedAt: '2026-02-12T15:00:00Z',
+  },
+  {
+    id: 'deal-4',
+    status: 'FUNDED',
+    channelId: 1,
+    channelTitle: 'Crypto News Daily',
+    channelUsername: 'cryptonewsdaily',
+    postType: 'NATIVE',
+    priceNano: 5_000_000_000,
+    role: 'OWNER',
+    advertiserId: 10,
+    ownerId: 1,
+    message: 'Crypto exchange review',
+    deadlineAt: '2026-03-01T10:00:00Z',
+    createdAt: '2026-02-05T08:00:00Z',
+    updatedAt: '2026-02-11T16:00:00Z',
+  },
+  {
+    id: 'deal-5',
+    status: 'CREATIVE_SUBMITTED',
+    channelId: 1,
+    channelTitle: 'Crypto News Daily',
+    channelUsername: 'cryptonewsdaily',
+    postType: 'STORY',
+    priceNano: 4_000_000_000,
+    role: 'OWNER',
+    advertiserId: 11,
+    ownerId: 1,
+    message: 'DeFi platform promo story',
+    deadlineAt: '2026-02-22T10:00:00Z',
+    createdAt: '2026-02-03T12:00:00Z',
+    updatedAt: '2026-02-12T10:30:00Z',
+  },
+  {
+    id: 'deal-6',
+    status: 'PUBLISHED',
+    channelId: 7,
+    channelTitle: 'TON Community',
+    channelUsername: 'toncommunity',
+    postType: 'NATIVE',
+    priceNano: 6_000_000_000,
+    role: 'OWNER',
+    advertiserId: 12,
+    ownerId: 1,
+    message: null,
+    deadlineAt: null,
+    createdAt: '2026-01-20T09:00:00Z',
+    updatedAt: '2026-02-10T14:00:00Z',
+  },
+  {
+    id: 'deal-7',
+    status: 'COMPLETED_RELEASED',
+    channelId: 2,
+    channelTitle: 'Tech Digest',
+    channelUsername: 'techdigest',
+    postType: 'NATIVE',
+    priceNano: 3_000_000_000,
+    role: 'ADVERTISER',
+    advertiserId: 1,
+    ownerId: 2,
+    message: 'Previous successful campaign',
+    deadlineAt: null,
+    createdAt: '2026-01-10T10:00:00Z',
+    updatedAt: '2026-02-01T12:00:00Z',
+  },
+  {
+    id: 'deal-8',
+    status: 'CANCELLED',
+    channelId: 5,
+    channelTitle: 'Marketing Hub',
+    channelUsername: null,
+    postType: 'NATIVE',
+    priceNano: 2_000_000_000,
+    role: 'ADVERTISER',
+    advertiserId: 1,
+    ownerId: 5,
+    message: null,
+    deadlineAt: null,
+    createdAt: '2026-01-05T10:00:00Z',
+    updatedAt: '2026-01-06T11:00:00Z',
+  },
+];
+
+type MockDealEvent = {
+  id: string;
+  type: string;
+  status: string;
+  actorRole: 'ADVERTISER' | 'OWNER' | 'SYSTEM';
+  message: string | null;
+  createdAt: string;
+};
+
+export const mockDealTimelines: Record<string, { events: MockDealEvent[] }> = {
+  'deal-1': {
+    events: [
+      { id: 'evt-1-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-12T10:00:00Z' },
+      { id: 'evt-1-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: 'Interested in native ad placement', createdAt: '2026-02-12T10:00:30Z' },
+    ],
+  },
+  'deal-2': {
+    events: [
+      { id: 'evt-2-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-10T14:00:00Z' },
+      { id: 'evt-2-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-10T14:00:30Z' },
+      { id: 'evt-2-3', type: 'COUNTER_OFFER', status: 'NEGOTIATING' as const, actorRole: 'OWNER' as const, message: 'Can we do 5 TON instead?', createdAt: '2026-02-11T09:00:00Z' },
+    ],
+  },
+  'deal-3': {
+    events: [
+      { id: 'evt-3-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-08T11:00:00Z' },
+      { id: 'evt-3-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-08T11:00:30Z' },
+      { id: 'evt-3-3', type: 'ACCEPTED', status: 'ACCEPTED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-02-09T10:00:00Z' },
+      { id: 'evt-3-4', type: 'PAYMENT_REQUESTED', status: 'AWAITING_PAYMENT' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-02-09T10:00:30Z' },
+    ],
+  },
+  'deal-4': {
+    events: [
+      { id: 'evt-4-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-05T08:00:00Z' },
+      { id: 'evt-4-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-05T08:00:30Z' },
+      { id: 'evt-4-3', type: 'ACCEPTED', status: 'ACCEPTED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-02-06T09:00:00Z' },
+      { id: 'evt-4-4', type: 'PAYMENT_REQUESTED', status: 'AWAITING_PAYMENT' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-02-06T09:00:30Z' },
+      { id: 'evt-4-5', type: 'FUNDED', status: 'FUNDED' as const, actorRole: 'SYSTEM' as const, message: 'Escrow funded via TON', createdAt: '2026-02-07T11:00:00Z' },
+    ],
+  },
+  'deal-5': {
+    events: [
+      { id: 'evt-5-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-03T12:00:00Z' },
+      { id: 'evt-5-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-02-03T12:00:30Z' },
+      { id: 'evt-5-3', type: 'ACCEPTED', status: 'ACCEPTED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-02-04T08:00:00Z' },
+      { id: 'evt-5-4', type: 'PAYMENT_REQUESTED', status: 'AWAITING_PAYMENT' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-02-04T08:00:30Z' },
+      { id: 'evt-5-5', type: 'FUNDED', status: 'FUNDED' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-02-05T10:00:00Z' },
+      { id: 'evt-5-6', type: 'CREATIVE_SUBMITTED', status: 'CREATIVE_SUBMITTED' as const, actorRole: 'ADVERTISER' as const, message: 'Banner uploaded', createdAt: '2026-02-12T10:30:00Z' },
+    ],
+  },
+  'deal-6': {
+    events: [
+      { id: 'evt-6-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-20T09:00:00Z' },
+      { id: 'evt-6-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-20T09:00:30Z' },
+      { id: 'evt-6-3', type: 'ACCEPTED', status: 'ACCEPTED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-01-21T10:00:00Z' },
+      { id: 'evt-6-4', type: 'PAYMENT_REQUESTED', status: 'AWAITING_PAYMENT' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-01-21T10:00:30Z' },
+      { id: 'evt-6-5', type: 'FUNDED', status: 'FUNDED' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-01-22T14:00:00Z' },
+      { id: 'evt-6-6', type: 'CREATIVE_SUBMITTED', status: 'CREATIVE_SUBMITTED' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-25T11:00:00Z' },
+      { id: 'evt-6-7', type: 'CREATIVE_APPROVED', status: 'CREATIVE_APPROVED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-01-26T09:00:00Z' },
+      { id: 'evt-6-8', type: 'PUBLISHED', status: 'PUBLISHED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-02-10T14:00:00Z' },
+    ],
+  },
+  'deal-7': {
+    events: [
+      { id: 'evt-7-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-10T10:00:00Z' },
+      { id: 'evt-7-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-10T10:00:30Z' },
+      { id: 'evt-7-3', type: 'ACCEPTED', status: 'ACCEPTED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-01-11T08:00:00Z' },
+      { id: 'evt-7-4', type: 'PAYMENT_REQUESTED', status: 'AWAITING_PAYMENT' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-01-11T08:00:30Z' },
+      { id: 'evt-7-5', type: 'FUNDED', status: 'FUNDED' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-01-12T12:00:00Z' },
+      { id: 'evt-7-6', type: 'CREATIVE_SUBMITTED', status: 'CREATIVE_SUBMITTED' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-15T09:00:00Z' },
+      { id: 'evt-7-7', type: 'CREATIVE_APPROVED', status: 'CREATIVE_APPROVED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-01-16T11:00:00Z' },
+      { id: 'evt-7-8', type: 'PUBLISHED', status: 'PUBLISHED' as const, actorRole: 'OWNER' as const, message: null, createdAt: '2026-01-20T14:00:00Z' },
+      { id: 'evt-7-9', type: 'DELIVERY_VERIFIED', status: 'DELIVERY_VERIFYING' as const, actorRole: 'SYSTEM' as const, message: null, createdAt: '2026-01-20T14:30:00Z' },
+      { id: 'evt-7-10', type: 'COMPLETED', status: 'COMPLETED_RELEASED' as const, actorRole: 'SYSTEM' as const, message: 'Funds released to owner', createdAt: '2026-02-01T12:00:00Z' },
+    ],
+  },
+  'deal-8': {
+    events: [
+      { id: 'evt-8-1', type: 'CREATED', status: 'DRAFT' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-05T10:00:00Z' },
+      { id: 'evt-8-2', type: 'OFFER_SENT', status: 'OFFER_PENDING' as const, actorRole: 'ADVERTISER' as const, message: null, createdAt: '2026-01-05T10:00:30Z' },
+      { id: 'evt-8-3', type: 'CANCELLED', status: 'CANCELLED' as const, actorRole: 'ADVERTISER' as const, message: 'Changed plans', createdAt: '2026-01-06T11:00:00Z' },
+    ],
+  },
+};
+
 // --- Channel teams ---
 
 export const mockChannelTeams: Record<number, { members: { userId: number; role: string; rights: string[] }[] }> = {

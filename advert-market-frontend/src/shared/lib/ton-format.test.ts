@@ -1,4 +1,4 @@
-import { formatTon, formatTonCompact, NANO_PER_TON, parseTonToNano } from '@/shared/lib/ton-format';
+import { computeCpm, formatCpm, formatTon, formatTonCompact, NANO_PER_TON, parseTonToNano } from '@/shared/lib/ton-format';
 
 describe('ton-format', () => {
   describe('NANO_PER_TON', () => {
@@ -118,6 +118,59 @@ describe('ton-format', () => {
 
     it('throws on double negative', () => {
       expect(() => parseTonToNano('--5')).toThrow('Invalid TON format');
+    });
+  });
+
+  describe('computeCpm', () => {
+    it('computes CPM correctly', () => {
+      // 5 TON for 45000 views -> 5/45000*1000 = 0.111...
+      const cpm = computeCpm(5_000_000_000, 45000);
+      expect(cpm).toBeCloseTo(0.1111, 3);
+    });
+
+    it('returns null for zero views', () => {
+      expect(computeCpm(5_000_000_000, 0)).toBeNull();
+    });
+
+    it('returns null for negative views', () => {
+      expect(computeCpm(5_000_000_000, -100)).toBeNull();
+    });
+
+    it('handles small price', () => {
+      const cpm = computeCpm(100_000_000, 10000);
+      expect(cpm).toBeCloseTo(0.01, 4);
+    });
+
+    it('handles large values', () => {
+      const cpm = computeCpm(15_000_000_000, 180000);
+      expect(cpm).toBeCloseTo(0.0833, 3);
+    });
+  });
+
+  describe('formatCpm', () => {
+    it('formats very small CPM as <0.01', () => {
+      expect(formatCpm(0.005)).toBe('<0.01');
+    });
+
+    it('formats CPM less than 1 with 2 decimals', () => {
+      expect(formatCpm(0.11)).toBe('0.11');
+      expect(formatCpm(0.5)).toBe('0.50');
+    });
+
+    it('formats CPM between 1 and 10 with 1 decimal', () => {
+      expect(formatCpm(3.14)).toBe('3.1');
+      expect(formatCpm(9.99)).toBe('10.0');
+    });
+
+    it('formats CPM >= 10 as integer', () => {
+      expect(formatCpm(15.7)).toBe('16');
+      expect(formatCpm(100)).toBe('100');
+    });
+
+    it('handles boundary values', () => {
+      expect(formatCpm(0.01)).toBe('0.01');
+      expect(formatCpm(1)).toBe('1.0');
+      expect(formatCpm(10)).toBe('10');
     });
   });
 
