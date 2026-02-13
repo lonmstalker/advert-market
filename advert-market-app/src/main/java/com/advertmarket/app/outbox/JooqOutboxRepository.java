@@ -32,6 +32,7 @@ public class JooqOutboxRepository implements OutboxRepository {
     @SuppressFBWarnings(
             value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
             justification = "dealId null-check is performed before .value() call")
+    @SuppressWarnings("fenum")
     public void save(@NonNull OutboxEntry entry) {
         dsl.insertInto(NOTIFICATION_OUTBOX)
                 .set(NOTIFICATION_OUTBOX.DEAL_ID,
@@ -99,6 +100,7 @@ public class JooqOutboxRepository implements OutboxRepository {
                 .execute();
     }
 
+    @SuppressWarnings("fenum")
     private OutboxEntry toEntry(Record record) {
         var dealIdUuid = record.get(NOTIFICATION_OUTBOX.DEAL_ID);
         @Nullable DealId dealId = dealIdUuid != null

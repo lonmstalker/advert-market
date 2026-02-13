@@ -1,7 +1,9 @@
 package com.advertmarket.app.config;
 
+import com.advertmarket.shared.FenumGroup;
 import com.advertmarket.shared.event.TopicNames;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.checkerframework.checker.fenum.qual.Fenum;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,58 +20,62 @@ public class KafkaTopicConfig {
     /** Deal state change events topic. */
     @Bean
     public NewTopic dealStateChangedTopic() {
-        return new NewTopic(TopicNames.DEAL_STATE_CHANGED,
-                DEFAULT_PARTITIONS, REPLICATION);
+        return topic(TopicNames.DEAL_STATE_CHANGED,
+                DEFAULT_PARTITIONS);
     }
 
     /** Deal deadlines topic. */
     @Bean
     public NewTopic dealDeadlinesTopic() {
-        return new NewTopic(TopicNames.DEAL_DEADLINES,
-                DEFAULT_PARTITIONS, REPLICATION);
+        return topic(TopicNames.DEAL_DEADLINES,
+                DEFAULT_PARTITIONS);
     }
 
     /** Financial commands topic. */
     @Bean
     public NewTopic financialCommandsTopic() {
-        return new NewTopic(TopicNames.FINANCIAL_COMMANDS,
-                FINANCIAL_PARTITIONS, REPLICATION);
+        return topic(TopicNames.FINANCIAL_COMMANDS,
+                FINANCIAL_PARTITIONS);
     }
 
     /** Financial events topic. */
     @Bean
     public NewTopic financialEventsTopic() {
-        return new NewTopic(TopicNames.FINANCIAL_EVENTS,
-                FINANCIAL_PARTITIONS, REPLICATION);
+        return topic(TopicNames.FINANCIAL_EVENTS,
+                FINANCIAL_PARTITIONS);
     }
 
     /** Delivery commands topic. */
     @Bean
     public NewTopic deliveryCommandsTopic() {
-        return new NewTopic(TopicNames.DELIVERY_COMMANDS,
-                DEFAULT_PARTITIONS, REPLICATION);
+        return topic(TopicNames.DELIVERY_COMMANDS,
+                DEFAULT_PARTITIONS);
     }
 
     /** Delivery events topic. */
     @Bean
     public NewTopic deliveryEventsTopic() {
-        return new NewTopic(TopicNames.DELIVERY_EVENTS,
-                DEFAULT_PARTITIONS, REPLICATION);
+        return topic(TopicNames.DELIVERY_EVENTS,
+                DEFAULT_PARTITIONS);
     }
 
     /** Communication notifications topic. */
     @Bean
     public NewTopic communicationNotificationsTopic() {
-        return new NewTopic(
-                TopicNames.COMMUNICATION_NOTIFICATIONS,
-                DEFAULT_PARTITIONS, REPLICATION);
+        return topic(TopicNames.COMMUNICATION_NOTIFICATIONS,
+                DEFAULT_PARTITIONS);
     }
 
     /** Financial reconciliation topic. */
     @Bean
     public NewTopic financialReconciliationTopic() {
-        return new NewTopic(
-                TopicNames.FINANCIAL_RECONCILIATION,
-                1, REPLICATION);
+        return topic(TopicNames.FINANCIAL_RECONCILIATION, 1);
+    }
+
+    @SuppressWarnings("fenum:argument")
+    private static NewTopic topic(
+            @Fenum(FenumGroup.TOPIC_NAME) String name,
+            int partitions) {
+        return new NewTopic(name, partitions, REPLICATION);
     }
 }

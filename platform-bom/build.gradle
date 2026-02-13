@@ -56,6 +56,7 @@ dependencies {
         // Static analysis annotations
         api 'com.github.spotbugs:spotbugs-annotations:4.9.8'
         api 'org.checkerframework:checker-qual:3.53.1'
+        api 'org.checkerframework:checker:3.53.1'
 
         // spring-properties-md
         api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api:v0.1.0'

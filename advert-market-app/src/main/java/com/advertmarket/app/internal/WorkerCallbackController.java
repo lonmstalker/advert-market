@@ -11,6 +11,7 @@ import com.advertmarket.financial.api.event.ReconciliationResultEvent;
 import com.advertmarket.financial.api.event.RefundCompletedEvent;
 import com.advertmarket.financial.api.port.FinancialEventPort;
 import com.advertmarket.financial.api.port.ReconciliationResultPort;
+import com.advertmarket.shared.FenumGroup;
 import com.advertmarket.shared.event.DomainEvent;
 import com.advertmarket.shared.event.EventEnvelope;
 import com.advertmarket.shared.event.EventTypeRegistry;
@@ -25,6 +26,7 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.fenum.qual.Fenum;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,6 +53,7 @@ public class WorkerCallbackController {
     private final MetricsFacade metrics;
 
     /** Receives a worker callback and dispatches to the appropriate port. */
+    @SuppressWarnings("fenum")
     @PostMapping("/worker-events")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public WorkerCallbackResponse handleCallback(
@@ -84,8 +87,9 @@ public class WorkerCallbackController {
                 "accepted");
     }
 
-    @SuppressWarnings("unchecked")
-    private void dispatch(String eventType,
+    @SuppressWarnings({"unchecked", "fenum"})
+    private void dispatch(
+            @Fenum(FenumGroup.EVENT_TYPE) String eventType,
             EventEnvelope<?> envelope) {
         switch (eventType) {
             case EventTypes.DEPOSIT_CONFIRMED ->

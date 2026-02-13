@@ -31,6 +31,7 @@ public class DeliveryEventListener {
     private final MetricsFacade metrics;
 
     /** Consumes delivery events from Kafka. */
+    @SuppressWarnings("fenum")
     @KafkaListener(
             topics = TopicNames.DELIVERY_EVENTS,
             groupId = ConsumerGroups.DELIVERY_EVENT_HANDLER,
@@ -50,7 +51,7 @@ public class DeliveryEventListener {
         ack.acknowledge();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "fenum"})
     private void dispatch(EventEnvelope<?> envelope) {
         switch (envelope.eventType()) {
             case EventTypes.PUBLICATION_RESULT ->

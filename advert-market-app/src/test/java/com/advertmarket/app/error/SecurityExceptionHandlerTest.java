@@ -1,8 +1,15 @@
 package com.advertmarket.app.error;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.advertmarket.shared.error.ErrorCode;
+import com.advertmarket.shared.i18n.LocalizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Locale;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,10 +24,15 @@ class SecurityExceptionHandlerTest {
 
     private SecurityExceptionHandler handler;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final LocalizationService localization =
+            mock(LocalizationService.class);
 
     @BeforeEach
     void setUp() {
-        handler = new SecurityExceptionHandler(objectMapper);
+        when(localization.msg(any(String.class), any(Locale.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        handler = new SecurityExceptionHandler(
+                objectMapper, localization);
     }
 
     @Test
@@ -102,5 +114,30 @@ class SecurityExceptionHandlerTest {
         assertThat(body).containsEntry(
                 "type",
                 "urn:advertmarket:error:AUTH_INSUFFICIENT_PERMISSIONS");
+    }
+
+    @Test
+    @DisplayName("Should use localized title and detail")
+    @SuppressWarnings("unchecked")
+    void shouldUseLocalizedMessages() throws Exception {
+        when(localization.msg(
+                eq(ErrorCode.AUTH_INVALID_TOKEN.titleKey()),
+                any(Locale.class)))
+                .thenReturn("Localized Title");
+        when(localization.msg(
+                eq(ErrorCode.AUTH_INVALID_TOKEN.detailKey()),
+                any(Locale.class)))
+                .thenReturn("Localized Detail");
+
+        var request = new MockHttpServletRequest();
+        var response = new MockHttpServletResponse();
+
+        handler.commence(request, response,
+                new BadCredentialsException("Bad"));
+
+        var body = objectMapper.readValue(
+                response.getContentAsString(), Map.class);
+        assertThat(body).containsEntry("title", "Localized Title");
+        assertThat(body).containsEntry("detail", "Localized Detail");
     }
 }

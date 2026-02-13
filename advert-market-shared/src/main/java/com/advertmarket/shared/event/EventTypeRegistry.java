@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Used by {@link EventEnvelopeDeserializer} for two-pass
  * deserialization.
  */
+@SuppressWarnings("fenum:argument")
 public class EventTypeRegistry {
 
     private final Map<String, Class<? extends DomainEvent>> types =

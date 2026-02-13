@@ -6,6 +6,7 @@ import org.checkerframework.checker.fenum.qual.Fenum;
 /**
  * Centralized error code constants for {@link DomainException}.
  */
+@SuppressWarnings("fenum:assignment")
 public final class ErrorCodes {
 
     // --- Auth ---

@@ -85,7 +85,8 @@ public class GlobalExceptionHandler
             AccessDeniedException ex, Locale locale) {
         log.debug("Access denied in controller advice: {}",
                 ex.getMessage());
-        metrics.incrementCounter(MetricNames.AUTH_ACCESS_DENIED);
+        metrics.incrementCounter(
+                MetricNames.AUTH_ACCESS_DENIED);
         var code = ErrorCode.AUTH_INSUFFICIENT_PERMISSIONS;
         var problem = ProblemDetail.forStatus(code.httpStatus());
         problem.setType(URI.create(code.typeUri()));
@@ -102,7 +103,8 @@ public class GlobalExceptionHandler
     public ProblemDetail handleFallback(
             Exception ex, Locale locale) {
         log.error("Unhandled exception", ex);
-        metrics.incrementCounter("errors.unhandled",
+        metrics.incrementCounter(
+                MetricNames.ERRORS_UNHANDLED,
                 "type", ex.getClass().getSimpleName());
         var code = ErrorCode.INTERNAL_ERROR;
         var problem = ProblemDetail.forStatus(code.httpStatus());
@@ -159,12 +161,14 @@ public class GlobalExceptionHandler
         return ResponseEntity.badRequest().body(problem);
     }
 
+    @SuppressWarnings("fenum:argument")
     private ProblemDetail buildProblem(
             DomainException ex,
             @Nullable ErrorCode code,
             int status,
             Locale locale) {
-        metrics.incrementCounter("errors.domain",
+        metrics.incrementCounter(
+                MetricNames.ERRORS_DOMAIN,
                 "code", ex.getErrorCode());
 
         var problem = ProblemDetail.forStatus(status);
@@ -182,6 +186,7 @@ public class GlobalExceptionHandler
         return problem;
     }
 
+    @SuppressWarnings("fenum:argument")
     private void addCommonProperties(
             ProblemDetail problem, String errorCode) {
         problem.setProperty("error_code", errorCode);

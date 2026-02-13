@@ -18,6 +18,7 @@ public class KafkaOutboxPublisher implements OutboxPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
+    @SuppressWarnings("fenum")
     public @NonNull CompletableFuture<Void> publish(
             @NonNull OutboxEntry entry) {
         return kafkaTemplate.send(

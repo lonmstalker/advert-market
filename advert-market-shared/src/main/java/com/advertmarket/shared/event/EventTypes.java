@@ -10,6 +10,7 @@ import org.checkerframework.checker.fenum.qual.Fenum;
  * <p>Annotated with {@link Fenum @Fenum(FenumGroup.EVENT_TYPE)} for
  * static type-safety of event type strings.
  */
+@SuppressWarnings("fenum:assignment")
 public final class EventTypes {
 
     /** Deal state changed event. */

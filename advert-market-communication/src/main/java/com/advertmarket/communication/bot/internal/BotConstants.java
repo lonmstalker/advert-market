@@ -6,6 +6,7 @@ import org.checkerframework.checker.fenum.qual.Fenum;
 /**
  * Shared constants for the Telegram bot framework.
  */
+@SuppressWarnings("fenum:assignment")
 public final class BotConstants {
 
     private BotConstants() {

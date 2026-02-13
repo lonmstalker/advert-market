@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * Facade over Micrometer {@link MeterRegistry} with cached counters and timers.
  */
 @RequiredArgsConstructor
+@SuppressWarnings("fenum:argument")
 public class MetricsFacade {
 
     private final MeterRegistry registry;

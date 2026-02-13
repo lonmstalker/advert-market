@@ -285,14 +285,14 @@ class CodingRulesArchTest {
     // --- Localization enforcement ---
 
     @Test
-    @DisplayName("GlobalExceptionHandler methods setting title/detail"
+    @DisplayName("Error handler methods setting title/detail"
             + " must use LocalizationService or buildProblem")
-    void globalExceptionHandlerMustLocalizeMessages() {
+    void errorHandlersMustLocalizeMessages() {
         methods()
                 .that().areDeclaredInClassesThat()
-                .haveSimpleName("GlobalExceptionHandler")
+                .resideInAPackage("com.advertmarket.app.error..")
                 .should(useLocalizationForProblemDetails())
-                .because("all error messages in GlobalExceptionHandler"
+                .because("all error messages in error handlers"
                         + " must go through LocalizationService"
                         + " for i18n support")
                 .check(classes);

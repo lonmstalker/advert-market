@@ -9,6 +9,7 @@ import org.checkerframework.checker.fenum.qual.Fenum;
  * <p>Annotated with {@link Fenum @Fenum(FenumGroup.CONSUMER_GROUP)} for
  * static type-safety of consumer group strings.
  */
+@SuppressWarnings("fenum:assignment")
 public final class ConsumerGroups {
 
     /** Processes financial commands (deposit, payout, refund). */

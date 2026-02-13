@@ -29,11 +29,11 @@ public class ReconciliationResultListener {
     private final MetricsFacade metrics;
 
     /** Consumes reconciliation result events from Kafka. */
+    @SuppressWarnings({"unchecked", "fenum"})
     @KafkaListener(
             topics = TopicNames.FINANCIAL_RECONCILIATION,
             groupId = ConsumerGroups.RECONCILIATION_RESULT_HANDLER,
             containerFactory = "kafkaListenerContainerFactory")
-    @SuppressWarnings("unchecked")
     public void onMessage(
             ConsumerRecord<String, String> record,
             Acknowledgment ack) {

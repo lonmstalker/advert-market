@@ -6,6 +6,7 @@ import org.checkerframework.checker.fenum.qual.Fenum;
 /**
  * Centralized metric name constants for {@link MetricsFacade}.
  */
+@SuppressWarnings("fenum:assignment")
 public final class MetricNames {
 
     // --- Auth ---
@@ -113,6 +114,12 @@ public final class MetricNames {
             "worker.callback.http.received";
     public static final @Fenum(FenumGroup.METRIC_NAME) String INTERNAL_AUTH_FAILED =
             "internal.auth.failed";
+
+    // --- Errors ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String ERRORS_DOMAIN =
+            "errors.domain";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String ERRORS_UNHANDLED =
+            "errors.unhandled";
 
     // --- System ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_PUBLISHED =

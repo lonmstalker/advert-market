@@ -9,6 +9,7 @@ import org.checkerframework.checker.fenum.qual.Fenum;
  * <p>Annotated with {@link Fenum @Fenum(FenumGroup.TOPIC_NAME)} for
  * static type-safety of topic name strings.
  */
+@SuppressWarnings("fenum:assignment")
 public final class TopicNames {
 
     /** Deal state change events. */

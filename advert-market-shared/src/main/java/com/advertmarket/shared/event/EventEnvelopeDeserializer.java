@@ -53,7 +53,7 @@ public class EventEnvelopeDeserializer {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "fenum:argument"})
     private EventEnvelope<?> doParse(JsonNode root) {
         var eventTypeNode = root.get("eventType");
         if (eventTypeNode == null || eventTypeNode.isNull()) {

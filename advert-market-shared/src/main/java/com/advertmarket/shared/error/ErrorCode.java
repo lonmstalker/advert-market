@@ -1,10 +1,12 @@
 package com.advertmarket.shared.error;
 
+import com.advertmarket.shared.FenumGroup;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.fenum.qual.Fenum;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -140,8 +142,9 @@ public enum ErrorCode {
      * @param errorCode the error code string
      * @return the matching enum constant, or {@code null} if not found
      */
+    @SuppressWarnings("fenum:argument")
     public static @Nullable ErrorCode resolve(
-            @NonNull String errorCode) {
+            @Fenum(FenumGroup.ERROR_CODE) @NonNull String errorCode) {
         Objects.requireNonNull(errorCode, "errorCode");
         return LOOKUP.get(errorCode);
     }

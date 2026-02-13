@@ -1,5 +1,7 @@
 package com.advertmarket.app.error;
 
+import com.advertmarket.shared.error.ErrorCode;
+import com.advertmarket.shared.i18n.LocalizationService;
 import com.advertmarket.shared.logging.MdcKeys;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,9 +9,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,7 +26,8 @@ import org.springframework.stereotype.Component;
  * Unified handler for Spring Security 401/403 responses.
  *
  * <p>Returns RFC 9457 ProblemDetail JSON instead of the default
- * HTML error pages.
+ * HTML error pages. Uses {@link ErrorCode} enum for error codes
+ * and {@link LocalizationService} for i18n title/detail.
  */
 @Slf4j
 @Component
@@ -34,6 +39,7 @@ public class SecurityExceptionHandler
             "application/problem+json";
 
     private final ObjectMapper objectMapper;
+    private final LocalizationService localization;
 
     @Override
     public void commence(
@@ -44,10 +50,7 @@ public class SecurityExceptionHandler
         log.debug("Authentication failed: {}",
                 authException.getMessage());
         writeProblem(response, HttpStatus.UNAUTHORIZED,
-                "AUTH_INVALID_TOKEN",
-                "urn:advertmarket:error:AUTH_INVALID_TOKEN",
-                "Authentication required",
-                "Missing or invalid authentication token");
+                ErrorCode.AUTH_INVALID_TOKEN);
     }
 
     @Override
@@ -59,24 +62,21 @@ public class SecurityExceptionHandler
         log.debug("Access denied: {}",
                 accessDeniedException.getMessage());
         writeProblem(response, HttpStatus.FORBIDDEN,
-                "AUTH_INSUFFICIENT_PERMISSIONS",
-                "urn:advertmarket:error:AUTH_INSUFFICIENT_PERMISSIONS",
-                "Access denied",
-                "You do not have permission to perform this action");
+                ErrorCode.AUTH_INSUFFICIENT_PERMISSIONS);
     }
 
     private void writeProblem(
             HttpServletResponse response,
             HttpStatus status,
-            String errorCode,
-            String typeUri,
-            String title,
-            String detail) throws IOException {
+            ErrorCode errorCode) throws IOException {
+        Locale locale = LocaleContextHolder.getLocale();
         var problem = ProblemDetail.forStatus(status);
-        problem.setType(URI.create(typeUri));
-        problem.setTitle(title);
-        problem.setDetail(detail);
-        problem.setProperty("error_code", errorCode);
+        problem.setType(URI.create(errorCode.typeUri()));
+        problem.setTitle(localization.msg(
+                errorCode.titleKey(), locale));
+        problem.setDetail(localization.msg(
+                errorCode.detailKey(), locale));
+        problem.setProperty("error_code", errorCode.name());
         problem.setProperty("timestamp",
                 Instant.now().toString());
 

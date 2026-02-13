@@ -32,6 +32,7 @@ public class FinancialEventListener {
     private final MetricsFacade metrics;
 
     /** Consumes financial events from Kafka. */
+    @SuppressWarnings("fenum")
     @KafkaListener(
             topics = TopicNames.FINANCIAL_EVENTS,
             groupId = ConsumerGroups.FINANCIAL_EVENT_HANDLER,
@@ -51,7 +52,7 @@ public class FinancialEventListener {
         ack.acknowledge();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "fenum"})
     private void dispatch(EventEnvelope<?> envelope) {
         switch (envelope.eventType()) {
             case EventTypes.DEPOSIT_CONFIRMED ->
