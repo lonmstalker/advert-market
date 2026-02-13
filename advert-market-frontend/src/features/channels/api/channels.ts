@@ -3,7 +3,6 @@ import { api } from '@/shared/api/client';
 import { type PaginatedResponse, paginatedResponseSchema } from '@/shared/api/types';
 import {
   type CatalogFilters,
-
   type Category,
   type Channel,
   type ChannelDetail,

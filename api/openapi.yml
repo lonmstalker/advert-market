@@ -1,101 +1,1432 @@
 openapi: 3.1.0
 info:
   title: Advert Market API
-  version: 0.1.0
   description: Telegram Mini App marketplace for channel advertising
+  version: 0.1.0
 servers:
-  - url: /api/v1
-    description: Default API prefix
+- url: http://localhost:8080
+  description: Generated server url
+tags:
+- name: Channels
+  description: Channel catalog and management
+- name: Admin
+  description: Internal admin endpoints
+- name: Pricing Rules
+  description: Channel pricing rule management
+- name: Channel Team
+  description: Channel team management
+- name: Auth
+  description: Telegram Mini App authentication
+- name: Profile
+  description: User profile management
 paths:
-  /auth/telegram:
-    post:
-      operationId: authenticateTelegram
-      tags: [Auth]
-      summary: Authenticate via Telegram initData
-      requestBody:
+  /internal/v1/canary:
+    get:
+      tags:
+      - Admin
+      summary: Get canary status
+      operationId: getCanary
+      parameters:
+      - name: Authorization
+        in: header
         required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Current canary configuration
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CanaryStatus"
+    put:
+      tags:
+      - Admin
+      summary: Update canary settings
+      operationId: setCanary
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TelegramAuthRequest'
+              $ref: "#/components/schemas/CanaryUpdate"
+        required: true
       responses:
-        '200':
-          description: JWT token issued
+        "200":
+          description: Updated canary configuration
           content:
-            application/json:
+            '*/*':
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
-          description: Invalid initData
+                $ref: "#/components/schemas/CanaryStatus"
+  /api/v1/profile/onboarding:
+    put:
+      tags:
+      - Profile
+      summary: Complete user onboarding
+      operationId: completeOnboarding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingRequest"
+        required: true
+      responses:
+        "200":
+          description: Onboarding completed
           content:
-            application/json:
+            '*/*':
               schema:
-                $ref: '#/components/schemas/ProblemDetail'
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid interests
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+      security:
+      - bearerAuth: []
+  /api/v1/channels/{id}:
+    get:
+      tags:
+      - Channels
+      summary: Get channel detail
+      description: Full channel info including pricing rules
+      operationId: getDetail
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Channel detail
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelDetailResponse"
+        "404":
+          description: Channel not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelDetailResponse"
+    put:
+      tags:
+      - Channels
+      summary: Update channel
+      description: Update channel details (owner only)
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChannelUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: Channel updated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+        "403":
+          description: Not the owner of the channel
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+        "404":
+          description: Channel not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Channels
+      summary: Deactivate channel
+      description: Soft-delete a channel (owner only)
+      operationId: deactivate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Channel deactivated
+        "403":
+          description: Not the owner of the channel
+        "404":
+          description: Channel not found
+      security:
+      - bearerAuth: []
+  /api/v1/channels/{channelId}/team/{userId}:
+    put:
+      tags:
+      - Channel Team
+      summary: Update member rights
+      description: Updates rights for a MANAGER (owner only)
+      operationId: updateRights
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamUpdateRightsRequest"
+        required: true
+      responses:
+        "200":
+          description: Rights updated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TeamMemberDto"
+        "403":
+          description: Not the owner or target is OWNER
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TeamMemberDto"
+        "404":
+          description: Team member not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TeamMemberDto"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Channel Team
+      summary: Remove team member
+      description: Removes a MANAGER (owner or self-removal)
+      operationId: remove
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Member removed
+        "403":
+          description: Not authorized or target is OWNER
+        "404":
+          description: Team member not found
+      security:
+      - bearerAuth: []
+  /api/v1/channels/{channelId}/pricing/{ruleId}:
+    put:
+      tags:
+      - Pricing Rules
+      summary: Update pricing rule
+      description: Updates a pricing rule (owner only)
+      operationId: update_1
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: ruleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PricingRuleUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: Rule updated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PricingRuleDto"
+        "403":
+          description: Not the owner of the channel
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PricingRuleDto"
+        "404":
+          description: Pricing rule not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PricingRuleDto"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Pricing Rules
+      summary: Delete pricing rule
+      description: Soft-deletes a pricing rule (owner only)
+      operationId: delete
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: ruleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Rule deleted
+        "403":
+          description: Not the owner of the channel
+        "404":
+          description: Pricing rule not found
+      security:
+      - bearerAuth: []
+  /internal/v1/worker-events:
+    post:
+      tags:
+      - worker-callback-controller
+      operationId: handleCallback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkerCallback"
+        required: true
+      responses:
+        "202":
+          description: Accepted
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WorkerCallbackResponse"
+  /api/v1/channels:
+    get:
+      tags:
+      - Channels
+      summary: Search channels
+      description: Public channel catalog with filters and BM25 search
+      operationId: search
+      parameters:
+      - name: query
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: minSubscribers
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: minSubs
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: maxSubscribers
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: maxSubs
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: minPrice
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: maxPrice
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: minEngagement
+        in: query
+        required: false
+        schema:
+          type: number
+          format: double
+      - name: language
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          default: SUBSCRIBERS_DESC
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: Search results
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CursorPageChannelListItem"
+    post:
+      tags:
+      - Channels
+      summary: Register a channel
+      description: Registers a previously verified channel
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChannelRegistrationRequest"
+        required: true
+      responses:
+        "201":
+          description: Channel registered
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+        "403":
+          description: User is not an admin of the channel
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+        "409":
+          description: Channel already registered
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+      security:
+      - bearerAuth: []
+  /api/v1/channels/{channelId}/team:
+    get:
+      tags:
+      - Channel Team
+      summary: List team members
+      description: Lists all team members (requires manage_team right)
+      operationId: list
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: List of team members
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamMemberDto"
+        "403":
+          description: Insufficient rights
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamMemberDto"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Channel Team
+      summary: Invite team member
+      description: Invites a user as MANAGER (owner only)
+      operationId: invite
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamInviteRequest"
+        required: true
+      responses:
+        "201":
+          description: Member invited
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TeamMemberDto"
+        "403":
+          description: Not the owner of the channel
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TeamMemberDto"
+        "409":
+          description: User is already a team member
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TeamMemberDto"
+        "422":
+          description: Manager limit exceeded
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TeamMemberDto"
+      security:
+      - bearerAuth: []
+  /api/v1/channels/{channelId}/pricing:
+    get:
+      tags:
+      - Pricing Rules
+      summary: List pricing rules
+      description: Lists active pricing rules for a channel
+      operationId: list_1
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: List of pricing rules
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PricingRuleDto"
+    post:
+      tags:
+      - Pricing Rules
+      summary: Create pricing rule
+      description: Creates a pricing rule for a channel (owner only)
+      operationId: create
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PricingRuleCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Rule created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PricingRuleDto"
+        "403":
+          description: Not the owner of the channel
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PricingRuleDto"
+      security:
+      - bearerAuth: []
+  /api/v1/channels/verify:
+    post:
+      tags:
+      - Channels
+      summary: Verify channel for registration
+      description: Checks that the bot is an admin and the user owns the channel
+      operationId: verify
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChannelVerifyRequest"
+        required: true
+      responses:
+        "200":
+          description: Verification result
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelVerifyResponse"
+        "403":
+          description: Bot or user lacks required permissions
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelVerifyResponse"
+        "404":
+          description: Channel not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelVerifyResponse"
+      security:
+      - bearerAuth: []
+  /api/v1/bot/webhook:
+    post:
+      tags:
+      - telegram-webhook-controller
+      operationId: handleWebhook
+      parameters:
+      - name: X-Telegram-Bot-Api-Secret-Token
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Logout and revoke current JWT
+      description: Blacklists the current JWT token so it can no longer be used
+      operationId: logout
+      responses:
+        "204":
+          description: Logged out successfully
+        "401":
+          description: Not authenticated
+      security:
+      - bearerAuth: []
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Auth
+      summary: Login via Telegram initData
+      description: Validates Telegram Mini App initData using HMAC-SHA256 and issues
+        a JWT token
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Invalid request body
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid or expired initData
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "429":
+          description: Too many login attempts
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+  /api/v1/profile:
+    get:
+      tags:
+      - Profile
+      summary: Get current user profile
+      operationId: getProfile
+      responses:
+        "200":
+          description: Profile retrieved
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Profile
+      summary: Delete user account (soft delete)
+      operationId: deleteAccount
+      responses:
+        "204":
+          description: Account deleted
+        "401":
+          description: Not authenticated
+      security:
+      - bearerAuth: []
+  /api/v1/post-types:
+    get:
+      tags:
+      - Reference Data
+      summary: List all post types with labels
+      operationId: listPostTypes
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostTypeDto"
+  /api/v1/channels/count:
+    get:
+      tags:
+      - Channels
+      summary: Count channels
+      description: Returns channel count for given search filters
+      operationId: count
+      parameters:
+      - name: query
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: minSubscribers
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: minSubs
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: maxSubscribers
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: maxSubs
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: minPrice
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: maxPrice
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: minEngagement
+        in: query
+        required: false
+        schema:
+          type: number
+          format: double
+      - name: language
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Channel count
+          content:
+            '*/*':
+              schema:
+                type: integer
+                format: int64
+  /api/v1/categories:
+    get:
+      tags:
+      - Reference Data
+      summary: List all active categories
+      operationId: listCategories
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryDto"
 components:
   schemas:
-    TelegramAuthRequest:
+    CanaryUpdate:
       type: object
-      required: [initData]
       properties:
-        initData:
-          type: string
-          description: Telegram Mini App initData string
-    AuthResponse:
-      type: object
-      required: [accessToken, expiresIn, user]
-      properties:
-        accessToken:
-          type: string
-        expiresIn:
+        percent:
           type: integer
-        user:
-          $ref: '#/components/schemas/UserInfo'
-    UserInfo:
+          format: int32
+        salt:
+          type: string
+    CanaryStatus:
       type: object
-      required: [id, username, displayName]
+      properties:
+        percent:
+          type: integer
+          format: int32
+        salt:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    OnboardingRequest:
+      type: object
+      description: User onboarding completion request
+      properties:
+        interests:
+          type: array
+          description: Selected interest tags
+          example:
+          - tech
+          - gaming
+          items:
+            type: string
+            maxLength: 100
+            minLength: 0
+          maxItems: 50
+          minItems: 0
+      required:
+      - interests
+    UserProfile:
+      type: object
+      description: Full user profile
       properties:
         id:
           type: integer
           format: int64
+          description: Telegram user ID
+          example: 42
         username:
           type: string
+          description: Telegram username
+          example: johndoe
         displayName:
           type: string
-    ProblemDetail:
-      type: object
-      required: [type, title, status]
-      properties:
-        type:
+          description: Display name
+          example: John Doe
+        languageCode:
           type: string
+          description: IETF language tag
+          example: en
+        onboardingCompleted:
+          type: boolean
+          description: Whether onboarding is completed
+        interests:
+          type: array
+          description: Selected interest tags
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+          description: Registration timestamp
+    ChannelUpdateRequest:
+      type: object
+      description: Channel update request
+      properties:
+        description:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+        pricePerPostNano:
+          type: integer
+          format: int64
+        language:
+          type: string
+          maxLength: 10
+          minLength: 0
+        isActive:
+          type: boolean
+    ChannelResponse:
+      type: object
+      description: Registered channel
+      properties:
+        id:
+          type: integer
+          format: int64
         title:
           type: string
-        status:
+        username:
+          type: string
+        description:
+          type: string
+        subscriberCount:
           type: integer
-        detail:
+          format: int32
+        categories:
+          type: array
+          items:
+            type: string
+        pricePerPostNano:
+          type: integer
+          format: int64
+        isActive:
+          type: boolean
+        ownerId:
+          type: integer
+          format: int64
+        createdAt:
           type: string
-        instance:
-          type: string
-    PaginatedResponse:
+          format: date-time
+    TeamUpdateRightsRequest:
       type: object
-      required: [items, hasNext]
+      description: Team rights update request
+      properties:
+        rights:
+          type: array
+          items:
+            type: string
+            enum:
+            - MODERATE
+            - PUBLISH
+            - MANAGE_TEAM
+            - VIEW_STATS
+          uniqueItems: true
+      required:
+      - rights
+    TeamMemberDto:
+      type: object
+      description: Channel team member
+      properties:
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        role:
+          type: string
+          enum:
+          - OWNER
+          - MANAGER
+        rights:
+          type: array
+          items:
+            type: string
+            enum:
+            - MODERATE
+            - PUBLISH
+            - MANAGE_TEAM
+            - VIEW_STATS
+          uniqueItems: true
+        invitedBy:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+    PricingRuleUpdateRequest:
+      type: object
+      description: Pricing rule update request
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 0
+        description:
+          type: string
+        postTypes:
+          type: array
+          items:
+            type: string
+            enum:
+            - REPOST
+            - NATIVE
+            - STORY
+            - INTEGRATION
+            - REVIEW
+            - MENTION
+            - GIVEAWAY
+            - PINNED
+            - POLL
+            - FORWARD
+          uniqueItems: true
+        priceNano:
+          type: integer
+          format: int64
+        sortOrder:
+          type: integer
+          format: int32
+        isActive:
+          type: boolean
+    PricingRuleDto:
+      type: object
+      description: Channel pricing rule
+      properties:
+        id:
+          type: integer
+          format: int64
+        channelId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        postTypes:
+          type: array
+          items:
+            type: string
+            enum:
+            - REPOST
+            - NATIVE
+            - STORY
+            - INTEGRATION
+            - REVIEW
+            - MENTION
+            - GIVEAWAY
+            - PINNED
+            - POLL
+            - FORWARD
+          uniqueItems: true
+        priceNano:
+          type: integer
+          format: int64
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+          format: int32
+    JsonNode: {}
+    WorkerCallback:
+      type: object
+      properties:
+        callbackType:
+          type: string
+        dealId:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+          format: uuid
+        payload:
+          $ref: "#/components/schemas/JsonNode"
+    WorkerCallbackResponse:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+          format: uuid
+        status:
+          type: string
+    ChannelRegistrationRequest:
+      type: object
+      description: Channel registration request
+      properties:
+        channelId:
+          type: integer
+          format: int64
+          description: Telegram chat ID from verify step
+        categories:
+          type: array
+          description: Category slugs
+          example:
+          - tech
+          items:
+            type: string
+        pricePerPostNano:
+          type: integer
+          format: int64
+          description: Price per post in nanoTON
+    TeamInviteRequest:
+      type: object
+      description: Team invite request
+      properties:
+        userId:
+          type: integer
+          format: int64
+        rights:
+          type: array
+          items:
+            type: string
+            enum:
+            - MODERATE
+            - PUBLISH
+            - MANAGE_TEAM
+            - VIEW_STATS
+          uniqueItems: true
+      required:
+      - rights
+    PricingRuleCreateRequest:
+      type: object
+      description: Pricing rule creation request
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 0
+        description:
+          type: string
+        postTypes:
+          type: array
+          items:
+            type: string
+            enum:
+            - REPOST
+            - NATIVE
+            - STORY
+            - INTEGRATION
+            - REVIEW
+            - MENTION
+            - GIVEAWAY
+            - PINNED
+            - POLL
+            - FORWARD
+          minItems: 1
+          uniqueItems: true
+        priceNano:
+          type: integer
+          format: int64
+        sortOrder:
+          type: integer
+          format: int32
+      required:
+      - name
+      - postTypes
+    ChannelVerifyRequest:
+      type: object
+      description: Channel verification request
+      properties:
+        channelUsername:
+          type: string
+          description: Public channel username without @
+          example: mychannel
+          maxLength: 255
+          minLength: 0
+      required:
+      - channelUsername
+    BotStatus:
+      type: object
+      description: Bot status in the channel
+      properties:
+        isAdmin:
+          type: boolean
+        canPostMessages:
+          type: boolean
+        canEditMessages:
+          type: boolean
+        missingPermissions:
+          type: array
+          items:
+            type: string
+    ChannelVerifyResponse:
+      type: object
+      description: Channel verification result
+      properties:
+        channelId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        username:
+          type: string
+        subscriberCount:
+          type: integer
+          format: int32
+        botStatus:
+          $ref: "#/components/schemas/BotStatus"
+        userStatus:
+          $ref: "#/components/schemas/UserStatus"
+    UserStatus:
+      type: object
+      description: User status in the channel
+      properties:
+        isMember:
+          type: boolean
+        role:
+          type: string
+    LoginRequest:
+      type: object
+      description: Telegram Mini App login request
+      properties:
+        initData:
+          type: string
+          description: Raw Telegram initData query string
+          example: query_id=AAH...&auth_date=1700000000&hash=abc
+          maxLength: 4096
+          minLength: 0
+      required:
+      - initData
+    LoginResponse:
+      type: object
+      description: Successful login response with JWT and user info
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: eyJhbGciOiJIUzI1NiJ9...
+        expiresIn:
+          type: integer
+          format: int64
+          description: Token lifetime in seconds
+          example: 3600
+        user:
+          $ref: "#/components/schemas/UserSummary"
+          description: Summary of the authenticated user
+    UserSummary:
+      type: object
+      description: Compact user info returned with the token
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Telegram user ID
+          example: 42
+        username:
+          type: string
+          description: Telegram username (without @)
+          example: johndoe
+        displayName:
+          type: string
+          description: Display name from first + last name
+          example: John Doe
+    PostTypeDto:
+      type: object
+      description: Post type with localized labels
+      properties:
+        value:
+          type: string
+          enum:
+          - REPOST
+          - NATIVE
+          - STORY
+          - INTEGRATION
+          - REVIEW
+          - MENTION
+          - GIVEAWAY
+          - PINNED
+          - POLL
+          - FORWARD
+        localizedName:
+          type: object
+          additionalProperties:
+            type: string
+    ChannelListItem:
+      type: object
+      description: Channel search result item
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        username:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+        subscriberCount:
+          type: integer
+          format: int32
+        avgViews:
+          type: integer
+          format: int32
+        engagementRate:
+          type: number
+        pricePerPostNano:
+          type: integer
+          format: int64
+        isActive:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+    CursorPageChannelListItem:
+      type: object
       properties:
         items:
           type: array
-          items: {}
+          items:
+            $ref: "#/components/schemas/ChannelListItem"
         nextCursor:
           type: string
-          nullable: true
-        hasNext:
+    ChannelDetailResponse:
+      type: object
+      description: Full channel detail with pricing rules
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        username:
+          type: string
+        description:
+          type: string
+        subscriberCount:
+          type: integer
+          format: int32
+        categories:
+          type: array
+          items:
+            type: string
+        pricePerPostNano:
+          type: integer
+          format: int64
+        isActive:
           type: boolean
+        ownerId:
+          type: integer
+          format: int64
+        engagementRate:
+          type: number
+        avgViews:
+          type: integer
+          format: int32
+        language:
+          type: string
+        pricingRules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PricingRuleDto"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CategoryDto:
+      type: object
+      description: Channel category with localized names
+      properties:
+        id:
+          type: integer
+          format: int32
+        slug:
+          type: string
+        localizedName:
+          type: object
+          additionalProperties:
+            type: string
+        sortOrder:
+          type: integer
+          format: int32
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    telegramInitData:
-      type: apiKey
-      in: header
-      name: X-Telegram-Init-Data
-security:
-  - bearerAuth: []
-  - telegramInitData: []

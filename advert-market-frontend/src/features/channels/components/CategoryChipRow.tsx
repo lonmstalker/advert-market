@@ -73,11 +73,7 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
         WebkitOverflowScrolling: 'touch',
       }}
     >
-      <Chip
-        label={t('catalog.filters.topicAll')}
-        active={isAllSelected}
-        onClick={() => onSelect([])}
-      />
+      <Chip label={t('catalog.filters.topicAll')} active={isAllSelected} onClick={() => onSelect([])} />
       {sorted.map((cat: Category) => (
         <Chip
           key={cat.slug}

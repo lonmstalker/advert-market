@@ -28,3 +28,9 @@ body {
   outline: 2px solid var(--color-accent-primary);
   outline-offset: 2px;
 }
+
+/* Pulsing dot animation for deal status */
+@keyframes deal-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

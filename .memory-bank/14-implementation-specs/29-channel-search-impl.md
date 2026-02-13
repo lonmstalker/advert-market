@@ -9,23 +9,23 @@ Implementation of channel search in the marketplace: jOOQ dynamic query building
 ## Search API
 
 ```
-GET /api/v1/channels?topic=crypto&minSubscribers=1000&maxPrice=100000000000&sort=subscribers_desc&cursor=xxx&limit=20
+GET /api/v1/channels?category=crypto&minSubscribers=1000&maxPrice=100000000000&sort=SUBSCRIBERS_DESC&cursor=xxx&limit=20
+GET /api/v1/channels/count?category=crypto&minSubscribers=1000&maxPrice=100000000000
 ```
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `topic` | String | -- | Filter by topic (exact match) |
+| `category` | String | -- | Filter by category slug (join `channel_categories`) |
 | `minSubscribers` | Integer | -- | Minimum subscriber count |
 | `maxSubscribers` | Integer | -- | Maximum subscriber count |
 | `minPrice` | Long | -- | Minimum price (nanoTON) |
 | `maxPrice` | Long | -- | Maximum price (nanoTON) |
 | `minEngagement` | Decimal | -- | Minimum engagement rate |
 | `language` | String | -- | Channel content language |
-| `available` | Boolean | -- | Only channels accepting deals now |
 | `query` | String | -- | Full-text search in title + description |
-| `sort` | String | `relevance` | Sort order |
+| `sort` | String | `SUBSCRIBERS_DESC` | Sort order |
 | `cursor` | String | -- | Pagination cursor (opaque) |
 | `limit` | Integer | 20 | Page size (max 50) |
 
@@ -33,13 +33,27 @@ GET /api/v1/channels?topic=crypto&minSubscribers=1000&maxPrice=100000000000&sort
 
 | Value | SQL ORDER BY |
 |-------|-------------|
-| `relevance` | `ts_rank(tsv, query) DESC, subscriber_count DESC` |
-| `subscribers_desc` | `subscriber_count DESC` |
-| `subscribers_asc` | `subscriber_count ASC` |
-| `price_asc` | `price_per_post_nano ASC` |
-| `price_desc` | `price_per_post_nano DESC` |
-| `engagement_desc` | `engagement_rate DESC` |
-| `updated` | `updated_at DESC` |
+| `RELEVANCE` | `pdb.score(id) DESC, id DESC` (when text query is present) |
+| `SUBSCRIBERS_DESC` | `subscriber_count DESC` |
+| `SUBSCRIBERS_ASC` | `subscriber_count ASC` |
+| `PRICE_ASC` | `price_per_post_nano ASC` |
+| `PRICE_DESC` | `price_per_post_nano DESC` |
+| `ENGAGEMENT_DESC` | `engagement_rate DESC` |
+| `UPDATED` | `updated_at DESC` |
+
+### Backward-Compatible Aliases
+
+Backend accepts legacy frontend aliases and maps them to canonical parameters:
+
+| Legacy key/value | Canonical key/value |
+|---|---|
+| `q` | `query` |
+| `minSubs` | `minSubscribers` |
+| `maxSubs` | `maxSubscribers` |
+| `sort=subscribers` | `sort=SUBSCRIBERS_DESC` |
+| `sort=price_asc` | `sort=PRICE_ASC` |
+| `sort=price_desc` | `sort=PRICE_DESC` |
+| `sort=er` | `sort=ENGAGEMENT_DESC` |
 
 ---
 
@@ -47,14 +61,13 @@ GET /api/v1/channels?topic=crypto&minSubscribers=1000&maxPrice=100000000000&sort
 
 ```java
 public record ChannelSearchCriteria(
-    String topic,
+    String category,
     Integer minSubscribers,
     Integer maxSubscribers,
     Long minPrice,
     Long maxPrice,
     BigDecimal minEngagement,
     String language,
-    Boolean available,
     String query,
     ChannelSort sort,
     String cursor,
@@ -69,8 +82,8 @@ public Page<ChannelListingDto> search(ChannelSearchCriteria criteria) {
     conditions.add(c.IS_ACTIVE.isTrue());
 
     // Dynamic filters
-    if (criteria.topic() != null)
-        conditions.add(c.TOPIC.eq(criteria.topic()));
+    if (criteria.category() != null)
+        conditions.add(existsCategory(criteria.category()));
     if (criteria.minSubscribers() != null)
         conditions.add(c.SUBSCRIBER_COUNT.ge(criteria.minSubscribers()));
     if (criteria.maxSubscribers() != null)
@@ -107,6 +120,13 @@ public Page<ChannelListingDto> search(ChannelSearchCriteria criteria) {
 
     String nextCursor = hasNext ? encodeCursor(results.getLast(), criteria.sort()) : null;
     return new Page<>(results, nextCursor);
+}
+
+public long count(ChannelSearchCriteria criteria) {
+    return dsl.selectCount()
+        .from(CHANNELS)
+        .where(DSL.and(buildBaseConditions(criteria)))
+        .fetchOne(0, long.class);
 }
 ```
 

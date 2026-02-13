@@ -281,6 +281,11 @@
       "conditions": "Условия размещения",
       "perThousandViews": "за 1 000 просмотров",
       "ownerNote": "Заметка от владельца",
+      "overlapTooltipLine1": "~{{freq}}ч — реклама на 1-м месте",
+      "overlapTooltipLine2": "{{dur}}ч — пост в ленте канала",
+      "overlapFormat": "{{freq}}/{{dur}}",
+      "onlyDuration": "{{dur}}ч",
+      "onlyFrequency": "~{{freq}}ч",
       "postType": {
         "NATIVE": "Нативный пост",
         "STORY": "Сторис",

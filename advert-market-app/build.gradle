@@ -18,6 +18,7 @@ dependencies {
     implementation project(':advert-market-communication')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -46,4 +47,23 @@ openApi {
     apiDocsUrl = 'http://localhost:8080/v3/api-docs.yaml'
     outputDir = file("${rootDir}/api")
     outputFileName = 'openapi.yml'
+}
+
+tasks.named('forkedSpringBootRun').configure {
+    dependsOn(
+            ':advert-market-shared:jar',
+            ':advert-market-db:jar',
+            ':advert-market-identity-api:jar',
+            ':advert-market-identity:jar',
+            ':advert-market-financial-api:jar',
+            ':advert-market-financial:jar',
+            ':advert-market-marketplace-api:jar',
+            ':advert-market-marketplace:jar',
+            ':advert-market-deal-api:jar',
+            ':advert-market-deal:jar',
+            ':advert-market-delivery-api:jar',
+            ':advert-market-delivery:jar',
+            ':advert-market-communication-api:jar',
+            ':advert-market-communication:jar'
+    )
 }

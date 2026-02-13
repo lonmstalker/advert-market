@@ -4,12 +4,14 @@ export { DealInfoCard } from './components/DealInfoCard';
 export { DealListItem } from './components/DealListItem';
 export { DealStatusBadge } from './components/DealStatusBadge';
 export { DealTimeline } from './components/DealTimeline';
-export { NegotiateSheetContent, setNegotiateSheetProps } from './components/NegotiateSheet';
+export { NegotiateSheetContent } from './components/NegotiateSheet';
+export { setNegotiateSheetProps } from './components/negotiate-sheet-props';
 export { useDealDetail } from './hooks/useDealDetail';
 export { useDealTransition } from './hooks/useDealTransition';
-export { buildTimelineSteps, getPollingInterval, getStatusConfig } from './lib/deal-status';
+export type { DealAction, DealActionType } from './lib/deal-actions';
 export { getDealActions } from './lib/deal-actions';
-
+export type { StatusColor, StatusConfig, TimelineStep } from './lib/deal-status';
+export { buildTimelineSteps, getPollingInterval, getStatusConfig } from './lib/deal-status';
 export type {
   Deal,
   DealEvent,
@@ -20,5 +22,3 @@ export type {
   NegotiateRequest,
   TransitionRequest,
 } from './types/deal';
-export type { DealAction, DealActionType } from './lib/deal-actions';
-export type { StatusColor, StatusConfig, TimelineStep } from './lib/deal-status';

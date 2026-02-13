@@ -1,7 +1,7 @@
+import { HttpResponse, http } from 'msw';
 import { Route, Routes } from 'react-router';
-import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
-import { http, HttpResponse } from 'msw';
+import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import ChannelDetailPage from './ChannelDetailPage';
 
 vi.mock('@/features/auth/hooks/use-auth', () => ({
@@ -102,9 +102,7 @@ describe('ChannelDetailPage', () => {
 
     it('shows description text', async () => {
       renderPage(1);
-      expect(
-        await screen.findByText(/Ежедневные новости из мира криптовалют и блокчейна/),
-      ).toBeInTheDocument();
+      expect(await screen.findByText(/Ежедневные новости из мира криптовалют и блокчейна/)).toBeInTheDocument();
     });
 
     it('shows "Open channel in Telegram" link', async () => {
@@ -176,16 +174,12 @@ describe('ChannelDetailPage', () => {
     it('shows owner note section', async () => {
       renderPage(1);
       expect(await screen.findByText("Owner's note")).toBeInTheDocument();
-      expect(
-        screen.getByText(/Пост должен быть на тему криптовалют или блокчейна/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Пост должен быть на тему криптовалют или блокчейна/)).toBeInTheDocument();
     });
 
     it('shows Edit button for owner', async () => {
       renderPage(1);
-      expect(
-        await screen.findByRole('button', { name: 'Edit' }),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Edit' })).toBeInTheDocument();
     });
 
     it('does NOT show "Create deal" CTA for owner', async () => {
@@ -214,9 +208,7 @@ describe('ChannelDetailPage', () => {
       const { user } = renderPage(1);
       const shareBtn = await screen.findByRole('button', { name: 'Share' });
       await user.click(shareBtn);
-      expect(mockCopyToClipboard).toHaveBeenCalledWith(
-        'https://t.me/AdvertMarketBot/app?startapp=channel_1',
-      );
+      expect(mockCopyToClipboard).toHaveBeenCalledWith('https://t.me/AdvertMarketBot/app?startapp=channel_1');
     });
 
     it('shows channel age', async () => {
@@ -357,9 +349,7 @@ describe('ChannelDetailPage', () => {
             ownerId: 99,
             createdAt: '2025-01-01T00:00:00Z',
             avgReach: 1500,
-            pricingRules: [
-              { id: 510, postType: 'NATIVE', priceNano: 1_000_000_000 },
-            ],
+            pricingRules: [{ id: 510, postType: 'NATIVE', priceNano: 1_000_000_000 }],
             topics: [],
           });
         }),
@@ -385,9 +375,7 @@ describe('ChannelDetailPage', () => {
             ownerId: 99,
             createdAt: '2025-01-01T00:00:00Z',
             avgReach: 3000,
-            pricingRules: [
-              { id: 500, postType: 'NATIVE', priceNano: 1_000_000_000 },
-            ],
+            pricingRules: [{ id: 500, postType: 'NATIVE', priceNano: 1_000_000_000 }],
             topics: [],
           });
         }),

@@ -1,7 +1,7 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
-import type { DealStatus } from '../types/deal';
 import { getStatusConfig, statusBgVar, statusColorVar } from '../lib/deal-status';
+import type { DealStatus } from '../types/deal';
 
 type DealStatusBadgeProps = {
   status: DealStatus;

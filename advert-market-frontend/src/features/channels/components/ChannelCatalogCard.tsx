@@ -1,6 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
 import { computeCpm, formatCpm, formatTonCompact } from '@/shared/lib/ton-format';
@@ -71,12 +71,16 @@ function MetricPill({ value, label, valueColor }: { value: string; label: string
         whiteSpace: 'nowrap',
       }}
     >
-      <span style={{ fontWeight: 600, color: valueColor ?? 'var(--color-foreground-primary)', fontVariantNumeric: 'tabular-nums' }}>
+      <span
+        style={{
+          fontWeight: 600,
+          color: valueColor ?? 'var(--color-foreground-primary)',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
         {value}
       </span>
-      <span style={{ color: 'var(--color-foreground-tertiary)', fontWeight: 400 }}>
-        {label}
-      </span>
+      <span style={{ color: 'var(--color-foreground-tertiary)', fontWeight: 400 }}>{label}</span>
     </span>
   );
 }
@@ -135,9 +139,10 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-  const cpm = channel.pricePerPostNano != null && channel.avgViews
-    ? computeCpm(channel.pricePerPostNano, channel.avgViews)
-    : null;
+  const cpm =
+    channel.pricePerPostNano != null && channel.avgViews
+      ? computeCpm(channel.pricePerPostNano, channel.avgViews)
+      : null;
 
   const langs = getChannelLanguages(channel);
 

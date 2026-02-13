@@ -1,5 +1,5 @@
-import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { mockCategories } from '@/test/mocks/data';
+import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { CategoryChipRow } from './CategoryChipRow';
 
 describe('CategoryChipRow', () => {
@@ -45,9 +45,7 @@ describe('CategoryChipRow', () => {
 
   it('clicking an already-selected category calls onSelect without that slug', async () => {
     const onSelect = vi.fn();
-    const { user } = renderWithProviders(
-      <CategoryChipRow selected={['crypto', 'tech']} onSelect={onSelect} />,
-    );
+    const { user } = renderWithProviders(<CategoryChipRow selected={['crypto', 'tech']} onSelect={onSelect} />);
 
     const cryptoChip = await screen.findByRole('button', { name: 'Crypto' });
     await user.click(cryptoChip);
@@ -58,9 +56,7 @@ describe('CategoryChipRow', () => {
 
   it('clicking "All topics" calls onSelect with empty array', async () => {
     const onSelect = vi.fn();
-    const { user } = renderWithProviders(
-      <CategoryChipRow selected={['crypto']} onSelect={onSelect} />,
-    );
+    const { user } = renderWithProviders(<CategoryChipRow selected={['crypto']} onSelect={onSelect} />);
 
     const allTopicsChip = await screen.findByRole('button', { name: 'All topics' });
     await user.click(allTopicsChip);
@@ -71,9 +67,7 @@ describe('CategoryChipRow', () => {
 
   it('returns null initially before categories load', () => {
     const onSelect = vi.fn();
-    const { container } = renderWithProviders(
-      <CategoryChipRow selected={[]} onSelect={onSelect} />,
-    );
+    const { container } = renderWithProviders(<CategoryChipRow selected={[]} onSelect={onSelect} />);
 
     expect(container.innerHTML).toBe('');
   });

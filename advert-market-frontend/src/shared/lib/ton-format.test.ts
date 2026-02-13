@@ -1,4 +1,11 @@
-import { computeCpm, formatCpm, formatTon, formatTonCompact, NANO_PER_TON, parseTonToNano } from '@/shared/lib/ton-format';
+import {
+  computeCpm,
+  formatCpm,
+  formatTon,
+  formatTonCompact,
+  NANO_PER_TON,
+  parseTonToNano,
+} from '@/shared/lib/ton-format';
 
 describe('ton-format', () => {
   describe('NANO_PER_TON', () => {

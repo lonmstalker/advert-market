@@ -1,30 +1,20 @@
 import { Button, Input, Text } from '@telegram-tools/ui-kit';
+import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTon } from '@/shared/lib/ton-format';
 import { pressScale } from '@/shared/ui/animations';
-import { motion } from 'motion/react';
-
-type NegotiateSheetContentProps = {
-  currentPriceNano: number;
-  onSubmit: (priceNano: number, message?: string) => void;
-  isPending: boolean;
-};
-
-let negotiateSheetProps: NegotiateSheetContentProps | null = null;
-
-export function setNegotiateSheetProps(props: NegotiateSheetContentProps) {
-  negotiateSheetProps = props;
-}
+import { getNegotiateSheetProps } from './negotiate-sheet-props';
 
 export function NegotiateSheetContent() {
   const { t } = useTranslation();
   const [price, setPrice] = useState('');
   const [message, setMessage] = useState('');
 
-  if (!negotiateSheetProps) return null;
+  const sheetProps = getNegotiateSheetProps();
+  if (!sheetProps) return null;
 
-  const { currentPriceNano, onSubmit, isPending } = negotiateSheetProps;
+  const { currentPriceNano, onSubmit, isPending } = sheetProps;
 
   const handleSubmit = () => {
     const priceNum = Number.parseFloat(price);
@@ -54,12 +44,7 @@ export function NegotiateSheetContent() {
         <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
           {t('deals.negotiate.proposedPrice')}
         </Text>
-        <Input
-          type="number"
-          value={price}
-          onChange={(v) => setPrice(v)}
-          placeholder="0.00"
-        />
+        <Input type="number" value={price} onChange={(v) => setPrice(v)} placeholder="0.00" />
       </div>
 
       <div>

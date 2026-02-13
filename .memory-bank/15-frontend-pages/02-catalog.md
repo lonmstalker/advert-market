@@ -24,8 +24,16 @@
 ### API
 
 ```
-GET /api/v1/channels?cursor=&limit=20&q=&topic=&minSubs=&maxSubs=&minPrice=&maxPrice=&sort=
+GET /api/v1/channels?cursor=&limit=20&query=&category=&minSubscribers=&maxSubscribers=&minPrice=&maxPrice=&sort=
+GET /api/v1/channels/count?query=&category=&minSubscribers=&maxSubscribers=&minPrice=&maxPrice=
 ```
+
+Compatibility aliases supported by backend search:
+
+- `q -> query`
+- `minSubs -> minSubscribers`
+- `maxSubs -> maxSubscribers`
+- `sort=subscribers|price_asc|price_desc|er` (legacy frontend sort values)
 
 **Query keys:** `channelKeys.list(params)`
 
@@ -49,7 +57,7 @@ If there is `startapp=channel_{id}` in the Telegram Mini App parameters, automat
 
 | Action | Result |
 |----------|-----------|
-| Entering search | Debounce → requery with `q=` |
+| Entering search | Debounce → requery with `query=` (or `q=` alias) |
 | "Filters" | → Sheet 2.2 |
 | Tap on channel | → `/catalog/channels/:channelId` |
 | Pull-to-refresh | Invalidate `channelKeys.lists()` |
@@ -64,10 +72,10 @@ If there is `startapp=channel_{id}` in the Telegram Mini App parameters, automat
 
 ```typescript
 type CatalogFilters = {
-  q?: string;
-  topic?: string;
-  minSubs?: number;
-  maxSubs?: number;
+  q?: string;             // FE key, sent as query alias
+  category?: string;
+  minSubs?: number;       // FE key, sent as minSubscribers alias
+  maxSubs?: number;       // FE key, sent as maxSubscribers alias
   minPrice?: bigint; // nanoTON
   maxPrice?: bigint; // nanoTON
   sort?: 'relevance' | 'subscribers' | 'price_asc' | 'price_desc' | 'er';
@@ -96,13 +104,13 @@ Storage: URL search params (shareable, back-compatible).
 ### API
 
 ```
-GET /api/v1/channels/topics # List of topics (or enum on the client)
+GET /api/v1/categories # Source for category selector
 ```
 
 ### UI
 
 - Header: `t('catalog.filters.title')`
-- **Topic** — `Select`, `t('catalog.filters.topic')`
+- **Category** — `Select`, `t('catalog.filters.topic')`
 - **Subscribers** - two `Input` (numeric): `t('catalog.filters.from')` / `t('catalog.filters.to')`
 - **Price per post** - two `Input` (numeric, TON): `t('catalog.filters.from')` / `t('catalog.filters.to')`
 - **Sorting** — `Select`, `t('catalog.filters.sort')`:
@@ -150,7 +158,7 @@ GET /api/v1/channels/topics # List of topics (or enum on the client)
 
 ```
 GET /api/v1/channels/:channelId
-GET /api/v1/channels/:channelId/team # Check: user role
+GET /api/v1/channels/:channelId/team # Check: user role (backend returns List<TeamMemberDto>)
 ```
 
 **Query keys:** `channelKeys.detail(channelId)`, `channelKeys.team(channelId)`
@@ -197,7 +205,7 @@ GET /api/v1/channels/:channelId/team # Check: user role
 ### Role Definition
 
 ```typescript
-const { isOwner, hasRight } = useChannelRights(channelId);
+const { isOwner, hasRight } = useChannelRights(channelId); // payload normalized in FE (list or {members})
 ```
 
 ### Error states

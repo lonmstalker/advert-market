@@ -1,33 +1,86 @@
 import { Sheet, Spinner, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { DealActions } from '@/features/deals/components/DealActions';
-import { DealInfoCard } from '@/features/deals/components/DealInfoCard';
 import { DealStatusBadge } from '@/features/deals/components/DealStatusBadge';
 import { DealTimeline } from '@/features/deals/components/DealTimeline';
-import { NegotiateSheetContent, setNegotiateSheetProps } from '@/features/deals/components/NegotiateSheet';
+import { NegotiateSheetContent } from '@/features/deals/components/NegotiateSheet';
+import { setNegotiateSheetProps } from '@/features/deals/components/negotiate-sheet-props';
 import { useDealDetail } from '@/features/deals/hooks/useDealDetail';
 import { useDealTransition } from '@/features/deals/hooks/useDealTransition';
+import type { DealActionType } from '@/features/deals/lib/deal-actions';
 import { getDealActions } from '@/features/deals/lib/deal-actions';
 import { buildTimelineSteps, getStatusConfig, statusBgVar } from '@/features/deals/lib/deal-status';
-import type { DealActionType } from '@/features/deals/lib/deal-actions';
-import { BackButtonHandler, EmptyState } from '@/shared/ui';
-import { fadeIn } from '@/shared/ui/animations';
+import { formatDate } from '@/shared/lib/date-format';
+import { formatFiat } from '@/shared/lib/fiat-format';
+import { formatTon } from '@/shared/lib/ton-format';
+import { BackButtonHandler, EmptyState, Popover } from '@/shared/ui';
+import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { InfoIcon, TelegramIcon, TonDiamondIcon } from '@/shared/ui/icons';
+
+const TERMINAL_STATUSES = new Set([
+  'COMPLETED_RELEASED',
+  'CANCELLED',
+  'EXPIRED',
+  'REFUNDED',
+  'PARTIALLY_REFUNDED',
+  'DISPUTED',
+]);
+
+function useCountdown(
+  deadlineAt: string | null,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string | null {
+  const [remaining, setRemaining] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!deadlineAt) {
+      setRemaining(null);
+      return;
+    }
+
+    function update() {
+      const diff = new Date(deadlineAt as string).getTime() - Date.now();
+      if (diff <= 0) {
+        setRemaining(null);
+        return;
+      }
+      const totalHours = Math.floor(diff / 3_600_000);
+      const minutes = Math.floor((diff % 3_600_000) / 60_000);
+      if (totalHours >= 24) {
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+        setRemaining(t('deals.detail.deadlineDays', { days, hours }));
+      } else if (totalHours > 0) {
+        setRemaining(t('deals.detail.deadlineHours', { hours: totalHours, minutes }));
+      } else {
+        setRemaining(t('deals.detail.deadlineMinutes', { minutes }));
+      }
+    }
+
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => clearInterval(interval);
+  }, [deadlineAt, t]);
+
+  return remaining;
+}
 
 const sheetMap = {
   negotiate: NegotiateSheetContent,
 };
 
 export default function DealDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { dealId } = useParams<{ dealId: string }>();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { deal, timeline, isLoading, isError } = useDealDetail(dealId!);
-  const { transition, negotiate, isPending } = useDealTransition(dealId!);
+  const { deal, timeline, isLoading, isError } = useDealDetail(dealId as string);
+  const { transition, negotiate, isPending } = useDealTransition(dealId as string);
+  const countdown = useCountdown(deal?.deadlineAt ?? null, t);
 
   const actions = useMemo(() => {
     if (!deal) return [];
@@ -86,6 +139,22 @@ export default function DealDetailPage() {
   const hue = (deal.channelTitle.charCodeAt(0) * 37 + (deal.channelTitle.charCodeAt(1) || 0) * 53) % 360;
   const statusConfig = getStatusConfig(deal.status);
   const statusDescKey = `${statusConfig.i18nKey}Desc`;
+  const isTerminal = TERMINAL_STATUSES.has(deal.status);
+
+  const telegramLink = deal.channelUsername ? `https://t.me/${deal.channelUsername}` : null;
+
+  // N/D format
+  const freq = deal.postFrequencyHours;
+  const dur = deal.durationHours;
+  const overlapLabel =
+    freq && dur
+      ? t('catalog.channel.overlapFormat', { freq, dur })
+      : dur
+        ? t('catalog.channel.onlyDuration', { dur })
+        : freq
+          ? t('catalog.channel.onlyFrequency', { freq })
+          : null;
+  const hasOverlapTooltip = !!(freq && dur);
 
   return (
     <>
@@ -98,64 +167,219 @@ export default function DealDetailPage() {
           minHeight: 'calc(100vh - 40px)',
         }}
       >
-        {/* Channel header */}
-        <div
-          style={{
-            padding: '16px 16px 14px',
-            background: 'var(--color-background-base)',
-            borderBottom: '1px solid var(--color-border-separator)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                background: `hsl(${hue}, 55%, 55%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ color: 'var(--color-static-white)', fontSize: 20, fontWeight: 600, lineHeight: 1 }}>
-                {deal.channelTitle.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Hero section */}
+        <div style={{ position: 'relative', overflow: 'hidden' }}>
+          {/* Gradient backdrop */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 160,
+              background: `linear-gradient(180deg, ${statusBgVar(statusConfig.color)} 0%, transparent 100%)`,
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Decorative diamonds */}
+          <TonDiamondIcon
+            style={{
+              position: 'absolute',
+              top: 18,
+              right: 32,
+              width: 10,
+              height: 10,
+              opacity: 0.08,
+              color: 'var(--color-foreground-primary)',
+              pointerEvents: 'none',
+            }}
+          />
+          <TonDiamondIcon
+            style={{
+              position: 'absolute',
+              top: 44,
+              right: 72,
+              width: 14,
+              height: 14,
+              opacity: 0.06,
+              color: 'var(--color-foreground-primary)',
+              pointerEvents: 'none',
+            }}
+          />
+          <TonDiamondIcon
+            style={{
+              position: 'absolute',
+              top: 28,
+              left: 24,
+              width: 8,
+              height: 8,
+              opacity: 0.1,
+              color: 'var(--color-foreground-primary)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          <div style={{ position: 'relative', padding: '20px 16px 16px' }}>
+            {/* Avatar + channel info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <motion.div
+                {...(telegramLink ? pressScale : {})}
+                onClick={telegramLink ? () => window.open(telegramLink, '_blank') : undefined}
+                style={{
+                  position: 'relative',
+                  width: 48,
+                  height: 48,
+                  flexShrink: 0,
+                  cursor: telegramLink ? 'pointer' : 'default',
+                }}
+              >
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: `hsl(${hue}, 55%, 55%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span style={{ color: 'var(--color-static-white)', fontSize: 20, fontWeight: 600, lineHeight: 1 }}>
+                    {deal.channelTitle.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                {telegramLink && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: -2,
+                      right: -2,
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      background: 'var(--color-link)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid var(--color-background-base)',
+                    }}
+                  >
+                    <TelegramIcon style={{ width: 10, height: 10, color: 'var(--color-static-white)' }} />
+                  </div>
+                )}
+              </motion.div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text type="title2" weight="bold">
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                  <span
+                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
+                  >
                     {deal.channelTitle}
                   </span>
                 </Text>
+                <Text type="subheadline2" color="secondary">
+                  {deal.channelUsername ? `@${deal.channelUsername}` : ''}
+                  {deal.channelUsername ? ' \u00b7 ' : ''}
+                  {t(`catalog.channel.postType.${deal.postType}`)}
+                </Text>
               </div>
-              <Text type="subheadline2" color="secondary">
-                {t(`catalog.channel.postType.${deal.postType}`)}
+            </div>
+
+            {/* Price */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+              style={{ textAlign: 'center', marginBottom: 14 }}
+            >
+              <Text type="title1" weight="bold">
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
               </Text>
+              <Text type="caption1" color="secondary" style={{ display: 'block', marginTop: 2 }}>
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
+              </Text>
+            </motion.div>
+
+            {/* Chips row */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+                gap: 8,
+                marginBottom: 14,
+              }}
+            >
+              {overlapLabel &&
+                (hasOverlapTooltip ? (
+                  <Popover
+                    content={
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Text type="caption1" color="secondary">
+                          {t('catalog.channel.overlapTooltipLine1', { freq })}
+                        </Text>
+                        <Text type="caption1" color="secondary">
+                          {t('catalog.channel.overlapTooltipLine2', { dur })}
+                        </Text>
+                      </div>
+                    }
+                  >
+                    <span style={heroChipStyle}>
+                      {overlapLabel}
+                      <InfoIcon style={{ width: 12, height: 12, color: 'var(--color-foreground-tertiary)' }} />
+                    </span>
+                  </Popover>
+                ) : (
+                  <span style={heroChipStyle}>{overlapLabel}</span>
+                ))}
+              <span style={heroChipStyle}>{formatDate(deal.createdAt, i18n.language)}</span>
+              {countdown && (
+                <span style={heroChipStyle}>
+                  {'\u23f1'} {countdown}
+                </span>
+              )}
+            </div>
+
+            {/* Deal message */}
+            {deal.message && (
+              <div
+                style={{
+                  background: 'var(--color-background-secondary)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
+                  marginBottom: 14,
+                }}
+              >
+                <Text
+                  type="caption1"
+                  color="secondary"
+                  style={{ whiteSpace: 'pre-wrap', fontStyle: 'italic', textAlign: 'center' }}
+                >
+                  &ldquo;{deal.message}&rdquo;
+                </Text>
+              </div>
+            )}
+
+            {/* Status pill */}
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: 10,
+                background: statusBgVar(statusConfig.color),
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              {!isTerminal && <span style={pulsingDotStyle(statusConfig.color)} />}
+              <div>
+                <DealStatusBadge status={deal.status} />
+                <Text type="caption1" color="secondary" style={{ marginTop: 4, display: 'block' }}>
+                  {t(statusDescKey)}
+                </Text>
+              </div>
             </div>
           </div>
-
-          {/* Status banner */}
-          <div
-            style={{
-              marginTop: 10,
-              padding: '10px 14px',
-              borderRadius: 10,
-              background: statusBgVar(statusConfig.color),
-            }}
-          >
-            <DealStatusBadge status={deal.status} />
-            <Text type="caption1" color="secondary" style={{ marginTop: 6, display: 'block' }}>
-              {t(statusDescKey)}
-            </Text>
-          </div>
-        </div>
-
-        {/* Info card */}
-        <div style={{ padding: '16px 0', marginBottom: 0 }}>
-          <DealInfoCard deal={deal} />
         </div>
 
         {/* Timeline */}
@@ -172,12 +396,42 @@ export default function DealDetailPage() {
       )}
 
       {/* Negotiate Sheet */}
-      <Sheet
-        sheets={sheetMap}
-        activeSheet="negotiate"
-        opened={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-      />
+      <Sheet sheets={sheetMap} activeSheet="negotiate" opened={sheetOpen} onClose={() => setSheetOpen(false)} />
     </>
   );
+}
+
+const heroChipStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+  padding: '4px 10px',
+  borderRadius: 8,
+  background: 'var(--color-background-secondary)',
+  border: '1px solid var(--color-border-separator)',
+  fontSize: 13,
+  fontWeight: 500,
+  color: 'var(--color-foreground-primary)',
+  fontVariantNumeric: 'tabular-nums',
+};
+
+function pulsingDotStyle(color: string): React.CSSProperties {
+  const colorVar =
+    color === 'accent'
+      ? 'var(--color-accent-primary)'
+      : color === 'warning'
+        ? 'var(--color-warning)'
+        : color === 'success'
+          ? 'var(--color-success)'
+          : color === 'destructive'
+            ? 'var(--color-destructive)'
+            : 'var(--color-foreground-secondary)';
+  return {
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    background: colorVar,
+    flexShrink: 0,
+    animation: 'deal-pulse 2s ease-in-out infinite',
+  };
 }

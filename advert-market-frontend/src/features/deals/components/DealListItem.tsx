@@ -2,6 +2,7 @@ import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { formatRelativeTime } from '@/shared/lib/date-format';
+import { formatFiat } from '@/shared/lib/fiat-format';
 import { formatTon } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
 import type { DealListItem as DealListItemType } from '../types/deal';
@@ -37,13 +38,16 @@ function DealAvatar({ title }: { title: string }) {
 export function DealListItem({ deal, onClick }: DealListItemProps) {
   const { t, i18n } = useTranslation();
 
-  const meta: string[] = [];
-  if (deal.durationHours) {
-    meta.push(t('deals.detail.durationValue', { hours: deal.durationHours }));
-  }
-  if (deal.postFrequencyHours) {
-    meta.push(t('deals.detail.postFrequency', { hours: deal.postFrequencyHours }));
-  }
+  const freq = deal.postFrequencyHours;
+  const dur = deal.durationHours;
+  const overlapLabel =
+    freq && dur
+      ? t('catalog.channel.overlapFormat', { freq, dur })
+      : dur
+        ? t('catalog.channel.onlyDuration', { dur })
+        : freq
+          ? t('catalog.channel.onlyFrequency', { freq })
+          : null;
 
   return (
     <motion.div {...listItem} {...pressScale} onClick={onClick} style={{ cursor: 'pointer' }}>
@@ -67,15 +71,20 @@ export function DealListItem({ deal, onClick }: DealListItemProps) {
                 {deal.channelTitle}
               </span>
             </Text>
-            {meta.length > 0 && (
+            {overlapLabel && (
               <Text type="caption1" color="tertiary">
-                {meta.join(' \u00b7 ')}
+                {overlapLabel}
               </Text>
             )}
           </div>
-          <Text type="callout" weight="bold" style={{ flexShrink: 0 }}>
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
-          </Text>
+          <div style={{ flexShrink: 0, textAlign: 'right' }}>
+            <Text type="callout" weight="bold">
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
+            </Text>
+            <Text type="caption1" color="tertiary">
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
+            </Text>
+          </div>
         </div>
 
         {/* Row 2: status badge + relative time */}

@@ -31,7 +31,7 @@ public class OutboxPoller {
      * Scheduled polling loop that fetches and publishes outbox entries.
      */
     @Scheduled(fixedDelayString =
-            "#{@outboxProperties.pollInterval().toMillis()}")
+            "${app.outbox.poll-interval:500ms}")
     public void poll() {
         metrics.incrementCounter(MetricNames.OUTBOX_POLL_COUNT);
 

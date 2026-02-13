@@ -1,0 +1,17 @@
+import type { SVGProps } from 'react';
+
+export function TonDiamondIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M6 0L12 6L6 12L0 6Z" fill="currentColor" />
+    </svg>
+  );
+}

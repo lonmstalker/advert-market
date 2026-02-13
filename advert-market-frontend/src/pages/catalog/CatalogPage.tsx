@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Button, Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
+import { Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -213,12 +213,14 @@ export default function CatalogPage() {
               width: 42,
               height: 42,
               borderRadius: 12,
-              border: activeFilterCount > 0
-                ? '1.5px solid var(--color-accent-primary)'
-                : '1.5px solid var(--color-border-separator)',
-              background: activeFilterCount > 0
-                ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)'
-                : 'var(--color-background-base)',
+              border:
+                activeFilterCount > 0
+                  ? '1.5px solid var(--color-accent-primary)'
+                  : '1.5px solid var(--color-border-separator)',
+              background:
+                activeFilterCount > 0
+                  ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)'
+                  : 'var(--color-background-base)',
               cursor: 'pointer',
               WebkitTapHighlightColor: 'transparent',
               flexShrink: 0,
@@ -230,9 +232,7 @@ export default function CatalogPage() {
               style={{
                 width: 20,
                 height: 20,
-                color: activeFilterCount > 0
-                  ? 'var(--color-accent-primary)'
-                  : 'var(--color-foreground-secondary)',
+                color: activeFilterCount > 0 ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
               }}
             />
             {activeFilterCount > 0 && (

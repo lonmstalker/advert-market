@@ -8,7 +8,9 @@ import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_
 import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.identity.security.JwtTokenProvider;
@@ -18,6 +20,7 @@ import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
+import com.advertmarket.marketplace.api.dto.ChannelSort;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.port.CategoryRepository;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
@@ -37,6 +40,7 @@ import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.util.List;
 import org.jooq.DSLContext;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -121,6 +125,48 @@ class ChannelCrudHttpIntegrationTest {
                 .expectBody()
                 .jsonPath("$.items").isArray()
                 .jsonPath("$.nextCursor").doesNotExist();
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/channels maps legacy aliases")
+    void searchMapsLegacyAliases() {
+        when(channelSearchPort.search(any()))
+                .thenReturn(CursorPage.empty());
+        clearInvocations(channelSearchPort);
+
+        webClient.get()
+                .uri("/api/v1/channels?q=ton&minSubs=100&maxSubs=200&sort=er&limit=5")
+                .exchange()
+                .expectStatus().isOk();
+
+        var captor = ArgumentCaptor.forClass(ChannelSearchCriteria.class);
+        verify(channelSearchPort).search(captor.capture());
+        ChannelSearchCriteria criteria = captor.getValue();
+        assertThat(criteria.query()).isEqualTo("ton");
+        assertThat(criteria.minSubscribers()).isEqualTo(100);
+        assertThat(criteria.maxSubscribers()).isEqualTo(200);
+        assertThat(criteria.sort()).isEqualTo(ChannelSort.ENGAGEMENT_DESC);
+        assertThat(criteria.limit()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/channels/count returns numeric count")
+    void countReturnsNumber() {
+        when(channelSearchPort.count(any())).thenReturn(9L);
+        clearInvocations(channelSearchPort);
+
+        webClient.get()
+                .uri("/api/v1/channels/count?q=crypto&minSubs=10")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$").isEqualTo(9);
+
+        var captor = ArgumentCaptor.forClass(ChannelSearchCriteria.class);
+        verify(channelSearchPort).count(captor.capture());
+        ChannelSearchCriteria criteria = captor.getValue();
+        assertThat(criteria.query()).isEqualTo("crypto");
+        assertThat(criteria.minSubscribers()).isEqualTo(10);
     }
 
     @Test

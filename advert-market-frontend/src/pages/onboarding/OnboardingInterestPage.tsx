@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { useOnboardingStore } from '@/features/onboarding';
 import { RoleCard } from '@/features/onboarding/components/role-card';
 import { RolePreviewItem } from '@/features/onboarding/components/role-preview-item';
-import { MonitorIcon, pressScale, slideUp, SpeakerIcon } from '@/shared/ui';
+import { MonitorIcon, pressScale, SpeakerIcon, slideUp } from '@/shared/ui';
 
 export default function OnboardingInterestPage() {
   const { t } = useTranslation();

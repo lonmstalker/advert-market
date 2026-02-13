@@ -80,6 +80,20 @@ class ChannelServiceTest {
     }
 
     @Test
+    @DisplayName("Should delegate count to ChannelSearchPort")
+    void shouldDelegateCount() {
+        var criteria = new ChannelSearchCriteria(
+                null, null, null, null, null, null,
+                null, "crypto", ChannelSort.SUBSCRIBERS_DESC, null, 20);
+        when(searchPort.count(any())).thenReturn(42L);
+
+        long count = channelService.count(criteria);
+
+        assertThat(count).isEqualTo(42L);
+        verify(searchPort).count(criteria);
+    }
+
+    @Test
     @DisplayName("Should return channel detail when found")
     void shouldReturnDetail() {
         when(channelRepository.findDetailById(CHANNEL_ID))

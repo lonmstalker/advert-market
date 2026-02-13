@@ -82,19 +82,19 @@ See [Architecture docs (C4)](.memory-bank/04-architecture/) and [Patterns & Deci
 
 ## Data Model
 
-16 tables across 6 bounded contexts. Partitioned tables marked with (P), immutable with (I).
+20 base tables across 6 bounded contexts (14 primary operational + 6 support/lookup).
 
-**Identity**: `users`, `pii_store`
+Primary operational tables include:
 
-**Marketplace**: `channels`, `channel_memberships`, `channel_pricing_rules`
+- **Identity**: `users`, `pii_store`
+- **Marketplace**: `channels`, `channel_memberships`, `channel_pricing_rules`
+- **Deal**: `deals`, `deal_events`
+- **Financial**: `ledger_entries`, `account_balances`, `ton_transactions`, `audit_log`
+- **Delivery**: `posting_checks`, `dispute_evidence`
+- **Infrastructure**: `notification_outbox`
 
-**Deal**: `deals`, `deal_events` (P, I)
-
-**Financial**: `ledger_entries` (P, I), `ledger_idempotency_keys`, `account_balances`, `ton_transactions`, `commission_tiers`
-
-**Delivery**: `posting_checks` (P, I), `disputes`, `dispute_evidence` (I)
-
-**Infrastructure**: `notification_outbox`, `audit_log` (I)
+See the full ER model and complete table inventory in
+`.memory-bank/04-architecture/05-data-stores.md`.
 
 Migrations: [`advert-market-db/src/main/resources/db/changelog/changes/`](advert-market-db/src/main/resources/db/changelog/changes/).
 Schema docs: [.memory-bank/04-architecture/05-data-stores.md](.memory-bank/04-architecture/05-data-stores.md).

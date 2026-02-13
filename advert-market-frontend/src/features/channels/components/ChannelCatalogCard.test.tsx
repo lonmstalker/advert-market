@@ -18,9 +18,7 @@ const baseChannel: Channel = {
 
 function renderCard(channelOverrides: Partial<Channel> = {}, onClick = vi.fn()) {
   const channel: Channel = { ...baseChannel, ...channelOverrides };
-  const result = renderWithProviders(
-    <ChannelCatalogCard channel={channel} onClick={onClick} />,
-  );
+  const result = renderWithProviders(<ChannelCatalogCard channel={channel} onClick={onClick} />);
   return { ...result, onClick };
 }
 

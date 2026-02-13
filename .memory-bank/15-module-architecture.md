@@ -45,6 +45,17 @@ This split enables:
 2. Clean microservice extraction — `-api` becomes a published Maven artifact
 3. Testability — mock ports without touching implementation
 
+## Current Module Status (HEAD)
+
+| Module | Status | Notes |
+|---|---|---|
+| `advert-market-identity` | Implemented | Auth/login/logout, profile APIs, onboarding |
+| `advert-market-marketplace` | Implemented | Channel catalog/search, verification, pricing, team management |
+| `advert-market-communication` | Partially implemented | Webhook + bot routing + shared outbox integration points |
+| `advert-market-deal` | Scaffold only | `src/main/java/.gitkeep`; APIs are planned in Beads |
+| `advert-market-financial` | Scaffold only | `src/main/java/.gitkeep`; APIs are planned in Beads |
+| `advert-market-delivery` | Scaffold only | `src/main/java/.gitkeep`; APIs are planned in Beads |
+
 ## Dependency Graph (impl → api)
 
 | Module (impl) | Depends on -api |
@@ -151,7 +162,7 @@ All 20+ services from C4 Level 3 mapped to modules:
 |---|---|
 | Auth Service (implemented), Login Rate Limiter (implemented) | identity |
 | User Profile Service (implemented) | identity |
-| ABAC Service, PII Vault, Channel Team Service | identity (planned) |
+| ABAC Service (implemented), Channel Team Service (implemented), PII Vault (planned) | identity + marketplace |
 | Ledger Service, Escrow Service, Commission Service | financial |
 | Balance Projection, Reconciliation Service | financial |
 | TON Payment Gateway, Confirmation Policy | financial |
@@ -171,7 +182,8 @@ All 45 specs from `14-implementation-specs/` are covered:
 | 01-ton-sdk, 08-ton-center-api, 15-confirmation-policy | financial |
 | 02-telegram-bot, 22-notification-templates | communication |
 | 03-auth-flow | identity (implemented) |
-| 07-pii-encryption, 13-abac | identity (planned, not yet implemented) |
+| 07-pii-encryption | identity (planned, not yet implemented) |
+| 13-abac | identity + marketplace (implemented in current channel/team authorization flow) |
 | 04-kafka-schemas, 18-kafka-consumer-errors | shared (schemas), each consumer module |
 | 05-ddl-migrations | db |
 | 06-project-scaffold | root + app |

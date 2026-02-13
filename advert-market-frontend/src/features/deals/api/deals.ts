@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { ApiError } from '@/shared/api';
 import { api } from '@/shared/api/client';
 import { type PaginatedResponse, paginatedResponseSchema } from '@/shared/api/types';
 import {
@@ -6,26 +6,44 @@ import {
   type DealListItem,
   type DealRole,
   type DealTimeline,
-  type NegotiateRequest,
-  type TransitionRequest,
   dealListItemSchema,
   dealSchema,
   dealTimelineSchema,
+  type NegotiateRequest,
+  type TransitionRequest,
 } from '../types/deal';
+
+const DEAL_API_UNAVAILABLE_STATUSES = new Set([404, 405, 501]);
+const isMockApiEnabled = import.meta.env.VITE_MOCK_API === 'true';
+
+function isDealApiUnavailable(error: unknown): error is ApiError {
+  return error instanceof ApiError && DEAL_API_UNAVAILABLE_STATUSES.has(error.status);
+}
 
 export function fetchDeals(params: {
   role?: DealRole;
   cursor?: string;
   limit?: number;
 }): Promise<PaginatedResponse<DealListItem>> {
-  return api.get('/deals', {
-    schema: paginatedResponseSchema(dealListItemSchema),
-    params: {
-      role: params.role,
-      cursor: params.cursor,
-      limit: params.limit ?? 20,
-    },
-  });
+  return api
+    .get('/deals', {
+      schema: paginatedResponseSchema(dealListItemSchema),
+      params: {
+        role: params.role,
+        cursor: params.cursor,
+        limit: params.limit ?? 20,
+      },
+    })
+    .catch((error: unknown) => {
+      if (!isMockApiEnabled && isDealApiUnavailable(error)) {
+        return {
+          items: [],
+          nextCursor: null,
+          hasNext: false,
+        };
+      }
+      throw error;
+    });
 }
 
 export function fetchDeal(dealId: string): Promise<Deal> {

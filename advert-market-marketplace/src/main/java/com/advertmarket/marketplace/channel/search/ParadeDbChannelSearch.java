@@ -42,18 +42,9 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
     @NonNull
     public CursorPage<ChannelListItem> search(
             @NonNull ChannelSearchCriteria criteria) {
-
-        Condition condition = CHANNELS.IS_ACTIVE.isTrue();
-        condition = applyFilters(condition, criteria);
-
+        Condition condition = buildSearchCondition(criteria);
         boolean hasTextQuery = criteria.query() != null
                 && !criteria.query().isBlank();
-
-        if (hasTextQuery) {
-            condition = condition.and(
-                    DSL.condition("channels @@@ {0}",
-                            DSL.val(buildParadeDbQuery(criteria.query()))));
-        }
 
         condition = applyKeyset(condition, criteria);
 
@@ -97,6 +88,31 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         }
 
         return new CursorPage<>(items, nextCursor);
+    }
+
+    @Override
+    public long count(@NonNull ChannelSearchCriteria criteria) {
+        Condition condition = buildSearchCondition(criteria);
+        Long value = dsl.selectCount()
+                .from(CHANNELS)
+                .where(condition)
+                .fetchOne(0, Long.class);
+        return value == null ? 0L : value;
+    }
+
+    private static Condition buildSearchCondition(
+            ChannelSearchCriteria criteria) {
+        Condition condition = CHANNELS.IS_ACTIVE.isTrue();
+        condition = applyFilters(condition, criteria);
+
+        boolean hasTextQuery = criteria.query() != null
+                && !criteria.query().isBlank();
+        if (hasTextQuery) {
+            condition = condition.and(
+                    DSL.condition("channels @@@ {0}",
+                            DSL.val(buildParadeDbQuery(criteria.query()))));
+        }
+        return condition;
     }
 
     private static Condition applyFilters(Condition condition,

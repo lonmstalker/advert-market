@@ -2,154 +2,64 @@
 
 ## Overview
 
-Apache Kafka serves as the event streaming backbone with 8 topics. All topics are partitioned by `deal_id` to maintain per-deal ordering guarantees. The Outbox Publisher is the primary producer, and workers + bot are the consumers.
+Apache Kafka is the event backbone. Current topic names are defined in code in
+`advert-market-shared/src/main/java/com/advertmarket/shared/event/TopicNames.java`.
+
+This document mirrors the current constants and consumer group names.
 
 ## Topic Map
 
 ```mermaid
 flowchart LR
-    subgraph Producers
-        OP[Outbox Publisher]
-        DW[TON Deposit Watcher]
-        DV[Delivery Verifier]
-    end
+    OP[Outbox Publisher] --> DSC[deal.state-changed]
+    OP --> DDL[deal.deadlines]
+    OP --> FCM[financial.commands]
+    OP --> DCM[delivery.commands]
+    OP --> CN[communication.notifications]
+    OP --> FR[financial.reconciliation]
 
-    subgraph Topics
-        DE[deal.events]
-        EC[escrow.commands]
-        ECF[escrow.confirmations]
-        DC[delivery.commands]
-        DR[delivery.results]
-        NO[notifications.outbox]
-        RT[reconciliation.triggers]
-        DD[deal.deadlines]
-    end
-
-    subgraph Consumers
-        TDW[TON Deposit Watcher]
-        PE[Payout Executor]
-        RE[Refund Executor]
-        DTW[Deal Timeout Worker]
-        PS[Post Scheduler]
-        DVR[Delivery Verifier]
-        RW[Reconciliation Worker]
-        BN[Bot Notifier]
-    end
-
-    OP --> DE & EC & DC & NO & DD
-    DW --> ECF
-    DV --> DR
-
-    DE -.-> TDW
-    EC --> TDW & PE & RE
-    DD --> DTW
-    DC --> PS & DVR
-    NO --> BN
-    RT --> RW
+    FDW[Financial workers] --> FE[financial.events]
+    DV[Delivery workers] --> DE[delivery.events]
 ```
 
-## Topics
+## Topics (Implemented Names)
 
-### 1. deal.events
+| Topic constant | Topic name | Purpose |
+|---|---|---|
+| `DEAL_STATE_CHANGED` | `deal.state-changed` | Deal state transitions and domain events |
+| `DEAL_DEADLINES` | `deal.deadlines` | Deadline-related events |
+| `FINANCIAL_COMMANDS` | `financial.commands` | Financial command bus |
+| `FINANCIAL_EVENTS` | `financial.events` | Financial result events |
+| `DELIVERY_COMMANDS` | `delivery.commands` | Delivery command bus |
+| `DELIVERY_EVENTS` | `delivery.events` | Delivery result events |
+| `COMMUNICATION_NOTIFICATIONS` | `communication.notifications` | Notification events for communication module |
+| `FINANCIAL_RECONCILIATION` | `financial.reconciliation` | Reconciliation triggers/events |
 
-| Attribute | Value |
-|-----------|-------|
-| **Description** | Domain events from deal state machine — fan-out for all workers |
-| **Partition key** | `deal_id` |
-| **Producer** | Outbox Publisher |
-| **Consumers** | Various (fan-out) |
-| **Schema** | Deal event envelope: `{deal_id, event_type, from_status, to_status, payload, timestamp}` |
+## Consumer Groups (Current Constants)
 
-### 2. escrow.commands
+| Consumer group constant | Group ID |
+|---|---|
+| `FINANCIAL_COMMAND_HANDLER` | `financial-command-handler` |
+| `DELIVERY_COMMAND_HANDLER` | `delivery-command-handler` |
+| `NOTIFICATION_SENDER` | `notification-sender` |
+| `DEAL_STATE_PROJECTION` | `deal-state-projection` |
+| `DEAL_DEADLINE_SCHEDULER` | `deal-deadline-scheduler` |
+| `TON_DEPOSIT_WATCHER` | `ton-deposit-watcher` |
+| `TON_PAYOUT_EXECUTOR` | `ton-payout-executor` |
+| `RECONCILIATION_HANDLER` | `reconciliation-handler` |
+| `ANALYTICS_COLLECTOR` | `analytics-collector` |
+| `DEAD_LETTER_PROCESSOR` | `dead-letter-processor` |
+| `FINANCIAL_EVENT_HANDLER` | `financial-event-handler` |
+| `DELIVERY_EVENT_HANDLER` | `delivery-event-handler` |
+| `RECONCILIATION_RESULT_HANDLER` | `reconciliation-result-handler` |
 
-| Attribute | Value |
-|-----------|-------|
-| **Tags** | `#financial` |
-| **Description** | Commands for deposit watcher, payout/refund executors |
-| **Partition key** | `deal_id` |
-| **Producer** | Outbox Publisher |
-| **Consumers** | TON Deposit Watcher, Payout Executor, Refund Executor |
-| **Command types** | `WATCH_DEPOSIT`, `EXECUTE_PAYOUT`, `EXECUTE_REFUND`, `SWEEP_COMMISSION`, `AUTO_REFUND_LATE_DEPOSIT` |
+## Notes on Legacy Names
 
-### 3. escrow.confirmations
-
-| Attribute | Value |
-|-----------|-------|
-| **Tags** | `#financial` |
-| **Description** | Results from TON deposit watcher: funding confirmed/failed |
-| **Partition key** | `deal_id` |
-| **Producer** | TON Deposit Watcher |
-| **Consumers** | Backend API (via worker callback) |
-
-### 4. delivery.commands
-
-| Attribute | Value |
-|-----------|-------|
-| **Description** | Commands for post scheduler and delivery verifier |
-| **Partition key** | `deal_id` |
-| **Producer** | Outbox Publisher |
-| **Consumers** | Post Scheduler, Delivery Verifier |
-| **Command types** | `PUBLISH_POST`, `VERIFY_DELIVERY` |
-
-### 5. delivery.results
-
-| Attribute | Value |
-|-----------|-------|
-| **Description** | Verification results from delivery verifier |
-| **Partition key** | `deal_id` |
-| **Producer** | Delivery Verifier |
-| **Consumers** | Backend API (via worker callback) |
-| **Result types** | `DELIVERY_VERIFIED`, `DELIVERY_FAILED` |
-
-### 6. notifications.outbox
-
-| Attribute | Value |
-|-----------|-------|
-| **Description** | Notification events for bot notifier |
-| **Partition key** | `recipient_id` |
-| **Producer** | Outbox Publisher |
-| **Consumer** | Bot Notifier |
-
-### 7. reconciliation.triggers
-
-| Attribute | Value |
-|-----------|-------|
-| **Tags** | `#financial`, `#audit` |
-| **Description** | Periodic reconciliation trigger events |
-| **Producer** | Scheduled (cron-based or external trigger) |
-| **Consumer** | Reconciliation Worker |
-
-### 8. deal.deadlines
-
-| Attribute | Value |
-|-----------|-------|
-| **Description** | Deadline events for timeout worker |
-| **Partition key** | `deal_id` |
-| **Producer** | Outbox Publisher |
-| **Consumer** | Deal Timeout Worker |
-
-## Consumer Groups
-
-| Consumer Group | Worker | Topics |
-|---------------|--------|--------|
-| `cg-deposit-watcher` | TON Deposit Watcher | `escrow.commands` |
-| `cg-payout-executor` | Payout Executor | `escrow.commands` |
-| `cg-refund-executor` | Refund Executor | `escrow.commands` |
-| `cg-deal-timeout` | Deal Timeout Worker | `deal.deadlines` |
-| `cg-post-scheduler` | Post Scheduler | `delivery.commands` |
-| `cg-delivery-verifier` | Delivery Verifier | `delivery.commands` |
-| `cg-reconciliation` | Reconciliation Worker | `reconciliation.triggers` |
-| `cg-bot-notifier` | Bot Notifier | `notifications.outbox` |
-| `cg-deposit-handler` | Deposit Handler | `escrow.confirmations` |
-
-## Ordering Guarantees
-
-- All financial topics partitioned by `deal_id` → per-deal ordering
-- `notifications.outbox` partitioned by `recipient_id` → per-user ordering
-- Consumer groups ensure each partition is processed by exactly one instance
+Legacy documentation names such as `deal.events`, `notifications.outbox`, and
+`escrow.commands` are deprecated for `HEAD` and replaced by the topic constants above.
 
 ## Related Documents
 
-- [Workers](./04-workers.md) — worker details
-- [Transactional Outbox](../05-patterns-and-decisions/03-transactional-outbox.md) — how events reach Kafka
-- [Notifications](../03-feature-specs/08-notifications.md) — notification pipeline
+- [Workers](./04-workers.md)
+- [Transactional Outbox](../05-patterns-and-decisions/03-transactional-outbox.md)
+- [Kafka Event Schemas](../14-implementation-specs/04-kafka-event-schemas.md)

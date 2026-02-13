@@ -7,18 +7,7 @@ import { parseTonToNano } from '@/shared/lib/ton-format';
 import { fetchCategories, fetchChannelCount } from '../api/channels';
 import type { CatalogFilters, ChannelSort } from '../types/channel';
 import { channelSortValues } from '../types/channel';
-
-type ChannelFiltersContentProps = {
-  currentFilters: CatalogFilters;
-  onApply: (filters: CatalogFilters) => void;
-  onReset: () => void;
-};
-
-let filtersContentProps: ChannelFiltersContentProps | null = null;
-
-export function setFiltersContentProps(props: ChannelFiltersContentProps) {
-  filtersContentProps = props;
-}
+import { getFiltersContentProps } from './channel-filters-props';
 
 const AVAILABLE_LANGUAGES = [
   { code: 'ru', label: 'RU' },
@@ -66,20 +55,19 @@ function ToggleChip({ label, active, onClick }: { label: string; active: boolean
 }
 
 export function ChannelFiltersContent() {
-  const propsRef = useRef(filtersContentProps);
-  propsRef.current = filtersContentProps;
-  const initial = filtersContentProps;
+  const currentProps = getFiltersContentProps();
+  const propsRef = useRef(currentProps);
+  propsRef.current = currentProps;
+  const initial = currentProps;
 
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
-  const initialCategories = initial?.currentFilters.categories
-    ?? (initial?.currentFilters.category ? [initial.currentFilters.category] : []);
+  const initialCategories =
+    initial?.currentFilters.categories ?? (initial?.currentFilters.category ? [initial.currentFilters.category] : []);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
-    initial?.currentFilters.languages ?? [],
-  );
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(initial?.currentFilters.languages ?? []);
   const [minSubs, setMinSubs] = useState(initial?.currentFilters.minSubs?.toString() ?? '');
   const [maxSubs, setMaxSubs] = useState(initial?.currentFilters.maxSubs?.toString() ?? '');
   const [minPrice, setMinPrice] = useState(
@@ -117,24 +105,20 @@ export function ChannelFiltersContent() {
   });
 
   const hasActiveFilters =
-    selectedCategories.length > 0
-    || selectedLanguages.length > 0
-    || minSubs !== ''
-    || maxSubs !== ''
-    || minPrice !== ''
-    || maxPrice !== ''
-    || sort != null;
+    selectedCategories.length > 0 ||
+    selectedLanguages.length > 0 ||
+    minSubs !== '' ||
+    maxSubs !== '' ||
+    minPrice !== '' ||
+    maxPrice !== '' ||
+    sort != null;
 
   const toggleCategory = (slug: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
-    );
+    setSelectedCategories((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
   };
 
   const toggleLanguage = (code: string) => {
-    setSelectedLanguages((prev) =>
-      prev.includes(code) ? prev.filter((s) => s !== code) : [...prev, code],
-    );
+    setSelectedLanguages((prev) => (prev.includes(code) ? prev.filter((s) => s !== code) : [...prev, code]));
   };
 
   const sortOptions = [

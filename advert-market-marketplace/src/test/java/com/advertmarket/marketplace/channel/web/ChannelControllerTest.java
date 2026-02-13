@@ -1,9 +1,11 @@
 package com.advertmarket.marketplace.channel.web;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,6 +18,8 @@ import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
+import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
+import com.advertmarket.marketplace.api.dto.ChannelSort;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
@@ -33,6 +37,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -88,6 +93,49 @@ class ChannelControllerTest {
                 .andExpect(jsonPath("$.items[0].id")
                         .value(CHANNEL_ID))
                 .andExpect(jsonPath("$.nextCursor").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("Should map legacy aliases for search parameters")
+    void shouldMapLegacyAliasesForSearch() throws Exception {
+        when(channelService.search(any())).thenReturn(CursorPage.empty());
+
+        mockMvc.perform(get("/api/v1/channels")
+                        .param("q", "crypto")
+                        .param("minSubs", "1000")
+                        .param("maxSubs", "5000")
+                        .param("sort", "price_desc")
+                        .param("limit", "10"))
+                .andExpect(status().isOk());
+
+        var captor = ArgumentCaptor.forClass(ChannelSearchCriteria.class);
+        verify(channelService).search(captor.capture());
+        ChannelSearchCriteria criteria = captor.getValue();
+        assertThat(criteria.query()).isEqualTo("crypto");
+        assertThat(criteria.minSubscribers()).isEqualTo(1000);
+        assertThat(criteria.maxSubscribers()).isEqualTo(5000);
+        assertThat(criteria.sort()).isEqualTo(ChannelSort.PRICE_DESC);
+        assertThat(criteria.limit()).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("Should return channels count and map legacy aliases")
+    void shouldReturnCount() throws Exception {
+        when(channelService.count(any())).thenReturn(7L);
+
+        mockMvc.perform(get("/api/v1/channels/count")
+                        .param("q", "ton")
+                        .param("minSubs", "100")
+                        .param("maxSubs", "500"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(7));
+
+        var captor = ArgumentCaptor.forClass(ChannelSearchCriteria.class);
+        verify(channelService).count(captor.capture());
+        ChannelSearchCriteria criteria = captor.getValue();
+        assertThat(criteria.query()).isEqualTo("ton");
+        assertThat(criteria.minSubscribers()).isEqualTo(100);
+        assertThat(criteria.maxSubscribers()).isEqualTo(500);
     }
 
     // --- Detail ---

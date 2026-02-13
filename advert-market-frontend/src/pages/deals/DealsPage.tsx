@@ -26,7 +26,7 @@ export default function DealsPage() {
     queryKey: [...dealKeys.lists(), { role: activeRole }],
     queryFn: ({ pageParam }) => fetchDeals({ role: activeRole, cursor: pageParam, limit: 20 }),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.nextCursor ?? undefined : undefined),
+    getNextPageParam: (lastPage) => (lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined),
   });
 
   const deals = data?.pages.flatMap((p) => p.items) ?? [];
@@ -83,11 +83,7 @@ export default function DealsPage() {
           style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
         >
           {deals.map((deal) => (
-            <DealListItem
-              key={deal.id}
-              deal={deal}
-              onClick={() => navigate(`/deals/${deal.id}`)}
-            />
+            <DealListItem key={deal.id} deal={deal} onClick={() => navigate(`/deals/${deal.id}`)} />
           ))}
 
           <div ref={sentinelRef} style={{ height: 1 }} />

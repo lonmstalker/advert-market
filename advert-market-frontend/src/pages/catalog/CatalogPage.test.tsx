@@ -1,7 +1,7 @@
-import { http, HttpResponse } from 'msw';
+import { HttpResponse, http } from 'msw';
 import { Route, Routes } from 'react-router';
-import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
+import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import CatalogPage from './CatalogPage';
 
 const API_BASE = '/api/v1';
@@ -61,9 +61,7 @@ describe('CatalogPage', () => {
   // --- Error path ---
 
   it('shows error state when API fails', async () => {
-    server.use(
-      http.get(`${API_BASE}/channels`, () => HttpResponse.error()),
-    );
+    server.use(http.get(`${API_BASE}/channels`, () => HttpResponse.error()));
     renderCatalog();
     expect(await screen.findByText('An error occurred')).toBeInTheDocument();
   });
@@ -157,9 +155,12 @@ describe('CatalogPage', () => {
     const input = screen.getByPlaceholderText('Search channels...');
     await user.type(input, 'crypto');
 
-    await waitFor(() => {
-      expect(screen.queryByText('Tech Digest')).not.toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Tech Digest')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
 
     expect(await screen.findByText('Crypto News Daily')).toBeInTheDocument();
   });

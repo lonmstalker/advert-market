@@ -33,6 +33,7 @@ export const pricingRuleSchema = z.object({
   postType: z.string(),
   priceNano: z.number(),
   durationHours: z.number().optional(),
+  postFrequencyHours: z.number().optional(),
   description: z.string().optional(),
 });
 
@@ -85,7 +86,7 @@ export const channelDetailSchema = channelSchema.extend({
   avgReach: z.number().optional(),
   postFrequencyHours: z.number().optional(),
   pricingRules: z.array(pricingRuleSchema),
-  topics: z.array(channelTopicSchema),
+  topics: z.array(channelTopicSchema).optional().default([]),
   rules: channelRulesSchema.optional(),
   nextAvailableSlot: z.string().optional(),
 });
@@ -94,14 +95,41 @@ export type ChannelDetail = z.infer<typeof channelDetailSchema>;
 
 // --- Channel team ---
 
-export const channelTeamMemberSchema = z.object({
+const channelTeamMemberInputSchema = z.object({
   userId: z.number(),
-  role: z.enum(['owner', 'manager']),
-  rights: z.array(z.string()),
+  role: z.enum(['owner', 'manager', 'OWNER', 'MANAGER']),
+  rights: z.array(z.string()).default([]),
 });
 
-export const channelTeamSchema = z.object({
-  members: z.array(channelTeamMemberSchema),
+function normalizeRole(role: z.infer<typeof channelTeamMemberInputSchema>['role']): 'owner' | 'manager' {
+  return role.toLowerCase() as 'owner' | 'manager';
+}
+
+function normalizeRight(right: string): string {
+  return right.trim().toLowerCase().replaceAll('-', '_');
+}
+
+function normalizeMember(member: z.infer<typeof channelTeamMemberInputSchema>) {
+  return {
+    userId: member.userId,
+    role: normalizeRole(member.role),
+    rights: member.rights.map(normalizeRight),
+  };
+}
+
+export const channelTeamMemberSchema = channelTeamMemberInputSchema.transform(normalizeMember);
+
+const channelTeamLegacySchema = z.object({
+  members: z.array(channelTeamMemberInputSchema),
+});
+
+const channelTeamDirectSchema = z.array(channelTeamMemberInputSchema);
+
+export const channelTeamSchema = z.union([channelTeamLegacySchema, channelTeamDirectSchema]).transform((payload) => {
+  const members = Array.isArray(payload) ? payload : payload.members;
+  return {
+    members: members.map(normalizeMember),
+  };
 });
 
 export type ChannelTeamMember = z.infer<typeof channelTeamMemberSchema>;

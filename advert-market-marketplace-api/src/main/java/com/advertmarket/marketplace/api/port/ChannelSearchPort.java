@@ -21,4 +21,12 @@ public interface ChannelSearchPort {
      */
     @NonNull
     CursorPage<ChannelListItem> search(@NonNull ChannelSearchCriteria criteria);
+
+    /**
+     * Counts channels matching the given criteria.
+     *
+     * @param criteria search filters
+     * @return total matching rows
+     */
+    long count(@NonNull ChannelSearchCriteria criteria);
 }

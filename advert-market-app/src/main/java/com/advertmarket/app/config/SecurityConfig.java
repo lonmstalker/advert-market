@@ -95,15 +95,17 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/bot/webhook",
-                                "/actuator/health/**")
+                                "/actuator/health/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs.yaml",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html")
                         .permitAll()
                         .requestMatchers(
                                 "/actuator/prometheus",
                                 "/actuator/metrics",
-                                "/actuator/info",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html")
+                                "/actuator/info")
                         .authenticated()
                         .requestMatchers("/api/v1/**")
                         .authenticated()

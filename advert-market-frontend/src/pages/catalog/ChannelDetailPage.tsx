@@ -10,13 +10,15 @@ import { channelKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { copyToClipboard } from '@/shared/lib/clipboard';
+import { formatFiat } from '@/shared/lib/fiat-format';
 import { computeCpm, formatCpm, formatTon } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState, SegmentControl } from '@/shared/ui';
+import { BackButtonHandler, EmptyState, Popover, SegmentControl } from '@/shared/ui';
 import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
 import {
   ArrowRightIcon,
   ClockIcon,
   EditIcon,
+  InfoIcon,
   PostTypeIcon,
   SearchOffIcon,
   ShareIcon,
@@ -49,6 +51,19 @@ function getChannelLanguages(channel: ChannelDetail): string[] {
 function getMinPrice(rules: PricingRule[]): number | null {
   if (rules.length === 0) return null;
   return Math.min(...rules.map((r) => r.priceNano));
+}
+
+function getOverlapLabel(
+  rule: PricingRule,
+  channelFreq: number | undefined,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): { label: string; hasTooltip: boolean; freq?: number; dur?: number } | null {
+  const freq = rule.postFrequencyHours ?? channelFreq;
+  const dur = rule.durationHours;
+  if (freq && dur) return { label: t('catalog.channel.overlapFormat', { freq, dur }), hasTooltip: true, freq, dur };
+  if (dur) return { label: t('catalog.channel.onlyDuration', { dur }), hasTooltip: false };
+  if (freq) return { label: t('catalog.channel.onlyFrequency', { freq }), hasTooltip: false };
+  return null;
 }
 
 function formatTimeUntil(isoDate: string): string | null {
@@ -286,7 +301,7 @@ function ChannelRulesSection({
       label: t('catalog.channel.rulesFormatting'),
       rows: [
         <div key="fmt" style={ruleItemStyle}>
-          <RuleIndicator allowed={rules.formattingAllowed!} />
+          <RuleIndicator allowed={rules.formattingAllowed as boolean} />
           <Text type="caption1">
             {rules.formattingAllowed
               ? t('catalog.channel.rulesFormattingAllowed')
@@ -749,124 +764,21 @@ export default function ChannelDetailPage() {
                           {t('catalog.channel.from', { price: formatTon(minPrice) })}
                         </span>
                       </Text>
-                      {heroCpm != null && (
-                        <Text type="subheadline2" color="tertiary">
-                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                            {'\u2248 '}
-                            {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
-                          </span>
-                        </Text>
-                      )}
-                    </div>
-                  )}
-                  {channel.postFrequencyHours != null && (
-                    <div style={postFrequencyBadgeStyle}>
-                      <ClockIcon
-                        style={{ width: 14, height: 14, color: 'var(--color-foreground-secondary)', flexShrink: 0 }}
-                      />
                       <Text type="caption1" color="secondary">
-                        {t('catalog.channel.postFrequency', { hours: channel.postFrequencyHours })}
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(minPrice)}</span>
                       </Text>
                     </div>
                   )}
+                  {heroCpm != null && (
+                    <Text type="subheadline2" color="secondary" style={{ marginTop: 4 }}>
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {'\u2248 '}
+                        {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
+                      </span>
+                    </Text>
+                  )}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {channel.pricingRules.map((rule) => {
-                    const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
-                    const localizedType = t(`catalog.channel.postType.${rule.postType}`, {
-                      defaultValue: rule.postType,
-                    });
-                    const durationLabel = rule.durationHours
-                      ? t('catalog.channel.durationHours', { hours: rule.durationHours })
-                      : null;
-                    const freqLabel =
-                      channel.postFrequencyHours != null
-                        ? t('catalog.channel.postFrequencyTooltip', { hours: channel.postFrequencyHours })
-                        : null;
-                    return (
-                      <div key={rule.id} style={pricingCardStyle}>
-                        <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={postTypeIconContainerStyle}>
-                            <PostTypeIcon
-                              postType={rule.postType}
-                              style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
-                            />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <Text type="body" weight="medium">
-                              <span
-                                style={{
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                  display: 'block',
-                                }}
-                              >
-                                {localizedType}
-                              </span>
-                            </Text>
-                            {(durationLabel || freqLabel || ruleCpm != null) && (
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 6,
-                                  marginTop: 2,
-                                  flexWrap: 'wrap',
-                                }}
-                              >
-                                {durationLabel && (
-                                  <Text type="caption1" color="secondary">
-                                    {durationLabel}
-                                  </Text>
-                                )}
-                                {durationLabel && freqLabel && (
-                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
-                                    {'\u00b7'}
-                                  </span>
-                                )}
-                                {freqLabel && (
-                                  <Text type="caption1" color="secondary">
-                                    {freqLabel}
-                                  </Text>
-                                )}
-                                {(durationLabel || freqLabel) && ruleCpm != null && (
-                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
-                                    {'\u00b7'}
-                                  </span>
-                                )}
-                                {ruleCpm != null && (
-                                  <Text type="caption1" color="tertiary">
-                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                      {'\u2248 '}
-                                      {formatCpm(ruleCpm)}/1K
-                                    </span>
-                                  </Text>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <Text type="callout" weight="bold" style={{ flexShrink: 0 }}>
-                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
-                          </Text>
-                        </div>
-                        {rule.description && (
-                          <div
-                            style={{
-                              padding: '10px 16px',
-                              borderTop: '1px solid var(--color-border-separator)',
-                              background: 'var(--color-background-secondary)',
-                            }}
-                          >
-                            <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                              {rule.description}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <PricingRulesList rules={channel.pricingRules} channel={channel} t={t} />
               </motion.div>
             )}
 
@@ -913,124 +825,21 @@ export default function ChannelDetailPage() {
                           {t('catalog.channel.from', { price: formatTon(minPrice) })}
                         </span>
                       </Text>
-                      {heroCpm != null && (
-                        <Text type="subheadline2" color="tertiary">
-                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                            {'\u2248 '}
-                            {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
-                          </span>
-                        </Text>
-                      )}
-                    </div>
-                  )}
-                  {channel.postFrequencyHours != null && (
-                    <div style={postFrequencyBadgeStyle}>
-                      <ClockIcon
-                        style={{ width: 14, height: 14, color: 'var(--color-foreground-secondary)', flexShrink: 0 }}
-                      />
                       <Text type="caption1" color="secondary">
-                        {t('catalog.channel.postFrequency', { hours: channel.postFrequencyHours })}
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(minPrice)}</span>
                       </Text>
                     </div>
                   )}
+                  {heroCpm != null && (
+                    <Text type="subheadline2" color="secondary" style={{ marginTop: 4 }}>
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {'\u2248 '}
+                        {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
+                      </span>
+                    </Text>
+                  )}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {channel.pricingRules.map((rule) => {
-                    const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
-                    const localizedType = t(`catalog.channel.postType.${rule.postType}`, {
-                      defaultValue: rule.postType,
-                    });
-                    const durationLabel = rule.durationHours
-                      ? t('catalog.channel.durationHours', { hours: rule.durationHours })
-                      : null;
-                    const freqLabel =
-                      channel.postFrequencyHours != null
-                        ? t('catalog.channel.postFrequencyTooltip', { hours: channel.postFrequencyHours })
-                        : null;
-                    return (
-                      <div key={rule.id} style={pricingCardStyle}>
-                        <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={postTypeIconContainerStyle}>
-                            <PostTypeIcon
-                              postType={rule.postType}
-                              style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
-                            />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <Text type="body" weight="medium">
-                              <span
-                                style={{
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                  display: 'block',
-                                }}
-                              >
-                                {localizedType}
-                              </span>
-                            </Text>
-                            {(durationLabel || freqLabel || ruleCpm != null) && (
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 6,
-                                  marginTop: 2,
-                                  flexWrap: 'wrap',
-                                }}
-                              >
-                                {durationLabel && (
-                                  <Text type="caption1" color="secondary">
-                                    {durationLabel}
-                                  </Text>
-                                )}
-                                {durationLabel && freqLabel && (
-                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
-                                    {'\u00b7'}
-                                  </span>
-                                )}
-                                {freqLabel && (
-                                  <Text type="caption1" color="secondary">
-                                    {freqLabel}
-                                  </Text>
-                                )}
-                                {(durationLabel || freqLabel) && ruleCpm != null && (
-                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
-                                    {'\u00b7'}
-                                  </span>
-                                )}
-                                {ruleCpm != null && (
-                                  <Text type="caption1" color="tertiary">
-                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                      {'\u2248 '}
-                                      {formatCpm(ruleCpm)}/1K
-                                    </span>
-                                  </Text>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <Text type="callout" weight="bold" style={{ flexShrink: 0 }}>
-                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
-                          </Text>
-                        </div>
-                        {rule.description && (
-                          <div
-                            style={{
-                              padding: '10px 16px',
-                              borderTop: '1px solid var(--color-border-separator)',
-                              background: 'var(--color-background-secondary)',
-                            }}
-                          >
-                            <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                              {rule.description}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <PricingRulesList rules={channel.pricingRules} channel={channel} t={t} />
               </motion.div>
             )}
 
@@ -1082,6 +891,9 @@ export default function ChannelDetailPage() {
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>
                   {t('catalog.channel.from', { price: formatTon(minPrice) })}
                 </span>
+              </Text>
+              <Text type="caption1" color="tertiary">
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(minPrice)}</span>
               </Text>
             </div>
           )}
@@ -1145,13 +957,133 @@ const ruleItemStyle: React.CSSProperties = {
   gap: 8,
 };
 
-const postFrequencyBadgeStyle: React.CSSProperties = {
+const overlapBadgeStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: 6,
-  marginTop: 8,
-  padding: '4px 10px',
-  borderRadius: 8,
+  gap: 4,
+  padding: '2px 8px',
+  borderRadius: 6,
   background: 'var(--color-background-secondary)',
-  border: '1px solid var(--color-border-separator)',
+  fontSize: 12,
+  fontWeight: 600,
+  color: 'var(--color-foreground-secondary)',
+  fontVariantNumeric: 'tabular-nums',
 };
+
+const cpmBadgeStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  padding: '2px 8px',
+  borderRadius: 6,
+  background: 'var(--color-background-secondary)',
+  fontVariantNumeric: 'tabular-nums',
+};
+
+function PricingRulesList({
+  rules,
+  channel,
+  t,
+}: {
+  rules: PricingRule[];
+  channel: ChannelDetail;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {rules.map((rule) => {
+        const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
+        const localizedType = t(`catalog.channel.postType.${rule.postType}`, {
+          defaultValue: rule.postType,
+        });
+        const overlap = getOverlapLabel(rule, channel.postFrequencyHours, t);
+        return (
+          <div key={rule.id} style={pricingCardStyle}>
+            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={postTypeIconContainerStyle}>
+                <PostTypeIcon
+                  postType={rule.postType}
+                  style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Text type="body" weight="medium">
+                    <span
+                      style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'block',
+                      }}
+                    >
+                      {localizedType}
+                    </span>
+                  </Text>
+                  {rule.description && (
+                    <Popover
+                      content={
+                        <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap', maxWidth: 220 }}>
+                          {rule.description}
+                        </Text>
+                      }
+                    >
+                      <InfoIcon
+                        style={{ width: 14, height: 14, color: 'var(--color-foreground-tertiary)', flexShrink: 0 }}
+                      />
+                    </Popover>
+                  )}
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 4,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  {overlap &&
+                    (overlap.hasTooltip ? (
+                      <Popover
+                        content={
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Text type="caption1" color="secondary">
+                              {t('catalog.channel.overlapTooltipLine1', { freq: overlap.freq })}
+                            </Text>
+                            <Text type="caption1" color="secondary">
+                              {t('catalog.channel.overlapTooltipLine2', { dur: overlap.dur })}
+                            </Text>
+                          </div>
+                        }
+                      >
+                        <span style={overlapBadgeStyle}>
+                          {overlap.label}
+                          <InfoIcon style={{ width: 12, height: 12, color: 'var(--color-foreground-tertiary)' }} />
+                        </span>
+                      </Popover>
+                    ) : (
+                      <span style={overlapBadgeStyle}>{overlap.label}</span>
+                    ))}
+                  {ruleCpm != null && (
+                    <span style={cpmBadgeStyle}>
+                      <Text type="caption1" color="secondary">
+                        {t('catalog.channel.cpmShort', { value: formatCpm(ruleCpm) })}
+                      </Text>
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                <Text type="callout" weight="bold">
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+                </Text>
+                <Text type="caption1" color="tertiary">
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(rule.priceNano)}</span>
+                </Text>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

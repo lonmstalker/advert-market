@@ -35,23 +35,17 @@ public class ChannelService {
     @NonNull
     public CursorPage<ChannelListItem> search(
             @NonNull ChannelSearchCriteria criteria) {
-        int limit = Math.clamp(criteria.limit(), 1,
-                ChannelSearchCriteria.MAX_LIMIT);
-        if (limit != criteria.limit()) {
-            criteria = new ChannelSearchCriteria(
-                    criteria.category(),
-                    criteria.minSubscribers(),
-                    criteria.maxSubscribers(),
-                    criteria.minPrice(),
-                    criteria.maxPrice(),
-                    criteria.minEngagement(),
-                    criteria.language(),
-                    criteria.query(),
-                    criteria.sort(),
-                    criteria.cursor(),
-                    limit);
-        }
-        return searchPort.search(criteria);
+        return searchPort.search(normalizeCriteria(criteria));
+    }
+
+    /**
+     * Counts active channels by the given criteria.
+     *
+     * @param criteria search filters
+     * @return count of matching channels
+     */
+    public long count(@NonNull ChannelSearchCriteria criteria) {
+        return searchPort.count(normalizeCriteria(criteria));
     }
 
     /**
@@ -111,5 +105,26 @@ public class ChannelService {
                     ErrorCodes.CHANNEL_NOT_OWNED,
                     "Not the owner of channel: " + channelId);
         }
+    }
+
+    private static ChannelSearchCriteria normalizeCriteria(
+            ChannelSearchCriteria criteria) {
+        int limit = Math.clamp(criteria.limit(), 1,
+                ChannelSearchCriteria.MAX_LIMIT);
+        if (limit == criteria.limit()) {
+            return criteria;
+        }
+        return new ChannelSearchCriteria(
+                criteria.category(),
+                criteria.minSubscribers(),
+                criteria.maxSubscribers(),
+                criteria.minPrice(),
+                criteria.maxPrice(),
+                criteria.minEngagement(),
+                criteria.language(),
+                criteria.query(),
+                criteria.sort(),
+                criteria.cursor(),
+                limit);
     }
 }

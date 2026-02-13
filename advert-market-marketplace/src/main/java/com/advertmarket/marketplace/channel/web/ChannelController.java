@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Channel verification, registration, search, and management endpoints.
@@ -54,22 +56,56 @@ public class ChannelController {
     @SuppressWarnings("checkstyle:ParameterNumber")
     public CursorPage<ChannelListItem> search(
             @RequestParam(name = "query", required = false) String query,
+            @RequestParam(name = "q", required = false) String q,
             @RequestParam(name = "category", required = false) String category,
             @RequestParam(name = "minSubscribers", required = false) Integer minSubscribers,
+            @RequestParam(name = "minSubs", required = false) Integer minSubs,
             @RequestParam(name = "maxSubscribers", required = false) Integer maxSubscribers,
+            @RequestParam(name = "maxSubs", required = false) Integer maxSubs,
             @RequestParam(name = "minPrice", required = false) Long minPrice,
             @RequestParam(name = "maxPrice", required = false) Long maxPrice,
             @RequestParam(name = "minEngagement", required = false) Double minEngagement,
             @RequestParam(name = "language", required = false) String language,
-            @RequestParam(name = "sort", defaultValue = "SUBSCRIBERS_DESC") ChannelSort sort,
+            @RequestParam(name = "sort", defaultValue = "SUBSCRIBERS_DESC") String sort,
             @RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "limit", defaultValue = "20") int limit) {
-
-        var criteria = new ChannelSearchCriteria(
-                category, minSubscribers, maxSubscribers,
-                minPrice, maxPrice, minEngagement,
-                language, query, sort, cursor, limit);
+        var criteria = buildCriteria(
+                query, q, category,
+                minSubscribers, minSubs,
+                maxSubscribers, maxSubs,
+                minPrice, maxPrice, minEngagement, language,
+                sort, cursor, limit);
         return channelService.search(criteria);
+    }
+
+    /**
+     * Counts active channels in the catalog with the same filters as search.
+     */
+    @GetMapping("/count")
+    @Operation(summary = "Count channels",
+            description = "Returns channel count for given search filters")
+    @ApiResponse(responseCode = "200", description = "Channel count")
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    public long count(
+            @RequestParam(name = "query", required = false) String query,
+            @RequestParam(name = "q", required = false) String q,
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "minSubscribers", required = false) Integer minSubscribers,
+            @RequestParam(name = "minSubs", required = false) Integer minSubs,
+            @RequestParam(name = "maxSubscribers", required = false) Integer maxSubscribers,
+            @RequestParam(name = "maxSubs", required = false) Integer maxSubs,
+            @RequestParam(name = "minPrice", required = false) Long minPrice,
+            @RequestParam(name = "maxPrice", required = false) Long maxPrice,
+            @RequestParam(name = "minEngagement", required = false) Double minEngagement,
+            @RequestParam(name = "language", required = false) String language) {
+        var criteria = buildCriteria(
+                query, q, category,
+                minSubscribers, minSubs,
+                maxSubscribers, maxSubs,
+                minPrice, maxPrice, minEngagement, language,
+                ChannelSort.SUBSCRIBERS_DESC.name(), null,
+                ChannelSearchCriteria.DEFAULT_LIMIT);
+        return channelService.count(criteria);
     }
 
     /**
@@ -165,5 +201,76 @@ public class ChannelController {
             @Valid @RequestBody ChannelRegistrationRequest request) {
         long userId = SecurityContextUtil.currentUserId().value();
         return registrationService.register(request, userId);
+    }
+
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    private static ChannelSearchCriteria buildCriteria(
+            String query,
+            String q,
+            String category,
+            Integer minSubscribers,
+            Integer minSubs,
+            Integer maxSubscribers,
+            Integer maxSubs,
+            Long minPrice,
+            Long maxPrice,
+            Double minEngagement,
+            String language,
+            String sort,
+            String cursor,
+            int limit) {
+        return new ChannelSearchCriteria(
+                category,
+                firstNonNull(minSubscribers, minSubs),
+                firstNonNull(maxSubscribers, maxSubs),
+                minPrice,
+                maxPrice,
+                minEngagement,
+                language,
+                firstNonBlank(query, q),
+                parseSort(sort),
+                cursor,
+                limit);
+    }
+
+    private static String firstNonBlank(String primary, String fallback) {
+        if (primary != null && !primary.isBlank()) {
+            return primary;
+        }
+        if (fallback != null && !fallback.isBlank()) {
+            return fallback;
+        }
+        return null;
+    }
+
+    private static <T> T firstNonNull(T primary, T fallback) {
+        return primary != null ? primary : fallback;
+    }
+
+    private static ChannelSort parseSort(String rawSort) {
+        if (rawSort == null || rawSort.isBlank()) {
+            return ChannelSort.SUBSCRIBERS_DESC;
+        }
+        String normalized = rawSort.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "relevance" -> ChannelSort.RELEVANCE;
+            case "subscribers", "subscribers_desc" -> ChannelSort.SUBSCRIBERS_DESC;
+            case "subscribers_asc" -> ChannelSort.SUBSCRIBERS_ASC;
+            case "price_asc" -> ChannelSort.PRICE_ASC;
+            case "price_desc" -> ChannelSort.PRICE_DESC;
+            case "er", "engagement_desc" -> ChannelSort.ENGAGEMENT_DESC;
+            case "updated" -> ChannelSort.UPDATED;
+            default -> {
+                try {
+                    yield ChannelSort.valueOf(rawSort.trim().toUpperCase(
+                            Locale.ROOT));
+                } catch (IllegalArgumentException ex) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Unsupported sort value: " + rawSort,
+                            ex);
+                }
+            }
+        };
     }
 }
