@@ -109,15 +109,39 @@ function RuleIndicator({ allowed }: { allowed: boolean }) {
   return (
     <span
       style={{
-        display: 'inline-block',
-        width: 6,
-        height: 6,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 18,
+        height: 18,
         borderRadius: '50%',
-        background: allowed ? 'var(--color-state-success)' : 'var(--color-state-destructive)',
+        background: allowed
+          ? 'color-mix(in srgb, var(--color-state-success) 12%, transparent)'
+          : 'color-mix(in srgb, var(--color-state-destructive) 12%, transparent)',
         flexShrink: 0,
-        marginTop: 6,
+        marginTop: 1,
       }}
-    />
+    >
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+        {allowed ? (
+          <path
+            d="M2 5.5L4 7.5L8 3"
+            stroke="var(--color-state-success)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ) : (
+          <path
+            d="M3 3L7 7M7 3L3 7"
+            stroke="var(--color-state-destructive)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+      </svg>
+    </span>
   );
 }
 
@@ -141,7 +165,6 @@ function ChannelRulesSection({
 
   const sections: { label: string; rows: React.ReactNode[] }[] = [];
 
-  // Content section
   if (hasContent) {
     const rows: React.ReactNode[] = [];
     if (rules.maxPostChars != null) {
@@ -159,7 +182,7 @@ function ChannelRulesSection({
         <div key="prohibited" style={{ ...ruleItemStyle, flexWrap: 'wrap' }}>
           <RuleIndicator allowed={false} />
           <Text type="caption1" color="secondary">{t('catalog.channel.rulesProhibited')}:</Text>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, width: '100%', paddingLeft: 14 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, width: '100%', paddingLeft: 26 }}>
             {rules.prohibitedTopics.map((topic) => (
               <span
                 key={topic}
@@ -182,7 +205,6 @@ function ChannelRulesSection({
     sections.push({ label: t('catalog.channel.rulesPostSize'), rows });
   }
 
-  // Media section
   if (hasMedia) {
     const rows: React.ReactNode[] = [];
     if (rules.mediaAllowed != null) {
@@ -215,7 +237,6 @@ function ChannelRulesSection({
     sections.push({ label: t('catalog.channel.rulesMedia'), rows });
   }
 
-  // Links & buttons
   if (hasLinksButtons) {
     const rows: React.ReactNode[] = [];
     if (rules.linksAllowed != null) {
@@ -251,7 +272,6 @@ function ChannelRulesSection({
     sections.push({ label: t('catalog.channel.rulesLinks'), rows });
   }
 
-  // Formatting
   if (hasFormatting) {
     sections.push({
       label: t('catalog.channel.rulesFormatting'),
@@ -266,21 +286,7 @@ function ChannelRulesSection({
     });
   }
 
-  // Custom rules
-  if (hasCustom) {
-    sections.push({
-      label: t('catalog.channel.rulesCustom'),
-      rows: [
-        <div key="custom" style={{ padding: '0 0 0 14px' }}>
-          <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-            {rules.customRules}
-          </Text>
-        </div>,
-      ],
-    });
-  }
-
-  if (sections.length === 0) {
+  if (sections.length === 0 && !hasCustom) {
     return (
       <div style={{ padding: '12px 16px', background: 'var(--color-background-section)', borderRadius: 12 }}>
         <Text type="caption1" color="tertiary">{t('catalog.channel.noRules')}</Text>
@@ -289,30 +295,62 @@ function ChannelRulesSection({
   }
 
   return (
-    <div
-      style={{
-        background: 'var(--color-background-base)',
-        border: '1px solid var(--color-border-separator)',
-        borderRadius: 12,
-        overflow: 'hidden',
-      }}
-    >
-      {sections.map((section, i) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {sections.length > 0 && (
         <div
-          key={section.label}
           style={{
-            padding: '12px 16px',
-            borderBottom: i < sections.length - 1 ? '1px solid var(--color-border-separator)' : 'none',
+            background: 'var(--color-background-base)',
+            border: '1px solid var(--color-border-separator)',
+            borderRadius: 12,
+            overflow: 'hidden',
           }}
         >
-          <Text type="caption1" weight="medium" color="secondary" style={{ marginBottom: 8 }}>
-            {section.label}
-          </Text>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {section.rows}
-          </div>
+          {sections.map((section, i) => (
+            <div
+              key={section.label}
+              style={{
+                padding: '12px 16px',
+                borderBottom: i < sections.length - 1 ? '1px solid var(--color-border-separator)' : 'none',
+              }}
+            >
+              <Text type="caption1" weight="medium" color="secondary" style={{ marginBottom: 8 }}>
+                {section.label}
+              </Text>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {section.rows}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+
+      {hasCustom && (
+        <div
+          style={{
+            padding: '14px 16px',
+            borderRadius: 12,
+            background: 'color-mix(in srgb, var(--color-accent-primary) 5%, var(--color-background-base))',
+            border: '1px solid color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
+          }}
+        >
+          <span
+            style={{
+              display: 'block',
+              fontSize: 11,
+              fontWeight: 700,
+              color: 'var(--color-accent-primary)',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              marginBottom: 8,
+            }}
+          >
+            {t('catalog.channel.ownerNote')}
+          </span>
+          <Text type="subheadline1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+            {rules.customRules}
+          </Text>
+        </div>
+      )}
     </div>
   );
 }
@@ -412,7 +450,6 @@ export default function ChannelDetailPage() {
               borderBottom: '1px solid var(--color-border-separator)',
             }}
           >
-            {/* Row: avatar + title/username + actions */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div
                 style={{
@@ -448,6 +485,9 @@ export default function ChannelDetailPage() {
                 <Text type="subheadline1" color="secondary">
                   <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {channel.username ? `@${channel.username}` : t('catalog.channel.privateChannel')}
+                    <span style={{ color: 'var(--color-foreground-tertiary)' }}>
+                      {' \u00b7 '}{formatChannelAge(channel.createdAt, t)}
+                    </span>
                   </span>
                 </Text>
               </div>
@@ -558,17 +598,6 @@ export default function ChannelDetailPage() {
           </motion.div>
         )}
 
-        {/* Hero CPM section */}
-        {heroCpm != null && (
-          <motion.div {...slideUp} style={{ padding: '20px 16px 4px', textAlign: 'center' }}>
-            <Text type="title1" weight="bold">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                {formatCpm(heroCpm)} TON / 1K {t('catalog.channel.views')}
-              </span>
-            </Text>
-          </motion.div>
-        )}
-
         {/* Stats row */}
         <motion.div {...slideUp} style={{ padding: '16px 16px 0', display: 'flex', gap: 8 }}>
           <div style={statCardStyle}>
@@ -644,12 +673,30 @@ export default function ChannelDetailPage() {
           </motion.div>
         )}
 
-        {/* Pricing table */}
+        {/* Pricing section */}
         {channel.pricingRules.length > 0 && (
-          <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-            <Text type="body" weight="bold" style={{ marginBottom: 12 }}>
-              {t('catalog.channel.pricing')}
-            </Text>
+          <motion.div {...slideUp} style={{ padding: '8px 16px 16px' }}>
+            <div style={{ marginBottom: 16 }}>
+              <Text type="title3" weight="bold" style={{ marginBottom: 6 }}>
+                {t('catalog.channel.pricingOverview')}
+              </Text>
+              {minPrice != null && (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                  <Text type="title1" weight="bold">
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      {t('catalog.channel.from', { price: formatTon(minPrice) })}
+                    </span>
+                  </Text>
+                  {heroCpm != null && (
+                    <Text type="subheadline2" color="tertiary">
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {'\u2248 '}{formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
+                      </span>
+                    </Text>
+                  )}
+                </div>
+              )}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {channel.pricingRules.map((rule) => {
                 const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
@@ -659,60 +706,54 @@ export default function ChannelDetailPage() {
                   : null;
                 return (
                   <div key={rule.id} style={pricingCardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
-                      <PostTypeIcon
-                        postType={rule.postType}
-                        style={{
-                          width: 20,
-                          height: 20,
-                          color: 'var(--color-foreground-secondary)',
-                          flexShrink: 0,
-                          marginTop: 1,
-                        }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Text type="body">
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                              {localizedType}
-                            </span>
-                          </Text>
-                          {durationLabel && (
-                            <span
-                              style={{
-                                padding: '2px 6px',
-                                borderRadius: 6,
-                                background: 'var(--color-background-secondary)',
-                                fontSize: 11,
-                                fontWeight: 500,
-                                color: 'var(--color-foreground-secondary)',
-                                whiteSpace: 'nowrap',
-                                flexShrink: 0,
-                              }}
-                            >
-                              {durationLabel}
-                            </span>
-                          )}
-                        </div>
-                        {rule.description && (
-                          <Text type="caption1" color="secondary" style={{ marginTop: 2 }}>
-                            {rule.description}
-                          </Text>
-                        )}
+                    <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={postTypeIconContainerStyle}>
+                        <PostTypeIcon
+                          postType={rule.postType}
+                          style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
+                        />
                       </div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <Text type="callout" weight="bold">
-                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
-                      </Text>
-                      {ruleCpm != null && (
-                        <Text type="caption1" color="secondary">
-                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                            {t('catalog.channel.cpmShort', { value: formatCpm(ruleCpm) })}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text type="body" weight="medium">
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                            {localizedType}
                           </span>
                         </Text>
-                      )}
+                        {(durationLabel || ruleCpm != null) && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                            {durationLabel && (
+                              <Text type="caption1" color="secondary">{durationLabel}</Text>
+                            )}
+                            {durationLabel && ruleCpm != null && (
+                              <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>{'\u00b7'}</span>
+                            )}
+                            {ruleCpm != null && (
+                              <Text type="caption1" color="tertiary">
+                                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                  {'\u2248 '}{formatCpm(ruleCpm)}/1K
+                                </span>
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Text type="callout" weight="bold" style={{ flexShrink: 0 }}>
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+                      </Text>
                     </div>
+                    {rule.description && (
+                      <div
+                        style={{
+                          padding: '10px 16px',
+                          borderTop: '1px solid var(--color-border-separator)',
+                          background: 'var(--color-background-secondary)',
+                        }}
+                      >
+                        <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                          {rule.description}
+                        </Text>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -720,10 +761,10 @@ export default function ChannelDetailPage() {
           </motion.div>
         )}
 
-        {/* Channel rules */}
+        {/* Placement conditions */}
         <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-          <Text type="body" weight="bold" style={{ marginBottom: 12 }}>
-            {t('catalog.channel.rules')}
+          <Text type="title3" weight="bold" style={{ marginBottom: 12 }}>
+            {t('catalog.channel.conditions')}
           </Text>
           {channel.rules ? (
             <ChannelRulesSection rules={channel.rules} t={t} />
@@ -740,26 +781,6 @@ export default function ChannelDetailPage() {
               </Text>
             </div>
           )}
-        </motion.div>
-
-        {/* Channel age */}
-        <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-          <div
-            style={{
-              padding: '10px 16px',
-              background: 'var(--color-background-section)',
-              borderRadius: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-            }}
-          >
-            <ClockIcon style={{ width: 14, height: 14, color: 'var(--color-foreground-tertiary)' }} />
-            <Text type="caption1" color="tertiary">
-              {formatChannelAge(channel.createdAt, t)}
-            </Text>
-          </div>
         </motion.div>
       </div>
 
@@ -829,11 +850,18 @@ const pricingCardStyle: React.CSSProperties = {
   background: 'var(--color-background-base)',
   border: '1px solid var(--color-border-separator)',
   borderRadius: 12,
-  padding: 16,
+  overflow: 'hidden',
+};
+
+const postTypeIconContainerStyle: React.CSSProperties = {
+  width: 40,
+  height: 40,
+  borderRadius: 10,
+  background: 'var(--color-background-secondary)',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 12,
+  justifyContent: 'center',
+  flexShrink: 0,
 };
 
 const ruleItemStyle: React.CSSProperties = {

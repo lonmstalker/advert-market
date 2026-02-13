@@ -275,6 +275,10 @@
       "rulesMaxChars": "{{count}} символов",
       "rulesButtonsCount": "{{count}} шт.",
       "noRules": "Правила не указаны",
+      "pricingOverview": "Стоимость размещения",
+      "conditions": "Условия размещения",
+      "perThousandViews": "за 1 000 просмотров",
+      "ownerNote": "Заметка от владельца",
       "postType": {
         "NATIVE": "Нативный пост",
         "STORY": "Сторис",

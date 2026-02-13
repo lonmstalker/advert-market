@@ -272,6 +272,10 @@
       "rulesMaxChars": "{{count}} characters",
       "rulesButtonsCount": "{{count}} pcs.",
       "noRules": "No rules specified",
+      "pricingOverview": "Pricing",
+      "conditions": "Placement conditions",
+      "perThousandViews": "per 1K views",
+      "ownerNote": "Owner's note",
       "postType": {
         "NATIVE": "Native post",
         "STORY": "Story",
