@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        maven { url 'https://jitpack.io' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.github.lonmstalker.spring-properties-md:spring-properties-md-gradle-plugin:v0.1.0'
+    }
+}
+
 plugins {
     id 'org.springframework.boot' version '4.0.2' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
@@ -79,6 +89,21 @@ subprojects {
             compileOnly 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api'
             testCompileOnly 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api'
             annotationProcessor 'com.github.lonmstalker.spring-properties-md:spring-properties-md-processor'
+        }
+
+        // --- spring-properties-md plugin (doc generation) ---
+        if (project.name != 'advert-market-integration-tests') {
+            apply plugin: 'io.github.spring-properties-md'
+
+            springPropertiesMd {
+                title = project.name
+                outputFile = "${rootDir}/docs/properties/${project.name}.md"
+            }
+
+            tasks.named('generatePropertyDocs') {
+                dependsOn 'compileJava'
+                onlyIf { file("${project.buildDir}/classes/java/main").exists() }
+            }
         }
 
         // --- Checkstyle ---

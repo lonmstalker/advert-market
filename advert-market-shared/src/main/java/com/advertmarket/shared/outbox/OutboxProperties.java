@@ -48,20 +48,15 @@ public record OutboxProperties(
         Duration publishTimeout
 ) {
 
-    private static final int DEFAULT_POLL_INTERVAL_MS = 500;
-    private static final int DEFAULT_BATCH_SIZE = 50;
-    private static final int DEFAULT_MAX_RETRIES = 3;
-
-    /** Applies defaults for unset properties. */
     public OutboxProperties {
         if (pollInterval == null) {
-            pollInterval = Duration.ofMillis(DEFAULT_POLL_INTERVAL_MS);
+            pollInterval = Duration.ofMillis(500);
         }
         if (batchSize <= 0) {
-            batchSize = DEFAULT_BATCH_SIZE;
+            batchSize = 50;
         }
         if (maxRetries <= 0) {
-            maxRetries = DEFAULT_MAX_RETRIES;
+            maxRetries = 3;
         }
         if (initialBackoff == null) {
             initialBackoff = Duration.ofSeconds(1);
