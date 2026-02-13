@@ -148,6 +148,14 @@ public final class ErrorCodes {
     public static final @Fenum(FenumGroup.ERROR_CODE) String LOCK_ACQUISITION_FAILED =
             "LOCK_ACQUISITION_FAILED";
 
+    // --- Internal API ---
+    public static final @Fenum(FenumGroup.ERROR_CODE) String INTERNAL_API_KEY_INVALID =
+            "INTERNAL_API_KEY_INVALID";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String INTERNAL_IP_DENIED =
+            "INTERNAL_IP_DENIED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String UNKNOWN_CALLBACK_TYPE =
+            "UNKNOWN_CALLBACK_TYPE";
+
     // --- Outbox ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String OUTBOX_PUBLISH_FAILED =
             "OUTBOX_PUBLISH_FAILED";

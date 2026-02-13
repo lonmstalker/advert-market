@@ -221,8 +221,18 @@
       "createDeal": "Create deal",
       "edit": "Edit",
       "share": "Share",
-      "description": "Description"
+      "description": "Description",
+      "from": "from {{price}}",
+      "cpmShort": "~{{value}}/1K",
+      "subs": "subs",
+      "reach": "reach",
+      "views": "views",
+      "openInTelegram": "Open channel in Telegram",
+      "completedDeals": "{{count}} completed deals",
+      "respondsIn": "Responds in ~{{time}}",
+      "newChannel": "New channel"
     },
+    "summary": "{{count}} channels \u00b7 \u2300 {{avgCpm}}/1K \u00b7 {{minSubs}}\u2013{{maxSubs}} subs",
     "empty": {
       "title": "Nothing found",
       "description": "Try changing your search parameters or reset filters",

@@ -222,8 +222,18 @@
       "createDeal": "Создать сделку",
       "edit": "Редактировать",
       "share": "Поделиться",
-      "description": "Описание"
+      "description": "Описание",
+      "from": "от {{price}}",
+      "cpmShort": "~{{value}}/1K",
+      "subs": "подп.",
+      "reach": "охват",
+      "views": "просмотров",
+      "openInTelegram": "Открыть канал в Telegram",
+      "completedDeals": "{{count}} завершённых сделок",
+      "respondsIn": "Отвечает за ~{{time}}",
+      "newChannel": "Новый канал"
     },
+    "summary": "{{count}} каналов · \u2300 {{avgCpm}}/1K · {{minSubs}}\u2013{{maxSubs}} подп.",
     "empty": {
       "title": "Ничего не найдено",
       "description": "Попробуйте изменить параметры поиска или сбросить фильтры",

@@ -5,6 +5,7 @@ import com.advertmarket.deal.api.event.DeadlineSetEvent;
 import com.advertmarket.deal.api.event.DealStateChangedEvent;
 import com.advertmarket.delivery.api.event.DeliveryFailedEvent;
 import com.advertmarket.delivery.api.event.DeliveryVerifiedEvent;
+import com.advertmarket.delivery.api.event.PublicationResultEvent;
 import com.advertmarket.delivery.api.event.PublishPostCommand;
 import com.advertmarket.delivery.api.event.VerifyDeliveryCommand;
 import com.advertmarket.financial.api.event.AutoRefundLateDepositCommand;
@@ -12,7 +13,10 @@ import com.advertmarket.financial.api.event.DepositConfirmedEvent;
 import com.advertmarket.financial.api.event.DepositFailedEvent;
 import com.advertmarket.financial.api.event.ExecutePayoutCommand;
 import com.advertmarket.financial.api.event.ExecuteRefundCommand;
+import com.advertmarket.financial.api.event.PayoutCompletedEvent;
+import com.advertmarket.financial.api.event.ReconciliationResultEvent;
 import com.advertmarket.financial.api.event.ReconciliationStartEvent;
+import com.advertmarket.financial.api.event.RefundCompletedEvent;
 import com.advertmarket.financial.api.event.SweepCommissionCommand;
 import com.advertmarket.financial.api.event.WatchDepositCommand;
 import com.advertmarket.shared.event.EventTypeRegistry;
@@ -64,6 +68,15 @@ public class KafkaEventTypeConfig {
                 NotificationEvent.class);
         registry.register(EventTypes.RECONCILIATION_START,
                 ReconciliationStartEvent.class);
+
+        registry.register(EventTypes.PAYOUT_COMPLETED,
+                PayoutCompletedEvent.class);
+        registry.register(EventTypes.REFUND_COMPLETED,
+                RefundCompletedEvent.class);
+        registry.register(EventTypes.PUBLICATION_RESULT,
+                PublicationResultEvent.class);
+        registry.register(EventTypes.RECONCILIATION_RESULT,
+                ReconciliationResultEvent.class);
 
         return registry;
     }

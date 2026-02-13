@@ -77,6 +77,22 @@ public final class EventTypes {
     public static final @Fenum(FenumGroup.EVENT_TYPE) String
             AUDIT_EVENT = "AUDIT_EVENT";
 
+    /** Payout confirmed on blockchain. */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            PAYOUT_COMPLETED = "PAYOUT_COMPLETED";
+
+    /** Refund confirmed on blockchain. */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            REFUND_COMPLETED = "REFUND_COMPLETED";
+
+    /** Post publication result (success or failure). */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            PUBLICATION_RESULT = "PUBLICATION_RESULT";
+
+    /** Reconciliation process completed. */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            RECONCILIATION_RESULT = "RECONCILIATION_RESULT";
+
     private EventTypes() {
     }
 }

@@ -4,6 +4,7 @@ import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.UserId;
 import java.util.Objects;
+import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -197,6 +198,43 @@ public record IdempotencyKey(@NonNull String value) {
         requireNotBlank(originalTxRef, "originalTxRef");
         return new IdempotencyKey(
                 "reversal:" + originalTxRef);
+    }
+
+    /**
+     * Key for payout: {@code payout:{dealId}}.
+     *
+     * @param dealId the deal identifier
+     * @return idempotency key
+     */
+    public static @NonNull IdempotencyKey payout(
+            @NonNull DealId dealId) {
+        return new IdempotencyKey(
+                "payout:" + dealId.value());
+    }
+
+    /**
+     * Key for publication: {@code publish:{dealId}}.
+     *
+     * @param dealId the deal identifier
+     * @return idempotency key
+     */
+    public static @NonNull IdempotencyKey publish(
+            @NonNull DealId dealId) {
+        return new IdempotencyKey(
+                "publish:" + dealId.value());
+    }
+
+    /**
+     * Key for reconciliation: {@code recon:{triggerId}}.
+     *
+     * @param triggerId the reconciliation trigger identifier
+     * @return idempotency key
+     */
+    public static @NonNull IdempotencyKey reconciliation(
+            @NonNull UUID triggerId) {
+        Objects.requireNonNull(triggerId, "triggerId");
+        return new IdempotencyKey(
+                "recon:" + triggerId);
     }
 
     private static void requireNotBlank(

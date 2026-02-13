@@ -1,10 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Button, Input, Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import {
+  CategoryChipRow,
   ChannelCatalogCard,
   ChannelFiltersContent,
   fetchChannels,
@@ -13,8 +14,15 @@ import {
 } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useDebounce } from '@/shared/hooks/use-debounce';
+import { computeCpm, formatCpm } from '@/shared/lib/ton-format';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
+
+function formatCompact(count: number): string {
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
+  if (count >= 1_000) return `${Math.round(count / 1_000)}K`;
+  return String(count);
+}
 
 function SkeletonCard() {
   return (
@@ -88,6 +96,24 @@ export default function CatalogPage() {
   const channels = data?.pages.flatMap((page) => page.items) ?? [];
   const totalCount = data?.pages[0]?.total;
 
+  const summary = useMemo(() => {
+    if (channels.length === 0) return null;
+    const subs = channels.map((c) => c.subscriberCount);
+    const minSubs = Math.min(...subs);
+    const maxSubs = Math.max(...subs);
+
+    const cpms: number[] = [];
+    for (const ch of channels) {
+      if (ch.pricePerPostNano != null && ch.avgViews && ch.avgViews > 0) {
+        const cpm = computeCpm(ch.pricePerPostNano, ch.avgViews);
+        if (cpm != null) cpms.push(cpm);
+      }
+    }
+    const avgCpm = cpms.length > 0 ? cpms.reduce((a, b) => a + b, 0) / cpms.length : null;
+
+    return { minSubs, maxSubs, avgCpm };
+  }, [channels]);
+
   const handleOpenFilters = useCallback(() => {
     setFiltersContentProps({
       currentFilters: filters,
@@ -111,47 +137,67 @@ export default function CatalogPage() {
       {/* Search bar area */}
       <div
         style={{
-          padding: '12px 16px',
-          display: 'flex',
-          gap: 8,
+          padding: '16px 16px 12px',
           position: 'sticky',
           top: 0,
           zIndex: 5,
           background: 'var(--color-background-secondary)',
         }}
       >
-        <div style={{ flex: 1 }}>
-          <Input value={searchInput} onChange={setSearchInput} placeholder={t('catalog.search.placeholder')} />
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'center',
+            background: 'var(--color-background-base)',
+            border: '1px solid var(--color-border-separator)',
+            borderRadius: 12,
+            padding: '0 12px',
+          }}
+        >
+          <span style={{ fontSize: 18, color: 'var(--color-foreground-tertiary)', flexShrink: 0, lineHeight: 1 }}>
+            {'\u{1F50D}'}
+          </span>
+          <div style={{ flex: 1 }}>
+            <Input value={searchInput} onChange={setSearchInput} placeholder={t('catalog.search.placeholder')} />
+          </div>
         </div>
-        <div style={{ flexShrink: 0, position: 'relative' }}>
-          <motion.div {...pressScale}>
-            <Button text={t('catalog.filters.button')} type="secondary" onClick={handleOpenFilters} />
-          </motion.div>
-          {activeFilterCount > 0 && (
-            <span
-              style={{
-                position: 'absolute',
-                top: -4,
-                right: -4,
-                width: 18,
-                height: 18,
-                borderRadius: '50%',
-                background: 'var(--color-accent-primary)',
-                color: 'var(--color-static-white)',
-                fontSize: 11,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                lineHeight: 1,
-                pointerEvents: 'none',
-              }}
-            >
-              {activeFilterCount}
-            </span>
-          )}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+          <div style={{ position: 'relative' }}>
+            <motion.div {...pressScale}>
+              <Button text={t('catalog.filters.button')} type="secondary" onClick={handleOpenFilters} />
+            </motion.div>
+            {activeFilterCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 18,
+                  height: 18,
+                  borderRadius: '50%',
+                  background: 'var(--color-accent-primary)',
+                  color: 'var(--color-static-white)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1,
+                  pointerEvents: 'none',
+                }}
+              >
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
         </div>
       </div>
+
+      <CategoryChipRow
+        selected={filters.category}
+        onSelect={(category) => setFilters({ ...filters, category })}
+      />
 
       <AnimatePresence mode="wait">
         {isLoading ? (
@@ -189,10 +235,17 @@ export default function CatalogPage() {
           </motion.div>
         ) : (
           <motion.div key="list" {...staggerChildren}>
-            {totalCount != null && (
+            {totalCount != null && summary && (
               <div style={{ padding: '8px 16px 4px' }}>
                 <Text type="footnote" color="secondary">
-                  {t('catalog.filters.show', { count: totalCount })}
+                  {summary.avgCpm != null
+                    ? t('catalog.summary', {
+                        count: totalCount,
+                        avgCpm: formatCpm(summary.avgCpm),
+                        minSubs: formatCompact(summary.minSubs),
+                        maxSubs: formatCompact(summary.maxSubs),
+                      })
+                    : t('catalog.filters.show', { count: totalCount })}
                 </Text>
               </div>
             )}

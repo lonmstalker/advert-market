@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
 import { parseTonToNano } from '@/shared/lib/ton-format';
-import { fetchChannelCount, fetchChannelTopics } from '../api/channels';
+import { fetchCategories, fetchChannelCount } from '../api/channels';
 import type { CatalogFilters, ChannelSort } from '../types/channel';
 import { channelSortValues } from '../types/channel';
 
@@ -38,9 +38,10 @@ export function ChannelFiltersContent() {
   propsRef.current = filtersContentProps;
   const initial = filtersContentProps;
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
 
-  const [topic, setTopic] = useState<string | null>(initial?.currentFilters.topic ?? null);
+  const [category, setCategory] = useState<string | null>(initial?.currentFilters.category ?? null);
   const [minSubs, setMinSubs] = useState(initial?.currentFilters.minSubs?.toString() ?? '');
   const [maxSubs, setMaxSubs] = useState(initial?.currentFilters.maxSubs?.toString() ?? '');
   const [minPrice, setMinPrice] = useState(
@@ -51,23 +52,23 @@ export function ChannelFiltersContent() {
   );
   const [sort, setSort] = useState<string | null>(initial?.currentFilters.sort ?? null);
 
-  const { data: topics = [] } = useQuery({
-    queryKey: channelKeys.topics(),
-    queryFn: fetchChannelTopics,
+  const { data: categories = [] } = useQuery({
+    queryKey: channelKeys.categories(),
+    queryFn: fetchCategories,
     staleTime: Number.POSITIVE_INFINITY,
   });
 
   const draftFilters: CatalogFilters = useMemo(
     () => ({
       q: propsRef.current?.currentFilters.q,
-      topic: topic || undefined,
+      category: category || undefined,
       minSubs: minSubs ? Number(minSubs) : undefined,
       maxSubs: maxSubs ? Number(maxSubs) : undefined,
       minPrice: minPrice ? Number(parseTonToNano(minPrice)) : undefined,
       maxPrice: maxPrice ? Number(parseTonToNano(maxPrice)) : undefined,
       sort: (sort as ChannelSort) || undefined,
     }),
-    [topic, minSubs, maxSubs, minPrice, maxPrice, sort],
+    [category, minSubs, maxSubs, minPrice, maxPrice, sort],
   );
 
   const { data: count } = useQuery({
@@ -77,11 +78,14 @@ export function ChannelFiltersContent() {
   });
 
   const hasActiveFilters =
-    topic != null || minSubs !== '' || maxSubs !== '' || minPrice !== '' || maxPrice !== '' || sort != null;
+    category != null || minSubs !== '' || maxSubs !== '' || minPrice !== '' || maxPrice !== '' || sort != null;
 
-  const topicOptions = [
+  const categoryOptions = [
     { label: t('catalog.filters.topicAll'), value: null },
-    ...topics.map((tp) => ({ label: tp.name, value: tp.slug })),
+    ...categories.map((cat) => ({
+      label: cat.localizedName[lang] ?? cat.localizedName.ru ?? cat.slug,
+      value: cat.slug,
+    })),
   ];
 
   const sortOptions = [
@@ -97,7 +101,7 @@ export function ChannelFiltersContent() {
   };
 
   const handleReset = () => {
-    setTopic(null);
+    setCategory(null);
     setMinSubs('');
     setMaxSubs('');
     setMinPrice('');
@@ -123,7 +127,7 @@ export function ChannelFiltersContent() {
         <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
           {t('catalog.filters.topic')}
         </Text>
-        <Select options={topicOptions} value={topic} onChange={setTopic} />
+        <Select options={categoryOptions} value={category} onChange={setCategory} />
       </FilterSection>
 
       <FilterSection>

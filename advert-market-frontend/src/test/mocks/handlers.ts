@@ -1,5 +1,5 @@
 import { HttpResponse, http } from 'msw';
-import { mockAuthResponse, mockChannelDetails, mockChannels, mockChannelTeams, mockProfile, mockTopics } from './data';
+import { mockAuthResponse, mockCategories, mockChannelDetails, mockChannels, mockChannelTeams, mockProfile } from './data';
 
 const API_BASE = '/api/v1';
 
@@ -39,9 +39,9 @@ export const handlers = [
 
   // --- Channel handlers ---
 
-  // GET /channels/topics — dynamic topic list
-  http.get(`${API_BASE}/channels/topics`, () => {
-    return HttpResponse.json(mockTopics);
+  // GET /categories — category list (matches backend ReferenceDataController)
+  http.get(`${API_BASE}/categories`, () => {
+    return HttpResponse.json(mockCategories);
   }),
 
   // GET /channels/count — filtered count
@@ -87,14 +87,19 @@ export const handlers = [
     }
 
     const detail = mockChannelDetails[channelId];
+    const fallbackCategory = mockCategories.find((c) => channel.categories.includes(c.slug));
     return HttpResponse.json({
       ...channel,
+      description: detail?.description ?? '',
+      ownerId: detail?.ownerId ?? 1,
+      createdAt: detail?.createdAt ?? '2025-01-01T00:00:00Z',
       avgReach: detail?.avgReach ?? Math.round(channel.subscriberCount * 0.3),
-      engagementRate: detail?.engagementRate ?? 2.5,
       pricingRules: detail?.pricingRules ?? [
-        { id: channelId * 100, postType: '1/24', priceNano: channel.pricePerPostNano ?? 1_000_000_000 },
+        { id: channelId * 100, postType: 'NATIVE', priceNano: channel.pricePerPostNano ?? 1_000_000_000 },
       ],
-      topics: detail?.topics ?? [mockTopics.find((t) => t.slug === channel.category) ?? mockTopics[0]],
+      topics: detail?.topics ?? (fallbackCategory
+        ? [{ slug: fallbackCategory.slug, name: fallbackCategory.localizedName.ru }]
+        : []),
     });
   }),
 
@@ -141,14 +146,13 @@ function filterChannels(params: URLSearchParams) {
     result = result.filter(
       (ch) =>
         ch.title.toLowerCase().includes(q) ||
-        ch.username?.toLowerCase().includes(q) ||
-        ch.description?.toLowerCase().includes(q),
+        ch.username?.toLowerCase().includes(q),
     );
   }
 
-  const topic = params.get('topic');
-  if (topic) {
-    result = result.filter((ch) => ch.category === topic);
+  const category = params.get('category');
+  if (category) {
+    result = result.filter((ch) => ch.categories.includes(category));
   }
 
   const minSubs = params.get('minSubs');

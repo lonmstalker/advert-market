@@ -1,6 +1,8 @@
 package com.advertmarket.app.config;
 
 import com.advertmarket.app.error.SecurityExceptionHandler;
+import com.advertmarket.app.filter.InternalApiKeyFilter;
+import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import java.time.Duration;
 import java.util.List;
@@ -8,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.Customizer;
@@ -24,16 +27,39 @@ import org.springframework.web.cors.CorsConfiguration;
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
-@EnableConfigurationProperties(CorsProperties.class)
+@EnableConfigurationProperties({CorsProperties.class, InternalApiProperties.class})
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsProperties corsProperties;
     private final SecurityExceptionHandler securityExceptionHandler;
+    private final InternalApiProperties internalApiProperties;
+    private final MetricsFacade metricsFacade;
 
-    /** Configures the HTTP security filter chain. */
+    /** Internal API security chain — API key auth, no JWT. */
     @Bean
-    public SecurityFilterChain securityFilterChain(
+    @Order(1)
+    public SecurityFilterChain internalSecurityFilterChain(
+            HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/internal/v1/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().authenticated())
+                .addFilterBefore(
+                        new InternalApiKeyFilter(
+                                internalApiProperties, metricsFacade),
+                        UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    /** Public API security chain — JWT auth. */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain publicSecurityFilterChain(
             HttpSecurity http) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(request -> {
@@ -69,7 +95,6 @@ public class SecurityConfig {
                                 "/actuator/health/**")
                         .permitAll()
                         .requestMatchers(
-                                "/internal/v1/**",
                                 "/actuator/prometheus",
                                 "/actuator/metrics",
                                 "/actuator/info",

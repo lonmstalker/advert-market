@@ -54,6 +54,21 @@ public final class ConsumerGroups {
     public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
             DEAD_LETTER_PROCESSOR = "dead-letter-processor";
 
+    /** Handles financial result events (deposit, payout, refund). */
+    public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
+            FINANCIAL_EVENT_HANDLER =
+            "financial-event-handler";
+
+    /** Handles delivery result events (publication, verification). */
+    public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
+            DELIVERY_EVENT_HANDLER =
+            "delivery-event-handler";
+
+    /** Handles reconciliation result events. */
+    public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
+            RECONCILIATION_RESULT_HANDLER =
+            "reconciliation-result-handler";
+
     private ConsumerGroups() {
     }
 }

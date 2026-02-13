@@ -10,7 +10,7 @@ export function useChannelFilters() {
     const sort = searchParams.get('sort') as ChannelSort | null;
     return {
       q: searchParams.get('q') || undefined,
-      topic: searchParams.get('topic') || undefined,
+      category: searchParams.get('category') || undefined,
       minSubs: searchParams.get('minSubs') ? Number(searchParams.get('minSubs')) : undefined,
       maxSubs: searchParams.get('maxSubs') ? Number(searchParams.get('maxSubs')) : undefined,
       minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
@@ -26,7 +26,7 @@ export function useChannelFilters() {
           const params = new URLSearchParams(prev);
           const entries: [string, string | undefined][] = [
             ['q', next.q],
-            ['topic', next.topic],
+            ['category', next.category],
             ['minSubs', next.minSubs?.toString()],
             ['maxSubs', next.maxSubs?.toString()],
             ['minPrice', next.minPrice?.toString()],
@@ -54,7 +54,7 @@ export function useChannelFilters() {
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (filters.topic) count++;
+    if (filters.category) count++;
     if (filters.minSubs || filters.maxSubs) count++;
     if (filters.minPrice || filters.maxPrice) count++;
     if (filters.sort && filters.sort !== 'relevance') count++;

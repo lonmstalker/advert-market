@@ -1,6 +1,17 @@
 import { z } from 'zod/v4';
 
-// --- Topics (dynamic from backend) ---
+// --- Categories (from /api/v1/categories) ---
+
+export const categorySchema = z.object({
+  id: z.number(),
+  slug: z.string(),
+  localizedName: z.record(z.string()),
+  sortOrder: z.number(),
+});
+
+export type Category = z.infer<typeof categorySchema>;
+
+// --- Legacy topic shape (used by detail endpoint) ---
 
 export const channelTopicSchema = z.object({
   slug: z.string(),
@@ -21,23 +32,27 @@ export const pricingRuleSchema = z.object({
   id: z.number(),
   postType: z.string(),
   priceNano: z.number(),
+  durationHours: z.number().optional(),
+  description: z.string().optional(),
 });
 
 export type PricingRule = z.infer<typeof pricingRuleSchema>;
 
-// --- Channel (list item) ---
+// --- Channel (list item — matches backend ChannelListItem) ---
 
 export const channelSchema = z.object({
   id: z.number(),
   title: z.string(),
   username: z.string().optional(),
-  description: z.string().optional(),
   subscriberCount: z.number(),
-  category: z.string().optional(),
+  categories: z.array(z.string()).default([]),
   pricePerPostNano: z.number().optional(),
+  avgViews: z.number().optional(),
+  engagementRate: z.number().optional(),
   isActive: z.boolean(),
-  ownerId: z.number(),
-  createdAt: z.string(),
+  isVerified: z.boolean().optional(),
+  language: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export type Channel = z.infer<typeof channelSchema>;
@@ -45,8 +60,10 @@ export type Channel = z.infer<typeof channelSchema>;
 // --- Channel detail ---
 
 export const channelDetailSchema = channelSchema.extend({
+  description: z.string().optional(),
+  ownerId: z.number(),
+  createdAt: z.string(),
   avgReach: z.number().optional(),
-  engagementRate: z.number().optional(),
   pricingRules: z.array(pricingRuleSchema),
   topics: z.array(channelTopicSchema),
 });
@@ -93,7 +110,7 @@ export type CreateDealResponse = z.infer<typeof createDealResponseSchema>;
 
 export type CatalogFilters = {
   q?: string;
-  topic?: string;
+  category?: string;
   minSubs?: number;
   maxSubs?: number;
   minPrice?: number;

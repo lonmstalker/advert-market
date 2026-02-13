@@ -1,8 +1,12 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { formatTon } from '@/shared/lib/ton-format';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { channelKeys } from '@/shared/api/query-keys';
+import { computeCpm, formatCpm, formatTonCompact } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
-import type { Channel } from '../types/channel';
+import { fetchCategories } from '../api/channels';
+import type { Category, Channel } from '../types/channel';
 
 type ChannelCatalogCardProps = {
   channel: Channel;
@@ -13,6 +17,37 @@ function formatSubscribers(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
   if (count >= 1_000) return `${Math.round(count / 1_000)}K`;
   return String(count);
+}
+
+function erColor(rate: number): string {
+  if (rate > 5) return 'var(--color-accent-primary)';
+  if (rate >= 2) return 'var(--color-foreground-secondary)';
+  return 'var(--color-foreground-tertiary)';
+}
+
+function MetricPill({ value, label, valueColor }: { value: string; label: string; valueColor?: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: '3px 8px',
+        borderRadius: 8,
+        background: 'var(--color-background-secondary)',
+        fontSize: 12,
+        lineHeight: 1.2,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span style={{ fontWeight: 600, color: valueColor ?? 'var(--color-foreground-primary)', fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+      </span>
+      <span style={{ color: 'var(--color-foreground-tertiary)', fontWeight: 400 }}>
+        {label}
+      </span>
+    </span>
+  );
 }
 
 function ChannelAvatar({ title }: { title: string }) {
@@ -37,26 +72,41 @@ function ChannelAvatar({ title }: { title: string }) {
   );
 }
 
-function TopicBadge({ name }: { name: string }) {
+function CategoryBadge({ slug, categories }: { slug: string; categories: Category[] }) {
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
+  const cat = categories.find((c) => c.slug === slug);
+  const label = cat ? (cat.localizedName[lang] ?? cat.localizedName.ru ?? cat.slug) : slug;
+
   return (
     <span
       style={{
-        padding: '2px 10px',
-        borderRadius: 10,
+        padding: '2px 8px',
+        borderRadius: 8,
         background: 'var(--color-background-secondary)',
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 500,
         color: 'var(--color-foreground-secondary)',
         whiteSpace: 'nowrap',
       }}
     >
-      {name}
+      {label}
     </span>
   );
 }
 
 export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps) {
-  const topicName = channel.category ? channel.category.charAt(0).toUpperCase() + channel.category.slice(1) : null;
+  const { t } = useTranslation();
+
+  const { data: categories = [] } = useQuery({
+    queryKey: channelKeys.categories(),
+    queryFn: fetchCategories,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+
+  const cpm = channel.pricePerPostNano != null && channel.avgViews
+    ? computeCpm(channel.pricePerPostNano, channel.avgViews)
+    : null;
 
   return (
     <motion.div
@@ -72,8 +122,8 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {/* Row 1: avatar + title + price */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      {/* Row 1: avatar + title/username + price/CPM */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <ChannelAvatar title={channel.title} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <Text type="body" weight="bold">
@@ -81,27 +131,53 @@ export function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps
               {channel.title}
             </span>
           </Text>
+          {channel.username && (
+            <Text type="caption1" color="secondary">
+              @{channel.username}
+            </Text>
+          )}
         </div>
         {channel.pricePerPostNano != null && (
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <Text type="callout" weight="bold">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(channel.pricePerPostNano)}</span>
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                {t('catalog.channel.from', { price: `${formatTonCompact(channel.pricePerPostNano)} TON` })}
+              </span>
             </Text>
+            {cpm != null && (
+              <Text type="caption1" color="secondary">
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {t('catalog.channel.cpmShort', { value: formatCpm(cpm) })}
+                </span>
+              </Text>
+            )}
           </div>
         )}
       </div>
 
-      {/* Row 2: stats + category */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
-          <Text type="caption1" color="secondary">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatSubscribers(channel.subscriberCount)}</span>
-          </Text>
-        </div>
-        <div style={{ display: 'flex', gap: 8, overflow: 'hidden', flexShrink: 1, justifyContent: 'flex-end' }}>
-          {topicName && <TopicBadge name={topicName} />}
-        </div>
+      {/* Row 2: metric pills */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+        <MetricPill value={formatSubscribers(channel.subscriberCount)} label={t('catalog.channel.subs')} />
+        {channel.avgViews != null && (
+          <MetricPill value={formatSubscribers(channel.avgViews)} label={t('catalog.channel.reach')} />
+        )}
+        {channel.engagementRate != null && (
+          <MetricPill
+            value={`${channel.engagementRate.toFixed(1)}%`}
+            label="ER"
+            valueColor={erColor(channel.engagementRate)}
+          />
+        )}
       </div>
+
+      {/* Row 3: category badges */}
+      {channel.categories.length > 0 && categories.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
+          {channel.categories.map((slug) => (
+            <CategoryBadge key={slug} slug={slug} categories={categories} />
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }

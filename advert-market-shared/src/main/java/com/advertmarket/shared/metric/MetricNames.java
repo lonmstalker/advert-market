@@ -88,6 +88,32 @@ public final class MetricNames {
     public static final @Fenum(FenumGroup.METRIC_NAME) String DEDUP_DUPLICATE =
             "telegram.update.duplicates";
 
+    // --- Reconciliation ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String RECONCILIATION_COMPLETED =
+            "reconciliation.completed";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String RECONCILIATION_FAILED =
+            "reconciliation.failed";
+
+    // --- Publication ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String PUBLICATION_SUCCEEDED =
+            "publication.succeeded";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String PUBLICATION_FAILED =
+            "publication.failed";
+
+    // --- Refund ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String REFUND_FAILED =
+            "refund.failed";
+
+    // --- Worker Events ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WORKER_EVENT_RECEIVED =
+            "worker.event.received";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WORKER_EVENT_DUPLICATE =
+            "worker.event.duplicate";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WORKER_CALLBACK_HTTP_RECEIVED =
+            "worker.callback.http.received";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String INTERNAL_AUTH_FAILED =
+            "internal.auth.failed";
+
     // --- System ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_PUBLISHED =
             "outbox.published";

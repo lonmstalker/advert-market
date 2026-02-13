@@ -3,34 +3,35 @@ import { api } from '@/shared/api/client';
 import { type PaginatedResponse, paginatedResponseSchema } from '@/shared/api/types';
 import {
   type CatalogFilters,
+
+  type Category,
   type Channel,
   type ChannelDetail,
   type ChannelTeam,
-  type ChannelTopic,
   type CreateDealRequest,
   type CreateDealResponse,
+  categorySchema,
   channelDetailSchema,
   channelSchema,
   channelTeamSchema,
-  channelTopicSchema,
   createDealResponseSchema,
 } from '../types/channel';
 
-export function fetchChannelTopics(): Promise<ChannelTopic[]> {
-  return api.get('/channels/topics', {
-    schema: z.array(channelTopicSchema),
+export function fetchCategories(): Promise<Category[]> {
+  return api.get('/categories', {
+    schema: z.array(categorySchema),
   });
 }
 
 export function fetchChannels(
   filters: CatalogFilters & { cursor?: string; limit?: number },
 ): Promise<PaginatedResponse<Channel>> {
-  const { q, topic, minSubs, maxSubs, minPrice, maxPrice, sort, cursor, limit } = filters;
+  const { q, category, minSubs, maxSubs, minPrice, maxPrice, sort, cursor, limit } = filters;
   return api.get('/channels', {
     schema: paginatedResponseSchema(channelSchema),
     params: {
       q,
-      topic,
+      category,
       minSubs,
       maxSubs,
       minPrice,
@@ -43,10 +44,10 @@ export function fetchChannels(
 }
 
 export function fetchChannelCount(filters: Omit<CatalogFilters, 'sort'>): Promise<number> {
-  const { q, topic, minSubs, maxSubs, minPrice, maxPrice } = filters;
+  const { q, category, minSubs, maxSubs, minPrice, maxPrice } = filters;
   return api.get('/channels/count', {
     schema: z.number(),
-    params: { q, topic, minSubs, maxSubs, minPrice, maxPrice },
+    params: { q, category, minSubs, maxSubs, minPrice, maxPrice },
   });
 }
 
