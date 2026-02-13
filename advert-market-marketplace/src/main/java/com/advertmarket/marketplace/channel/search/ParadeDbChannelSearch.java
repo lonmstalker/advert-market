@@ -156,7 +156,12 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
     }
 
     private static String buildParadeDbQuery(String query) {
-        String escaped = query.replace("'", "''");
+        String escaped = query
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace(":", "\\:")
+                .replace("~", "\\~")
+                .replace("'", "''");
         return "title:\"" + escaped + "\"~1 OR description:\""
                 + escaped + "\"~1";
     }

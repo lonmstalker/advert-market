@@ -22,6 +22,7 @@ import org.springframework.kafka.core.ProducerFactory;
 @EnableConfigurationProperties(KafkaClientProperties.class)
 public class KafkaProducerFallbackConfig {
 
+    /** Creates a producer factory with string serializers. */
     @Bean
     @ConditionalOnMissingBean
     public ProducerFactory<String, String> producerFactory(
@@ -36,6 +37,7 @@ public class KafkaProducerFallbackConfig {
         return new DefaultKafkaProducerFactory<>(props);
     }
 
+    /** Creates a KafkaTemplate backed by the given producer factory. */
     @Bean
     @ConditionalOnMissingBean
     public KafkaTemplate<String, String> kafkaTemplate(

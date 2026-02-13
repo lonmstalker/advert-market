@@ -252,6 +252,7 @@ public class ChannelController {
             return ChannelSort.SUBSCRIBERS_DESC;
         }
         String normalized = rawSort.trim().toLowerCase(Locale.ROOT);
+        // CHECKSTYLE.SUPPRESS: MissingNullCaseInSwitch for +1 lines
         return switch (normalized) {
             case "relevance" -> ChannelSort.RELEVANCE;
             case "subscribers", "subscribers_desc" -> ChannelSort.SUBSCRIBERS_DESC;
