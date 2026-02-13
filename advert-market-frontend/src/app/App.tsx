@@ -17,6 +17,7 @@ const CatalogPage = lazy(() => import('@/pages/catalog/CatalogPage'));
 const ChannelDetailPage = lazy(() => import('@/pages/catalog/ChannelDetailPage'));
 const DealsPage = lazy(() => import('@/pages/deals/DealsPage'));
 const CreateDealPage = lazy(() => import('@/pages/deals/CreateDealPage'));
+const DealDetailPage = lazy(() => import('@/pages/deals/DealDetailPage'));
 const WalletPage = lazy(() => import('@/pages/wallet/WalletPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 
@@ -82,6 +83,7 @@ export function App() {
                           <Route path="/profile" element={<ProfilePage />} />
                         </Route>
                         <Route path="/catalog/channels/:channelId" element={<ChannelDetailPage />} />
+                        <Route path="/deals/:dealId" element={<DealDetailPage />} />
                         <Route path="/deals/new" element={<CreateDealPage />} />
                       </Route>
 

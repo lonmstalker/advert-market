@@ -340,11 +340,13 @@ export default function CatalogPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                style={{ textAlign: 'center', padding: '16px 16px 8px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 40px 8px' }}
               >
-                <Text type="caption1" color="tertiary">
+                <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
+                <Text type="caption1" color="tertiary" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {t('catalog.endOfList')}
                 </Text>
+                <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
               </motion.div>
             )}
           </motion.div>

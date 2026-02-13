@@ -1,15 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { Spinner, Text } from '@telegram-tools/ui-kit';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
+import type { ChannelDetail, PricingRule } from '@/features/channels';
 import { fetchChannelDetail, useChannelRights } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { copyToClipboard } from '@/shared/lib/clipboard';
 import { computeCpm, formatCpm, formatTon } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState } from '@/shared/ui';
+import { BackButtonHandler, EmptyState, SegmentControl } from '@/shared/ui';
 import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
 import {
   ArrowRightIcon,
@@ -21,7 +23,6 @@ import {
   TelegramIcon,
   VerifiedIcon,
 } from '@/shared/ui/icons';
-import type { ChannelDetail, PricingRule } from '@/features/channels';
 
 function formatSubscribers(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
@@ -74,8 +75,20 @@ function formatChannelAge(createdAt: string, t: (key: string, opts?: Record<stri
   if (days < 30) return t('catalog.channel.addedDaysAgo', { count: days });
   const months = Math.floor(days / 30);
   if (months < 12) return t('catalog.channel.addedMonthsAgo', { count: months });
-  const monthNames = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  const monthNames = [
+    'января',
+    'февраля',
+    'марта',
+    'апреля',
+    'мая',
+    'июня',
+    'июля',
+    'августа',
+    'сентября',
+    'октября',
+    'ноября',
+    'декабря',
+  ];
   return t('catalog.channel.onPlatformSince', {
     date: `${monthNames[created.getMonth()]} ${created.getFullYear()}`,
   });
@@ -152,17 +165,10 @@ function ChannelRulesSection({
   rules: NonNullable<ChannelDetail['rules']>;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
-  const hasContent = rules.maxPostChars != null
-    || (rules.prohibitedTopics && rules.prohibitedTopics.length > 0);
-  const hasMedia = rules.mediaAllowed != null
-    || rules.mediaTypes != null
-    || rules.maxMediaCount != null;
-  const hasLinksButtons = rules.linksAllowed != null
-    || rules.mentionsAllowed != null
-    || rules.maxButtons != null;
+  const hasContent = rules.maxPostChars != null || (rules.prohibitedTopics && rules.prohibitedTopics.length > 0);
+  const hasMedia = rules.mediaAllowed != null || rules.mediaTypes != null || rules.maxMediaCount != null;
+  const hasLinksButtons = rules.linksAllowed != null || rules.mentionsAllowed != null || rules.maxButtons != null;
   const hasFormatting = rules.formattingAllowed != null;
-  const hasCustom = !!rules.customRules;
-
   const sections: { label: string; rows: React.ReactNode[] }[] = [];
 
   if (hasContent) {
@@ -171,9 +177,7 @@ function ChannelRulesSection({
       rows.push(
         <div key="chars" style={ruleItemStyle}>
           <RuleIndicator allowed />
-          <Text type="caption1">
-            {t('catalog.channel.rulesMaxChars', { count: rules.maxPostChars })}
-          </Text>
+          <Text type="caption1">{t('catalog.channel.rulesMaxChars', { count: rules.maxPostChars })}</Text>
         </div>,
       );
     }
@@ -181,7 +185,9 @@ function ChannelRulesSection({
       rows.push(
         <div key="prohibited" style={{ ...ruleItemStyle, flexWrap: 'wrap' }}>
           <RuleIndicator allowed={false} />
-          <Text type="caption1" color="secondary">{t('catalog.channel.rulesProhibited')}:</Text>
+          <Text type="caption1" color="secondary">
+            {t('catalog.channel.rulesProhibited')}:
+          </Text>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, width: '100%', paddingLeft: 26 }}>
             {rules.prohibitedTopics.map((topic) => (
               <span
@@ -254,7 +260,9 @@ function ChannelRulesSection({
         <div key="mentions" style={ruleItemStyle}>
           <RuleIndicator allowed={rules.mentionsAllowed} />
           <Text type="caption1">
-            {rules.mentionsAllowed ? t('catalog.channel.rulesMentionsAllowed') : t('catalog.channel.rulesMentionsNotAllowed')}
+            {rules.mentionsAllowed
+              ? t('catalog.channel.rulesMentionsAllowed')
+              : t('catalog.channel.rulesMentionsNotAllowed')}
           </Text>
         </div>,
       );
@@ -264,7 +272,8 @@ function ChannelRulesSection({
         <div key="buttons" style={ruleItemStyle}>
           <RuleIndicator allowed />
           <Text type="caption1">
-            {t('catalog.channel.rulesMaxButtons')}: {t('catalog.channel.rulesButtonsCount', { count: rules.maxButtons })}
+            {t('catalog.channel.rulesMaxButtons')}:{' '}
+            {t('catalog.channel.rulesButtonsCount', { count: rules.maxButtons })}
           </Text>
         </div>,
       );
@@ -279,17 +288,21 @@ function ChannelRulesSection({
         <div key="fmt" style={ruleItemStyle}>
           <RuleIndicator allowed={rules.formattingAllowed!} />
           <Text type="caption1">
-            {rules.formattingAllowed ? t('catalog.channel.rulesFormattingAllowed') : t('catalog.channel.rulesFormattingNotAllowed')}
+            {rules.formattingAllowed
+              ? t('catalog.channel.rulesFormattingAllowed')
+              : t('catalog.channel.rulesFormattingNotAllowed')}
           </Text>
         </div>,
       ],
     });
   }
 
-  if (sections.length === 0 && !hasCustom) {
+  if (sections.length === 0) {
     return (
       <div style={{ padding: '12px 16px', background: 'var(--color-background-section)', borderRadius: 12 }}>
-        <Text type="caption1" color="tertiary">{t('catalog.channel.noRules')}</Text>
+        <Text type="caption1" color="tertiary">
+          {t('catalog.channel.noRules')}
+        </Text>
       </div>
     );
   }
@@ -316,39 +329,9 @@ function ChannelRulesSection({
               <Text type="caption1" weight="medium" color="secondary" style={{ marginBottom: 8 }}>
                 {section.label}
               </Text>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {section.rows}
-              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{section.rows}</div>
             </div>
           ))}
-        </div>
-      )}
-
-      {hasCustom && (
-        <div
-          style={{
-            padding: '14px 16px',
-            borderRadius: 12,
-            background: 'color-mix(in srgb, var(--color-accent-primary) 5%, var(--color-background-base))',
-            border: '1px solid color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
-          }}
-        >
-          <span
-            style={{
-              display: 'block',
-              fontSize: 11,
-              fontWeight: 700,
-              color: 'var(--color-accent-primary)',
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              marginBottom: 8,
-            }}
-          >
-            {t('catalog.channel.ownerNote')}
-          </span>
-          <Text type="subheadline1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-            {rules.customRules}
-          </Text>
         </div>
       )}
     </div>
@@ -374,6 +357,7 @@ export default function ChannelDetailPage() {
   });
 
   const { isOwner, isLoading: rightsLoading } = useChannelRights(id);
+  const [activeTab, setActiveTab] = useState<'pricing' | 'conditions'>('pricing');
 
   if (isLoading || rightsLoading) {
     return (
@@ -406,17 +390,12 @@ export default function ChannelDetailPage() {
   const langs = getChannelLanguages(channel);
 
   const minPrice = getMinPrice(channel.pricingRules);
-  const heroCpm = minPrice != null && channel.avgReach
-    ? computeCpm(minPrice, channel.avgReach)
-    : null;
+  const heroCpm = minPrice != null && channel.avgReach ? computeCpm(minPrice, channel.avgReach) : null;
 
-  const reachRate = channel.avgReach != null && channel.subscriberCount > 0
-    ? (channel.avgReach / channel.subscriberCount * 100)
-    : null;
+  const reachRate =
+    channel.avgReach != null && channel.subscriberCount > 0 ? (channel.avgReach / channel.subscriberCount) * 100 : null;
 
-  const nextSlotTime = channel.nextAvailableSlot
-    ? formatTimeUntil(channel.nextAvailableSlot)
-    : null;
+  const nextSlotTime = channel.nextAvailableSlot ? formatTimeUntil(channel.nextAvailableSlot) : null;
 
   const handleShare = async () => {
     const link = `https://t.me/AdvertMarketBot/app?startapp=channel_${channel.id}`;
@@ -427,15 +406,22 @@ export default function ChannelDetailPage() {
     }
   };
 
-  const telegramLink = channel.username
-    ? `https://t.me/${channel.username}`
-    : channel.inviteLink ?? null;
+  const telegramLink = channel.username ? `https://t.me/${channel.username}` : (channel.inviteLink ?? null);
 
   const handleOpenTelegram = () => {
     if (telegramLink) {
       window.open(telegramLink, '_blank');
     }
   };
+
+  const hasPricing = channel.pricingRules.length > 0;
+  const hasConditions = !!channel.rules;
+  const showTabs = hasPricing && hasConditions;
+
+  const pricingConditionsTabs = [
+    { value: 'pricing' as const, label: t('catalog.channel.pricingOverview') },
+    { value: 'conditions' as const, label: t('catalog.channel.conditions') },
+  ];
 
   return (
     <>
@@ -463,12 +449,16 @@ export default function ChannelDetailPage() {
                   flexShrink: 0,
                 }}
               >
-                <span style={{ color: 'var(--color-static-white)', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>{letter}</span>
+                <span style={{ color: 'var(--color-static-white)', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
+                  {letter}
+                </span>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Text type="title2" weight="bold">
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                    <span
+                      style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
+                    >
                       {channel.title}
                     </span>
                   </Text>
@@ -483,10 +473,13 @@ export default function ChannelDetailPage() {
                   ))}
                 </div>
                 <Text type="subheadline1" color="secondary">
-                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span
+                    style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
                     {channel.username ? `@${channel.username}` : t('catalog.channel.privateChannel')}
                     <span style={{ color: 'var(--color-foreground-tertiary)' }}>
-                      {' \u00b7 '}{formatChannelAge(channel.createdAt, t)}
+                      {' \u00b7 '}
+                      {formatChannelAge(channel.createdAt, t)}
                     </span>
                   </span>
                 </Text>
@@ -646,7 +639,38 @@ export default function ChannelDetailPage() {
           </motion.div>
         )}
 
-        {/* Open in Telegram link */}
+        {/* Owner's note */}
+        {channel.rules?.customRules && (
+          <motion.div {...slideUp} style={{ padding: '0 16px 8px' }}>
+            <div
+              style={{
+                padding: '14px 16px',
+                borderRadius: 12,
+                background: 'color-mix(in srgb, var(--color-accent-primary) 5%, var(--color-background-base))',
+                border: '1px solid color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--color-accent-primary)',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  marginBottom: 8,
+                }}
+              >
+                {t('catalog.channel.ownerNote')}
+              </span>
+              <Text type="subheadline1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                {channel.rules.customRules}
+              </Text>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Open in Telegram card */}
         {telegramLink && (
           <motion.div {...slideUp} style={{ padding: '0 16px 8px' }}>
             <motion.button
@@ -654,134 +678,385 @@ export default function ChannelDetailPage() {
               type="button"
               onClick={handleOpenTelegram}
               style={{
-                background: 'none',
-                border: 'none',
+                width: '100%',
+                background: 'var(--color-background-base)',
+                border: '1px solid var(--color-border-separator)',
+                borderRadius: 12,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '4px 0',
+                gap: 12,
+                padding: '14px 16px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <TelegramIcon style={{ width: 16, height: 16, color: 'var(--color-link)' }} />
-              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-link)' }}>
-                {channel.username ? t('catalog.channel.openInTelegram') : t('catalog.channel.joinChannel')}
-              </span>
-              <ArrowRightIcon style={{ width: 14, height: 14, color: 'var(--color-link)', opacity: 0.6 }} />
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: 'color-mix(in srgb, var(--color-link) 8%, transparent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <TelegramIcon style={{ width: 18, height: 18, color: 'var(--color-link)' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--color-link)' }}>
+                  {channel.username ? t('catalog.channel.openInTelegram') : t('catalog.channel.joinChannel')}
+                </span>
+                {channel.username && (
+                  <span
+                    style={{ display: 'block', fontSize: 12, color: 'var(--color-foreground-tertiary)', marginTop: 2 }}
+                  >
+                    @{channel.username}
+                  </span>
+                )}
+              </div>
+              <ArrowRightIcon
+                style={{ width: 16, height: 16, color: 'var(--color-link)', opacity: 0.5, flexShrink: 0 }}
+              />
             </motion.button>
           </motion.div>
         )}
 
-        {/* Pricing section */}
-        {channel.pricingRules.length > 0 && (
-          <motion.div {...slideUp} style={{ padding: '8px 16px 16px' }}>
-            <div style={{ marginBottom: 16 }}>
-              <Text type="title3" weight="bold" style={{ marginBottom: 6 }}>
-                {t('catalog.channel.pricingOverview')}
-              </Text>
-              {minPrice != null && (
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-                  <Text type="title1" weight="bold">
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {t('catalog.channel.from', { price: formatTon(minPrice) })}
-                    </span>
-                  </Text>
-                  {heroCpm != null && (
-                    <Text type="subheadline2" color="tertiary">
-                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {'\u2248 '}{formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
-                      </span>
-                    </Text>
-                  )}
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {channel.pricingRules.map((rule) => {
-                const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
-                const localizedType = t(`catalog.channel.postType.${rule.postType}`, { defaultValue: rule.postType });
-                const durationLabel = rule.durationHours
-                  ? t('catalog.channel.durationHours', { hours: rule.durationHours })
-                  : null;
-                return (
-                  <div key={rule.id} style={pricingCardStyle}>
-                    <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={postTypeIconContainerStyle}>
-                        <PostTypeIcon
-                          postType={rule.postType}
-                          style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
-                        />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Text type="body" weight="medium">
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                            {localizedType}
-                          </span>
-                        </Text>
-                        {(durationLabel || ruleCpm != null) && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                            {durationLabel && (
-                              <Text type="caption1" color="secondary">{durationLabel}</Text>
-                            )}
-                            {durationLabel && ruleCpm != null && (
-                              <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>{'\u00b7'}</span>
-                            )}
-                            {ruleCpm != null && (
-                              <Text type="caption1" color="tertiary">
-                                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                  {'\u2248 '}{formatCpm(ruleCpm)}/1K
-                                </span>
-                              </Text>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <Text type="callout" weight="bold" style={{ flexShrink: 0 }}>
-                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
-                      </Text>
-                    </div>
-                    {rule.description && (
-                      <div
-                        style={{
-                          padding: '10px 16px',
-                          borderTop: '1px solid var(--color-border-separator)',
-                          background: 'var(--color-background-secondary)',
-                        }}
-                      >
-                        <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                          {rule.description}
-                        </Text>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+        {/* Segment tabs for Pricing / Conditions */}
+        {showTabs && (
+          <motion.div {...slideUp} style={{ padding: '8px 16px 12px' }}>
+            <SegmentControl tabs={pricingConditionsTabs} active={activeTab} onChange={setActiveTab} />
           </motion.div>
         )}
 
-        {/* Placement conditions */}
-        <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-          <Text type="title3" weight="bold" style={{ marginBottom: 12 }}>
-            {t('catalog.channel.conditions')}
-          </Text>
-          {channel.rules ? (
-            <ChannelRulesSection rules={channel.rules} t={t} />
-          ) : (
-            <div
-              style={{
-                padding: '12px 16px',
-                background: 'var(--color-background-section)',
-                borderRadius: 12,
-              }}
-            >
-              <Text type="caption1" color="tertiary">
-                {t('catalog.channel.noRules')}
+        {showTabs ? (
+          <AnimatePresence mode="wait">
+            {activeTab === 'pricing' && (
+              <motion.div
+                key="pricing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                style={{ padding: '0 16px 16px' }}
+              >
+                <div style={{ marginBottom: 16 }}>
+                  {minPrice != null && (
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                      <Text type="title1" weight="bold">
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {t('catalog.channel.from', { price: formatTon(minPrice) })}
+                        </span>
+                      </Text>
+                      {heroCpm != null && (
+                        <Text type="subheadline2" color="tertiary">
+                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {'\u2248 '}
+                            {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
+                          </span>
+                        </Text>
+                      )}
+                    </div>
+                  )}
+                  {channel.postFrequencyHours != null && (
+                    <div style={postFrequencyBadgeStyle}>
+                      <ClockIcon
+                        style={{ width: 14, height: 14, color: 'var(--color-foreground-secondary)', flexShrink: 0 }}
+                      />
+                      <Text type="caption1" color="secondary">
+                        {t('catalog.channel.postFrequency', { hours: channel.postFrequencyHours })}
+                      </Text>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {channel.pricingRules.map((rule) => {
+                    const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
+                    const localizedType = t(`catalog.channel.postType.${rule.postType}`, {
+                      defaultValue: rule.postType,
+                    });
+                    const durationLabel = rule.durationHours
+                      ? t('catalog.channel.durationHours', { hours: rule.durationHours })
+                      : null;
+                    const freqLabel =
+                      channel.postFrequencyHours != null
+                        ? t('catalog.channel.postFrequencyTooltip', { hours: channel.postFrequencyHours })
+                        : null;
+                    return (
+                      <div key={rule.id} style={pricingCardStyle}>
+                        <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={postTypeIconContainerStyle}>
+                            <PostTypeIcon
+                              postType={rule.postType}
+                              style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
+                            />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Text type="body" weight="medium">
+                              <span
+                                style={{
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  display: 'block',
+                                }}
+                              >
+                                {localizedType}
+                              </span>
+                            </Text>
+                            {(durationLabel || freqLabel || ruleCpm != null) && (
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  marginTop: 2,
+                                  flexWrap: 'wrap',
+                                }}
+                              >
+                                {durationLabel && (
+                                  <Text type="caption1" color="secondary">
+                                    {durationLabel}
+                                  </Text>
+                                )}
+                                {durationLabel && freqLabel && (
+                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
+                                    {'\u00b7'}
+                                  </span>
+                                )}
+                                {freqLabel && (
+                                  <Text type="caption1" color="secondary">
+                                    {freqLabel}
+                                  </Text>
+                                )}
+                                {(durationLabel || freqLabel) && ruleCpm != null && (
+                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
+                                    {'\u00b7'}
+                                  </span>
+                                )}
+                                {ruleCpm != null && (
+                                  <Text type="caption1" color="tertiary">
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                      {'\u2248 '}
+                                      {formatCpm(ruleCpm)}/1K
+                                    </span>
+                                  </Text>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <Text type="callout" weight="bold" style={{ flexShrink: 0 }}>
+                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+                          </Text>
+                        </div>
+                        {rule.description && (
+                          <div
+                            style={{
+                              padding: '10px 16px',
+                              borderTop: '1px solid var(--color-border-separator)',
+                              background: 'var(--color-background-secondary)',
+                            }}
+                          >
+                            <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                              {rule.description}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'conditions' && (
+              <motion.div
+                key="conditions"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                style={{ padding: '0 16px 16px' }}
+              >
+                {channel.rules ? (
+                  <ChannelRulesSection rules={channel.rules} t={t} />
+                ) : (
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      background: 'var(--color-background-section)',
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text type="caption1" color="tertiary">
+                      {t('catalog.channel.noRules')}
+                    </Text>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          <>
+            {/* Pricing section (no tabs) */}
+            {hasPricing && (
+              <motion.div {...slideUp} style={{ padding: '8px 16px 16px' }}>
+                <div style={{ marginBottom: 16 }}>
+                  <Text type="title3" weight="bold" style={{ marginBottom: 6 }}>
+                    {t('catalog.channel.pricingOverview')}
+                  </Text>
+                  {minPrice != null && (
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                      <Text type="title1" weight="bold">
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {t('catalog.channel.from', { price: formatTon(minPrice) })}
+                        </span>
+                      </Text>
+                      {heroCpm != null && (
+                        <Text type="subheadline2" color="tertiary">
+                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {'\u2248 '}
+                            {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
+                          </span>
+                        </Text>
+                      )}
+                    </div>
+                  )}
+                  {channel.postFrequencyHours != null && (
+                    <div style={postFrequencyBadgeStyle}>
+                      <ClockIcon
+                        style={{ width: 14, height: 14, color: 'var(--color-foreground-secondary)', flexShrink: 0 }}
+                      />
+                      <Text type="caption1" color="secondary">
+                        {t('catalog.channel.postFrequency', { hours: channel.postFrequencyHours })}
+                      </Text>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {channel.pricingRules.map((rule) => {
+                    const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
+                    const localizedType = t(`catalog.channel.postType.${rule.postType}`, {
+                      defaultValue: rule.postType,
+                    });
+                    const durationLabel = rule.durationHours
+                      ? t('catalog.channel.durationHours', { hours: rule.durationHours })
+                      : null;
+                    const freqLabel =
+                      channel.postFrequencyHours != null
+                        ? t('catalog.channel.postFrequencyTooltip', { hours: channel.postFrequencyHours })
+                        : null;
+                    return (
+                      <div key={rule.id} style={pricingCardStyle}>
+                        <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={postTypeIconContainerStyle}>
+                            <PostTypeIcon
+                              postType={rule.postType}
+                              style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
+                            />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Text type="body" weight="medium">
+                              <span
+                                style={{
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  display: 'block',
+                                }}
+                              >
+                                {localizedType}
+                              </span>
+                            </Text>
+                            {(durationLabel || freqLabel || ruleCpm != null) && (
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  marginTop: 2,
+                                  flexWrap: 'wrap',
+                                }}
+                              >
+                                {durationLabel && (
+                                  <Text type="caption1" color="secondary">
+                                    {durationLabel}
+                                  </Text>
+                                )}
+                                {durationLabel && freqLabel && (
+                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
+                                    {'\u00b7'}
+                                  </span>
+                                )}
+                                {freqLabel && (
+                                  <Text type="caption1" color="secondary">
+                                    {freqLabel}
+                                  </Text>
+                                )}
+                                {(durationLabel || freqLabel) && ruleCpm != null && (
+                                  <span style={{ color: 'var(--color-foreground-tertiary)', fontSize: 10 }}>
+                                    {'\u00b7'}
+                                  </span>
+                                )}
+                                {ruleCpm != null && (
+                                  <Text type="caption1" color="tertiary">
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                      {'\u2248 '}
+                                      {formatCpm(ruleCpm)}/1K
+                                    </span>
+                                  </Text>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <Text type="callout" weight="bold" style={{ flexShrink: 0 }}>
+                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+                          </Text>
+                        </div>
+                        {rule.description && (
+                          <div
+                            style={{
+                              padding: '10px 16px',
+                              borderTop: '1px solid var(--color-border-separator)',
+                              background: 'var(--color-background-secondary)',
+                            }}
+                          >
+                            <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                              {rule.description}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Placement conditions (no tabs) */}
+            <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
+              <Text type="title3" weight="bold" style={{ marginBottom: 12 }}>
+                {t('catalog.channel.conditions')}
               </Text>
-            </div>
-          )}
-        </motion.div>
+              {channel.rules ? (
+                <ChannelRulesSection rules={channel.rules} t={t} />
+              ) : (
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    background: 'var(--color-background-section)',
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text type="caption1" color="tertiary">
+                    {t('catalog.channel.noRules')}
+                  </Text>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
       </div>
 
       {/* Sticky bottom CTA */}
@@ -868,4 +1143,15 @@ const ruleItemStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'flex-start',
   gap: 8,
+};
+
+const postFrequencyBadgeStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  marginTop: 8,
+  padding: '4px 10px',
+  borderRadius: 8,
+  background: 'var(--color-background-secondary)',
+  border: '1px solid var(--color-border-separator)',
 };

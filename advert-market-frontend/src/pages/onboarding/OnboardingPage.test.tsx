@@ -30,7 +30,7 @@ describe('OnboardingPage', () => {
     expect(screen.getByText('TON Escrow')).toBeInTheDocument();
     expect(screen.getByText('Protected payments')).toBeInTheDocument();
     expect(screen.getByText('Deal Tracking')).toBeInTheDocument();
-    expect(screen.getByText('16-state pipeline')).toBeInTheDocument();
+    expect(screen.getByText('17-state pipeline')).toBeInTheDocument();
   });
 
   it('renders time hint', () => {

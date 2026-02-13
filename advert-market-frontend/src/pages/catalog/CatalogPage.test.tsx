@@ -53,9 +53,9 @@ describe('CatalogPage', () => {
     expect(screen.getByText('Marketing Hub')).toBeInTheDocument();
   });
 
-  it('shows "All channels loaded" when all channels fit in one page', async () => {
+  it('shows end-of-list text when all channels fit in one page', async () => {
     renderCatalog();
-    expect(await screen.findByText('All channels loaded')).toBeInTheDocument();
+    expect(await screen.findByText("That's all")).toBeInTheDocument();
   });
 
   // --- Error path ---

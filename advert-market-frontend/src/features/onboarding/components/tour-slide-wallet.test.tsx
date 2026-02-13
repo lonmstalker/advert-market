@@ -15,7 +15,7 @@ describe('TourSlideWallet', () => {
     renderWithProviders(<TourSlideWallet />);
 
     expect(screen.getByText('Escrow')).toBeInTheDocument();
-    expect(screen.getAllByText('50.00 TON').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('5.00 TON').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows escrow flow on escrow click', async () => {

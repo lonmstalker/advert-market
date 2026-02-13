@@ -7,7 +7,7 @@ function TestRoutes() {
   return (
     <Routes>
       <Route path="*" element={<DeepLinkHandler />} />
-      <Route path="/catalog/:id" element={<div>channel-page</div>} />
+      <Route path="/catalog/channels/:channelId" element={<div>channel-page</div>} />
       <Route path="/deals/:id" element={<div>deal-page</div>} />
     </Routes>
   );

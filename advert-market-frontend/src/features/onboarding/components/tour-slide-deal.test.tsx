@@ -11,12 +11,12 @@ describe('TourSlideDeal', () => {
     useOnboardingStore.getState().reset();
   });
 
-  it('renders timeline with 7 steps', () => {
+  it('renders timeline with 3 macro steps', () => {
     renderWithProviders(<TourSlideDeal />);
 
-    expect(screen.getByText('Offer Sent')).toBeInTheDocument();
-    expect(screen.getByText('Creative Approved')).toBeInTheDocument();
-    expect(screen.getByText('Completed')).toBeInTheDocument();
+    expect(screen.getByText('Offer & Negotiation')).toBeInTheDocument();
+    expect(screen.getByText('Payment & Creative')).toBeInTheDocument();
+    expect(screen.getByText('Publication & Payout')).toBeInTheDocument();
   });
 
   it('shows Approve button', () => {
@@ -41,7 +41,7 @@ describe('TourSlideDeal', () => {
     await user.click(screen.getByRole('button', { name: 'Approve' }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Creative approved! Publication scheduled/)).toBeInTheDocument();
+      expect(screen.getByText(/Creative approved! Moving to publication/)).toBeInTheDocument();
     });
   });
 
@@ -79,7 +79,7 @@ describe('TourSlideDeal', () => {
     await user.click(screen.getByText('← Back to deal'));
 
     await waitFor(() => {
-      expect(screen.getByText('Offer Sent')).toBeInTheDocument();
+      expect(screen.getByText('Offer & Negotiation')).toBeInTheDocument();
     });
   });
 

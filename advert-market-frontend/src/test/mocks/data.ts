@@ -241,6 +241,7 @@ type MockChannelDetail = {
   ownerId: number;
   createdAt: string;
   avgReach: number;
+  postFrequencyHours?: number;
   pricingRules: { id: number; postType: string; priceNano: number; durationHours?: number; description?: string }[];
   topics: { slug: string; name: string }[];
   rules?: {
@@ -263,6 +264,7 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     ownerId: 1,
     createdAt: '2025-06-01T10:00:00Z',
     avgReach: 45000,
+    postFrequencyHours: 6,
     pricingRules: [
       { id: 1, postType: 'NATIVE', priceNano: 5_000_000_000, durationHours: 24, description: 'Пост в стиле канала с интеграцией продукта' },
       { id: 2, postType: 'NATIVE', priceNano: 8_000_000_000, durationHours: 48, description: 'Нативный пост с удержанием 48ч' },
@@ -291,6 +293,7 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     ownerId: 2,
     createdAt: '2025-07-10T12:00:00Z',
     avgReach: 28000,
+    postFrequencyHours: 12,
     pricingRules: [
       { id: 5, postType: 'NATIVE', priceNano: 3_000_000_000, durationHours: 24, description: 'Обзор продукта в формате статьи' },
       { id: 6, postType: 'NATIVE', priceNano: 5_000_000_000, durationHours: 48 },
@@ -317,6 +320,7 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     ownerId: 4,
     createdAt: '2025-05-20T14:00:00Z',
     avgReach: 85000,
+    postFrequencyHours: 4,
     pricingRules: [
       { id: 10, postType: 'NATIVE', priceNano: 8_000_000_000, durationHours: 24, description: 'Аналитический пост с упоминанием продукта' },
       { id: 11, postType: 'NATIVE', priceNano: 14_000_000_000, durationHours: 72, description: 'Нативный пост с удержанием 72ч' },
@@ -333,6 +337,7 @@ export const mockChannelDetails: Record<number, MockChannelDetail> = {
     ownerId: 5,
     createdAt: '2026-01-20T10:00:00Z',
     avgReach: 12000,
+    postFrequencyHours: 48,
     pricingRules: [
       { id: 14, postType: 'NATIVE', priceNano: 2_000_000_000, durationHours: 24, description: 'Кейс или обзор инструмента' },
       { id: 15, postType: 'MENTION', priceNano: 1_500_000_000, description: 'Упоминание в тематическом посте' },
@@ -363,6 +368,8 @@ export const mockDeals = [
     channelUsername: 'techdigest',
     postType: 'NATIVE',
     priceNano: 3_000_000_000,
+    durationHours: 24,
+    postFrequencyHours: 12,
     role: 'ADVERTISER',
     advertiserId: 1,
     ownerId: 2,
@@ -411,6 +418,8 @@ export const mockDeals = [
     channelUsername: 'cryptonewsdaily',
     postType: 'NATIVE',
     priceNano: 5_000_000_000,
+    durationHours: 24,
+    postFrequencyHours: 6,
     role: 'OWNER',
     advertiserId: 10,
     ownerId: 1,

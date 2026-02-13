@@ -5,8 +5,8 @@ import {
   mockChannelDetails,
   mockChannels,
   mockChannelTeams,
-  mockDealTimelines,
   mockDeals,
+  mockDealTimelines,
   mockProfile,
 } from './data';
 
@@ -170,12 +170,13 @@ export const handlers = [
       ownerId: detail?.ownerId ?? 1,
       createdAt: detail?.createdAt ?? '2025-01-01T00:00:00Z',
       avgReach: detail?.avgReach ?? Math.round(channel.subscriberCount * 0.3),
+      ...(detail?.postFrequencyHours != null ? { postFrequencyHours: detail.postFrequencyHours } : {}),
       pricingRules: detail?.pricingRules ?? [
         { id: channelId * 100, postType: 'NATIVE', priceNano: channel.pricePerPostNano ?? 1_000_000_000 },
       ],
-      topics: detail?.topics ?? (fallbackCategory
-        ? [{ slug: fallbackCategory.slug, name: fallbackCategory.localizedName.ru }]
-        : []),
+      topics:
+        detail?.topics ??
+        (fallbackCategory ? [{ slug: fallbackCategory.slug, name: fallbackCategory.localizedName.ru }] : []),
       ...(detail?.rules ? { rules: detail.rules } : {}),
     });
   }),
@@ -220,11 +221,7 @@ function filterChannels(params: URLSearchParams) {
 
   const q = params.get('q')?.toLowerCase();
   if (q) {
-    result = result.filter(
-      (ch) =>
-        ch.title.toLowerCase().includes(q) ||
-        ch.username?.toLowerCase().includes(q),
-    );
+    result = result.filter((ch) => ch.title.toLowerCase().includes(q) || ch.username?.toLowerCase().includes(q));
   }
 
   const category = params.get('category');

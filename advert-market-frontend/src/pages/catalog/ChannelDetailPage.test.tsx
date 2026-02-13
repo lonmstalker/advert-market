@@ -75,7 +75,7 @@ describe('ChannelDetailPage', () => {
     it('shows @cryptonewsdaily username', async () => {
       renderPage(1);
       await waitFor(() => {
-        expect(screen.getByText(/@cryptonewsdaily/)).toBeInTheDocument();
+        expect(screen.getAllByText(/@cryptonewsdaily/).length).toBeGreaterThanOrEqual(1);
       });
     });
 
@@ -141,23 +141,31 @@ describe('ChannelDetailPage', () => {
       expect(await screen.findByText('Placement conditions')).toBeInTheDocument();
     });
 
-    it('shows rules: media allowed', async () => {
-      renderPage(1);
+    it('shows rules: media allowed after switching to Conditions tab', async () => {
+      const { user } = renderPage(1);
+      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
+      await user.click(conditionsTab);
       expect(await screen.findByText('Media allowed')).toBeInTheDocument();
     });
 
-    it('shows rules: links allowed', async () => {
-      renderPage(1);
+    it('shows rules: links allowed after switching to Conditions tab', async () => {
+      const { user } = renderPage(1);
+      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
+      await user.click(conditionsTab);
       expect(await screen.findByText('Links allowed')).toBeInTheDocument();
     });
 
-    it('shows rules: text formatting allowed', async () => {
-      renderPage(1);
+    it('shows rules: text formatting allowed after switching to Conditions tab', async () => {
+      const { user } = renderPage(1);
+      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
+      await user.click(conditionsTab);
       expect(await screen.findByText('Text formatting allowed')).toBeInTheDocument();
     });
 
-    it('shows prohibited topics', async () => {
-      renderPage(1);
+    it('shows prohibited topics after switching to Conditions tab', async () => {
+      const { user } = renderPage(1);
+      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
+      await user.click(conditionsTab);
       await waitFor(() => {
         expect(screen.getByText('Казино')).toBeInTheDocument();
       });

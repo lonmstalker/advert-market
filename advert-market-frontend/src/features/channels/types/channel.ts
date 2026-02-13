@@ -83,6 +83,7 @@ export const channelDetailSchema = channelSchema.extend({
   ownerId: z.number(),
   createdAt: z.string(),
   avgReach: z.number().optional(),
+  postFrequencyHours: z.number().optional(),
   pricingRules: z.array(pricingRuleSchema),
   topics: z.array(channelTopicSchema),
   rules: channelRulesSchema.optional(),
