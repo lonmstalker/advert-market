@@ -13,6 +13,9 @@ dependencies {
     compileOnly 'org.springframework.data:spring-data-redis'
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
 
+    // Logging: MDC support for MdcKeys
+    api 'org.slf4j:slf4j-api'
+
     // API: exposed in public interfaces (PrincipalAuthentication extends Authentication)
     api 'org.springframework.security:spring-security-core'
 
@@ -21,6 +24,7 @@ dependencies {
     testImplementation 'org.springframework.data:spring-data-redis'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    testRuntimeOnly 'ch.qos.logback:logback-classic'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter'

@@ -1,5 +1,6 @@
 package com.advertmarket.app.config;
 
+import com.advertmarket.app.listener.KafkaMdcInterceptor;
 import com.advertmarket.shared.event.EventDeserializationException;
 import com.advertmarket.shared.json.JsonException;
 import java.util.HashMap;
@@ -108,6 +109,7 @@ public class KafkaConsumerConfig {
         factory.getContainerProperties().setAckMode(
                 ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         factory.setCommonErrorHandler(errorHandler);
+        factory.setRecordInterceptor(new KafkaMdcInterceptor());
         return factory;
     }
 

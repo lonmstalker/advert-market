@@ -1,12 +1,12 @@
 package com.advertmarket.app.error;
 
-import com.advertmarket.app.filter.CorrelationIdFilter;
 import com.advertmarket.shared.error.ErrorCode;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.InsufficientBalanceException;
 import com.advertmarket.shared.exception.InvalidStateTransitionException;
 import com.advertmarket.shared.i18n.LocalizationService;
+import com.advertmarket.shared.logging.MdcKeys;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import java.net.URI;
@@ -188,7 +188,7 @@ public class GlobalExceptionHandler
         problem.setProperty("timestamp",
                 Instant.now().toString());
         var correlationId = MDC.get(
-                CorrelationIdFilter.MDC_KEY);
+                MdcKeys.CORRELATION_ID);
         if (correlationId != null) {
             problem.setProperty("correlation_id",
                     correlationId);

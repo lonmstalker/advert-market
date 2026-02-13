@@ -2,6 +2,7 @@ package com.advertmarket.identity.security;
 
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.logging.MdcKeys;
 import com.advertmarket.shared.model.UserBlockCheckPort;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -59,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } else {
                 SecurityContextHolder.getContext()
                         .setAuthentication(auth);
+                MdcKeys.putUserId(auth.getUserId().value());
             }
         } catch (DomainException e) {
             log.debug("JWT validation failed: {}", e.getMessage());

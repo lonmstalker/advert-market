@@ -1,5 +1,6 @@
 package com.advertmarket.app.filter;
 
+import com.advertmarket.shared.logging.MdcKeys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,9 +24,6 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
     /** HTTP header name for the correlation ID. */
     public static final String HEADER = "X-Correlation-Id";
 
-    /** MDC key for the correlation ID. */
-    public static final String MDC_KEY = "correlationId";
-
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -35,12 +33,12 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
         String correlationId = sanitize(
                 request.getHeader(HEADER));
 
-        MDC.put(MDC_KEY, correlationId);
+        MDC.put(MdcKeys.CORRELATION_ID, correlationId);
         response.setHeader(HEADER, correlationId);
         try {
             filterChain.doFilter(request, response);
         } finally {
-            MDC.remove(MDC_KEY);
+            MDC.clear();
         }
     }
 

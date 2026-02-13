@@ -8,6 +8,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaConstructor;
 import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -313,6 +314,54 @@ class CodingRulesArchTest {
     }
 
     @Test
+    @DisplayName("Event records must implement DomainEvent")
+    void eventRecordsMustImplementDomainEvent() {
+        classes()
+                .that().resideInAnyPackage("..api.event..")
+                .and().haveSimpleNameEndingWith("Event")
+                .and().areNotEnums()
+                .and().areNotInterfaces()
+                .and().doNotHaveModifier(
+                        com.tngtech.archunit.core.domain.JavaModifier.ABSTRACT)
+                .should().implement(
+                        "com.advertmarket.shared.event.DomainEvent")
+                .because("event records (named *Event) in "
+                        + "api.event packages must implement "
+                        + "DomainEvent marker interface")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("No raw ObjectMapper in business modules — use JsonFacade")
+    void noDirectObjectMapperUsage() {
+        noClasses()
+                .that().resideInAnyPackage(
+                        "com.advertmarket.identity..",
+                        "com.advertmarket.financial..",
+                        "com.advertmarket.marketplace..",
+                        "com.advertmarket.deal..",
+                        "com.advertmarket.delivery..",
+                        "com.advertmarket.communication..")
+                .should().dependOnClassesThat()
+                .haveFullyQualifiedName(
+                        "com.fasterxml.jackson.databind.ObjectMapper")
+                .because("use JsonFacade from shared module "
+                        + "instead of ObjectMapper directly")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("No @Autowired on constructors — use Lombok")
+    void noAutowiredOnConstructors() {
+        noClasses()
+                .that().resideInAPackage("com.advertmarket..")
+                .should(haveAutowiredConstructor())
+                .because("use Lombok @RequiredArgsConstructor "
+                        + "instead of @Autowired on constructors")
+                .check(classes);
+    }
+
+    @Test
     @DisplayName("No Guava collection factories"
             + " — use JDK List.of/Set.of/Map.of")
     void noGuavaCollectionFactories() {
@@ -372,6 +421,34 @@ class CodingRulesArchTest {
                                     + " sets ProblemDetail"
                                     + " title/detail without"
                                     + " using LocalizationService"));
+                }
+            }
+        };
+    }
+
+    private static ArchCondition<JavaClass> haveAutowiredConstructor() {
+        return new ArchCondition<>(
+                "have @Autowired on a constructor") {
+            @Override
+            public void check(JavaClass clazz,
+                    ConditionEvents events) {
+                for (JavaConstructor ctor
+                        : clazz.getConstructors()) {
+                    boolean hasAutowired = ctor.getAnnotations()
+                            .stream()
+                            .map(JavaAnnotation::getRawType)
+                            .map(JavaClass::getFullName)
+                            .anyMatch(name -> name.equals(
+                                    "org.springframework.beans"
+                                            + ".factory.annotation"
+                                            + ".Autowired"));
+                    if (hasAutowired) {
+                        events.add(SimpleConditionEvent.violated(
+                                clazz,
+                                clazz.getSimpleName()
+                                        + " has @Autowired"
+                                        + " on constructor"));
+                    }
                 }
             }
         };

@@ -1,6 +1,6 @@
 package com.advertmarket.app.error;
 
-import com.advertmarket.app.filter.CorrelationIdFilter;
+import com.advertmarket.shared.logging.MdcKeys;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -81,7 +81,7 @@ public class SecurityExceptionHandler
                 Instant.now().toString());
 
         var correlationId = MDC.get(
-                CorrelationIdFilter.MDC_KEY);
+                MdcKeys.CORRELATION_ID);
         if (correlationId != null) {
             problem.setProperty("correlation_id",
                     correlationId);

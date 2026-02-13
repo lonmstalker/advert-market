@@ -122,6 +122,14 @@ app:
     instance-id: ${INSTANCE_ID:default}
     color: ${DEPLOY_COLOR:blue}
 
+logging:
+  level:
+    com.advertmarket: INFO
+    org.springframework: WARN
+    org.jooq: WARN
+    org.apache.kafka: WARN
+    io.lettuce: WARN
+
 springdoc:
   api-docs:
     path: /v3/api-docs

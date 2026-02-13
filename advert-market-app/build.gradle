@@ -26,6 +26,7 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
 
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'net.logstash.logback:logstash-logback-encoder'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
     runtimeOnly 'org.postgresql:postgresql'
 
