@@ -158,6 +158,50 @@ export const createDealResponseSchema = z.object({
 
 export type CreateDealResponse = z.infer<typeof createDealResponseSchema>;
 
+// --- Channel verify (POST /channels/verify) ---
+
+export const channelVerifyResponseSchema = z.object({
+  channelId: z.number(),
+  title: z.string(),
+  username: z.string().optional(),
+  subscriberCount: z.number(),
+  botStatus: z.object({
+    isAdmin: z.boolean(),
+    canPostMessages: z.boolean(),
+    missingPermissions: z.array(z.string()),
+  }),
+  userStatus: z.object({
+    isMember: z.boolean(),
+    role: z.string(),
+  }),
+});
+
+export type ChannelVerifyResponse = z.infer<typeof channelVerifyResponseSchema>;
+
+// --- Channel registration (POST /channels) ---
+
+export const channelRegistrationRequestSchema = z.object({
+  channelId: z.number(),
+  categories: z.array(z.string()).optional(),
+  pricePerPostNano: z.number().optional(),
+});
+
+export type ChannelRegistrationRequest = z.infer<typeof channelRegistrationRequestSchema>;
+
+export const channelResponseSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  username: z.string().optional(),
+  subscriberCount: z.number(),
+  categories: z.array(z.string()).default([]),
+  pricePerPostNano: z.number().optional(),
+  isActive: z.boolean(),
+  ownerId: z.number(),
+  createdAt: z.string(),
+});
+
+export type ChannelResponse = z.infer<typeof channelResponseSchema>;
+
 // --- Catalog filters ---
 
 export type CatalogFilters = {

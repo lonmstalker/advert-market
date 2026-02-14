@@ -50,6 +50,7 @@ export { ScrollIcon } from './scroll-icon';
 export { SearchIcon } from './search-icon';
 export { SearchOffIcon } from './search-off-icon';
 export { ShareIcon } from './share-icon';
+export { SortIcon } from './sort-icon';
 export { SpeakerIcon } from './speaker-icon';
 export { TelegramIcon } from './telegram-icon';
 export { TonDiamondIcon } from './ton-diamond-icon';

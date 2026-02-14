@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { fetchCategories } from '../api/channels';
 import type { Category } from '../types/channel';
 
@@ -16,7 +17,7 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
       onClick={onClick}
       style={{
         padding: '6px 14px',
-        borderRadius: 16,
+        borderRadius: 100,
         border: active ? 'none' : '1px solid var(--color-border-separator)',
         background: active ? 'var(--color-accent-primary)' : 'var(--color-background-base)',
         color: active ? 'var(--color-static-white)' : 'var(--color-foreground-secondary)',
@@ -41,6 +42,7 @@ function getCategoryName(cat: Category, lang: string): string {
 export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
+  const haptic = useHaptic();
 
   const { data: categories } = useQuery({
     queryKey: channelKeys.categories(),
@@ -55,6 +57,7 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
   const isAllSelected = selected.length === 0;
 
   const handleToggle = (slug: string) => {
+    haptic.impactOccurred('light');
     if (selected.includes(slug)) {
       onSelect(selected.filter((s) => s !== slug));
     } else {
@@ -73,7 +76,14 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
         WebkitOverflowScrolling: 'touch',
       }}
     >
-      <Chip label={t('catalog.filters.topicAll')} active={isAllSelected} onClick={() => onSelect([])} />
+      <Chip
+        label={t('catalog.filters.topicAll')}
+        active={isAllSelected}
+        onClick={() => {
+          haptic.impactOccurred('light');
+          onSelect([]);
+        }}
+      />
       {sorted.map((cat: Category) => (
         <Chip
           key={cat.slug}

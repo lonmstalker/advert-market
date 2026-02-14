@@ -156,7 +156,7 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
 const pricingCardStyle: React.CSSProperties = {
   background: 'var(--color-background-base)',
   border: '1px solid var(--color-border-separator)',
-  borderRadius: 12,
+  borderRadius: 14,
   overflow: 'hidden',
 };
 

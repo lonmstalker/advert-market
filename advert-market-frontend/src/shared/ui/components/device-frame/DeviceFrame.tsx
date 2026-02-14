@@ -41,7 +41,8 @@ const gradientBorder: CSSProperties = {
   inset: 0,
   borderRadius: 28,
   padding: 2,
-  background: 'linear-gradient(135deg, var(--color-accent-primary), #9b59b6, var(--color-accent-primary))',
+  background:
+    'linear-gradient(135deg, var(--color-accent-primary), color-mix(in srgb, var(--color-accent-primary) 50%, var(--color-link)), var(--color-accent-primary))',
   WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
   WebkitMaskComposite: 'xor',
   maskComposite: 'exclude',

@@ -486,7 +486,43 @@ All presets are defined in `src/shared/ui/animations.ts`. Use via `motion/react`
 
 ---
 
-## 14. Pre-Release Screen Checklist
+## 14. Border Radius Tokens
+
+| Element | Radius | Notes |
+|---------|--------|-------|
+| Cards / containers | **14px** | `DealListItem`, `ChannelDetailStats`, `PricingCard` |
+| CTA buttons | **12px** | UI Kit standard, do not override |
+| Inputs | **12px** | UI Kit standard |
+| Chips / pills | **100** (`borderRadius: 100`) | `CategoryChipRow`, filter chips |
+| Avatars / icon circles | **50%** | Transaction type icon, user avatar |
+| Timeline active highlight | **8px** | `DealTimeline` active step background |
+| Overlap / CPM badges | **6px** | Small inline badges |
+
+---
+
+## 15. Haptic Feedback
+
+Use `useHaptic()` from `@/shared/hooks/use-haptic` for tactile feedback on interactions.
+
+### Patterns
+
+| Method | When to use | Examples |
+|--------|-------------|---------|
+| `selectionChanged()` | Tab switch, segment toggle, navigation between items | `BottomTabs`, `SegmentControl` |
+| `impactOccurred('light')` | Tap on a card, chip, or filter element | `DealListItem`, `CategoryChipRow`, `CreativesPage` sort |
+| `notificationOccurred('success')` | Successful action completion | `DealActions` confirm, `NegotiateSheet` submit |
+| `notificationOccurred('error')` | Action failure | Form validation error, API error feedback |
+
+### Rules
+
+- Every `onClick` on a card or list item should trigger `impactOccurred('light')`
+- Tab/segment switches use `selectionChanged()` — not `impactOccurred`
+- Success haptic fires **before** the action handler (optimistic feel)
+- Never double-fire haptic (e.g., don't fire on both button press and action callback)
+
+---
+
+## 16. Pre-Release Screen Checklist
 
 Before every PR that adds or modifies a screen, verify:
 

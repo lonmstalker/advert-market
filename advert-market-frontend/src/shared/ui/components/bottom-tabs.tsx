@@ -1,6 +1,7 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { DocumentIcon, PersonIcon, SearchIcon, WalletIcon } from '../icons';
 
 const tabs = [
@@ -12,6 +13,7 @@ const tabs = [
 
 export function BottomTabs() {
   const { t } = useTranslation();
+  const haptic = useHaptic();
 
   return (
     <nav
@@ -34,6 +36,7 @@ export function BottomTabs() {
         <NavLink
           key={to}
           to={to}
+          onClick={() => haptic.selectionChanged()}
           style={({ isActive }) => ({
             display: 'flex',
             flexDirection: 'column',
