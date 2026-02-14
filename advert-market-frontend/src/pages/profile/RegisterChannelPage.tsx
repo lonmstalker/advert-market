@@ -104,10 +104,15 @@ export default function RegisterChannelPage() {
   };
 
   const handleOpenBot = () => {
+    const url = `https://t.me/${BOT_USERNAME.slice(1)}`;
     try {
-      window.Telegram?.WebApp?.openTelegramLink?.(`https://t.me/${BOT_USERNAME.slice(1)}`);
+      // Telegram WebApp typings don't always include all methods.
+      const webApp = window.Telegram?.WebApp as
+        | { openTelegramLink?: (u: string) => void; openLink?: (u: string) => void }
+        | undefined;
+      webApp?.openTelegramLink?.(url) ?? webApp?.openLink?.(url) ?? window.open(url, '_blank');
     } catch {
-      window.open(`https://t.me/${BOT_USERNAME.slice(1)}`, '_blank');
+      window.open(url, '_blank');
     }
   };
 
@@ -171,9 +176,11 @@ export default function RegisterChannelPage() {
         padding: '0 16px',
       }}
     >
-      <Text type="title1" weight="bold" style={{ paddingTop: 16, paddingBottom: 16 }}>
-        {t('profile.register.title')}
-      </Text>
+      <div style={{ paddingTop: 16, paddingBottom: 16 }}>
+        <Text type="title1" weight="bold">
+          {t('profile.register.title')}
+        </Text>
+      </div>
 
       <AnimatePresence mode="wait">
         {step === 1 && (
@@ -195,8 +202,8 @@ export default function RegisterChannelPage() {
                   {t('profile.register.addBotInstruction')}
                 </Text>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <Button text={t('profile.register.copyBot')} type="secondary" onClick={handleCopyBot} size="small" />
-                  <Button text={t('profile.register.openBot')} type="secondary" onClick={handleOpenBot} size="small" />
+                  <Button text={t('profile.register.copyBot')} type="secondary" onClick={handleCopyBot} />
+                  <Button text={t('profile.register.openBot')} type="secondary" onClick={handleOpenBot} />
                 </div>
               </div>
 
@@ -217,9 +224,9 @@ export default function RegisterChannelPage() {
                 />
                 {inlineError && (
                   <motion.div {...fadeIn} style={{ marginTop: 8 }}>
-                    <Text type="caption1" style={{ color: 'var(--color-state-destructive)' }}>
-                      {inlineError}
-                    </Text>
+                    <div style={{ color: 'var(--color-state-destructive)' }}>
+                      <Text type="caption1">{inlineError}</Text>
+                    </div>
                   </motion.div>
                 )}
               </div>
@@ -252,9 +259,11 @@ export default function RegisterChannelPage() {
                   border: '1px solid var(--color-border-separator)',
                 }}
               >
-                <Text type="subheadline2" color="secondary" style={{ marginBottom: 4 }}>
-                  {t('profile.register.channelInfo')}
-                </Text>
+                <div style={{ marginBottom: 4 }}>
+                  <Text type="subheadline2" color="secondary">
+                    {t('profile.register.channelInfo')}
+                  </Text>
+                </div>
                 <Text type="title2" weight="bold">
                   {verifyData.title}
                 </Text>
@@ -263,9 +272,11 @@ export default function RegisterChannelPage() {
                     @{verifyData.username}
                   </Text>
                 )}
-                <Text type="subheadline2" color="secondary" style={{ marginTop: 4 }}>
-                  {t('profile.register.subscribers', { count: verifyData.subscriberCount })}
-                </Text>
+                <div style={{ marginTop: 4 }}>
+                  <Text type="subheadline2" color="secondary">
+                    {t('profile.register.subscribers', { count: verifyData.subscriberCount })}
+                  </Text>
+                </div>
               </div>
 
               {/* Category select */}
