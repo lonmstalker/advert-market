@@ -1,11 +1,8 @@
 import type { CSSProperties } from 'react';
 
-export const postBubble: CSSProperties = {
+export const postContent: CSSProperties = {
   background: 'var(--color-background-base)',
-  borderRadius: 12,
-  border: '1px solid var(--color-border-separator)',
   overflow: 'hidden',
-  maxWidth: 400,
   width: '100%',
 };
 
@@ -17,22 +14,24 @@ export const postHeader: CSSProperties = {
 };
 
 export const headerAvatar: CSSProperties = {
-  width: 32,
-  height: 32,
+  width: 28,
+  height: 28,
   borderRadius: '50%',
   background: 'var(--color-accent-primary)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   color: 'var(--color-static-white)',
-  fontSize: 14,
+  fontSize: 12,
   fontWeight: 600,
   flexShrink: 0,
 };
 
 export const headerInfo: CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  flex: 1,
   minWidth: 0,
 };
 
@@ -48,6 +47,8 @@ export const headerTitle: CSSProperties = {
 export const headerTime: CSSProperties = {
   fontSize: 11,
   color: 'var(--color-foreground-tertiary)',
+  flexShrink: 0,
+  marginLeft: 8,
 };
 
 export const postBody: CSSProperties = {
@@ -91,14 +92,15 @@ export const inlineButton: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '8px 12px',
-  borderRadius: 8,
-  background: 'var(--color-accent-primary)',
-  color: 'var(--color-static-white)',
+  gap: 6,
+  padding: '8px 16px',
+  borderRadius: 20,
+  background: 'transparent',
+  border: '1px solid color-mix(in srgb, var(--color-accent-primary) 40%, transparent)',
+  color: 'var(--color-accent-primary)',
   fontSize: 14,
   fontWeight: 500,
   textDecoration: 'none',
-  cursor: 'pointer',
 };
 
 export const spoilerHidden: CSSProperties = {
@@ -140,12 +142,14 @@ export const linkStyle: CSSProperties = {
   textDecoration: 'none',
 };
 
-export const chatBackground: CSSProperties = {
-  background: 'var(--color-background-section)',
+export const chatArea: CSSProperties = {
+  background: 'var(--color-background-secondary)',
   backgroundImage:
-    'radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--color-accent-primary) 6%, transparent) 0%, transparent 50%), radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--color-accent-primary) 4%, transparent) 0%, transparent 50%)',
+    'radial-gradient(circle, color-mix(in srgb, var(--color-foreground-primary) 4%, transparent) 1px, transparent 1px)',
+  backgroundSize: '24px 24px',
+  padding: '12px 0 16px',
+  minHeight: 200,
   borderRadius: 16,
-  padding: '12px 12px 16px',
   overflow: 'hidden',
 };
 
@@ -153,12 +157,9 @@ export const chatTopBar: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 10,
-  padding: '8px 12px',
+  padding: '10px 12px',
   background: 'var(--color-background-base)',
-  borderRadius: '12px 12px 0 0',
-  marginBottom: 12,
-  border: '1px solid var(--color-border-separator)',
-  borderBottom: 'none',
+  borderBottom: '1px solid var(--color-border-separator)',
 };
 
 export const chatTopBarAvatar: CSSProperties = {
@@ -194,11 +195,7 @@ export const viewCounter: CSSProperties = {
   alignItems: 'center',
   gap: 4,
   justifyContent: 'flex-end',
-  padding: '2px 12px 6px',
+  padding: '2px 12px 4px',
   fontSize: 12,
   color: 'var(--color-foreground-tertiary)',
-};
-
-export const bubbleTail: CSSProperties = {
-  position: 'relative',
 };

@@ -1,6 +1,4 @@
-import { motion } from 'motion/react';
 import type { InlineButton } from '@/shared/types/text-entity';
-import { pressScale } from '../../animations';
 import { buttonsContainer, inlineButton } from './styles';
 
 type TelegramPostButtonsProps = {
@@ -13,16 +11,9 @@ export function TelegramPostButtons({ buttons }: TelegramPostButtonsProps) {
   return (
     <div style={buttonsContainer}>
       {buttons.map((btn, index) => (
-        <motion.a
-          key={`${btn.url}-${index}`}
-          href={btn.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={inlineButton}
-          {...pressScale}
-        >
+        <span key={`${btn.url}-${index}`} style={inlineButton}>
           {btn.text}
-        </motion.a>
+        </span>
       ))}
     </div>
   );

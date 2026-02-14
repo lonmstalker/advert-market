@@ -3,12 +3,12 @@ import type { InlineButton, MediaItem, TextEntity } from '@/shared/types/text-en
 import { slideUp } from '../../animations';
 import { EyeIcon } from '../../icons';
 import {
-  chatBackground,
+  chatArea,
   chatTopBar,
   chatTopBarAvatar,
   chatTopBarSubtitle,
   chatTopBarTitle,
-  postBubble,
+  postContent,
   viewCounter,
 } from './styles';
 import { TelegramPostBody } from './TelegramPostBody';
@@ -42,9 +42,10 @@ export function TelegramChatSimulator({
 }: TelegramChatSimulatorProps) {
   const title = channelTitle || 'Channel';
   const initial = title.charAt(0).toUpperCase();
+  const time = formatTime();
 
   return (
-    <div style={chatBackground}>
+    <div style={chatArea}>
       <div style={chatTopBar}>
         {channelAvatar ? (
           <img src={channelAvatar} alt={title} style={{ ...chatTopBarAvatar, objectFit: 'cover' }} />
@@ -57,26 +58,19 @@ export function TelegramChatSimulator({
         </div>
       </div>
 
-      <motion.div {...slideUp} style={{ ...postBubble, position: 'relative' }}>
-        <TelegramPostHeader channelTitle={channelTitle} channelAvatar={channelAvatar} />
+      <motion.div {...slideUp} style={postContent}>
+        <TelegramPostHeader channelTitle={channelTitle} channelAvatar={channelAvatar} time={time} />
         <TelegramPostMedia media={media} />
         <TelegramPostBody text={text} entities={entities} />
-        <TelegramPostButtons buttons={buttons} />
 
         <div style={viewCounter}>
           <EyeIcon style={{ width: 14, height: 14 }} />
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>1.2K</span>
-          <span style={{ marginLeft: 4 }}>{formatTime()}</span>
+          <span style={{ marginLeft: 4 }}>{time}</span>
         </div>
-      </motion.div>
 
-      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
-        <defs>
-          <clipPath id="bubble-tail">
-            <path d="M0,0 Q0,8 8,8 L0,8 Z" />
-          </clipPath>
-        </defs>
-      </svg>
+        <TelegramPostButtons buttons={buttons} />
+      </motion.div>
     </div>
   );
 }

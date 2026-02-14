@@ -3,9 +3,10 @@ import { headerAvatar, headerInfo, headerTime, headerTitle, postHeader } from '.
 type TelegramPostHeaderProps = {
   channelTitle?: string;
   channelAvatar?: string;
+  time?: string;
 };
 
-export function TelegramPostHeader({ channelTitle, channelAvatar }: TelegramPostHeaderProps) {
+export function TelegramPostHeader({ channelTitle, channelAvatar, time }: TelegramPostHeaderProps) {
   const title = channelTitle || 'Channel';
   const initial = title.charAt(0).toUpperCase();
 
@@ -18,7 +19,7 @@ export function TelegramPostHeader({ channelTitle, channelAvatar }: TelegramPost
       )}
       <div style={headerInfo}>
         <span style={headerTitle}>{title}</span>
-        <span style={headerTime}>12:00</span>
+        <span style={headerTime}>{time ?? '12:00'}</span>
       </div>
     </div>
   );
