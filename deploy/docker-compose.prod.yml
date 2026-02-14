@@ -1,7 +1,7 @@
 services:
   # ── Infrastructure ────────────────────────────────────
   postgres:
-    image: postgres:latest
+    image: paradedb/paradedb:latest-pg18
     container_name: am-postgres
     restart: unless-stopped
     environment:
