@@ -7,7 +7,8 @@ import '@telegram-tools/ui-kit/dist/index.css';
 import '@/app/global.css';
 
 // Eruda dev console for mobile debugging (dev only, lazy-loaded)
-if (import.meta.env.DEV) {
+// Disabled in E2E runs because it can intercept pointer events (especially in WebKit).
+if (import.meta.env.DEV && import.meta.env.MODE !== 'e2e') {
   import('eruda').then(({ default: eruda }) => eruda.init());
 }
 

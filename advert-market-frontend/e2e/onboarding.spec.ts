@@ -31,7 +31,7 @@ test.describe('Onboarding Flow', () => {
     const nextBtn = page.getByRole('button', { name: 'Next' });
     await expect(nextBtn).toBeDisabled();
 
-    await page.getByText('Crypto News Daily').click();
+    await page.getByText('Crypto News Daily', { exact: true }).click();
     await expect(page.getByText('Post Price')).toBeVisible();
     await expect(nextBtn).toBeEnabled();
     await nextBtn.click();
@@ -50,7 +50,7 @@ test.describe('Onboarding Flow', () => {
     const finishBtn = page.getByRole('button', { name: 'Get Started' });
     await expect(finishBtn).toBeVisible();
 
-    await page.getByText('Escrow').first().click();
+    await page.getByText('Escrow', { exact: true }).click();
     await expect(page.getByText(/secure escrow works/)).toBeVisible();
 
     await finishBtn.click();
@@ -111,7 +111,7 @@ test.describe('Onboarding Flow', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     // Slide 1: go to detail and back
-    await page.getByText('Crypto News Daily').click();
+    await page.getByText('Crypto News Daily', { exact: true }).click();
     await expect(page.getByText('Post Price')).toBeVisible();
     await page.getByText('← Back to list').click();
     await expect(page.getByText('Tech Digest')).toBeVisible();
@@ -123,7 +123,7 @@ test.describe('Onboarding Flow', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     // Complete slide 1 task
-    await page.getByText('Crypto News Daily').click();
+    await page.getByText('Crypto News Daily', { exact: true }).click();
     await page.getByRole('button', { name: 'Next' }).click();
 
     // Slide 2: view all states
@@ -145,14 +145,14 @@ test.describe('Onboarding Flow', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     // Complete slides 1 and 2
-    await page.getByText('Crypto News Daily').click();
+    await page.getByText('Crypto News Daily', { exact: true }).click();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Approve' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
 
     // Slide 3: escrow flow
     await expect(page.getByText('Secure Payments')).toBeVisible();
-    await page.getByText('Escrow').first().click();
+    await page.getByText('Escrow', { exact: true }).click();
     await expect(page.getByText(/secure escrow works/)).toBeVisible();
 
     // Policy view

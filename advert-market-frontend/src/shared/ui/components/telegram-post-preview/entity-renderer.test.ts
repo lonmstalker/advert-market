@@ -35,44 +35,51 @@ describe('entity-renderer', () => {
       renderToContainer('Hello bold world', [{ type: TextEntityType.BOLD, offset: 6, length: 4 }]);
       const strong = screen.getByTestId('container').querySelector('strong');
       expect(strong).toBeTruthy();
-      expect(strong!.textContent).toBe('bold');
+      if (!strong) throw new Error('Expected <strong> element');
+      expect(strong.textContent).toBe('bold');
     });
 
     it('should render italic entity as <em>', () => {
       renderToContainer('Hello italic world', [{ type: TextEntityType.ITALIC, offset: 6, length: 6 }]);
       const em = screen.getByTestId('container').querySelector('em');
       expect(em).toBeTruthy();
-      expect(em!.textContent).toBe('italic');
+      if (!em) throw new Error('Expected <em> element');
+      expect(em.textContent).toBe('italic');
     });
 
     it('should render underline entity as <u>', () => {
       renderToContainer('Hello underline world', [{ type: TextEntityType.UNDERLINE, offset: 6, length: 9 }]);
       const u = screen.getByTestId('container').querySelector('u');
       expect(u).toBeTruthy();
-      expect(u!.textContent).toBe('underline');
+      if (!u) throw new Error('Expected <u> element');
+      expect(u.textContent).toBe('underline');
     });
 
     it('should render strikethrough entity as <del>', () => {
       renderToContainer('Hello deleted world', [{ type: TextEntityType.STRIKETHROUGH, offset: 6, length: 7 }]);
       const del = screen.getByTestId('container').querySelector('del');
       expect(del).toBeTruthy();
-      expect(del!.textContent).toBe('deleted');
+      if (!del) throw new Error('Expected <del> element');
+      expect(del.textContent).toBe('deleted');
     });
 
     it('should render code entity as <code>', () => {
       renderToContainer('Use const x = 1 here', [{ type: TextEntityType.CODE, offset: 4, length: 11 }]);
       const code = screen.getByTestId('container').querySelector('code');
       expect(code).toBeTruthy();
-      expect(code!.textContent).toBe('const x = 1');
+      if (!code) throw new Error('Expected <code> element');
+      expect(code.textContent).toBe('const x = 1');
     });
 
     it('should render pre entity as <pre><code>', () => {
       renderToContainer('Code block:\nfunction() {}', [{ type: TextEntityType.PRE, offset: 12, length: 13 }]);
       const pre = screen.getByTestId('container').querySelector('pre');
       expect(pre).toBeTruthy();
-      const code = pre!.querySelector('code');
+      if (!pre) throw new Error('Expected <pre> element');
+      const code = pre.querySelector('code');
       expect(code).toBeTruthy();
-      expect(code!.textContent).toBe('function() {}');
+      if (!code) throw new Error('Expected <pre><code> element');
+      expect(code.textContent).toBe('function() {}');
     });
 
     it('should render text_link entity as <a>', () => {
@@ -81,17 +88,19 @@ describe('entity-renderer', () => {
       ]);
       const link = screen.getByTestId('container').querySelector('a');
       expect(link).toBeTruthy();
-      expect(link!.textContent).toBe('here');
-      expect(link!.getAttribute('href')).toBe('https://example.com');
-      expect(link!.getAttribute('target')).toBe('_blank');
-      expect(link!.getAttribute('rel')).toBe('noopener noreferrer');
+      if (!link) throw new Error('Expected <a> element');
+      expect(link.textContent).toBe('here');
+      expect(link.getAttribute('href')).toBe('https://example.com');
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     });
 
     it('should render spoiler entity with data-spoiler attribute', () => {
       renderToContainer('This is hidden text', [{ type: TextEntityType.SPOILER, offset: 8, length: 6 }]);
       const spoiler = screen.getByTestId('container').querySelector('[data-spoiler]');
       expect(spoiler).toBeTruthy();
-      expect(spoiler!.textContent).toBe('hidden');
+      if (!spoiler) throw new Error('Expected spoiler element');
+      expect(spoiler.textContent).toBe('hidden');
     });
   });
 
@@ -103,9 +112,11 @@ describe('entity-renderer', () => {
       ]);
       const strong = screen.getByTestId('container').querySelector('strong');
       expect(strong).toBeTruthy();
-      const em = strong!.querySelector('em');
+      if (!strong) throw new Error('Expected <strong> element');
+      const em = strong.querySelector('em');
       expect(em).toBeTruthy();
-      expect(em!.textContent).toBe('world');
+      if (!em) throw new Error('Expected <em> element');
+      expect(em.textContent).toBe('world');
     });
 
     it('should handle partially overlapping entities', () => {
@@ -133,8 +144,10 @@ describe('entity-renderer', () => {
       const container = screen.getByTestId('container');
       const strong = container.querySelector('strong');
       const em = container.querySelector('em');
-      expect(strong!.textContent).toBe('bold');
-      expect(em!.textContent).toBe('italic');
+      if (!strong) throw new Error('Expected <strong> element');
+      if (!em) throw new Error('Expected <em> element');
+      expect(strong.textContent).toBe('bold');
+      expect(em.textContent).toBe('italic');
     });
   });
 
@@ -146,7 +159,8 @@ describe('entity-renderer', () => {
       renderToContainer(text, [{ type: TextEntityType.BOLD, offset: 6, length: 4 }]);
       const strong = screen.getByTestId('container').querySelector('strong');
       expect(strong).toBeTruthy();
-      expect(strong!.textContent).toBe('bold');
+      if (!strong) throw new Error('Expected <strong> element');
+      expect(strong.textContent).toBe('bold');
     });
   });
 
@@ -154,19 +168,22 @@ describe('entity-renderer', () => {
     it('should handle entity at the start', () => {
       renderToContainer('bold text', [{ type: TextEntityType.BOLD, offset: 0, length: 4 }]);
       const strong = screen.getByTestId('container').querySelector('strong');
-      expect(strong!.textContent).toBe('bold');
+      if (!strong) throw new Error('Expected <strong> element');
+      expect(strong.textContent).toBe('bold');
     });
 
     it('should handle entity at the end', () => {
       renderToContainer('text bold', [{ type: TextEntityType.BOLD, offset: 5, length: 4 }]);
       const strong = screen.getByTestId('container').querySelector('strong');
-      expect(strong!.textContent).toBe('bold');
+      if (!strong) throw new Error('Expected <strong> element');
+      expect(strong.textContent).toBe('bold');
     });
 
     it('should handle entity covering full text', () => {
       renderToContainer('bold', [{ type: TextEntityType.BOLD, offset: 0, length: 4 }]);
       const strong = screen.getByTestId('container').querySelector('strong');
-      expect(strong!.textContent).toBe('bold');
+      if (!strong) throw new Error('Expected <strong> element');
+      expect(strong.textContent).toBe('bold');
     });
   });
 });

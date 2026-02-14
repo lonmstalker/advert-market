@@ -1,4 +1,5 @@
 import { Spinner, Text } from '@telegram-tools/ui-kit';
+import { TonConnectButton, useIsConnectionRestored } from '@tonconnect/ui-react';
 import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +16,7 @@ import { ScrollIcon } from '@/shared/ui/icons';
 export default function WalletPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const isConnectionRestored = useIsConnectionRestored();
 
   const { data: summary, isLoading: summaryLoading } = useWalletSummary();
   const { data: txData, isLoading: txLoading } = useTransactions(undefined, 5);
@@ -56,6 +58,39 @@ export default function WalletPage() {
         <Text type="title1" weight="bold">
           {t('wallet.title')}
         </Text>
+      </div>
+
+      <div style={{ padding: '12px 16px 4px' }}>
+        <div
+          style={{
+            padding: '12px 12px',
+            borderRadius: 14,
+            background: 'var(--color-background-secondary)',
+            border: '1px solid var(--color-border-separator)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <Text type="caption1" color="secondary">
+              {t('wallet.connection.title')}
+            </Text>
+            <div style={{ marginTop: 2 }}>
+              <Text type="subheadline2" color="secondary">
+                {t('wallet.connection.hint')}
+              </Text>
+            </div>
+          </div>
+          {isConnectionRestored ? (
+            <div data-testid="wallet-ton-connect">
+              <TonConnectButton />
+            </div>
+          ) : (
+            <Spinner size="20px" color="accent" />
+          )}
+        </div>
       </div>
 
       <SummaryHero summary={summary} />

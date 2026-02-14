@@ -37,7 +37,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const TON_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
+const TON_MANIFEST_URL = import.meta.env.VITE_TON_MANIFEST_URL ?? `${window.location.origin}/tonconnect-manifest.json`;
 
 function getTheme(): 'light' | 'dark' {
   try {
@@ -67,7 +67,12 @@ export function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <TonConnectUIProvider manifestUrl={TON_MANIFEST_URL}>
+      <TonConnectUIProvider
+        manifestUrl={TON_MANIFEST_URL}
+        actionsConfiguration={{
+          twaReturnUrl: 'https://t.me/AdvertMarketBot/app',
+        }}
+      >
         <ThemeProvider theme={theme}>
           <ToastProvider>
             <QueryClientProvider client={queryClient}>

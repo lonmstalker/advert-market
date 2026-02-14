@@ -33,7 +33,7 @@ test.describe('Deals Page', () => {
     await expect(page.getByText('Tech Digest').first()).toBeVisible();
     await page.getByText('Tech Digest').first().click();
     await page.waitForURL('**/deals/deal-1');
-    await expect(page.getByText('Timeline')).toBeVisible();
+    await expect(page.getByText(/^Timeline$/)).toBeVisible();
   });
 
   test('deal detail shows timeline and actions', async ({ page }) => {
@@ -43,8 +43,47 @@ test.describe('Deals Page', () => {
     // Should show status badge
     await expect(page.getByText('Offer Pending')).toBeVisible();
     // Should show timeline
-    await expect(page.getByText('Timeline')).toBeVisible();
+    await expect(page.getByText(/^Timeline$/)).toBeVisible();
     // Advertiser on OFFER_PENDING should see Cancel button
     await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
+  });
+
+  test('Pay action opens TON payment sheet', async ({ page }) => {
+    await navigateToDeals(page);
+    await page.getByText('Finance Pro').first().click();
+    await page.waitForURL('**/deals/deal-3');
+
+    // deal-3: AWAITING_PAYMENT, role=ADVERTISER
+    // Ensure the deal page finished rendering before we click the sticky action.
+    await expect(page.getByText(/^Timeline$/)).toBeVisible();
+    await page.getByRole('button', { name: /^Pay$/ }).click();
+
+    const sheet = page.getByTestId('payment-sheet');
+    await expect(sheet).toBeVisible();
+
+    // Wallet not connected in E2E: Pay button inside sheet should be disabled
+    await expect(sheet.getByRole('button', { name: /^Pay$/ })).toBeDisabled();
+  });
+
+  test('Pending TON intent resumes polling and deal becomes Funded', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        'ton_pending_intent',
+        JSON.stringify({
+          type: 'escrow_deposit',
+          dealId: 'deal-3',
+          sentAt: Date.now(),
+          address: 'UQ_MOCK_ESCROW_deal-3',
+          amountNano: '8000000000',
+        }),
+      );
+    });
+
+    await navigateToDeals(page);
+    await page.getByText('Finance Pro').first().click();
+    await page.waitForURL('**/deals/deal-3');
+
+    // Deposit mock progresses and sets deal status to FUNDED.
+    await expect(page.getByText('Funded')).toBeVisible();
   });
 });

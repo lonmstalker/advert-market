@@ -35,8 +35,9 @@ export function renderEntities(text: string, entities: TextEntity[]): ReactNode[
   let keyCounter = 0;
 
   for (let i = 0; i < sortedBoundaries.length - 1; i++) {
-    const start = sortedBoundaries[i]!;
-    const end = sortedBoundaries[i + 1]!;
+    const start = sortedBoundaries.at(i);
+    const end = sortedBoundaries.at(i + 1);
+    if (start == null || end == null) continue;
 
     if (start >= end) continue;
 

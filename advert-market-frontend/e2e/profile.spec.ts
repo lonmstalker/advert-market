@@ -5,11 +5,11 @@ test.describe('Profile Page', () => {
   test.beforeEach(async ({ page }) => {
     await completeOnboarding(page);
     await page.getByRole('link', { name: 'Profile' }).click();
-    await page.waitForURL('**/profile');
+    await expect(page.getByText(/^Settings$/)).toBeVisible();
   });
 
   test('displays profile page', async ({ page }) => {
-    await expect(page.getByText(/profile/i)).toBeVisible();
+    await expect(page.getByText(/^Settings$/)).toBeVisible();
   });
 
   test('bottom tabs remain visible', async ({ page }) => {
