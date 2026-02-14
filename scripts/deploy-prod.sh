@@ -280,8 +280,10 @@ else
     "deploy/README.md" \
     "deploy/RUNBOOK.md" \
     "deploy/docker-compose.prod.yml" \
-    "deploy/docker-compose.server.override.yml" \
     "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/"
+  if [[ -f "deploy/docker-compose.server.override.yml" ]]; then
+    rsync -az -e "${RSYNC_SSH}" "deploy/docker-compose.server.override.yml" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/"
+  fi
   rsync -az -e "${RSYNC_SSH}" "deploy/scripts/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/scripts/"
 fi
 
