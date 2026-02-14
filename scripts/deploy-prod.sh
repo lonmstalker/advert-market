@@ -100,6 +100,7 @@ load_env_server_file() {
 SSH_CMD=(ssh)
 RSYNC_SSH="ssh"
 DEPLOY_SSH_OPTS="${DEPLOY_SSH_OPTS:-}"
+DEPLOY_SSH_CONTROL_PATH="${DEPLOY_SSH_CONTROL_PATH:-}"
 
 # First pass: allow overriding env-server path.
 args=("$@")
@@ -110,6 +111,16 @@ for ((i=0; i<${#args[@]}; i++)); do
 done
 
 load_env_server_file "${ENV_SERVER_FILE}"
+
+# SSH in this environment is flaky (port can briefly refuse connections).
+# Multiplexing reduces the number of TCP handshakes and keeps a single session
+# alive across the whole deploy (including long local build steps).
+if [[ "${DEPLOY_SSH_OPTS}" != *"ControlMaster="* ]]; then
+  if [[ -z "${DEPLOY_SSH_CONTROL_PATH}" ]]; then
+    DEPLOY_SSH_CONTROL_PATH="$(mktemp -u /tmp/am-deploy-ssh-XXXXXX)"
+  fi
+  DEPLOY_SSH_OPTS="${DEPLOY_SSH_OPTS} -o ControlMaster=auto -o ControlPersist=10m -o ControlPath=${DEPLOY_SSH_CONTROL_PATH}"
+fi
 
 if [[ -n "${DEPLOY_SSH_OPTS}" ]]; then
   # Split opts into array safely.
@@ -164,6 +175,13 @@ done
 if [[ -z "${DEPLOY_DIR}" ]]; then
   DEPLOY_DIR="/home/${SERVER_USER:-ad-marketplace}/advert-market"
 fi
+
+cleanup_ssh_mux() {
+  if [[ -n "${DEPLOY_SSH_CONTROL_PATH:-}" && -n "${DEPLOY_SSH:-}" ]]; then
+    "${SSH_CMD[@]}" -O exit "${DEPLOY_SSH}" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup_ssh_mux EXIT
 
 require_cmd() {
   local cmd="$1"
