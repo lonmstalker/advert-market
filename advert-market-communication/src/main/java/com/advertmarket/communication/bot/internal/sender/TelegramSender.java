@@ -7,11 +7,13 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.Callback;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
+import com.pengrad.telegrambot.model.request.Keyboard;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.AnswerCallbackQuery;
 import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.BaseResponse;
+import com.pengrad.telegrambot.response.SendResponse;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import java.io.IOException;
@@ -34,6 +36,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class TelegramSender {
+
+    private static final String CANT_PARSE_ENTITIES =
+            "can't parse entities";
+    private static final int MAX_LOG_TEXT_LEN = 200;
 
     private final TelegramBot bot;
     private final RateLimiterPort rateLimiter;
@@ -179,6 +185,13 @@ public class TelegramSender {
                     R response, int attempt,
                     CompletableFuture<R> future) {
         int code = response.errorCode();
+
+        if (isMarkdownV2ParseError(request, code, response)) {
+            handleMarkdownV2ParseError(
+                    (SendMessage) request, response, future);
+            return;
+        }
+
         var category = classifyError(code);
 
         if (category == BotErrorCategory.CLIENT_ERROR
@@ -204,6 +217,89 @@ public class TelegramSender {
         }
 
         scheduleRetry(request, attempt + 1, delayMs, future);
+    }
+
+    private static <T extends BaseRequest<T, R>,
+            R extends BaseResponse> boolean isMarkdownV2ParseError(
+                    T request, int code, R response) {
+        if (!(request instanceof SendMessage sendMessage)) {
+            return false;
+        }
+        if (code != HttpStatus.BAD_REQUEST.value()) {
+            return false;
+        }
+        if (sendMessage.getParseMode() != ParseMode.MarkdownV2) {
+            return false;
+        }
+        String desc = response.description();
+        return desc != null && desc.contains(CANT_PARSE_ENTITIES);
+    }
+
+    private <R extends BaseResponse> void handleMarkdownV2ParseError(
+            SendMessage original, R originalResponse,
+            CompletableFuture<R> future) {
+        Long chatId = original.getChatId();
+        String channelUsername = original.getChannelUsername();
+        String text = original.getText();
+
+        log.warn("Telegram rejected MarkdownV2 message "
+                + "(falling back to plain text): "
+                + "chat_id={} channel={} desc={} text={}",
+                chatId, channelUsername,
+                originalResponse.description(),
+                sanitizeForLog(text));
+
+        SendMessage fallback;
+        if (chatId != null) {
+            fallback = new SendMessage(chatId, text);
+        } else if (channelUsername != null) {
+            fallback = new SendMessage(channelUsername, text);
+        } else {
+            future.complete(originalResponse);
+            return;
+        }
+
+        Keyboard keyboard = original.getReplyMarkup();
+        if (keyboard != null) {
+            fallback.replyMarkup(keyboard);
+        }
+        var linkPreview = original.getLinkPreviewOptions();
+        if (linkPreview != null) {
+            fallback.linkPreviewOptions(linkPreview);
+        }
+
+        bot.execute(fallback, new Callback<SendMessage,
+                SendResponse>() {
+            @Override
+            public void onResponse(SendMessage req,
+                    SendResponse response) {
+                metrics.incrementCounter(METRIC_API_CALL,
+                        "ok", String.valueOf(response.isOk()));
+                future.complete((R) response);
+            }
+
+            @Override
+            public void onFailure(SendMessage req,
+                    IOException e) {
+                metrics.incrementCounter(METRIC_API_CALL,
+                        "ok", "false");
+                future.complete(originalResponse);
+            }
+        });
+    }
+
+    private static String sanitizeForLog(String text) {
+        if (text == null) {
+            return "<null>";
+        }
+        String normalized = text
+                .replace("\r", "\\\\r")
+                .replace("\n", "\\\\n");
+        if (normalized.length() <= MAX_LOG_TEXT_LEN) {
+            return normalized;
+        }
+        return normalized.substring(0, MAX_LOG_TEXT_LEN)
+                + "...(len=" + normalized.length() + ")";
     }
 
     private <T extends BaseRequest<T, R>, R extends BaseResponse>
