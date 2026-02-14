@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        maven { url 'https://jitpack.io' }
+        maven { url = 'https://jitpack.io' }
         mavenCentral()
     }
     dependencies {
@@ -25,7 +25,7 @@ allprojects {
 
     repositories {
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+        maven { url = 'https://jitpack.io' }
     }
 }
 
@@ -140,8 +140,8 @@ subprojects {
         // --- SpotBugs + FindSecBugs ---
         apply plugin: 'com.github.spotbugs'
         spotbugs {
-            effort = 'MAX'
-            reportLevel = 'MEDIUM'
+            effort = com.github.spotbugs.snom.Effort.valueOf('MAX')
+            reportLevel = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
             excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
         }
         dependencies {
