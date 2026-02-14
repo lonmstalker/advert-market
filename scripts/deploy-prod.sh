@@ -263,8 +263,27 @@ echo "==> Domain: ${DEPLOY_DOMAIN}"
 require_cmd ssh
 require_cmd rsync
 
-echo "==> Remote update (git pull with autostash to preserve runtime nginx state files)"
-"${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; cd '${DEPLOY_DIR}'; git fetch origin; git checkout main; git pull --rebase --autostash origin main"
+echo "==> Remote update"
+if "${SSH_CMD[@]}" "${DEPLOY_SSH}" "test -d '${DEPLOY_DIR}/.git'"; then
+  echo "==> Remote is a git repo: git pull --rebase --autostash"
+  "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; cd '${DEPLOY_DIR}'; git fetch origin; git checkout main; git pull --rebase --autostash origin main"
+else
+  echo "==> Remote is NOT a git repo: syncing deploy infra (no .env, no nginx state)"
+  "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/scripts'"
+
+  rsync -az -e "${RSYNC_SSH}" "Dockerfile" "${DEPLOY_SSH}:${DEPLOY_DIR}/Dockerfile"
+  if [[ -f .dockerignore ]]; then
+    rsync -az -e "${RSYNC_SSH}" ".dockerignore" "${DEPLOY_SSH}:${DEPLOY_DIR}/.dockerignore"
+  fi
+
+  rsync -az -e "${RSYNC_SSH}" \
+    "deploy/README.md" \
+    "deploy/RUNBOOK.md" \
+    "deploy/docker-compose.prod.yml" \
+    "deploy/docker-compose.server.override.yml" \
+    "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/"
+  rsync -az -e "${RSYNC_SSH}" "deploy/scripts/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/scripts/"
+fi
 
 if [[ "${NO_CHECKS}" -eq 0 ]]; then
   BOOT_JAR="$(select_boot_jar)"
