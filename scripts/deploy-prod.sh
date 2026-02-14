@@ -173,6 +173,24 @@ require_cmd() {
   }
 }
 
+retry() {
+  local attempts="${1:?attempts required}"
+  local delay_seconds="${2:?delay_seconds required}"
+  shift 2
+
+  local i
+  for ((i=1; i<=attempts; i++)); do
+    if "$@"; then
+      return 0
+    fi
+    if [[ "${i}" -lt "${attempts}" ]]; then
+      echo "WARN: command failed (attempt ${i}/${attempts}); retrying in ${delay_seconds}s..." >&2
+      sleep "${delay_seconds}"
+    fi
+  done
+  return 1
+}
+
 require_repo_clean_on_main() {
   local branch
   branch="$(git rev-parse --abbrev-ref HEAD)"
@@ -263,28 +281,31 @@ echo "==> Domain: ${DEPLOY_DOMAIN}"
 require_cmd ssh
 require_cmd rsync
 
+echo "==> Remote connectivity"
+retry 10 3 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "true"
+
 echo "==> Remote update"
-if "${SSH_CMD[@]}" "${DEPLOY_SSH}" "test -d '${DEPLOY_DIR}/.git'"; then
+if retry 3 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "test -d '${DEPLOY_DIR}/.git'"; then
   echo "==> Remote is a git repo: git pull --rebase --autostash"
-  "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; cd '${DEPLOY_DIR}'; git fetch origin; git checkout main; git pull --rebase --autostash origin main"
+  retry 5 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; cd '${DEPLOY_DIR}'; git fetch origin; git checkout main; git pull --rebase --autostash origin main"
 else
   echo "==> Remote is NOT a git repo: syncing deploy infra (no .env, no nginx state)"
-  "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/scripts'"
+  retry 5 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/scripts'"
 
-  rsync -az -e "${RSYNC_SSH}" "Dockerfile" "${DEPLOY_SSH}:${DEPLOY_DIR}/Dockerfile"
+  retry 5 2 rsync -az -e "${RSYNC_SSH}" "Dockerfile" "${DEPLOY_SSH}:${DEPLOY_DIR}/Dockerfile"
   if [[ -f .dockerignore ]]; then
-    rsync -az -e "${RSYNC_SSH}" ".dockerignore" "${DEPLOY_SSH}:${DEPLOY_DIR}/.dockerignore"
+    retry 5 2 rsync -az -e "${RSYNC_SSH}" ".dockerignore" "${DEPLOY_SSH}:${DEPLOY_DIR}/.dockerignore"
   fi
 
-  rsync -az -e "${RSYNC_SSH}" \
+  retry 5 2 rsync -az -e "${RSYNC_SSH}" \
     "deploy/README.md" \
     "deploy/RUNBOOK.md" \
     "deploy/docker-compose.prod.yml" \
     "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/"
   if [[ -f "deploy/docker-compose.server.override.yml" ]]; then
-    rsync -az -e "${RSYNC_SSH}" "deploy/docker-compose.server.override.yml" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/"
+    retry 5 2 rsync -az -e "${RSYNC_SSH}" "deploy/docker-compose.server.override.yml" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/"
   fi
-  rsync -az -e "${RSYNC_SSH}" "deploy/scripts/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/scripts/"
+  retry 5 2 rsync -az -e "${RSYNC_SSH}" "deploy/scripts/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/scripts/"
 fi
 
 if [[ "${NO_CHECKS}" -eq 0 ]]; then
@@ -307,16 +328,16 @@ else
 fi
 
 echo "==> Upload boot jar"
-"${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/advert-market-app/build/libs'; rm -f '${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-'*'.jar'"
-rsync -az -e "${RSYNC_SSH}" "${BOOT_JAR}" "${DEPLOY_SSH}:${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-deploy.jar"
+retry 10 3 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/advert-market-app/build/libs'; rm -f '${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-'*'.jar'"
+retry 10 3 rsync -az -e "${RSYNC_SSH}" "${BOOT_JAR}" "${DEPLOY_SSH}:${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-deploy.jar"
 
 echo "==> Upload frontend dist"
 if [[ ! -d advert-market-frontend/dist ]]; then
   echo "ERROR: advert-market-frontend/dist not found. Build the frontend first." >&2
   exit 1
 fi
-"${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/nginx/html'"
-rsync -az -e "${RSYNC_SSH}" --delete --exclude '.gitkeep' "advert-market-frontend/dist/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/nginx/html/"
+retry 10 3 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/nginx/html'"
+retry 10 3 rsync -az -e "${RSYNC_SSH}" --delete --exclude '.gitkeep' "advert-market-frontend/dist/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/nginx/html/"
 
 echo "==> Remote build + blue/green deploy"
 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail;
