@@ -4,6 +4,8 @@ export {
   fetchChannelDetail,
   fetchChannels,
   fetchChannelTeam,
+  registerChannel,
+  verifyChannel,
 } from './api/channels';
 export { CategoryChipRow } from './components/CategoryChipRow';
 export { ChannelCard } from './components/ChannelCard';
@@ -20,10 +22,13 @@ export type {
   Category,
   Channel,
   ChannelDetail,
+  ChannelRegistrationRequest,
+  ChannelResponse,
   ChannelRules,
   ChannelSort,
   ChannelTeam,
   ChannelTopic,
+  ChannelVerifyResponse,
   CreateDealRequest,
   CreateDealResponse,
   PricingRule,

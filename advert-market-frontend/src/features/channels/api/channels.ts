@@ -14,7 +14,6 @@ import {
   type CreateDealResponse,
   categorySchema,
   channelDetailSchema,
-  channelRegistrationRequestSchema,
   channelResponseSchema,
   channelSchema,
   channelTeamSchema,
@@ -88,9 +87,13 @@ export function createDeal(request: CreateDealRequest): Promise<CreateDealRespon
 }
 
 export function verifyChannel(username: string): Promise<ChannelVerifyResponse> {
-  return api.post('/channels/verify', { channelUsername: username }, {
-    schema: channelVerifyResponseSchema,
-  });
+  return api.post(
+    '/channels/verify',
+    { channelUsername: username },
+    {
+      schema: channelVerifyResponseSchema,
+    },
+  );
 }
 
 export function registerChannel(request: ChannelRegistrationRequest): Promise<ChannelResponse> {

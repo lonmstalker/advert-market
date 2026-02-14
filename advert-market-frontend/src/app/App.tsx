@@ -25,6 +25,7 @@ const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const LanguagePage = lazy(() => import('@/pages/profile/LanguagePage'));
 const CurrencyPage = lazy(() => import('@/pages/profile/CurrencyPage'));
 const NotificationsPage = lazy(() => import('@/pages/profile/NotificationsPage'));
+const RegisterChannelPage = lazy(() => import('@/pages/profile/RegisterChannelPage'));
 const CreativesPage = lazy(() => import('@/pages/creatives/CreativesPage'));
 const CreativeEditorPage = lazy(() => import('@/pages/creatives/CreativeEditorPage'));
 
@@ -102,6 +103,7 @@ export function App() {
                         <Route path="/profile/language" element={<LanguagePage />} />
                         <Route path="/profile/currency" element={<CurrencyPage />} />
                         <Route path="/profile/notifications" element={<NotificationsPage />} />
+                        <Route path="/profile/channels/new" element={<RegisterChannelPage />} />
                         <Route path="/profile/creatives" element={<CreativesPage />} />
                         <Route path="/profile/creatives/new" element={<CreativeEditorPage />} />
                         <Route path="/profile/creatives/:creativeId/edit" element={<CreativeEditorPage />} />

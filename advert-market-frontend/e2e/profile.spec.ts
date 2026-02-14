@@ -20,4 +20,10 @@ test.describe('Profile Page', () => {
     await page.getByRole('link', { name: 'Catalog' }).click();
     await page.waitForURL('**/catalog');
   });
+
+  test('can open add channel page', async ({ page }) => {
+    await page.getByRole('button', { name: 'Add channel' }).click();
+    await page.waitForURL('**/profile/channels/new');
+    await expect(page.getByText('Add Channel')).toBeVisible();
+  });
 });
