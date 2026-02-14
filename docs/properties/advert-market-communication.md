@@ -25,6 +25,7 @@ Root configuration for the Telegram bot
 | `app.telegram.bot-username` | `NotBlank String` | Telegram bot username |  | Yes | NotBlank(must not be blank) |  |
 | `app.telegram.webhook` | `Valid Webhook` | Webhook configuration |  | No |  |  |
 | `app.telegram.webapp` | `Valid WebApp` | Telegram Web App configuration |  | Yes |  |  |
+| `app.telegram.welcome` | `Valid Welcome` | Welcome message configuration |  | No |  |  |
 
 ## User Blocking
 

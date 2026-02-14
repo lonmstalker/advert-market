@@ -15,7 +15,7 @@ JWT and Telegram initData validation settings
 
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
-| `app.auth.jwt` | `Valid Jwt` | JWT token configuration |  | Yes |  |  |
+| `app.auth.jwt` | `NonNull Jwt` | JWT token configuration |  | Yes |  |  |
 | `app.auth.anti-replay-window-seconds` | `Positive int` | Maximum age of Telegram initData auth_date in seconds for anti-replay protection |  | Yes | Positive(must be positive) |  |
 
 ## Login Rate Limiter
