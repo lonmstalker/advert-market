@@ -4,7 +4,6 @@ import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { formatFiat } from '@/shared/lib/fiat-format';
 import { formatTon } from '@/shared/lib/ton-format';
-import { TonDiamondIcon } from '@/shared/ui/icons';
 import type { WalletSummary } from '../types/wallet';
 
 type SummaryHeroProps = {
@@ -39,44 +38,6 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
         }}
       />
 
-      {/* Decorative TON diamonds */}
-      <TonDiamondIcon
-        style={{
-          position: 'absolute',
-          top: 14,
-          right: 28,
-          width: 16,
-          height: 16,
-          opacity: 0.2,
-          color: 'var(--color-accent-primary)',
-          pointerEvents: 'none',
-        }}
-      />
-      <TonDiamondIcon
-        style={{
-          position: 'absolute',
-          top: 38,
-          right: 64,
-          width: 20,
-          height: 20,
-          opacity: 0.15,
-          color: 'var(--color-accent-primary)',
-          pointerEvents: 'none',
-        }}
-      />
-      <TonDiamondIcon
-        style={{
-          position: 'absolute',
-          top: 22,
-          left: 20,
-          width: 14,
-          height: 14,
-          opacity: 0.22,
-          color: 'var(--color-accent-primary)',
-          pointerEvents: 'none',
-        }}
-      />
-
       <div
         style={{
           position: 'relative',
@@ -103,7 +64,7 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           transition={{ delay: 0.25, duration: 0.3 }}
           style={{ marginTop: 4 }}
         >
-          <Text type="caption1" color="secondary">
+          <Text type="subheadline2" color="secondary">
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(heroAmount)}</span>
           </Text>
         </motion.div>

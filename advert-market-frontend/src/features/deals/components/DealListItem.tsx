@@ -2,6 +2,7 @@ import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { formatRelativeTime } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
 import { buildOverlapLabel } from '@/shared/lib/overlap-label';
@@ -18,16 +19,25 @@ type DealListItemProps = {
 
 export const DealListItem = memo(function DealListItem({ deal, onClick }: DealListItemProps) {
   const { t, i18n } = useTranslation();
+  const haptic = useHaptic();
 
   const overlapLabel = buildOverlapLabel(deal.postFrequencyHours, deal.durationHours, t)?.label ?? null;
 
   return (
-    <motion.div {...listItem} {...pressScale} onClick={onClick} style={{ cursor: 'pointer' }}>
+    <motion.div
+      {...listItem}
+      {...pressScale}
+      onClick={() => {
+        haptic.impactOccurred('light');
+        onClick();
+      }}
+      style={{ cursor: 'pointer' }}
+    >
       <div
         style={{
           background: 'var(--color-background-base)',
           border: '1px solid var(--color-border-separator)',
-          borderRadius: 16,
+          borderRadius: 14,
           padding: '14px 16px',
           display: 'flex',
           flexDirection: 'column',

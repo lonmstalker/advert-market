@@ -2,6 +2,14 @@ import { mockCategories } from '@/test/mocks/data';
 import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { CategoryChipRow } from './CategoryChipRow';
 
+vi.mock('@/shared/hooks/use-haptic', () => ({
+  useHaptic: () => ({
+    impactOccurred: vi.fn(),
+    notificationOccurred: vi.fn(),
+    selectionChanged: vi.fn(),
+  }),
+}));
+
 describe('CategoryChipRow', () => {
   it('renders "All topics" chip when no selection', async () => {
     const onSelect = vi.fn();

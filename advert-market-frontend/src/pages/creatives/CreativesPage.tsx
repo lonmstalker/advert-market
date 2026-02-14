@@ -1,4 +1,4 @@
-import { Group, Text } from '@telegram-tools/ui-kit';
+import { Group, GroupItem, Icon, Sheet, Text } from '@telegram-tools/ui-kit';
 import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { CreativeTemplate } from '@/features/creatives';
 import { CreativeListItem, useCreatives } from '@/features/creatives';
-import { BackButtonHandler, EmptyState, EndOfList, SegmentControl, Tappable } from '@/shared/ui';
+import { useHaptic } from '@/shared/hooks/use-haptic';
+import { BackButtonHandler, EmptyState, EndOfList, Tappable } from '@/shared/ui';
 import { fadeIn, listItem, pressScale, scaleIn, staggerChildren } from '@/shared/ui/animations';
-import { PaletteIcon, SearchIcon, SearchOffIcon } from '@/shared/ui/icons';
+import { PaletteIcon, SearchIcon, SearchOffIcon, SortIcon } from '@/shared/ui/icons';
 
 type SortMode = 'newest' | 'oldest' | 'byName';
 
@@ -25,6 +26,20 @@ const addButtonStyle: CSSProperties = {
   padding: 0,
   fontSize: 20,
   color: 'var(--color-accent-primary)',
+};
+
+const sortButtonStyle: CSSProperties = {
+  width: 36,
+  height: 36,
+  borderRadius: 10,
+  border: '1px solid var(--color-border-separator)',
+  background: 'var(--color-background-base)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  padding: 0,
+  flexShrink: 0,
 };
 
 function useDebounce(value: string, delay: number): string {
@@ -50,14 +65,18 @@ function sortCreatives(items: CreativeTemplate[], mode: SortMode): CreativeTempl
   }
 }
 
+const SORT_OPTIONS: SortMode[] = ['newest', 'oldest', 'byName'];
+
 export default function CreativesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const haptic = useHaptic();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useCreatives();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('newest');
+  const [sortSheetOpen, setSortSheetOpen] = useState(false);
   const debouncedQuery = useDebounce(searchQuery, 300);
 
   const allCreatives = data?.pages.flatMap((p) => p.items) ?? [];
@@ -81,11 +100,29 @@ export default function CreativesPage() {
     [hasNextPage, isFetchingNextPage, fetchNextPage],
   );
 
-  const sortTabs = [
-    { value: 'newest' as const, label: t('creatives.sort.newest') },
-    { value: 'oldest' as const, label: t('creatives.sort.oldest') },
-    { value: 'byName' as const, label: t('creatives.sort.byName') },
-  ];
+  const SortSheetContent = () => (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <Text type="title2" weight="bold">
+        {t('creatives.sort.title')}
+      </Text>
+      <Group>
+        {SORT_OPTIONS.map((option) => (
+          <GroupItem
+            key={option}
+            text={t(`creatives.sort.${option}`)}
+            after={sortMode === option ? <Icon name="check" color="accent" /> : undefined}
+            onClick={() => {
+              haptic.selectionChanged();
+              setSortMode(option);
+              setSortSheetOpen(false);
+            }}
+          />
+        ))}
+      </Group>
+    </div>
+  );
+
+  const sheetMap = { sort: SortSheetContent };
 
   return (
     <div style={{ paddingBottom: 24 }} onScroll={handleScroll}>
@@ -121,12 +158,13 @@ export default function CreativesPage() {
           }}
         >
           <motion.div
-            style={{ marginBottom: 12 }}
             animate={{ scale: searchFocused ? 1.01 : 1 }}
             transition={{ duration: 0.15, ease: easeOut }}
+            style={{ display: 'flex', gap: 8 }}
           >
             <div
               style={{
+                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
@@ -165,8 +203,24 @@ export default function CreativesPage() {
                 }}
               />
             </div>
+            <motion.div {...pressScale}>
+              <Tappable
+                onClick={() => {
+                  haptic.impactOccurred('light');
+                  setSortSheetOpen(true);
+                }}
+                style={sortButtonStyle}
+              >
+                <SortIcon
+                  style={{
+                    width: 20,
+                    height: 20,
+                    color: sortMode !== 'newest' ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
+                  }}
+                />
+              </Tappable>
+            </motion.div>
           </motion.div>
-          <SegmentControl tabs={sortTabs} active={sortMode} onChange={setSortMode} />
         </div>
       )}
 
@@ -213,6 +267,8 @@ export default function CreativesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Sheet sheets={sheetMap} activeSheet="sort" opened={sortSheetOpen} onClose={() => setSortSheetOpen(false)} />
     </div>
   );
 }

@@ -20,7 +20,7 @@ import { buildOverlapLabel } from '@/shared/lib/overlap-label';
 import { formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState, PageLoader, Popover } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
-import { ClockIcon, InfoIcon, SadFaceIcon, TelegramIcon, TonDiamondIcon } from '@/shared/ui/icons';
+import { ClockIcon, InfoIcon, SadFaceIcon, TelegramIcon } from '@/shared/ui/icons';
 
 const TERMINAL_STATUSES = new Set([
   'COMPLETED_RELEASED',
@@ -126,44 +126,6 @@ export default function DealDetailPage() {
             }}
           />
 
-          {/* Decorative diamonds */}
-          <TonDiamondIcon
-            style={{
-              position: 'absolute',
-              top: 18,
-              right: 32,
-              width: 10,
-              height: 10,
-              opacity: 0.15,
-              color: 'var(--color-foreground-primary)',
-              pointerEvents: 'none',
-            }}
-          />
-          <TonDiamondIcon
-            style={{
-              position: 'absolute',
-              top: 44,
-              right: 72,
-              width: 14,
-              height: 14,
-              opacity: 0.1,
-              color: 'var(--color-foreground-primary)',
-              pointerEvents: 'none',
-            }}
-          />
-          <TonDiamondIcon
-            style={{
-              position: 'absolute',
-              top: 28,
-              left: 24,
-              width: 8,
-              height: 8,
-              opacity: 0.18,
-              color: 'var(--color-foreground-primary)',
-              pointerEvents: 'none',
-            }}
-          />
-
           <div style={{ position: 'relative', padding: '20px 16px 16px' }}>
             {/* Avatar + channel info */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -244,7 +206,7 @@ export default function DealDetailPage() {
                   width: 48,
                   height: 3,
                   borderRadius: 2,
-                  background: 'linear-gradient(90deg, var(--color-accent-primary), #9b59b6)',
+                  background: 'var(--color-accent-primary)',
                   margin: '6px auto 4px',
                 }}
               />

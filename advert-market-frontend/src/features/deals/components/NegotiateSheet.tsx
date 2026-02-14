@@ -2,6 +2,7 @@ import { Button, Input, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { formatTon } from '@/shared/lib/ton-format';
 import { pressScale } from '@/shared/ui/animations';
 import { TextareaField } from '@/shared/ui/components/textarea-field';
@@ -9,6 +10,7 @@ import { useNegotiateContext } from './NegotiateContext';
 
 export function NegotiateSheetContent() {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const [price, setPrice] = useState('');
   const [message, setMessage] = useState('');
 
@@ -18,6 +20,7 @@ export function NegotiateSheetContent() {
     const priceNum = Number.parseFloat(price);
     if (Number.isNaN(priceNum) || priceNum <= 0) return;
     const priceNano = Math.round(priceNum * 1_000_000_000);
+    haptic.notificationOccurred('success');
     onSubmit(priceNano, message.trim() || undefined);
   };
 

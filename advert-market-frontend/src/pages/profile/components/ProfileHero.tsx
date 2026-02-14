@@ -26,8 +26,7 @@ export function ProfileHero({ displayName, username, roleBadge, memberSince, ava
           height: 80,
           borderRadius: '50%',
           padding: 3,
-          background:
-            'linear-gradient(135deg, var(--color-accent-primary), color-mix(in srgb, var(--color-accent-primary) 60%, #a855f7))',
+          background: 'var(--color-accent-primary)',
         }}
       >
         <div

@@ -568,6 +568,7 @@
       "placeholder": "Search creatives..."
     },
     "sort": {
+      "title": "Sort by",
       "newest": "Newest",
       "oldest": "Oldest",
       "byName": "By name"

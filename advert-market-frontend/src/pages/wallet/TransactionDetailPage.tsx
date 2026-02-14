@@ -78,51 +78,13 @@ export default function TransactionDetailPage() {
             }}
           />
 
-          {/* Decorative TON diamonds */}
-          <TonDiamondIcon
-            style={{
-              position: 'absolute',
-              top: 16,
-              right: 30,
-              width: 14,
-              height: 14,
-              opacity: 0.2,
-              color: 'var(--color-foreground-primary)',
-              pointerEvents: 'none',
-            }}
-          />
-          <TonDiamondIcon
-            style={{
-              position: 'absolute',
-              top: 40,
-              right: 68,
-              width: 18,
-              height: 18,
-              opacity: 0.15,
-              color: 'var(--color-foreground-primary)',
-              pointerEvents: 'none',
-            }}
-          />
-          <TonDiamondIcon
-            style={{
-              position: 'absolute',
-              top: 24,
-              left: 22,
-              width: 12,
-              height: 12,
-              opacity: 0.22,
-              color: 'var(--color-foreground-primary)',
-              pointerEvents: 'none',
-            }}
-          />
-
           <div style={{ position: 'relative', textAlign: 'center', padding: '28px 16px 20px' }}>
             {/* Type icon in container */}
             <div
               style={{
                 width: 56,
                 height: 56,
-                borderRadius: 16,
+                borderRadius: '50%',
                 background: getTransactionTypeTint(tx.type),
                 display: 'flex',
                 alignItems: 'center',
@@ -154,7 +116,7 @@ export default function TransactionDetailPage() {
               transition={{ delay: 0.25, duration: 0.3 }}
               style={{ marginTop: 4 }}
             >
-              <Text type="caption1" color="secondary">
+              <Text type="subheadline2" color="secondary">
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(tx.amountNano)}</span>
               </Text>
             </motion.div>

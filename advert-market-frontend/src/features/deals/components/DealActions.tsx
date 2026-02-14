@@ -2,6 +2,7 @@ import { Button, DialogModal } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { pressScale } from '@/shared/ui/animations';
 import type { DealAction, DealActionType } from '../lib/deal-actions';
 
@@ -13,6 +14,7 @@ type DealActionsProps = {
 
 export function DealActions({ actions, onAction, isPending }: DealActionsProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const [confirmAction, setConfirmAction] = useState<DealAction | null>(null);
 
   if (actions.length === 0) return null;
@@ -21,12 +23,14 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
     if (action.requiresConfirm) {
       setConfirmAction(action);
     } else {
+      haptic.notificationOccurred('success');
       onAction(action.type);
     }
   };
 
   const handleConfirm = () => {
     if (confirmAction) {
+      haptic.notificationOccurred('success');
       onAction(confirmAction.type);
       setConfirmAction(null);
     }

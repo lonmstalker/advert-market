@@ -3,6 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { SegmentControl } from '../segment-control';
 
+vi.mock('@/shared/hooks/use-haptic', () => ({
+  useHaptic: () => ({
+    impactOccurred: vi.fn(),
+    notificationOccurred: vi.fn(),
+    selectionChanged: vi.fn(),
+  }),
+}));
+
 const tabs = [
   { value: 'tab1', label: 'First' },
   { value: 'tab2', label: 'Second' },

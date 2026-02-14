@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useId } from 'react';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 
 type Tab<T extends string> = {
   value: T;
@@ -14,6 +15,7 @@ type SegmentControlProps<T extends string> = {
 
 export function SegmentControl<T extends string>({ tabs, active, onChange }: SegmentControlProps<T>) {
   const id = useId();
+  const haptic = useHaptic();
   return (
     <div
       style={{
@@ -31,7 +33,10 @@ export function SegmentControl<T extends string>({ tabs, active, onChange }: Seg
           <button
             key={tab.value}
             type="button"
-            onClick={() => onChange(tab.value)}
+            onClick={() => {
+              haptic.selectionChanged();
+              onChange(tab.value);
+            }}
             style={{
               flex: 1,
               position: 'relative',

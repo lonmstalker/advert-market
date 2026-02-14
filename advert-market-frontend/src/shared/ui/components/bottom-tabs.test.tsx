@@ -1,6 +1,14 @@
 import { renderWithProviders, screen } from '@/test/test-utils';
 import { BottomTabs } from './bottom-tabs';
 
+vi.mock('@/shared/hooks/use-haptic', () => ({
+  useHaptic: () => ({
+    impactOccurred: vi.fn(),
+    notificationOccurred: vi.fn(),
+    selectionChanged: vi.fn(),
+  }),
+}));
+
 describe('BottomTabs', () => {
   it('renders 4 navigation links with correct paths', () => {
     renderWithProviders(<BottomTabs />);

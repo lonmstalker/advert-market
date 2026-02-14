@@ -85,7 +85,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                     animate={{
                       boxShadow: [
                         '0 0 0 0px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.3)',
-                        '0 0 0 5px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0)',
+                        '0 0 0 6px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0)',
                         '0 0 0 0px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.3)',
                       ],
                     }}
@@ -97,6 +97,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                       border: '2.5px solid var(--color-accent-primary)',
                       backgroundColor: 'var(--color-background-base)',
                       marginTop: 0,
+                      filter: 'drop-shadow(0 0 3px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.2))',
                     }}
                   />
                 ) : (
