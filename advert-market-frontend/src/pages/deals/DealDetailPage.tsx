@@ -1,6 +1,6 @@
 import { Sheet, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { DealActions } from '@/features/deals/components/DealActions';
@@ -8,12 +8,16 @@ import { DealStatusBadge } from '@/features/deals/components/DealStatusBadge';
 import { DealTimeline } from '@/features/deals/components/DealTimeline';
 import { NegotiateProvider } from '@/features/deals/components/NegotiateContext';
 import { NegotiateSheetContent } from '@/features/deals/components/NegotiateSheet';
+import { PaymentProvider } from '@/features/deals/components/PaymentContext';
+import { PaymentSheetContent } from '@/features/deals/components/PaymentSheet';
 import { useDealDetail } from '@/features/deals/hooks/useDealDetail';
 import { useDealTransition } from '@/features/deals/hooks/useDealTransition';
 import type { DealActionType } from '@/features/deals/lib/deal-actions';
 import { getDealActions } from '@/features/deals/lib/deal-actions';
 import { buildTimelineSteps, getStatusConfig, statusBgVar } from '@/features/deals/lib/deal-status';
+import { loadPendingIntent } from '@/features/ton/lib/ton-intent';
 import { useCountdown } from '@/shared/hooks/use-countdown';
+import { useToast } from '@/shared/hooks/use-toast';
 import { formatDate } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
 import { buildOverlapLabel } from '@/shared/lib/overlap-label';
@@ -33,13 +37,18 @@ const TERMINAL_STATUSES = new Set([
 
 const sheetMap = {
   negotiate: NegotiateSheetContent,
+  payment: PaymentSheetContent,
 };
+
+type DealSheet = 'negotiate' | 'payment';
 
 export default function DealDetailPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { dealId } = useParams<{ dealId: string }>();
+  const [activeSheet, setActiveSheet] = useState<DealSheet>('negotiate');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { showError } = useToast();
 
   const { deal, timeline, isLoading, isError } = useDealDetail(dealId as string);
   const { transition, negotiate, isPending } = useDealTransition(dealId as string);
@@ -55,8 +64,30 @@ export default function DealDetailPage() {
     return buildTimelineSteps(timeline.events, deal.status, t);
   }, [deal, timeline, t]);
 
+  useEffect(() => {
+    if (!dealId) return;
+    const raw = sessionStorage.getItem('ton_pending_intent');
+    if (!raw) return;
+
+    const intent = loadPendingIntent();
+    if (!intent) {
+      showError(t('wallet.error.pollingTimeout'));
+      return;
+    }
+    if (intent.dealId !== dealId) return;
+
+    setActiveSheet('payment');
+    setSheetOpen(true);
+  }, [dealId, showError, t]);
+
   const handleAction = (type: DealActionType) => {
     if (type === 'counter_offer' || type === 'reply') {
+      setActiveSheet('negotiate');
+      setSheetOpen(true);
+      return;
+    }
+    if (type === 'pay') {
+      setActiveSheet('payment');
       setSheetOpen(true);
       return;
     }
@@ -352,16 +383,18 @@ export default function DealDetailPage() {
       )}
 
       {/* Negotiate Sheet */}
-      <NegotiateProvider
-        currentPriceNano={deal?.priceNano ?? 0}
-        onSubmit={(priceNano, message) => {
-          negotiate({ priceNano, message });
-          setSheetOpen(false);
-        }}
-        isPending={isPending}
-      >
-        <Sheet sheets={sheetMap} activeSheet="negotiate" opened={sheetOpen} onClose={() => setSheetOpen(false)} />
-      </NegotiateProvider>
+      <PaymentProvider dealId={dealId as string} onClose={() => setSheetOpen(false)}>
+        <NegotiateProvider
+          currentPriceNano={deal?.priceNano ?? 0}
+          onSubmit={(priceNano, message) => {
+            negotiate({ priceNano, message });
+            setSheetOpen(false);
+          }}
+          isPending={isPending}
+        >
+          <Sheet sheets={sheetMap} activeSheet={activeSheet} opened={sheetOpen} onClose={() => setSheetOpen(false)} />
+        </NegotiateProvider>
+      </PaymentProvider>
     </>
   );
 }

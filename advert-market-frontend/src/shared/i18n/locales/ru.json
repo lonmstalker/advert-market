@@ -429,6 +429,15 @@
       "messagePlaceholder": "Объясните ваше предложение...",
       "submit": "Отправить"
     },
+    "payment": {
+      "title": "Оплата",
+      "platformCommission": "Комиссия платформы: 10%",
+      "wallet": "Кошелек",
+      "walletNotConnected": "Не подключен",
+      "escrowNote": "Оплата отправляется на уникальный эскроу-адрес для этой сделки.",
+      "pay": "Оплатить",
+      "error": "Не удалось загрузить данные для оплаты"
+    },
     "transition": {
       "success": "Готово",
       "error": "Ошибка выполнения",
@@ -456,6 +465,11 @@
   },
   "wallet": {
     "title": "Финансы",
+    "connection": {
+      "title": "TON кошелек",
+      "hint": "Подключите, чтобы получать выплаты"
+    },
+    "connectWallet": "Подключить кошелек",
     "empty": {
       "title": "Транзакций пока нет",
       "description": "Здесь будет история ваших транзакций",
@@ -481,7 +495,28 @@
     "status": {
       "pending": "Ожидание",
       "confirmed": "Подтверждено",
-      "failed": "Ошибка"
+      "failed": "Ошибка",
+      "txDetected": "Транзакция обнаружена",
+      "confirming": "Подтверждение {{current}}/{{required}}",
+      "operatorReview": "Ожидается проверка оператора",
+      "overpaid": "Обнаружена переплата"
+    },
+    "toast": {
+      "paymentSent": "Транзакция отправлена",
+      "paymentConfirmed": "Оплата подтверждена"
+    },
+    "error": {
+      "connectFirst": "Сначала подключите кошелек",
+      "walletRejected": "Вы отменили транзакцию в кошельке",
+      "insufficientTon": "Недостаточно TON",
+      "timeout": "Время подтверждения истекло",
+      "networkMismatch": "Неверная сеть кошелька",
+      "disconnected": "Кошелек отключен",
+      "transactionFailed": "Не удалось выполнить транзакцию",
+      "depositExpired": "Депозит просрочен",
+      "pollingTimeout": "Не удалось дождаться подтверждения оплаты",
+      "underpaid": "Сумма меньше ожидаемой",
+      "depositRejected": "Депозит отклонен"
     },
     "history": {
       "title": "История операций",

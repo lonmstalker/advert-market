@@ -77,9 +77,10 @@ export default function OnboardingTourPage() {
     isAnimating.current = false;
   }
 
-  const SlideComponent = slideComponents[activeSlide]!;
-
   if (interests.size === 0) return null;
+
+  const SlideComponent = slideComponents[activeSlide];
+  if (!SlideComponent) return null;
 
   return (
     <div

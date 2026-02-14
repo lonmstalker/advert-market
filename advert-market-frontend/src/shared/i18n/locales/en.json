@@ -425,6 +425,15 @@
       "messagePlaceholder": "Explain your offer...",
       "submit": "Send offer"
     },
+    "payment": {
+      "title": "Payment",
+      "platformCommission": "Platform commission: 10%",
+      "wallet": "Wallet",
+      "walletNotConnected": "Not connected",
+      "escrowNote": "Payment is sent to a unique escrow address for this deal.",
+      "pay": "Pay",
+      "error": "Failed to load payment details"
+    },
     "transition": {
       "success": "Done",
       "error": "Action failed",
@@ -452,6 +461,11 @@
   },
   "wallet": {
     "title": "Finance",
+    "connection": {
+      "title": "TON wallet",
+      "hint": "Connect to receive payouts"
+    },
+    "connectWallet": "Connect wallet",
     "empty": {
       "title": "No transactions yet",
       "description": "Your transaction history will appear here",
@@ -477,7 +491,28 @@
     "status": {
       "pending": "Pending",
       "confirmed": "Confirmed",
-      "failed": "Failed"
+      "failed": "Failed",
+      "txDetected": "Transaction detected",
+      "confirming": "Confirming {{current}}/{{required}}",
+      "operatorReview": "Awaiting operator review",
+      "overpaid": "Overpaid amount detected"
+    },
+    "toast": {
+      "paymentSent": "Transaction sent",
+      "paymentConfirmed": "Payment confirmed"
+    },
+    "error": {
+      "connectFirst": "Connect wallet first",
+      "walletRejected": "Transaction rejected in wallet",
+      "insufficientTon": "Not enough TON",
+      "timeout": "Transaction expired",
+      "networkMismatch": "Wallet network mismatch",
+      "disconnected": "Wallet disconnected",
+      "transactionFailed": "Transaction failed",
+      "depositExpired": "Deposit expired",
+      "pollingTimeout": "Payment confirmation timed out",
+      "underpaid": "Received less than expected",
+      "depositRejected": "Deposit rejected"
     },
     "history": {
       "title": "Transaction history",

@@ -25,12 +25,16 @@ export function fetchCategories(): Promise<Category[]> {
 export function fetchChannels(
   filters: CatalogFilters & { cursor?: string; limit?: number },
 ): Promise<PaginatedResponse<Channel>> {
-  const { q, category, minSubs, maxSubs, minPrice, maxPrice, sort, cursor, limit } = filters;
+  const { q, category, categories, languages, minSubs, maxSubs, minPrice, maxPrice, sort, cursor, limit } = filters;
+  const categoryParam = category ?? categories?.[0];
   return api.get('/channels', {
     schema: paginatedResponseSchema(channelSchema),
     params: {
       q,
-      category,
+      category: categoryParam,
+      // Backend currently supports single category; keep query cache keys stable while
+      // allowing chip row multi-select state (`categories`) in UI.
+      ...(languages?.length ? { languages: languages.join(',') } : {}),
       minSubs,
       maxSubs,
       minPrice,
@@ -43,10 +47,19 @@ export function fetchChannels(
 }
 
 export function fetchChannelCount(filters: Omit<CatalogFilters, 'sort'>): Promise<number> {
-  const { q, category, minSubs, maxSubs, minPrice, maxPrice } = filters;
+  const { q, category, categories, languages, minSubs, maxSubs, minPrice, maxPrice } = filters;
+  const categoryParam = category ?? categories?.[0];
   return api.get('/channels/count', {
     schema: z.number(),
-    params: { q, category, minSubs, maxSubs, minPrice, maxPrice },
+    params: {
+      q,
+      category: categoryParam,
+      ...(languages?.length ? { languages: languages.join(',') } : {}),
+      minSubs,
+      maxSubs,
+      minPrice,
+      maxPrice,
+    },
   });
 }
 

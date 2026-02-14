@@ -1123,8 +1123,13 @@ export const mockTransactions = [
   },
 ];
 
+const tx0 = mockTransactions.at(0);
+if (!tx0) throw new Error('Expected mockTransactions[0] to exist');
+const tx2 = mockTransactions.at(2);
+if (!tx2) throw new Error('Expected mockTransactions[2] to exist');
+
 export const mockTransactionDetail = {
-  ...mockTransactions[0]!,
+  ...tx0,
   txHash: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
   fromAddress: 'EQBvW8Z5huBkMJYdnfAEFYpzHC2p0y3wR6Qf5eJYhS1eN0Yz',
   toAddress: 'EQAo92DYMokBh2HJiIXLfhE0qiG0mF3KxhNZ2W1ghT3xQ4Rn',
@@ -1132,7 +1137,7 @@ export const mockTransactionDetail = {
 };
 
 export const mockTransactionDetailMinimal = {
-  ...mockTransactions[2]!,
+  ...tx2,
   txHash: null,
   fromAddress: null,
   toAddress: null,
@@ -1203,20 +1208,23 @@ export const mockCreativeTemplates = [
   },
 ];
 
+const defiTemplate = mockCreativeTemplates.at(2);
+if (!defiTemplate) throw new Error('Expected mockCreativeTemplates[2] to exist');
+
 export const mockCreativeVersions = [
   {
     version: 3,
-    draft: mockCreativeTemplates[2]!.draft,
+    draft: defiTemplate.draft,
     createdAt: '2026-02-13T11:00:00Z',
   },
   {
     version: 2,
-    draft: { ...mockCreativeTemplates[2]!.draft, text: 'Introducing a new DeFi platform.' },
+    draft: { ...defiTemplate.draft, text: 'Introducing a new DeFi platform.' },
     createdAt: '2026-02-10T14:00:00Z',
   },
   {
     version: 1,
-    draft: { ...mockCreativeTemplates[2]!.draft, text: 'DeFi platform coming soon.' },
+    draft: { ...defiTemplate.draft, text: 'DeFi platform coming soon.' },
     createdAt: '2026-02-01T09:00:00Z',
   },
 ];

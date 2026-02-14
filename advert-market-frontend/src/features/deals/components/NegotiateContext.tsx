@@ -14,7 +14,9 @@ export function NegotiateProvider({
   onSubmit,
   isPending,
 }: NegotiateContextValue & { children: React.ReactNode }) {
-  return <NegotiateContext value={{ currentPriceNano, onSubmit, isPending }}>{children}</NegotiateContext>;
+  return (
+    <NegotiateContext.Provider value={{ currentPriceNano, onSubmit, isPending }}>{children}</NegotiateContext.Provider>
+  );
 }
 
 export function useNegotiateContext() {

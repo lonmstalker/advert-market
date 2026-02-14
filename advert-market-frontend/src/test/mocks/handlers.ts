@@ -17,12 +17,67 @@ import {
 
 const API_BASE = '/api/v1';
 
-let profile = { ...mockProfile };
+const STORAGE_KEYS = {
+  profile: 'msw_profile_state',
+  deals: 'msw_deals_state',
+} as const;
+
+function hasSessionStorage(): boolean {
+  return typeof sessionStorage !== 'undefined' && sessionStorage != null;
+}
+
+function loadState<T>(key: string, fallback: T): T {
+  if (!hasSessionStorage()) return fallback;
+  const raw = sessionStorage.getItem(key);
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveState(key: string, value: unknown): void {
+  if (!hasSessionStorage()) return;
+  sessionStorage.setItem(key, JSON.stringify(value));
+}
+
+let profile = loadState<typeof mockProfile>(STORAGE_KEYS.profile, { ...mockProfile });
+let deals = loadState<typeof mockDeals>(
+  STORAGE_KEYS.deals,
+  mockDeals.map((d) => ({ ...d })),
+);
+
+const depositChecks = new Map<string, number>();
+
+export function resetMockState(): void {
+  profile = { ...mockProfile };
+  deals = mockDeals.map((d) => ({ ...d }));
+  depositChecks.clear();
+
+  if (!hasSessionStorage()) return;
+  sessionStorage.removeItem(STORAGE_KEYS.profile);
+  sessionStorage.removeItem(STORAGE_KEYS.deals);
+}
+
+function hasPendingDepositIntent(dealId: string): boolean {
+  if (!hasSessionStorage()) return false;
+  const raw = sessionStorage.getItem('ton_pending_intent');
+  if (!raw) return false;
+  try {
+    const parsed = JSON.parse(raw) as { dealId?: unknown };
+    return typeof parsed.dealId === 'string' && parsed.dealId === dealId;
+  } catch {
+    return false;
+  }
+}
 
 export const handlers = [
   // POST /auth/login — authenticate via Telegram initData
   http.post(`${API_BASE}/auth/login`, () => {
-    sessionStorage.setItem('access_token', mockAuthResponse.accessToken);
+    if (hasSessionStorage()) {
+      sessionStorage.setItem('access_token', mockAuthResponse.accessToken);
+    }
     return HttpResponse.json(mockAuthResponse);
   }),
 
@@ -39,6 +94,7 @@ export const handlers = [
       onboardingCompleted: true,
       interests: body.interests,
     };
+    saveState(STORAGE_KEYS.profile, profile);
     return HttpResponse.json(profile);
   }),
 
@@ -49,7 +105,7 @@ export const handlers = [
     const limit = Number(url.searchParams.get('limit')) || 20;
     const cursor = url.searchParams.get('cursor');
 
-    let filtered = [...mockDeals];
+    let filtered = [...deals];
     if (role) {
       filtered = filtered.filter((d) => d.role === role);
     }
@@ -61,18 +117,93 @@ export const handlers = [
 
     const page = filtered.slice(startIndex, startIndex + limit);
     const hasNext = startIndex + limit < filtered.length;
-    const nextCursor = hasNext ? page.at(-1)!.id : null;
+    const nextCursor = hasNext ? (page.at(-1)?.id ?? null) : null;
 
     return HttpResponse.json({ items: page, nextCursor, hasNext });
   }),
 
   // GET /deals/:dealId — deal detail
   http.get(`${API_BASE}/deals/:dealId`, ({ params }) => {
-    const deal = mockDeals.find((d) => d.id === params.dealId);
+    const deal = deals.find((d) => d.id === params.dealId);
     if (!deal) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
     return HttpResponse.json(deal);
+  }),
+
+  // GET /deals/:dealId/deposit — escrow address + deposit status (TON Connect)
+  http.get(`${API_BASE}/deals/:dealId/deposit`, ({ params }) => {
+    const dealId = params.dealId as string;
+    const deal = deals.find((d) => d.id === dealId);
+    if (!deal) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+
+    const amountNano = String(deal.priceNano);
+    const escrowAddress = `UQ_MOCK_ESCROW_${dealId}`;
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
+    if (!hasPendingDepositIntent(dealId)) {
+      depositChecks.delete(dealId);
+      return HttpResponse.json({
+        escrowAddress,
+        amountNano,
+        dealId,
+        status: 'AWAITING_PAYMENT',
+        currentConfirmations: null,
+        requiredConfirmations: null,
+        receivedAmountNano: null,
+        txHash: null,
+        expiresAt,
+      });
+    }
+
+    const attempt = (depositChecks.get(dealId) ?? 0) + 1;
+    depositChecks.set(dealId, attempt);
+
+    if (attempt >= 3) {
+      const updated = { ...deal, status: 'FUNDED', updatedAt: new Date().toISOString() };
+      deals = deals.map((d) => (d.id === dealId ? updated : d));
+      saveState(STORAGE_KEYS.deals, deals);
+
+      return HttpResponse.json({
+        escrowAddress,
+        amountNano,
+        dealId,
+        status: 'CONFIRMED',
+        currentConfirmations: 1,
+        requiredConfirmations: 1,
+        receivedAmountNano: amountNano,
+        txHash: `txhash_${dealId}`,
+        expiresAt,
+      });
+    }
+
+    if (attempt >= 2) {
+      return HttpResponse.json({
+        escrowAddress,
+        amountNano,
+        dealId,
+        status: 'CONFIRMING',
+        currentConfirmations: 0,
+        requiredConfirmations: 1,
+        receivedAmountNano: null,
+        txHash: `txhash_${dealId}`,
+        expiresAt,
+      });
+    }
+
+    return HttpResponse.json({
+      escrowAddress,
+      amountNano,
+      dealId,
+      status: 'TX_DETECTED',
+      currentConfirmations: null,
+      requiredConfirmations: null,
+      receivedAmountNano: null,
+      txHash: `txhash_${dealId}`,
+      expiresAt,
+    });
   }),
 
   // GET /deals/:dealId/timeline — deal timeline events
@@ -86,7 +217,7 @@ export const handlers = [
 
   // POST /deals/:dealId/transition — deal state transition
   http.post(`${API_BASE}/deals/:dealId/transition`, async ({ params, request }) => {
-    const deal = mockDeals.find((d) => d.id === params.dealId);
+    const deal = deals.find((d) => d.id === params.dealId);
     if (!deal) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
@@ -100,22 +231,28 @@ export const handlers = [
       schedule: 'SCHEDULED',
     };
     const newStatus = statusMap[body.action] ?? deal.status;
-    return HttpResponse.json({ ...deal, status: newStatus, updatedAt: new Date().toISOString() });
+    const updated = { ...deal, status: newStatus, updatedAt: new Date().toISOString() };
+    deals = deals.map((d) => (d.id === deal.id ? updated : d));
+    saveState(STORAGE_KEYS.deals, deals);
+    return HttpResponse.json(updated);
   }),
 
   // POST /deals/:dealId/negotiate — counter-offer
   http.post(`${API_BASE}/deals/:dealId/negotiate`, async ({ params, request }) => {
-    const deal = mockDeals.find((d) => d.id === params.dealId);
+    const deal = deals.find((d) => d.id === params.dealId);
     if (!deal) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
     const body = (await request.json()) as { priceNano: number };
-    return HttpResponse.json({
+    const updated = {
       ...deal,
       status: 'NEGOTIATING',
       priceNano: body.priceNano,
       updatedAt: new Date().toISOString(),
-    });
+    };
+    deals = deals.map((d) => (d.id === deal.id ? updated : d));
+    saveState(STORAGE_KEYS.deals, deals);
+    return HttpResponse.json(updated);
   }),
 
   // --- Channel handlers ---
@@ -148,7 +285,8 @@ export const handlers = [
 
     const page = filtered.slice(startIndex, startIndex + limit);
     const hasNext = startIndex + limit < filtered.length;
-    const nextCursor = hasNext ? String(page.at(-1)!.id) : null;
+    const last = page.at(-1);
+    const nextCursor = hasNext && last ? String(last.id) : null;
 
     return HttpResponse.json({
       items: page,
@@ -205,6 +343,7 @@ export const handlers = [
   http.put(`${API_BASE}/profile/language`, async ({ request }) => {
     const body = (await request.json()) as { languageCode: string };
     profile = { ...profile, languageCode: body.languageCode };
+    saveState(STORAGE_KEYS.profile, profile);
     return HttpResponse.json(profile);
   }),
 
@@ -220,6 +359,7 @@ export const handlers = [
     if (body.notificationSettings) {
       profile = { ...profile, notificationSettings: body.notificationSettings };
     }
+    saveState(STORAGE_KEYS.profile, profile);
     return HttpResponse.json(profile);
   }),
 
@@ -249,7 +389,7 @@ export const handlers = [
 
     const page = filtered.slice(startIndex, startIndex + limit);
     const hasNext = startIndex + limit < filtered.length;
-    const nextCursor = hasNext ? page.at(-1)!.id : null;
+    const nextCursor = hasNext ? (page.at(-1)?.id ?? null) : null;
 
     return HttpResponse.json({ items: page, nextCursor, hasNext });
   }),
@@ -282,7 +422,7 @@ export const handlers = [
 
     const page = mockCreativeTemplates.slice(startIndex, startIndex + limit);
     const hasNext = startIndex + limit < mockCreativeTemplates.length;
-    const nextCursor = hasNext ? page.at(-1)!.id : null;
+    const nextCursor = hasNext ? (page.at(-1)?.id ?? null) : null;
 
     return HttpResponse.json({ items: page, nextCursor, hasNext });
   }),

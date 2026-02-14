@@ -23,7 +23,9 @@ test.describe('Catalog Page', () => {
 
   test('shows "All channels loaded" when all data fetched', async ({ page }) => {
     await expect(page.getByText('Crypto News Daily')).toBeVisible();
-    await expect(page.getByText('All channels loaded')).toBeVisible();
+    const endOfList = page.getByText("That's all");
+    await endOfList.scrollIntoViewIfNeeded();
+    await expect(endOfList).toBeVisible();
   });
 
   test('shows verified badges on verified channels', async ({ page }) => {
@@ -88,6 +90,6 @@ test.describe('Catalog Page', () => {
 
   test('channel cards show price info', async ({ page }) => {
     // Crypto News Daily: 5 TON
-    await expect(page.getByText(/from.*5 TON/)).toBeVisible();
+    await expect(page.getByText(/^from 5 TON$/)).toBeVisible();
   });
 });

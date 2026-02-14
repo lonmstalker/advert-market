@@ -5,6 +5,11 @@ import { server } from '@/test/mocks/server';
 import { renderWithProviders, screen } from '@/test/test-utils';
 import WalletPage from './WalletPage';
 
+vi.mock('@tonconnect/ui-react', () => ({
+  TonConnectButton: () => <div data-testid="ton-connect-button" />,
+  useIsConnectionRestored: () => true,
+}));
+
 vi.mock('@/shared/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/shared/ui')>();
   return { ...actual, BackButtonHandler: () => null };
