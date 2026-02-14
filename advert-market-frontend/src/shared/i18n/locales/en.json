@@ -553,7 +553,30 @@
     "role.channel_owner": "Channel Owner",
     "memberSince": "Member since {{date}}",
     "language.hint": "App interface language",
-    "creatives.description": "Ad template library"
+    "creatives.description": "Ad template library",
+    "register": {
+      "title": "Add Channel",
+      "channelLink": "Channel link",
+      "channelPlaceholder": "@username",
+      "addBotInstruction": "Add @AdvertMarketBot as an admin to your channel",
+      "copyBot": "Copy",
+      "openBot": "Open bot",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "channelInfo": "Channel info",
+      "subscribers": "{{count}} subscribers",
+      "category": "Category",
+      "categoryPlaceholder": "Select category",
+      "price": "Price per post (TON)",
+      "pricePlaceholder": "0.00",
+      "priceHint": "Minimum price for ad placement",
+      "submit": "Register",
+      "submitting": "Registering...",
+      "success": "Channel registered",
+      "botNotAdmin": "Bot is not added as a channel admin",
+      "channelNotFound": "Channel not found",
+      "alreadyRegistered": "This channel is already registered"
+    }
   },
   "creatives": {
     "title": "My Creatives",

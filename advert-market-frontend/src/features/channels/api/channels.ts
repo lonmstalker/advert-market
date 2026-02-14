@@ -6,13 +6,19 @@ import {
   type Category,
   type Channel,
   type ChannelDetail,
+  type ChannelRegistrationRequest,
+  type ChannelResponse,
   type ChannelTeam,
+  type ChannelVerifyResponse,
   type CreateDealRequest,
   type CreateDealResponse,
   categorySchema,
   channelDetailSchema,
+  channelRegistrationRequestSchema,
+  channelResponseSchema,
   channelSchema,
   channelTeamSchema,
+  channelVerifyResponseSchema,
   createDealResponseSchema,
 } from '../types/channel';
 
@@ -65,5 +71,17 @@ export function fetchChannelTeam(channelId: number): Promise<ChannelTeam> {
 export function createDeal(request: CreateDealRequest): Promise<CreateDealResponse> {
   return api.post('/deals', request, {
     schema: createDealResponseSchema,
+  });
+}
+
+export function verifyChannel(username: string): Promise<ChannelVerifyResponse> {
+  return api.post('/channels/verify', { channelUsername: username }, {
+    schema: channelVerifyResponseSchema,
+  });
+}
+
+export function registerChannel(request: ChannelRegistrationRequest): Promise<ChannelResponse> {
+  return api.post('/channels', request, {
+    schema: channelResponseSchema,
   });
 }

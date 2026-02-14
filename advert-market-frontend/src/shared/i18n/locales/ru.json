@@ -557,7 +557,30 @@
     "role.channel_owner": "Владелец канала",
     "memberSince": "Участник с {{date}}",
     "language.hint": "Язык интерфейса приложения",
-    "creatives.description": "Библиотека рекламных шаблонов"
+    "creatives.description": "Библиотека рекламных шаблонов",
+    "register": {
+      "title": "Добавить канал",
+      "channelLink": "Ссылка на канал",
+      "channelPlaceholder": "@username",
+      "addBotInstruction": "Добавьте @AdvertMarketBot как администратора вашего канала",
+      "copyBot": "Скопировать",
+      "openBot": "Открыть бот",
+      "verify": "Проверить",
+      "verifying": "Проверяем...",
+      "channelInfo": "Информация о канале",
+      "subscribers": "{{count}} подписчиков",
+      "category": "Категория",
+      "categoryPlaceholder": "Выберите категорию",
+      "price": "Цена за пост (TON)",
+      "pricePlaceholder": "0.00",
+      "priceHint": "Минимальная цена за размещение рекламы",
+      "submit": "Зарегистрировать",
+      "submitting": "Регистрируем...",
+      "success": "Канал зарегистрирован",
+      "botNotAdmin": "Бот не добавлен как администратор канала",
+      "channelNotFound": "Канал не найден",
+      "alreadyRegistered": "Этот канал уже зарегистрирован"
+    }
   },
   "creatives": {
     "title": "Мои креативы",
