@@ -10,6 +10,7 @@ vi.mock('@telegram-apps/sdk-react', () => ({
 
 // Dynamic import so the mock is applied before the module loads
 const { api } = await import('../client');
+const { retrieveRawInitData } = await import('@telegram-apps/sdk-react');
 
 const API_BASE = '/api/v1';
 
@@ -316,6 +317,39 @@ describe('api client', () => {
   // -------- Content-Type header --------
 
   describe('request headers', () => {
+    it('sends X-Canary-Key derived from Telegram user.id when available', async () => {
+      vi.mocked(retrieveRawInitData).mockReturnValueOnce('user=%7B%22id%22%3A123%7D&hash=abc');
+
+      server.use(
+        http.get(`${API_BASE}/canary-key`, ({ request }) => {
+          return HttpResponse.json({
+            canaryKey: request.headers.get('X-Canary-Key'),
+          });
+        }),
+      );
+
+      const data = await api.get<{ canaryKey: string | null }>('/canary-key');
+      expect(data.canaryKey).toBe('123');
+    });
+
+    it('still sends X-Canary-Key when Authorization is present', async () => {
+      sessionStorage.setItem('access_token', 'my-jwt');
+      vi.mocked(retrieveRawInitData).mockReturnValueOnce('user=%7B%22id%22%3A777%7D&hash=abc');
+
+      server.use(
+        http.get(`${API_BASE}/canary-key-auth`, ({ request }) => {
+          return HttpResponse.json({
+            auth: request.headers.get('Authorization'),
+            canaryKey: request.headers.get('X-Canary-Key'),
+          });
+        }),
+      );
+
+      const data = await api.get<{ auth: string | null; canaryKey: string | null }>('/canary-key-auth');
+      expect(data.auth).toBe('Bearer my-jwt');
+      expect(data.canaryKey).toBe('777');
+    });
+
     it('sets Content-Type to application/json when body is provided', async () => {
       server.use(
         http.post(`${API_BASE}/with-body`, ({ request }) => {

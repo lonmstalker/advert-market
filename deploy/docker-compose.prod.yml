@@ -160,6 +160,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/upstream-active.conf:/etc/nginx/upstream-active.conf:ro
+      - ./nginx/canary-api.conf:/etc/nginx/canary-api.conf:ro
+      - ./nginx/canary-api-split.conf:/etc/nginx/canary-api-split.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/html:/usr/share/nginx/html:ro
     depends_on:
