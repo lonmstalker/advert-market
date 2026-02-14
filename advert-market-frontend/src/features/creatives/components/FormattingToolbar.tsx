@@ -1,5 +1,15 @@
-import type { CSSProperties } from 'react';
+import type { ComponentType, CSSProperties, SVGProps } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tappable } from '@/shared/ui';
+import {
+  FormatBoldIcon,
+  FormatCodeIcon,
+  FormatItalicIcon,
+  FormatSpoilerIcon,
+  FormatStrikethroughIcon,
+  FormatUnderlineIcon,
+  LinkIcon,
+} from '@/shared/ui/icons';
 import { TextEntityType } from '../types/creative';
 
 type FormattingToolbarProps = {
@@ -24,25 +34,35 @@ const buttonBase: CSSProperties = {
   borderRadius: 8,
   border: 'none',
   cursor: 'pointer',
-  fontSize: 15,
-  fontWeight: 600,
   transition: 'background 0.15s',
 };
 
-const BUTTONS: Array<{ type: TextEntityType; label: string; style?: CSSProperties }> = [
-  { type: TextEntityType.BOLD, label: 'B', style: { fontWeight: 800 } },
-  { type: TextEntityType.ITALIC, label: 'I', style: { fontStyle: 'italic' } },
-  { type: TextEntityType.UNDERLINE, label: 'U', style: { textDecoration: 'underline' } },
-  { type: TextEntityType.STRIKETHROUGH, label: 'S', style: { textDecoration: 'line-through' } },
-  { type: TextEntityType.CODE, label: '</>' },
-  { type: TextEntityType.SPOILER, label: '\u2588\u2588' },
+const iconStyle: CSSProperties = {
+  width: 18,
+  height: 18,
+};
+
+const BUTTONS: Array<{ type: TextEntityType; icon: ComponentType<SVGProps<SVGSVGElement>>; labelKey: string }> = [
+  { type: TextEntityType.BOLD, icon: FormatBoldIcon, labelKey: 'creatives.form.formatting.bold' },
+  { type: TextEntityType.ITALIC, icon: FormatItalicIcon, labelKey: 'creatives.form.formatting.italic' },
+  { type: TextEntityType.UNDERLINE, icon: FormatUnderlineIcon, labelKey: 'creatives.form.formatting.underline' },
+  {
+    type: TextEntityType.STRIKETHROUGH,
+    icon: FormatStrikethroughIcon,
+    labelKey: 'creatives.form.formatting.strikethrough',
+  },
+  { type: TextEntityType.CODE, icon: FormatCodeIcon, labelKey: 'creatives.form.formatting.code' },
+  { type: TextEntityType.SPOILER, icon: FormatSpoilerIcon, labelKey: 'creatives.form.formatting.spoiler' },
 ];
 
 export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: FormattingToolbarProps) {
+  const { t } = useTranslation();
+
   return (
     <div style={toolbarStyle}>
       {BUTTONS.map((btn) => {
         const isActive = activeTypes.has(btn.type);
+        const Icon = btn.icon;
         return (
           <Tappable
             key={btn.type}
@@ -50,15 +70,14 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
             onClick={() => onFormat(btn.type)}
             style={{
               ...buttonBase,
-              ...btn.style,
               background: isActive ? 'var(--color-accent-primary)' : 'var(--color-background-section)',
               color: isActive ? 'var(--color-static-white)' : 'var(--color-foreground-primary)',
               opacity: disabled ? 0.4 : 1,
             }}
             aria-pressed={isActive}
-            aria-label={btn.type}
+            aria-label={t(btn.labelKey)}
           >
-            {btn.label}
+            <Icon style={iconStyle} />
           </Tappable>
         );
       })}
@@ -75,9 +94,9 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
             : 'var(--color-foreground-primary)',
           opacity: disabled ? 0.4 : 1,
         }}
-        aria-label="Link"
+        aria-label={t('creatives.form.formatting.link')}
       >
-        {'\uD83D\uDD17'}
+        <LinkIcon style={iconStyle} />
       </Tappable>
     </div>
   );

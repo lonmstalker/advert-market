@@ -1,4 +1,4 @@
-import { Button, Input, Text, Toggle } from '@telegram-tools/ui-kit';
+import { Input, Text, Toggle } from '@telegram-tools/ui-kit';
 import { type RefObject, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/shared/ui';
@@ -21,8 +21,6 @@ type CreativeFormProps = {
   disableWebPagePreview: boolean;
   onDisableWebPagePreviewChange: (value: boolean) => void;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
-  onSubmit: () => void;
-  isSubmitting?: boolean;
 };
 
 const MAX_TEXT_LENGTH = 4096;
@@ -41,8 +39,6 @@ export function CreativeForm({
   disableWebPagePreview,
   onDisableWebPagePreviewChange,
   textareaRef,
-  onSubmit,
-  isSubmitting,
 }: CreativeFormProps) {
   const { t } = useTranslation();
   const [isFocused, setIsFocused] = useState(false);
@@ -120,20 +116,29 @@ export function CreativeForm({
           activeTypes={activeTypes}
           disabled={!hasSelection()}
         />
-        <Textarea
-          ref={textareaRef}
-          value={text}
-          onChange={onTextChange}
-          placeholder={t('creatives.form.textPlaceholder')}
-          maxLength={MAX_TEXT_LENGTH}
-          rows={6}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
-        <div style={{ textAlign: 'right' }}>
-          <Text type="caption1" color="secondary">
-            {text.length}/{MAX_TEXT_LENGTH}
-          </Text>
+        <div style={{ position: 'relative' }}>
+          <Textarea
+            ref={textareaRef}
+            value={text}
+            onChange={onTextChange}
+            placeholder={t('creatives.form.textPlaceholder')}
+            maxLength={MAX_TEXT_LENGTH}
+            rows={6}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 8,
+              right: 12,
+              pointerEvents: 'none',
+            }}
+          >
+            <Text type="caption1" color="secondary">
+              {text.length}/{MAX_TEXT_LENGTH}
+            </Text>
+          </div>
         </div>
       </div>
 
@@ -144,8 +149,6 @@ export function CreativeForm({
         <Text type="body">{t('creatives.form.disablePreview')}</Text>
         <Toggle isEnabled={disableWebPagePreview} onChange={onDisableWebPagePreviewChange} />
       </div>
-
-      <Button text={t('common.save')} type="primary" loading={isSubmitting} onClick={onSubmit} />
     </div>
   );
 }

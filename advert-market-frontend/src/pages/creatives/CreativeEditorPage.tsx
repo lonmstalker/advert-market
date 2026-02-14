@@ -15,7 +15,7 @@ import {
   useUpdateCreative,
 } from '@/features/creatives';
 import { BackButtonHandler, Tappable, TelegramChatSimulator } from '@/shared/ui';
-import { fadeIn } from '@/shared/ui/animations';
+import { fadeIn, pressScale } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
 type EditorTab = 'editor' | 'preview';
@@ -42,6 +42,8 @@ export default function CreativeEditorPage() {
   const [buttons, setButtons] = useState<InlineButton[]>(creative?.draft.buttons ?? []);
   const [disableWebPagePreview, setDisableWebPagePreview] = useState(creative?.draft.disableWebPagePreview ?? false);
   const { entities, toggleEntity, isActive } = useEntities(creative?.draft.entities ?? []);
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = useCallback(() => {
     if (!title.trim() || !text.trim()) return;
@@ -94,10 +96,18 @@ export default function CreativeEditorPage() {
   ];
 
   return (
-    <motion.div {...fadeIn} style={{ padding: 16 }}>
+    <motion.div {...fadeIn} style={{ paddingBottom: 72 }}>
       <BackButtonHandler />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          padding: '16px 16px 0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <Text type="title1" weight="bold">
           {isEditing ? t('creatives.editTitle') : t('creatives.newTitle')}
         </Text>
@@ -117,38 +127,73 @@ export default function CreativeEditorPage() {
         )}
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ padding: '0 16px', marginBottom: 16 }}>
         <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
       </div>
 
-      {activeTab === 'editor' ? (
-        <CreativeForm
-          title={title}
-          onTitleChange={setTitle}
-          text={text}
-          onTextChange={setText}
-          media={media}
-          onMediaChange={setMedia}
-          buttons={buttons}
-          onButtonsChange={setButtons}
-          toggleEntity={toggleEntity}
-          isActive={isActive}
-          disableWebPagePreview={disableWebPagePreview}
-          onDisableWebPagePreviewChange={setDisableWebPagePreview}
-          textareaRef={textareaRef}
-          onSubmit={handleSubmit}
-          isSubmitting={createMutation.isPending || updateMutation.isPending}
-        />
-      ) : (
-        <div style={{ padding: '16px 0' }}>
-          <TelegramChatSimulator
+      <div style={{ padding: '0 16px' }}>
+        {activeTab === 'editor' ? (
+          <CreativeForm
+            title={title}
+            onTitleChange={setTitle}
             text={text}
-            entities={entities}
+            onTextChange={setText}
             media={media}
-            buttons={buttons.filter((b) => b.text && b.url)}
+            onMediaChange={setMedia}
+            buttons={buttons}
+            onButtonsChange={setButtons}
+            toggleEntity={toggleEntity}
+            isActive={isActive}
+            disableWebPagePreview={disableWebPagePreview}
+            onDisableWebPagePreviewChange={setDisableWebPagePreview}
+            textareaRef={textareaRef}
           />
-        </div>
-      )}
+        ) : (
+          <div style={{ padding: '16px 0' }}>
+            <TelegramChatSimulator
+              text={text}
+              entities={entities}
+              media={media}
+              buttons={buttons.filter((b) => b.text && b.url)}
+            />
+          </div>
+        )}
+      </div>
+
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '10px 16px',
+          background: 'var(--color-background-base)',
+          borderTop: '1px solid var(--color-border-separator)',
+          zIndex: 10,
+        }}
+      >
+        <motion.button
+          {...pressScale}
+          type="button"
+          disabled={isPending || !title.trim() || !text.trim()}
+          onClick={handleSubmit}
+          style={{
+            width: '100%',
+            padding: '10px 16px',
+            background: 'var(--color-accent-primary)',
+            border: 'none',
+            borderRadius: 10,
+            cursor: 'pointer',
+            fontSize: 14,
+            fontWeight: 600,
+            color: 'var(--color-static-white)',
+            WebkitTapHighlightColor: 'transparent',
+            opacity: isPending || !title.trim() || !text.trim() ? 0.5 : 1,
+          }}
+        >
+          {isPending ? t('common.loading') : t('common.save')}
+        </motion.button>
+      </div>
 
       {versions && (
         <CreativeHistorySheet open={showHistory} onClose={() => setShowHistory(false)} versions={versions} />

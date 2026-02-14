@@ -587,7 +587,16 @@
       "addButton": "Добавить кнопку",
       "buttonText": "Текст кнопки",
       "disablePreview": "Отключить превью ссылок",
-      "linkPrompt": "Введите URL ссылки:"
+      "linkPrompt": "Введите URL ссылки:",
+      "formatting": {
+        "bold": "Жирный",
+        "italic": "Курсив",
+        "underline": "Подчёркнутый",
+        "strikethrough": "Зачёркнутый",
+        "code": "Код",
+        "spoiler": "Спойлер",
+        "link": "Ссылка"
+      }
     },
     "history": {
       "title": "История версий",

@@ -2,6 +2,7 @@ import { Button, Input, Text } from '@telegram-tools/ui-kit';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tappable } from '@/shared/ui';
+import { CrossIcon } from '@/shared/ui/icons';
 import type { InlineButton } from '../types/creative';
 
 const buttonRowStyle: CSSProperties = {
@@ -63,12 +64,14 @@ export function ButtonBuilder({ buttons, onChange, max = 5 }: ButtonBuilderProps
               background: 'var(--color-state-destructive)',
               color: 'var(--color-static-white)',
               cursor: 'pointer',
-              fontSize: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               marginTop: 4,
             }}
             aria-label={t('common.cancel')}
           >
-            {'\u2715'}
+            <CrossIcon style={{ width: 16, height: 16 }} />
           </Tappable>
         </div>
       ))}

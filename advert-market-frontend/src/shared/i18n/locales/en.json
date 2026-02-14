@@ -582,7 +582,16 @@
       "addButton": "Add button",
       "buttonText": "Button text",
       "disablePreview": "Disable link previews",
-      "linkPrompt": "Enter link URL:"
+      "linkPrompt": "Enter link URL:",
+      "formatting": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "strikethrough": "Strikethrough",
+        "code": "Code",
+        "spoiler": "Spoiler",
+        "link": "Link"
+      }
     },
     "history": {
       "title": "Version History",
