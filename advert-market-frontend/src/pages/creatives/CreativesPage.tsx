@@ -37,9 +37,9 @@ export default function CreativesPage() {
         {isLoading ? (
           <motion.div key="skeleton" {...fadeIn}>
             <Group skeleton={{ show: true }}>
-              {Array.from({ length: 3 }, (_, i) => (
-                <div key={`skeleton-${i}`} style={{ height: 56 }} />
-              ))}
+              <div key="skeleton-a" style={{ height: 56 }} />
+              <div key="skeleton-b" style={{ height: 56 }} />
+              <div key="skeleton-c" style={{ height: 56 }} />
             </Group>
           </motion.div>
         ) : allCreatives.length === 0 ? (
