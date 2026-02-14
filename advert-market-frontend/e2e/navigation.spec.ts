@@ -42,7 +42,7 @@ test.describe('Navigation', () => {
   });
 
   test('deep link to channel detail works', async ({ page }) => {
-    await page.goto('/catalog/channels/1');
+    await page.goto('/catalog/channels/1', { waitUntil: 'domcontentloaded' });
     await expect(page.getByText('Crypto News Daily')).toBeVisible();
   });
 
