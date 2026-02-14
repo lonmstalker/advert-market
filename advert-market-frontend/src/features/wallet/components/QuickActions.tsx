@@ -11,19 +11,49 @@ type QuickAction = {
 };
 
 const ArrowDown = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="M12 5v14M5 12l7 7 7-7" />
   </svg>
 );
 
 const ArrowUp = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="M12 19V5M5 12l7-7 7 7" />
   </svg>
 );
 
 const ArrowLeftRight = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="M8 3l-4 4 4 4M16 21l4-4-4-4M4 7h16M20 17H4" />
   </svg>
 );
@@ -31,7 +61,11 @@ const ArrowLeftRight = () => (
 const ACTIONS: QuickAction[] = [
   { id: 'topUp', i18nKey: 'wallet.quickAction.topUp', icon: <ArrowDown /> },
   { id: 'withdraw', i18nKey: 'wallet.quickAction.withdraw', icon: <ArrowUp /> },
-  { id: 'transfer', i18nKey: 'wallet.quickAction.transfer', icon: <ArrowLeftRight /> },
+  {
+    id: 'transfer',
+    i18nKey: 'wallet.quickAction.transfer',
+    icon: <ArrowLeftRight />,
+  },
 ];
 
 export function QuickActions() {
@@ -46,7 +80,8 @@ export function QuickActions() {
     <div style={{ display: 'flex', justifyContent: 'center', gap: 24 }}>
       {ACTIONS.map((action) => (
         <motion.div {...pressScale} key={action.id} style={{ textAlign: 'center' }}>
-          <div
+          <button
+            type="button"
             style={{
               width: 56,
               height: 56,
@@ -57,20 +92,14 @@ export function QuickActions() {
               justifyContent: 'center',
               cursor: 'pointer',
               color: '#fff',
+              border: 'none',
+              padding: 0,
             }}
-            role="button"
-            tabIndex={0}
             aria-label={t(action.i18nKey)}
             onClick={handleClick}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleClick();
-              }
-            }}
           >
             {action.icon}
-          </div>
+          </button>
           <Text type="caption1" style={{ marginTop: 8 }}>
             {t(action.i18nKey)}
           </Text>
