@@ -58,6 +58,11 @@ jooq {
 
 sourceSets.main.java.srcDirs += "$projectDir/src/main/generated"
 
+// Generated sources are gitignored, so a clean checkout must generate them before compilation.
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateJooq')
+}
+
 // Exclude generated jOOQ code from SpotBugs
 tasks.matching { it.name == 'spotbugsMain' }.configureEach {
     classes = files(classes.files.findAll {
