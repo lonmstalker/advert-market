@@ -120,6 +120,11 @@ Metrics: auth.logout
 -> 204 No Content
 ```
 
+### Frontend API Client Notes
+
+- The frontend may attempt an automatic re-login when any non-auth endpoint returns `401` (expired/invalid JWT).
+- **Never** auto re-login on `/api/v1/auth/*` endpoints themselves (especially `/auth/login`). Otherwise the client can deadlock by trying to "re-login while logging in" if `/auth/login` returns `401` (invalid/expired initData).
+
 ### Profile Endpoints (`ProfileController`)
 
 ```

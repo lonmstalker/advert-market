@@ -295,6 +295,36 @@ describe('api client', () => {
   // -------- 401 handling & re-login --------
 
   describe('401 handling', () => {
+    function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+      return new Promise((resolve, reject) => {
+        const id = setTimeout(() => reject(new Error('timeout')), ms);
+        promise.then(
+          (value) => {
+            clearTimeout(id);
+            resolve(value);
+          },
+          (err) => {
+            clearTimeout(id);
+            reject(err);
+          },
+        );
+      });
+    }
+
+    it('does not deadlock when /auth/login responds 401 (must not auto re-login)', async () => {
+      let callCount = 0;
+      server.use(
+        http.post(`${API_BASE}/auth/login`, () => {
+          callCount++;
+          return HttpResponse.json({ type: 'about:blank', title: 'Unauthorized', status: 401 }, { status: 401 });
+        }),
+      );
+
+      const promise = api.post('/auth/login', { initData: 'bad-init-data' });
+      await expect(withTimeout(promise, 1000)).rejects.toBeInstanceOf(ApiError);
+      expect(callCount).toBe(1);
+    });
+
     it('clears access_token from sessionStorage on 401', async () => {
       sessionStorage.setItem('access_token', 'expired-token');
 

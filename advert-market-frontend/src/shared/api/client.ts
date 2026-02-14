@@ -134,7 +134,10 @@ async function request<T>(method: string, path: string, options?: RequestOptions
   }
 
   if (!response.ok) {
-    if (response.status === 401 && !options?._isRetrying) {
+    // Never attempt auto re-login for auth endpoints themselves.
+    // Otherwise we can deadlock by trying to "re-login" while already logging in.
+    const isAuthEndpoint = path.startsWith('/auth/');
+    if (response.status === 401 && !isAuthEndpoint && !options?._isRetrying) {
       sessionStorage.removeItem('access_token');
       const reLoginOk = await attemptReLogin();
       if (reLoginOk) {
