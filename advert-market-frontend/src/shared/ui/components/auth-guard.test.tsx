@@ -2,11 +2,11 @@ import { Route, Routes } from 'react-router';
 import { renderWithProviders, screen } from '@/test/test-utils';
 import { AuthGuard } from './auth-guard';
 
-vi.mock('@/features/auth', () => ({
+vi.mock('@/shared/hooks/use-auth', () => ({
   useAuth: vi.fn(),
 }));
 
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/shared/hooks/use-auth';
 
 const mockUseAuth = vi.mocked(useAuth);
 
@@ -15,6 +15,8 @@ describe('AuthGuard', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
+      authError: null,
+      retryAuth: vi.fn(),
       profile: null,
       invalidateProfile: vi.fn(),
     });
@@ -28,10 +30,12 @@ describe('AuthGuard', () => {
     expect(screen.queryByText('protected')).not.toBeInTheDocument();
   });
 
-  it('renders spinner when not authenticated', () => {
+  it('renders error state when not authenticated', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
+      authError: new Error('initData is missing'),
+      retryAuth: vi.fn(),
       profile: null,
       invalidateProfile: vi.fn(),
     });
@@ -43,12 +47,15 @@ describe('AuthGuard', () => {
       </Routes>,
     );
     expect(screen.queryByText('protected')).not.toBeInTheDocument();
+    expect(screen.getByText("Couldn't sign in")).toBeInTheDocument();
   });
 
   it('redirects to /onboarding when onboarding not completed', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
+      authError: null,
+      retryAuth: vi.fn(),
       profile: {
         id: 1,
         telegramId: 123456789,
@@ -77,6 +84,8 @@ describe('AuthGuard', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
+      authError: null,
+      retryAuth: vi.fn(),
       profile: {
         id: 1,
         telegramId: 123456789,

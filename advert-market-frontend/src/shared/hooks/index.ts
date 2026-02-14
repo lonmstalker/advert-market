@@ -1,3 +1,4 @@
+export { useAuth } from './use-auth';
 export { useCountdown } from './use-countdown';
 export { useDebounce } from './use-debounce';
 export type { HapticFeedback } from './use-haptic';

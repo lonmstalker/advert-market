@@ -115,7 +115,7 @@ export function TourSlideWallet() {
                 <GroupItem
                   text={t('onboarding.tour.mockup.ownerPayout')}
                   after={
-                    <Text type="body" color="success">
+                    <Text type="body" color="accent">
                       4.75 TON
                     </Text>
                   }

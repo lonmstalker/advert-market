@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RenderOptions } from '@testing-library/react';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import type { ReactElement, ReactNode } from 'react';
@@ -27,26 +27,30 @@ function createWrapper({ initialEntries = ['/'] }: ProviderOptions) {
     },
   });
 
-  return function Wrapper({ children }: { children: ReactNode }) {
+  function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
       </QueryClientProvider>
     );
-  };
+  }
+
+  return { Wrapper, queryClient };
 }
 
 type CustomRenderOptions = Omit<RenderOptions, 'wrapper'> & ProviderOptions;
 
 export function renderWithProviders(ui: ReactElement, options: CustomRenderOptions = {}) {
   const { initialEntries, ...renderOptions } = options;
+  const { Wrapper, queryClient } = createWrapper({ initialEntries });
   return {
     user: userEvent.setup(),
+    queryClient,
     ...render(ui, {
-      wrapper: createWrapper({ initialEntries }),
+      wrapper: Wrapper,
       ...renderOptions,
     }),
   };
 }
 
-export { screen, waitFor, within, act, userEvent };
+export { render, screen, waitFor, within, act, userEvent, renderHook };

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Text } from '@telegram-tools/ui-kit';
+import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +10,7 @@ import { useOnboardingStore } from '@/features/onboarding';
 import { TourSlideCatalog } from '@/features/onboarding/components/tour-slide-catalog';
 import { TourSlideDeal } from '@/features/onboarding/components/tour-slide-deal';
 import { TourSlideWallet } from '@/features/onboarding/components/tour-slide-wallet';
+import { profileKeys } from '@/shared/api';
 import { pressScale } from '@/shared/ui';
 
 const SLIDE_COUNT = 3;
@@ -41,7 +43,7 @@ export default function OnboardingTourPage() {
     mutationFn: () => completeOnboarding([...interests]),
     onSuccess: (updatedProfile) => {
       hasCompleted.current = true;
-      queryClient.setQueryData(['auth', 'profile'], updatedProfile);
+      queryClient.setQueryData(profileKeys.me, updatedProfile);
       navigate('/catalog', { replace: true });
       reset();
     },
@@ -75,7 +77,7 @@ export default function OnboardingTourPage() {
     isAnimating.current = false;
   }
 
-  const SlideComponent = slideComponents[activeSlide];
+  const SlideComponent = slideComponents[activeSlide]!;
 
   if (interests.size === 0) return null;
 
@@ -106,7 +108,7 @@ export default function OnboardingTourPage() {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            transition={{ duration: 0.25, ease: easeOut }}
             onAnimationComplete={handleAnimationComplete}
           >
             <SlideComponent />
@@ -133,7 +135,7 @@ export default function OnboardingTourPage() {
               aria-selected={isActive}
               aria-label={`${i + 1} / ${SLIDE_COUNT}`}
               animate={{ width: isActive ? 24 : 8 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
+              transition={{ duration: 0.25, ease: easeOut }}
               style={{
                 height: 8,
                 borderRadius: 4,
@@ -192,7 +194,7 @@ export default function OnboardingTourPage() {
               transition={{ duration: 0.2 }}
               style={{ textAlign: 'center', overflow: 'hidden' }}
             >
-              <Text type="caption1" color="destructive">
+              <Text type="caption1" color="danger">
                 {t('onboarding.tour.error')}
               </Text>
             </motion.div>

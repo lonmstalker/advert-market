@@ -54,6 +54,6 @@ describe('ChannelListItem', () => {
 
   it('renders subscribers label text', () => {
     renderListItem();
-    expect(screen.getByText(/subscribers/)).toBeInTheDocument();
+    expect(screen.getByText(/subs/)).toBeInTheDocument();
   });
 });

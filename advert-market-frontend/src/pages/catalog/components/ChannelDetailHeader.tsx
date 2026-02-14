@@ -42,7 +42,8 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
               {channel.isVerified && (
                 <VerifiedIcon
                   style={{ width: 16, height: 16, color: 'var(--color-accent-primary)', flexShrink: 0 }}
-                  title={t('catalog.channel.verified')}
+                  aria-label={t('catalog.channel.verified')}
+                  role="img"
                 />
               )}
               {langs.map((code) => (

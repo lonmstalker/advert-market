@@ -46,7 +46,8 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
             {channel.isVerified && (
               <VerifiedIcon
                 style={{ width: 14, height: 14, color: 'var(--color-accent-primary)', flexShrink: 0 }}
-                title={t('catalog.channel.verified')}
+                aria-label={t('catalog.channel.verified')}
+                role="img"
               />
             )}
             {langs.map((code) => (

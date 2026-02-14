@@ -1,4 +1,5 @@
 import { Icon, Text } from '@telegram-tools/ui-kit';
+import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,9 +32,11 @@ export function DealTimeline({ steps }: DealTimelineProps) {
 
   return (
     <div style={{ padding: '0 16px' }}>
-      <Text type="subheadline2" weight="bold" style={{ marginBottom: 12 }}>
-        {t('deals.detail.timeline')}
-      </Text>
+      <div style={{ marginBottom: 12 }}>
+        <Text type="subheadline2" weight="bold">
+          {t('deals.detail.timeline')}
+        </Text>
+      </div>
       <ul
         aria-label={t('deals.detail.timeline')}
         style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: 0, listStyle: 'none', margin: 0 }}
@@ -74,7 +77,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                       marginTop: 2,
                     }}
                   >
-                    <Icon name="check" color="white" size="10px" />
+                    <Icon name="check" size="10px" className="am-icon-white" />
                   </div>
                 ) : isActive ? (
                   <motion.div
@@ -147,9 +150,11 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                     {step.label}
                   </Text>
                   {isCompleted && step.timestamp && (
-                    <Text type="caption1" color="secondary" style={{ flexShrink: 0, marginLeft: 8 }}>
-                      {formatTimelineDate(step.timestamp)}
-                    </Text>
+                    <span style={{ flexShrink: 0, marginLeft: 8 }}>
+                      <Text type="caption1" color="secondary">
+                        {formatTimelineDate(step.timestamp)}
+                      </Text>
+                    </span>
                   )}
                 </button>
 
@@ -159,7 +164,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: 'easeOut' }}
+                      transition={{ duration: 0.25, ease: easeOut }}
                       style={{ overflow: 'hidden', paddingLeft: 8 }}
                     >
                       <div style={{ paddingBottom: 4, paddingTop: 2 }}>

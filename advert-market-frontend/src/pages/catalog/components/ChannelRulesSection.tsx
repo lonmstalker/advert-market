@@ -177,9 +177,11 @@ export function ChannelRulesSection({ rules }: ChannelRulesSectionProps) {
                 borderBottom: i < sections.length - 1 ? '1px solid var(--color-border-separator)' : 'none',
               }}
             >
-              <Text type="caption1" weight="medium" color="secondary" style={{ marginBottom: 8 }}>
-                {section.label}
-              </Text>
+              <div style={{ marginBottom: 8 }}>
+                <Text type="caption1" weight="medium" color="secondary">
+                  {section.label}
+                </Text>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{section.rows}</div>
             </div>
           ))}

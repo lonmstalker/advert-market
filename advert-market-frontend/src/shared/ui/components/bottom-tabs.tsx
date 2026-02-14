@@ -48,9 +48,9 @@ export function BottomTabs() {
           })}
         >
           <Icon width={24} height={24} />
-          <Text type="caption2" style={{ color: 'inherit' }}>
-            {t(labelKey)}
-          </Text>
+          <span style={{ color: 'inherit' }}>
+            <Text type="caption2">{t(labelKey)}</Text>
+          </span>
         </NavLink>
       ))}
     </nav>

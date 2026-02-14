@@ -5,9 +5,14 @@ import {
   mockChannelDetails,
   mockChannels,
   mockChannelTeams,
+  mockCreativeTemplates,
+  mockCreativeVersions,
   mockDeals,
   mockDealTimelines,
   mockProfile,
+  mockTransactionDetail,
+  mockTransactions,
+  mockWalletSummaryOwner,
 } from './data';
 
 const API_BASE = '/api/v1';
@@ -56,7 +61,7 @@ export const handlers = [
 
     const page = filtered.slice(startIndex, startIndex + limit);
     const hasNext = startIndex + limit < filtered.length;
-    const nextCursor = hasNext ? page[page.length - 1].id : null;
+    const nextCursor = hasNext ? page.at(-1)!.id : null;
 
     return HttpResponse.json({ items: page, nextCursor, hasNext });
   }),
@@ -143,7 +148,7 @@ export const handlers = [
 
     const page = filtered.slice(startIndex, startIndex + limit);
     const hasNext = startIndex + limit < filtered.length;
-    const nextCursor = hasNext ? String(page[page.length - 1].id) : null;
+    const nextCursor = hasNext ? String(page.at(-1)!.id) : null;
 
     return HttpResponse.json({
       items: page,
@@ -194,6 +199,149 @@ export const handlers = [
     const channelId = Number(params.channelId);
     const team = mockChannelTeams[channelId];
     return HttpResponse.json(team ?? { members: [] });
+  }),
+
+  // PUT /profile/language — update language
+  http.put(`${API_BASE}/profile/language`, async ({ request }) => {
+    const body = (await request.json()) as { languageCode: string };
+    profile = { ...profile, languageCode: body.languageCode };
+    return HttpResponse.json(profile);
+  }),
+
+  // PUT /profile/settings — update display currency and notification settings
+  http.put(`${API_BASE}/profile/settings`, async ({ request }) => {
+    const body = (await request.json()) as {
+      displayCurrency?: string;
+      notificationSettings?: typeof profile.notificationSettings;
+    };
+    if (body.displayCurrency) {
+      profile = { ...profile, displayCurrency: body.displayCurrency };
+    }
+    if (body.notificationSettings) {
+      profile = { ...profile, notificationSettings: body.notificationSettings };
+    }
+    return HttpResponse.json(profile);
+  }),
+
+  // --- Wallet handlers ---
+
+  // GET /wallet/summary — wallet summary
+  http.get(`${API_BASE}/wallet/summary`, () => {
+    return HttpResponse.json(mockWalletSummaryOwner);
+  }),
+
+  // GET /wallet/transactions — paginated transaction list
+  http.get(`${API_BASE}/wallet/transactions`, ({ request }) => {
+    const url = new URL(request.url);
+    const type = url.searchParams.get('type');
+    const limit = Number(url.searchParams.get('limit')) || 20;
+    const cursor = url.searchParams.get('cursor');
+
+    let filtered = [...mockTransactions];
+    if (type) {
+      filtered = filtered.filter((tx) => tx.type === type);
+    }
+
+    let startIndex = 0;
+    if (cursor) {
+      startIndex = filtered.findIndex((tx) => tx.id === cursor) + 1;
+    }
+
+    const page = filtered.slice(startIndex, startIndex + limit);
+    const hasNext = startIndex + limit < filtered.length;
+    const nextCursor = hasNext ? page.at(-1)!.id : null;
+
+    return HttpResponse.json({ items: page, nextCursor, hasNext });
+  }),
+
+  // GET /wallet/transactions/:txId — transaction detail
+  http.get(`${API_BASE}/wallet/transactions/:txId`, ({ params }) => {
+    const txId = params.txId as string;
+    if (txId === mockTransactionDetail.id) {
+      return HttpResponse.json(mockTransactionDetail);
+    }
+    const tx = mockTransactions.find((t) => t.id === txId);
+    if (!tx) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+    return HttpResponse.json({ ...tx, txHash: null, fromAddress: null, toAddress: null, commissionNano: null });
+  }),
+
+  // --- Creative Library handlers ---
+
+  // GET /creatives — paginated creative list
+  http.get(`${API_BASE}/creatives`, ({ request }) => {
+    const url = new URL(request.url);
+    const limit = Number(url.searchParams.get('limit')) || 20;
+    const cursor = url.searchParams.get('cursor');
+
+    let startIndex = 0;
+    if (cursor) {
+      startIndex = mockCreativeTemplates.findIndex((c) => c.id === cursor) + 1;
+    }
+
+    const page = mockCreativeTemplates.slice(startIndex, startIndex + limit);
+    const hasNext = startIndex + limit < mockCreativeTemplates.length;
+    const nextCursor = hasNext ? page.at(-1)!.id : null;
+
+    return HttpResponse.json({ items: page, nextCursor, hasNext });
+  }),
+
+  // GET /creatives/:id — creative detail
+  http.get(`${API_BASE}/creatives/:id`, ({ params }) => {
+    const creative = mockCreativeTemplates.find((c) => c.id === params.id);
+    if (!creative) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+    return HttpResponse.json(creative);
+  }),
+
+  // POST /creatives — create creative
+  http.post(`${API_BASE}/creatives`, async ({ request }) => {
+    const body = (await request.json()) as { title: string; text: string };
+    return HttpResponse.json(
+      {
+        id: `creative-${Date.now()}`,
+        title: body.title,
+        draft: { text: body.text, entities: [], media: [], buttons: [], disableWebPagePreview: false },
+        version: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  // PUT /creatives/:id — update creative
+  http.put(`${API_BASE}/creatives/:id`, async ({ params, request }) => {
+    const creative = mockCreativeTemplates.find((c) => c.id === params.id);
+    if (!creative) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({
+      ...creative,
+      ...body,
+      version: creative.version + 1,
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  // DELETE /creatives/:id — delete creative
+  http.delete(`${API_BASE}/creatives/:id`, ({ params }) => {
+    const creative = mockCreativeTemplates.find((c) => c.id === params.id);
+    if (!creative) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // GET /creatives/:id/versions — version history
+  http.get(`${API_BASE}/creatives/:id/versions`, ({ params }) => {
+    if (params.id === 'creative-3') {
+      return HttpResponse.json(mockCreativeVersions);
+    }
+    return HttpResponse.json([]);
   }),
 
   // POST /deals — create a new deal

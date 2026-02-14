@@ -33,9 +33,11 @@ export function ChannelOwnerNote({ customRules }: ChannelOwnerNoteProps) {
         >
           {t('catalog.channel.ownerNote')}
         </span>
-        <Text type="subheadline1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-          {customRules}
-        </Text>
+        <div style={{ whiteSpace: 'pre-wrap' }}>
+          <Text type="subheadline1" color="secondary">
+            {customRules}
+          </Text>
+        </div>
       </div>
     </motion.div>
   );

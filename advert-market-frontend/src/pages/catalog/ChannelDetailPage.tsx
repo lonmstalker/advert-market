@@ -90,9 +90,11 @@ export default function ChannelDetailPage() {
 
         {channel.description && (
           <motion.div {...slideUp} style={{ padding: 16 }}>
-            <Text type="subheadline1" color="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-              {channel.description}
-            </Text>
+            <div style={{ whiteSpace: 'pre-wrap' }}>
+              <Text type="subheadline1" color="secondary">
+                {channel.description}
+              </Text>
+            </div>
           </motion.div>
         )}
 

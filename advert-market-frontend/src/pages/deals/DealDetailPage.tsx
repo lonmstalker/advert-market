@@ -239,9 +239,11 @@ export default function DealDetailPage() {
               <Text type="title1" weight="bold">
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
               </Text>
-              <Text type="caption1" color="secondary" style={{ display: 'block', marginTop: 2 }}>
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
-              </Text>
+              <div style={{ marginTop: 2 }}>
+                <Text type="caption1" color="secondary">
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
+                </Text>
+              </div>
             </motion.div>
 
             {/* Chips row */}
@@ -294,13 +296,11 @@ export default function DealDetailPage() {
                   marginBottom: 14,
                 }}
               >
-                <Text
-                  type="caption1"
-                  color="secondary"
-                  style={{ whiteSpace: 'pre-wrap', fontStyle: 'italic', textAlign: 'center' }}
-                >
-                  &ldquo;{deal.message}&rdquo;
-                </Text>
+                <div style={{ whiteSpace: 'pre-wrap', fontStyle: 'italic', textAlign: 'center' }}>
+                  <Text type="caption1" color="secondary">
+                    &ldquo;{deal.message}&rdquo;
+                  </Text>
+                </div>
               </div>
             )}
 
@@ -318,9 +318,11 @@ export default function DealDetailPage() {
               {!isTerminal && <PulsingDot color={statusConfig.color} />}
               <div>
                 <DealStatusBadge status={deal.status} />
-                <Text type="caption1" color="secondary" style={{ marginTop: 4, display: 'block' }}>
-                  {t(statusDescKey)}
-                </Text>
+                <div style={{ marginTop: 4 }}>
+                  <Text type="caption1" color="secondary">
+                    {t(statusDescKey)}
+                  </Text>
+                </div>
               </div>
             </div>
           </div>

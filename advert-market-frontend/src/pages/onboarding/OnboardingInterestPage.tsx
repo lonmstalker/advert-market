@@ -28,9 +28,11 @@ export default function OnboardingInterestPage() {
         <Text type="title1" weight="bold">
           {t('onboarding.interest.title')}
         </Text>
-        <Text type="body" color="secondary" style={{ marginTop: '8px' }}>
-          {t('onboarding.interest.subtitle')}
-        </Text>
+        <div style={{ marginTop: '8px' }}>
+          <Text type="body" color="secondary">
+            {t('onboarding.interest.subtitle')}
+          </Text>
+        </div>
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>

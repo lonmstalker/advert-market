@@ -1,6 +1,8 @@
 package com.advertmarket.identity.web;
 
 import com.advertmarket.identity.api.dto.OnboardingRequest;
+import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
+import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.UserPort;
@@ -78,6 +80,48 @@ public class ProfileController {
             @AuthenticationPrincipal @NonNull UserId userId,
             @RequestBody @Valid OnboardingRequest request) {
         return userService.completeOnboarding(userId, request);
+    }
+
+    /**
+     * Updates the authenticated user's language.
+     */
+    @PutMapping("/language")
+    @Operation(summary = "Update user language")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Language updated",
+            content = @Content(schema =
+            @Schema(implementation = UserProfile.class))
+    )
+    @ApiResponse(responseCode = "400",
+            description = "Invalid language code")
+    @ApiResponse(responseCode = "401",
+            description = "Not authenticated")
+    public @NonNull UserProfile updateLanguage(
+            @AuthenticationPrincipal @NonNull UserId userId,
+            @RequestBody @Valid UpdateLanguageRequest request) {
+        return userService.updateLanguage(userId, request);
+    }
+
+    /**
+     * Updates the authenticated user's settings (currency, notifications).
+     */
+    @PutMapping("/settings")
+    @Operation(summary = "Update user settings")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Settings updated",
+            content = @Content(schema =
+            @Schema(implementation = UserProfile.class))
+    )
+    @ApiResponse(responseCode = "400",
+            description = "Invalid settings")
+    @ApiResponse(responseCode = "401",
+            description = "Not authenticated")
+    public @NonNull UserProfile updateSettings(
+            @AuthenticationPrincipal @NonNull UserId userId,
+            @RequestBody @Valid UpdateSettingsRequest request) {
+        return userService.updateSettings(userId, request);
     }
 
     /**

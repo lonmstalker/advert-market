@@ -30,18 +30,22 @@ export function NegotiateSheetContent() {
       </Text>
 
       <div>
-        <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
-          {t('deals.negotiate.currentPrice')}
-        </Text>
+        <div style={{ marginBottom: 8 }}>
+          <Text type="subheadline2" color="secondary">
+            {t('deals.negotiate.currentPrice')}
+          </Text>
+        </div>
         <Text type="body" weight="medium">
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(currentPriceNano)}</span>
         </Text>
       </div>
 
       <div>
-        <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
-          {t('deals.negotiate.proposedPrice')}
-        </Text>
+        <div style={{ marginBottom: 8 }}>
+          <Text type="subheadline2" color="secondary">
+            {t('deals.negotiate.proposedPrice')}
+          </Text>
+        </div>
         <Input type="number" value={price} onChange={(v) => setPrice(v)} placeholder="0.00" />
       </div>
 

@@ -1,13 +1,21 @@
 import type { AuthResponse } from '@/shared/api';
 
+export const mockNotificationSettings = {
+  deals: { newOffers: true, acceptReject: true, deliveryStatus: true },
+  financial: { deposits: true, payouts: true, escrow: true },
+  disputes: { opened: true, resolved: true },
+};
+
 export const mockUser = {
   id: 1,
   telegramId: 123456789,
   username: 'testuser',
   displayName: 'Test User',
   languageCode: 'ru',
+  displayCurrency: 'USD',
+  notificationSettings: mockNotificationSettings,
   onboardingCompleted: false,
-  interests: [] as string[],
+  interests: ['advertiser'] as string[],
   createdAt: '2026-01-15T10:00:00Z',
 };
 
@@ -27,6 +35,8 @@ export const mockProfile = {
   username: mockUser.username,
   displayName: mockUser.displayName,
   languageCode: mockUser.languageCode,
+  displayCurrency: mockUser.displayCurrency,
+  notificationSettings: mockUser.notificationSettings,
   onboardingCompleted: mockUser.onboardingCompleted,
   interests: mockUser.interests,
   createdAt: mockUser.createdAt,
@@ -1009,6 +1019,207 @@ export const mockDealTimelines: Record<string, { events: MockDealEvent[] }> = {
     ],
   },
 };
+
+// --- Wallet summaries ---
+
+export const mockWalletSummaryOwner = {
+  earnedTotalNano: '15000000000',
+  inEscrowNano: '5000000000',
+  spentTotalNano: '0',
+  activeEscrowNano: '0',
+  activeDealsCount: 2,
+  completedDealsCount: 5,
+};
+
+export const mockWalletSummaryAdvertiser = {
+  earnedTotalNano: '0',
+  inEscrowNano: '0',
+  spentTotalNano: '25000000000',
+  activeEscrowNano: '8000000000',
+  activeDealsCount: 3,
+  completedDealsCount: 4,
+};
+
+export const mockWalletSummaryEmpty = {
+  earnedTotalNano: '0',
+  inEscrowNano: '0',
+  spentTotalNano: '0',
+  activeEscrowNano: '0',
+  activeDealsCount: 0,
+  completedDealsCount: 0,
+};
+
+// --- Transactions ---
+
+const today = new Date().toISOString().slice(0, 10);
+const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+
+export const mockTransactions = [
+  {
+    id: 'tx-1',
+    type: 'escrow_deposit',
+    status: 'confirmed',
+    amountNano: '5000000000',
+    direction: 'expense',
+    dealId: 'deal-1',
+    channelTitle: 'Crypto News Daily',
+    description: 'Escrow deposit for deal',
+    createdAt: `${today}T10:00:00Z`,
+  },
+  {
+    id: 'tx-2',
+    type: 'payout',
+    status: 'confirmed',
+    amountNano: '4750000000',
+    direction: 'income',
+    dealId: 'deal-7',
+    channelTitle: 'Tech Digest',
+    description: 'Payout for completed deal',
+    createdAt: `${today}T08:30:00Z`,
+  },
+  {
+    id: 'tx-3',
+    type: 'refund',
+    status: 'pending',
+    amountNano: '3000000000',
+    direction: 'income',
+    dealId: 'deal-8',
+    channelTitle: null,
+    description: 'Refund for cancelled deal',
+    createdAt: `${yesterday}T14:00:00Z`,
+  },
+  {
+    id: 'tx-4',
+    type: 'commission',
+    status: 'confirmed',
+    amountNano: '250000000',
+    direction: 'expense',
+    dealId: 'deal-7',
+    channelTitle: 'Tech Digest',
+    description: 'Platform commission',
+    createdAt: `${yesterday}T08:30:00Z`,
+  },
+  {
+    id: 'tx-5',
+    type: 'escrow_deposit',
+    status: 'failed',
+    amountNano: '8000000000',
+    direction: 'expense',
+    dealId: 'deal-3',
+    channelTitle: 'Finance Pro',
+    description: 'Failed escrow deposit',
+    createdAt: '2026-01-15T12:00:00Z',
+  },
+  {
+    id: 'tx-6',
+    type: 'payout',
+    status: 'pending',
+    amountNano: '6000000000',
+    direction: 'income',
+    dealId: 'deal-6',
+    channelTitle: 'TON Community',
+    description: 'Pending payout',
+    createdAt: '2026-01-10T09:00:00Z',
+  },
+];
+
+export const mockTransactionDetail = {
+  ...mockTransactions[0]!,
+  txHash: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+  fromAddress: 'EQBvW8Z5huBkMJYdnfAEFYpzHC2p0y3wR6Qf5eJYhS1eN0Yz',
+  toAddress: 'EQAo92DYMokBh2HJiIXLfhE0qiG0mF3KxhNZ2W1ghT3xQ4Rn',
+  commissionNano: '250000000',
+};
+
+export const mockTransactionDetailMinimal = {
+  ...mockTransactions[2]!,
+  txHash: null,
+  fromAddress: null,
+  toAddress: null,
+  commissionNano: null,
+};
+
+// --- Creative Templates ---
+
+export const mockCreativeTemplates = [
+  {
+    id: 'creative-1',
+    title: 'Crypto Exchange Promo',
+    draft: {
+      text: 'Trade crypto with zero fees! Join the fastest exchange in TON ecosystem. Start now and get 100 TON bonus.',
+      entities: [
+        { type: 'BOLD', offset: 0, length: 30 },
+        { type: 'ITALIC', offset: 31, length: 50 },
+        { type: 'TEXT_LINK', offset: 82, length: 9, url: 'https://example.com/signup' },
+      ],
+      media: [{ type: 'PHOTO', fileId: 'AgACAgIAAx0CZ', caption: 'Exchange banner' }],
+      buttons: [
+        { text: 'Start Trading', url: 'https://example.com/trade' },
+        { text: 'Learn More', url: 'https://example.com/about' },
+      ],
+      disableWebPagePreview: true,
+    },
+    version: 2,
+    createdAt: '2026-02-10T10:00:00Z',
+    updatedAt: '2026-02-12T14:00:00Z',
+  },
+  {
+    id: 'creative-2',
+    title: 'AI Tool Review',
+    draft: {
+      text: 'New AI assistant that actually works. We tested it for 30 days — here are the results.',
+      entities: [
+        { type: 'BOLD', offset: 0, length: 38 },
+        { type: 'UNDERLINE', offset: 43, length: 42 },
+      ],
+      media: [],
+      buttons: [{ text: 'Try Free', url: 'https://example.com/ai-tool' }],
+      disableWebPagePreview: false,
+    },
+    version: 1,
+    createdAt: '2026-02-08T15:00:00Z',
+    updatedAt: '2026-02-08T15:00:00Z',
+  },
+  {
+    id: 'creative-3',
+    title: 'DeFi Platform Launch',
+    draft: {
+      text: 'Introducing a new DeFi platform on TON blockchain.\n\nFeatures:\n- Staking with 15% APY\n- Instant swaps\n- No KYC required\n\nJoin the waitlist today!',
+      entities: [
+        { type: 'BOLD', offset: 0, length: 50 },
+        { type: 'CODE', offset: 63, length: 18 },
+        { type: 'SPOILER', offset: 119, length: 27 },
+      ],
+      media: [
+        { type: 'PHOTO', fileId: 'AgACAgIAAx1CY', caption: 'Platform screenshot' },
+        { type: 'VIDEO', fileId: 'BAACAgIAAx0CX', caption: 'Demo video' },
+      ],
+      buttons: [{ text: 'Join Waitlist', url: 'https://example.com/waitlist' }],
+      disableWebPagePreview: true,
+    },
+    version: 3,
+    createdAt: '2026-02-01T09:00:00Z',
+    updatedAt: '2026-02-13T11:00:00Z',
+  },
+];
+
+export const mockCreativeVersions = [
+  {
+    version: 3,
+    draft: mockCreativeTemplates[2]!.draft,
+    createdAt: '2026-02-13T11:00:00Z',
+  },
+  {
+    version: 2,
+    draft: { ...mockCreativeTemplates[2]!.draft, text: 'Introducing a new DeFi platform.' },
+    createdAt: '2026-02-10T14:00:00Z',
+  },
+  {
+    version: 1,
+    draft: { ...mockCreativeTemplates[2]!.draft, text: 'DeFi platform coming soon.' },
+    createdAt: '2026-02-01T09:00:00Z',
+  },
+];
 
 // --- Channel teams ---
 

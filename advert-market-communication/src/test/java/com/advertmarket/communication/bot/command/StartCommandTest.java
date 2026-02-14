@@ -9,6 +9,30 @@ import org.junit.jupiter.api.Test;
 class StartCommandTest {
 
     @Test
+    @DisplayName("Prefixes welcome message with custom emoji when configured")
+    void maybePrefixCustomEmoji_withId() {
+        assertThat(StartCommand.maybePrefixCustomEmoji(
+                "Hello", "123"))
+                .isEqualTo("![⭐](tg://emoji?id=123) Hello");
+    }
+
+    @Test
+    @DisplayName("Does not prefix welcome message when emoji id is blank")
+    void maybePrefixCustomEmoji_blank() {
+        assertThat(StartCommand.maybePrefixCustomEmoji(
+                "Hello", ""))
+                .isEqualTo("Hello");
+    }
+
+    @Test
+    @DisplayName("Does not prefix welcome message when emoji id is invalid")
+    void maybePrefixCustomEmoji_invalid() {
+        assertThat(StartCommand.maybePrefixCustomEmoji(
+                "Hello", "abc"))
+                .isEqualTo("Hello");
+    }
+
+    @Test
     @DisplayName("Extracts deep link parameter")
     void extractDeepLinkParam_withParam() {
         assertThat(StartCommand.extractDeepLinkParam(

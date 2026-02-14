@@ -1,6 +1,8 @@
 package com.advertmarket.identity.service;
 
 import com.advertmarket.identity.api.dto.OnboardingRequest;
+import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
+import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.UserPort;
 import com.advertmarket.identity.api.port.UserRepository;
@@ -37,6 +39,29 @@ public class UserServiceImpl implements UserPort {
             @NonNull OnboardingRequest request) {
         userRepository.completeOnboarding(
                 userId, request.interests());
+        return getProfile(userId);
+    }
+
+    @Override
+    public @NonNull UserProfile updateLanguage(
+            @NonNull UserId userId,
+            @NonNull UpdateLanguageRequest request) {
+        userRepository.updateLanguage(userId, request.languageCode());
+        return getProfile(userId);
+    }
+
+    @Override
+    public @NonNull UserProfile updateSettings(
+            @NonNull UserId userId,
+            @NonNull UpdateSettingsRequest request) {
+        if (request.displayCurrency() != null) {
+            userRepository.updateDisplayCurrency(
+                    userId, request.displayCurrency());
+        }
+        if (request.notificationSettings() != null) {
+            userRepository.updateNotificationSettings(
+                    userId, request.notificationSettings());
+        }
         return getProfile(userId);
     }
 

@@ -36,7 +36,7 @@ export function fetchChannels(
       minPrice,
       maxPrice,
       sort,
-      cursor,
+      ...(cursor ? { cursor } : {}),
       limit: limit ?? 20,
     },
   });

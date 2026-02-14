@@ -1,4 +1,3 @@
-export { completeOnboarding, fetchProfile, login } from './api/auth-api';
-export { useAuth } from './hooks/use-auth';
-export type { UserProfile } from './types/auth';
-export { userProfileSchema } from './types/auth';
+export type { UserProfile } from '@/shared/api';
+export { completeOnboarding, fetchProfile, login, userProfileSchema } from '@/shared/api';
+export { useAuth } from '@/shared/hooks';

@@ -40,7 +40,7 @@ export function TourSlideCatalog() {
               <Group header={t('onboarding.tour.mockup.popular')}>
                 <GroupItem
                   text={t('onboarding.tour.mockup.channelName1')}
-                  description={t('onboarding.tour.mockup.subscribers', { count: '125K' })}
+                  description={`125K ${t('catalog.channel.subs')}`}
                   after={
                     <Text type="caption1" color="accent">
                       5 TON
@@ -51,7 +51,7 @@ export function TourSlideCatalog() {
                 />
                 <GroupItem
                   text={t('onboarding.tour.mockup.channelName2')}
-                  description={t('onboarding.tour.mockup.subscribers', { count: '89K' })}
+                  description={`89K ${t('catalog.channel.subs')}`}
                   after={
                     <Text type="caption1" color="accent">
                       3 TON
@@ -61,7 +61,7 @@ export function TourSlideCatalog() {
                 />
                 <GroupItem
                   text={t('onboarding.tour.mockup.channelName3')}
-                  description={t('onboarding.tour.mockup.subscribers', { count: '67K' })}
+                  description={`67K ${t('catalog.channel.subs')}`}
                   after={
                     <Text type="caption1" color="accent">
                       4.5 TON
@@ -82,7 +82,7 @@ export function TourSlideCatalog() {
               <Group>
                 <GroupItem
                   text={t('onboarding.tour.mockup.channelName1')}
-                  description={t('onboarding.tour.mockup.subscribers', { count: '125K' })}
+                  description={`125K ${t('catalog.channel.subs')}`}
                   before={
                     <div
                       aria-hidden="true"

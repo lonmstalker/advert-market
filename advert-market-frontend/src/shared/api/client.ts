@@ -1,5 +1,5 @@
-import { retrieveRawInitData } from '@telegram-apps/sdk-react';
 import type { z } from 'zod/v4';
+import { getTelegramInitData } from '@/shared/lib/telegram-init-data';
 import type { PaginationParams } from './types';
 import { ApiError, problemDetailSchema } from './types';
 
@@ -8,14 +8,6 @@ const API_PREFIX = '/api/v1';
 
 function getAuthToken(): string | null {
   return sessionStorage.getItem('access_token');
-}
-
-function getInitData(): string {
-  try {
-    return retrieveRawInitData() ?? '';
-  } catch {
-    return '';
-  }
 }
 
 function deriveCanaryKey(initData: string): string {
@@ -63,11 +55,11 @@ async function attemptReLogin(): Promise<boolean> {
 }
 
 async function doReLogin(): Promise<boolean> {
-  const initData = getInitData();
+  const initData = getTelegramInitData();
   if (!initData) return false;
 
   try {
-    const { login } = await import('@/features/auth/api/auth-api');
+    const { login } = await import('./auth');
     await login(initData);
     return true;
   } catch {
@@ -90,7 +82,7 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     Accept: 'application/json',
   };
 
-  const initData = getInitData();
+  const initData = getTelegramInitData();
 
   const token = getAuthToken();
   if (token) {

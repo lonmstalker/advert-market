@@ -104,7 +104,7 @@ export function buildTimelineSteps(
   } else {
     // Happy path: completed + active + pending
     for (let i = 0; i < HAPPY_PATH.length; i++) {
-      const status = HAPPY_PATH[i];
+      const status = HAPPY_PATH[i]!;
       const timestamp = completedStatuses.get(status);
 
       if (i < currentIndex) {

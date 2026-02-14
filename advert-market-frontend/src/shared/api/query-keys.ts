@@ -33,6 +33,26 @@ export const creativeKeys = {
   brief: (dealId: string) => ['creative', dealId, 'brief'] as const,
 };
 
+export const creativeLibraryKeys = {
+  all: ['creativeLibrary'] as const,
+  lists: () => [...creativeLibraryKeys.all, 'list'] as const,
+  list: (params?: Record<string, string | number | undefined>) => [...creativeLibraryKeys.lists(), params] as const,
+  details: () => [...creativeLibraryKeys.all, 'detail'] as const,
+  detail: (id: string) => [...creativeLibraryKeys.details(), id] as const,
+  versions: (id: string) => [...creativeLibraryKeys.detail(id), 'versions'] as const,
+};
+
 export const disputeKeys = {
   detail: (dealId: string) => ['dispute', dealId] as const,
+};
+
+export const profileKeys = {
+  me: ['profile'] as const,
+};
+
+export const walletKeys = {
+  summary: ['wallet', 'summary'] as const,
+  transactions: () => ['wallet', 'transactions'] as const,
+  transactionList: (params?: Record<string, string | undefined>) => [...walletKeys.transactions(), params] as const,
+  transactionDetail: (txId: string) => [...walletKeys.transactions(), txId] as const,
 };

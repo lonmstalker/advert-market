@@ -15,6 +15,8 @@ CREATE TABLE users (
     interests             TEXT ARRAY    DEFAULT ARRAY[],
     is_deleted            BOOLEAN       DEFAULT FALSE,
     deleted_at            TIMESTAMPTZ,
+    display_currency      VARCHAR(3)    NOT NULL DEFAULT 'USD',
+    notification_settings JSONB         NOT NULL DEFAULT '{}',
     version               INTEGER       NOT NULL DEFAULT 0,
     created_at            TIMESTAMPTZ   DEFAULT now(),
     updated_at            TIMESTAMPTZ   DEFAULT now()

@@ -30,12 +30,12 @@ describe('ChannelCatalogCard', () => {
 
   it('shows verified icon when isVerified is true', () => {
     renderCard({ isVerified: true });
-    expect(screen.getByTitle('Verified')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /verified/i })).toBeInTheDocument();
   });
 
   it('does not show verified icon when isVerified is false', () => {
     renderCard({ isVerified: false });
-    expect(screen.queryByTitle('Verified')).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /verified/i })).not.toBeInTheDocument();
   });
 
   it('shows @username in subtitle when present', () => {

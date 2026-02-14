@@ -91,15 +91,19 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryProps, ErrorBoundaryStat
             </svg>
           </div>
 
-          <Text type="title2" weight="bold" style={{ marginBottom: 8 }}>
-            {t('error.boundary.title')}
-          </Text>
-          <Text type="subheadline2" color="secondary" style={{ marginBottom: 24, maxWidth: 280 }}>
-            {t('error.boundary.description')}
-          </Text>
+          <div style={{ marginBottom: 8 }}>
+            <Text type="title2" weight="bold">
+              {t('error.boundary.title')}
+            </Text>
+          </div>
+          <div style={{ marginBottom: 24, maxWidth: 280 }}>
+            <Text type="subheadline2" color="secondary">
+              {t('error.boundary.description')}
+            </Text>
+          </div>
 
           <div style={{ width: '100%', maxWidth: 240 }}>
-            <Button text={t('error.boundary.retry')} type="primary" size="m" onClick={this.handleRetry} />
+            <Button text={t('error.boundary.retry')} type="primary" onClick={this.handleRetry} />
           </div>
         </div>
       );

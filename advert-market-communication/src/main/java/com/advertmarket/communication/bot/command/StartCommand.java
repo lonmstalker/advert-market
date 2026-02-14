@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,12 +36,15 @@ public class StartCommand implements BotCommand {
             );
 
     private final String webAppUrl;
+    private final String welcomeCustomEmojiId;
     private final LocalizationService i18n;
 
     /** Creates the start command. */
     public StartCommand(TelegramBotProperties botProperties,
             LocalizationService i18n) {
         this.webAppUrl = botProperties.webapp().url();
+        this.welcomeCustomEmojiId = botProperties.welcome() != null
+                ? botProperties.welcome().customEmojiId() : "";
         this.i18n = i18n;
     }
 
@@ -65,7 +69,9 @@ public class StartCommand implements BotCommand {
     private void handleWelcome(UpdateContext ctx,
             TelegramSender sender) {
         String lang = langOf(ctx);
-        Reply.text(ctx, i18n.msg("bot.welcome", lang))
+        String welcome = i18n.msg("bot.welcome", lang);
+        Reply.text(ctx, maybePrefixCustomEmoji(welcome,
+                        welcomeCustomEmojiId))
                 .keyboard(KeyboardBuilder.inline()
                         .webAppButton(
                                 i18n.msg("bot.welcome.button",
@@ -96,6 +102,20 @@ public class StartCommand implements BotCommand {
     private static String langOf(UpdateContext ctx) {
         return ctx.languageCode() != null
                 ? ctx.languageCode() : "ru";
+    }
+
+    static String maybePrefixCustomEmoji(
+            String message, String customEmojiId) {
+        if (StringUtils.isBlank(customEmojiId)) {
+            return message;
+        }
+        if (!customEmojiId.chars().allMatch(Character::isDigit)) {
+            return message;
+        }
+        // Telegram custom emoji in MarkdownV2:
+        // ![⭐](tg://emoji?id=5368324170671202286)
+        return "![⭐](tg://emoji?id=" + customEmojiId + ") "
+                + message;
     }
 
     static String extractDeepLinkParam(String text) {

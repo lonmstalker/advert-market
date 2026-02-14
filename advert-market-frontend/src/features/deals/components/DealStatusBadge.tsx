@@ -21,9 +21,11 @@ export function DealStatusBadge({ status }: DealStatusBadgeProps) {
         whiteSpace: 'nowrap',
       }}
     >
-      <Text type="caption1" weight="bold" style={{ color: statusColorVar(config.color), fontSize: 12 }}>
-        {t(config.i18nKey)}
-      </Text>
+      <span style={{ color: statusColorVar(config.color), fontSize: 12 }}>
+        <Text type="caption1" weight="bold">
+          {t(config.i18nKey)}
+        </Text>
+      </span>
     </span>
   );
 }

@@ -6,7 +6,7 @@ describe('BottomTabs', () => {
     renderWithProviders(<BottomTabs />);
     expect(screen.getByRole('link', { name: /catalog/i })).toHaveAttribute('href', '/catalog');
     expect(screen.getByRole('link', { name: /deals/i })).toHaveAttribute('href', '/deals');
-    expect(screen.getByRole('link', { name: /wallet/i })).toHaveAttribute('href', '/wallet');
+    expect(screen.getByRole('link', { name: /finance/i })).toHaveAttribute('href', '/wallet');
     expect(screen.getByRole('link', { name: /profile/i })).toHaveAttribute('href', '/profile');
   });
 
@@ -14,7 +14,7 @@ describe('BottomTabs', () => {
     renderWithProviders(<BottomTabs />);
     expect(screen.getByText('Catalog')).toBeInTheDocument();
     expect(screen.getByText('Deals')).toBeInTheDocument();
-    expect(screen.getByText('Wallet')).toBeInTheDocument();
+    expect(screen.getByText('Finance')).toBeInTheDocument();
     expect(screen.getByText('Profile')).toBeInTheDocument();
   });
 

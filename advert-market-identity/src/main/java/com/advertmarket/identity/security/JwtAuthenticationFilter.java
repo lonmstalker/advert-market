@@ -51,13 +51,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.debug("Token blacklisted, jti={}",
                         auth.getJti());
             } else if (userBlockCheckPort.isBlocked(
-                    auth.getUserId())) {
+                    auth.getUserId().value())) {
                 log.debug("User blocked, userId={}",
-                        auth.getUserId());
+                        auth.getUserId().value());
             } else {
                 SecurityContextHolder.getContext()
                         .setAuthentication(auth);
-                MdcKeys.putUserId(auth.getUserId());
+                MdcKeys.putUserId(auth.getUserId().value());
             }
         } catch (DomainException e) {
             log.debug("JWT validation failed: {}", e.getMessage());

@@ -1,0 +1,17 @@
+import type { NotificationSettings } from '@/shared/api';
+import type { UserProfile } from '@/shared/api/auth';
+import { userProfileSchema } from '@/shared/api/auth';
+import { api } from '@/shared/api/client';
+
+export function updateLanguage(languageCode: string): Promise<UserProfile> {
+  return api.put<UserProfile>('/profile/language', { languageCode }, { schema: userProfileSchema });
+}
+
+type UpdateSettingsRequest = {
+  displayCurrency?: string;
+  notificationSettings?: NotificationSettings;
+};
+
+export function updateSettings(settings: UpdateSettingsRequest): Promise<UserProfile> {
+  return api.put<UserProfile>('/profile/settings', settings, { schema: userProfileSchema });
+}

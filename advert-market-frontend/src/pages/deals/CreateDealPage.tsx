@@ -113,9 +113,11 @@ export default function CreateDealPage() {
           <ChannelCard channel={channel} />
 
           <div>
-            <Text type="subheadline2" color="secondary" style={{ marginBottom: 8 }}>
-              {t('deals.create.postType')}
-            </Text>
+            <div style={{ marginBottom: 8 }}>
+              <Text type="subheadline2" color="secondary">
+                {t('deals.create.postType')}
+              </Text>
+            </div>
             <Select options={ruleOptions} value={selectedRuleId} onChange={setSelectedRuleId} />
           </div>
 

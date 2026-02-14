@@ -1,6 +1,7 @@
 import { act } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { useOnboardingStore } from '@/features/onboarding';
+import { profileKeys } from '@/shared/api';
 import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import OnboardingTourPage from './OnboardingTourPage';
 
@@ -100,6 +101,15 @@ describe('OnboardingTourPage', () => {
     const { user } = renderPage();
     await user.click(screen.getByText('Skip'));
     expect(await screen.findByText('catalog-page')).toBeInTheDocument();
+  });
+
+  it('updates profile cache at profileKeys.me after Skip', async () => {
+    const { user, queryClient } = renderPage();
+    const spy = vi.spyOn(queryClient, 'setQueryData');
+    await user.click(screen.getByText('Skip'));
+    await screen.findByText('catalog-page');
+    expect(spy).toHaveBeenCalledWith(profileKeys.me, expect.objectContaining({ onboardingCompleted: true }));
+    spy.mockRestore();
   });
 
   it('resets onboarding store after completing', async () => {

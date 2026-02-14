@@ -1,4 +1,15 @@
+export type { NotificationSettings, UserProfile } from './auth';
+export { completeOnboarding, fetchProfile, login, userProfileSchema } from './auth';
 export { api } from './client';
-export { authKeys, channelKeys, creativeKeys, dealKeys, disputeKeys } from './query-keys';
+export {
+  authKeys,
+  channelKeys,
+  creativeKeys,
+  creativeLibraryKeys,
+  dealKeys,
+  disputeKeys,
+  profileKeys,
+  walletKeys,
+} from './query-keys';
 export type { AuthResponse, PaginatedResponse, PaginationParams, ProblemDetail } from './types';
 export { ApiError } from './types';

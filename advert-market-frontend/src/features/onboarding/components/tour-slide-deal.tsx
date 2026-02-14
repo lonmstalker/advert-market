@@ -42,9 +42,9 @@ export function TourSlideDeal() {
 
   const approvedSteps = useMemo(
     () => [
-      { ...initialSteps[0], status: 'completed' as const },
-      { ...initialSteps[1], status: 'completed' as const },
-      { ...initialSteps[2], status: 'active' as const },
+      { ...initialSteps[0]!, status: 'completed' as const },
+      { ...initialSteps[1]!, status: 'completed' as const },
+      { ...initialSteps[2]!, status: 'active' as const },
     ],
     [initialSteps],
   );

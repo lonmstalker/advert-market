@@ -51,7 +51,7 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
               type={action.variant === 'destructive' ? 'secondary' : action.variant}
               onClick={() => handleClick(action)}
               loading={isPending}
-              style={action.variant === 'destructive' ? { color: 'var(--color-destructive)' } : undefined}
+              className={action.variant === 'destructive' ? 'am-button-destructive' : undefined}
             />
           </motion.div>
         ))}

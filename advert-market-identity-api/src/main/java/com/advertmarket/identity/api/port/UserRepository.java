@@ -1,5 +1,6 @@
 package com.advertmarket.identity.api.port;
 
+import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.shared.model.UserId;
@@ -37,6 +38,33 @@ public interface UserRepository {
      */
     void completeOnboarding(@NonNull UserId userId,
             @NonNull List<String> interests);
+
+    /**
+     * Updates the user's language code.
+     *
+     * @param userId       user identifier
+     * @param languageCode IETF language tag
+     */
+    void updateLanguage(@NonNull UserId userId,
+            @NonNull String languageCode);
+
+    /**
+     * Updates the user's display currency.
+     *
+     * @param userId   user identifier
+     * @param currency ISO 4217 currency code
+     */
+    void updateDisplayCurrency(@NonNull UserId userId,
+            @NonNull String currency);
+
+    /**
+     * Updates the user's notification settings.
+     *
+     * @param userId   user identifier
+     * @param settings notification preferences
+     */
+    void updateNotificationSettings(@NonNull UserId userId,
+            @NonNull NotificationSettings settings);
 
     /**
      * Soft-deletes a user by clearing PII and setting the deleted flag.

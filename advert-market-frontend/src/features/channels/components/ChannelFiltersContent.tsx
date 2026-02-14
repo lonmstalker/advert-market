@@ -82,22 +82,56 @@ export function ChannelFiltersContent() {
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-  const draftFilters: CatalogFilters = useMemo(
+  const draftFilters: CatalogFilters = useMemo(() => {
+    const next: CatalogFilters = {};
+
+    if (currentFilters.q) next.q = currentFilters.q;
+
+    if (selectedCategories.length > 0) {
+      // Backend currently supports a single category filter.
+      next.category = selectedCategories[0];
+      next.categories = selectedCategories;
+    }
+
+    if (selectedLanguages.length > 0) {
+      next.languages = selectedLanguages;
+    }
+
+    if (minSubs) next.minSubs = Number(minSubs);
+    if (maxSubs) next.maxSubs = Number(maxSubs);
+    if (minPrice) next.minPrice = Number(parseTonToNano(minPrice));
+    if (maxPrice) next.maxPrice = Number(parseTonToNano(maxPrice));
+
+    if (sort) next.sort = sort as ChannelSort;
+
+    return next;
+  }, [selectedCategories, selectedLanguages, minSubs, maxSubs, minPrice, maxPrice, sort, currentFilters.q]);
+
+  const countParams = useMemo(
     () => ({
-      q: currentFilters.q,
-      categories: selectedCategories.length > 0 ? selectedCategories : undefined,
-      languages: selectedLanguages.length > 0 ? selectedLanguages : undefined,
-      minSubs: minSubs ? Number(minSubs) : undefined,
-      maxSubs: maxSubs ? Number(maxSubs) : undefined,
-      minPrice: minPrice ? Number(parseTonToNano(minPrice)) : undefined,
-      maxPrice: maxPrice ? Number(parseTonToNano(maxPrice)) : undefined,
-      sort: (sort as ChannelSort) || undefined,
+      q: draftFilters.q,
+      category: draftFilters.category,
+      minSubs: draftFilters.minSubs,
+      maxSubs: draftFilters.maxSubs,
+      minPrice: draftFilters.minPrice,
+      maxPrice: draftFilters.maxPrice,
+      categories: draftFilters.categories?.join(','),
+      languages: draftFilters.languages?.join(','),
     }),
-    [selectedCategories, selectedLanguages, minSubs, maxSubs, minPrice, maxPrice, sort, currentFilters.q],
+    [
+      draftFilters.q,
+      draftFilters.category,
+      draftFilters.minSubs,
+      draftFilters.maxSubs,
+      draftFilters.minPrice,
+      draftFilters.maxPrice,
+      draftFilters.categories,
+      draftFilters.languages,
+    ],
   );
 
   const { data: count } = useQuery({
-    queryKey: channelKeys.count(draftFilters),
+    queryKey: channelKeys.count(countParams),
     queryFn: () => fetchChannelCount(draftFilters),
     placeholderData: (prev) => prev,
   });
@@ -159,9 +193,11 @@ export function ChannelFiltersContent() {
 
       {/* Categories multi-select */}
       <FilterSection>
-        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
-          {t('catalog.filters.topic')}
-        </Text>
+        <div style={{ marginBottom: 8 }}>
+          <Text type="body" weight="medium">
+            {t('catalog.filters.topic')}
+          </Text>
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {sortedCategories.map((cat) => (
             <ToggleChip
@@ -176,9 +212,11 @@ export function ChannelFiltersContent() {
 
       {/* Languages multi-select */}
       <FilterSection>
-        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
-          {t('catalog.filters.language')}
-        </Text>
+        <div style={{ marginBottom: 8 }}>
+          <Text type="body" weight="medium">
+            {t('catalog.filters.language')}
+          </Text>
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {AVAILABLE_LANGUAGES.map((l) => (
             <ToggleChip
@@ -192,9 +230,11 @@ export function ChannelFiltersContent() {
       </FilterSection>
 
       <FilterSection>
-        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
-          {t('catalog.filters.subscribers')}
-        </Text>
+        <div style={{ marginBottom: 8 }}>
+          <Text type="body" weight="medium">
+            {t('catalog.filters.subscribers')}
+          </Text>
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Input value={minSubs} onChange={setMinSubs} numeric placeholder={t('catalog.filters.from')} />
           <Input value={maxSubs} onChange={setMaxSubs} numeric placeholder={t('catalog.filters.to')} />
@@ -202,9 +242,11 @@ export function ChannelFiltersContent() {
       </FilterSection>
 
       <FilterSection>
-        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
-          {t('catalog.filters.pricePerPost')}
-        </Text>
+        <div style={{ marginBottom: 8 }}>
+          <Text type="body" weight="medium">
+            {t('catalog.filters.pricePerPost')}
+          </Text>
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Input value={minPrice} onChange={setMinPrice} placeholder={`${t('catalog.filters.from')} TON`} />
           <Input value={maxPrice} onChange={setMaxPrice} placeholder={`${t('catalog.filters.to')} TON`} />
@@ -212,9 +254,11 @@ export function ChannelFiltersContent() {
       </FilterSection>
 
       <div>
-        <Text type="body" weight="medium" style={{ marginBottom: 8 }}>
-          {t('catalog.filters.sortLabel')}
-        </Text>
+        <div style={{ marginBottom: 8 }}>
+          <Text type="body" weight="medium">
+            {t('catalog.filters.sortLabel')}
+          </Text>
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {sortOptions.map((opt) => (
             <ToggleChip

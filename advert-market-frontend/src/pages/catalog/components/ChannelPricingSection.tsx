@@ -43,12 +43,14 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
         </Text>
       </div>
       {heroCpm != null && (
-        <Text type="subheadline2" color="secondary" style={{ marginTop: 4 }}>
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {'\u2248 '}
-            {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
-          </span>
-        </Text>
+        <div style={{ marginTop: 4 }}>
+          <Text type="subheadline2" color="secondary">
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {'\u2248 '}
+              {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
+            </span>
+          </Text>
+        </div>
       )}
     </div>
   );
@@ -107,9 +109,11 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
       {hasPricing && (
         <motion.div {...slideUp} style={{ padding: '8px 16px 16px' }}>
           <div style={{ marginBottom: 16 }}>
-            <Text type="title3" weight="bold" style={{ marginBottom: 6 }}>
-              {t('catalog.channel.pricingOverview')}
-            </Text>
+            <div style={{ marginBottom: 6 }}>
+              <Text type="title3" weight="bold">
+                {t('catalog.channel.pricingOverview')}
+              </Text>
+            </div>
             {minPrice != null && (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                 <Text type="title1" weight="bold">
@@ -123,12 +127,14 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
               </div>
             )}
             {heroCpm != null && (
-              <Text type="subheadline2" color="secondary" style={{ marginTop: 4 }}>
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {'\u2248 '}
-                  {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
-                </span>
-              </Text>
+              <div style={{ marginTop: 4 }}>
+                <Text type="subheadline2" color="secondary">
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {'\u2248 '}
+                    {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
+                  </span>
+                </Text>
+              </div>
             )}
           </div>
           <PricingRulesList rules={channel.pricingRules} channel={channel} />
@@ -136,9 +142,11 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
       )}
 
       <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-        <Text type="title3" weight="bold" style={{ marginBottom: 12 }}>
-          {t('catalog.channel.conditions')}
-        </Text>
+        <div style={{ marginBottom: 12 }}>
+          <Text type="title3" weight="bold">
+            {t('catalog.channel.conditions')}
+          </Text>
+        </div>
         {conditionsContent}
       </motion.div>
     </>
@@ -181,9 +189,11 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
                   {rule.description && (
                     <Popover
                       content={
-                        <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap', maxWidth: 220 }}>
-                          {rule.description}
-                        </Text>
+                        <div style={{ whiteSpace: 'pre-wrap', maxWidth: 220 }}>
+                          <Text type="caption1" color="secondary">
+                            {rule.description}
+                          </Text>
+                        </div>
                       }
                     >
                       <InfoIcon

@@ -62,7 +62,7 @@ class JwtAuthenticationFilterTest {
         when(jwtTokenProvider.parseToken(token)).thenReturn(auth);
         when(tokenBlacklistPort.isBlacklisted("jti-123"))
                 .thenReturn(false);
-        when(userBlockCheckPort.isBlocked(new UserId(42L)))
+        when(userBlockCheckPort.isBlocked(42L))
                 .thenReturn(false);
 
         filter.doFilterInternal(request, response, filterChain);
@@ -134,7 +134,7 @@ class JwtAuthenticationFilterTest {
         when(jwtTokenProvider.parseToken(token)).thenReturn(auth);
         when(tokenBlacklistPort.isBlacklisted("jti-123"))
                 .thenReturn(false);
-        when(userBlockCheckPort.isBlocked(new UserId(99L)))
+        when(userBlockCheckPort.isBlocked(99L))
                 .thenReturn(true);
 
         filter.doFilterInternal(request, response, filterChain);

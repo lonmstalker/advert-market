@@ -8,6 +8,12 @@ describe('userProfileSchema', () => {
       username: 'alice',
       displayName: 'Alice',
       languageCode: 'en',
+      displayCurrency: 'USD',
+      notificationSettings: {
+        deals: { newOffers: true, acceptReject: true, deliveryStatus: true },
+        financial: { deposits: true, payouts: true, escrow: true },
+        disputes: { opened: true, resolved: true },
+      },
       onboardingCompleted: true,
       interests: ['crypto'],
       createdAt: '2026-02-13T00:00:00Z',

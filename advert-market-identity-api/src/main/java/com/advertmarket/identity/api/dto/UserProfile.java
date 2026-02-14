@@ -8,13 +8,15 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * Full user profile.
  *
- * @param id                  user identifier (Telegram user ID)
- * @param username            Telegram username
- * @param displayName         computed from first + last name
- * @param languageCode        IETF language tag
- * @param onboardingCompleted whether onboarding is done
- * @param interests           selected interest tags
- * @param createdAt           registration timestamp
+ * @param id                    user identifier (Telegram user ID)
+ * @param username              Telegram username
+ * @param displayName           computed from first + last name
+ * @param languageCode          IETF language tag
+ * @param displayCurrency       fiat currency for display
+ * @param notificationSettings  notification preferences
+ * @param onboardingCompleted   whether onboarding is done
+ * @param interests             selected interest tags
+ * @param createdAt             registration timestamp
  */
 @Schema(description = "Full user profile")
 public record UserProfile(
@@ -26,6 +28,10 @@ public record UserProfile(
         @NonNull String displayName,
         @Schema(description = "IETF language tag", example = "en")
         @NonNull String languageCode,
+        @Schema(description = "Fiat display currency", example = "USD")
+        @NonNull String displayCurrency,
+        @Schema(description = "Notification preferences")
+        @NonNull NotificationSettings notificationSettings,
         @Schema(description = "Whether onboarding is completed")
         boolean onboardingCompleted,
         @Schema(description = "Selected interest tags")

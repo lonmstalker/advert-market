@@ -18,20 +18,36 @@ export function useChannelFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const filters: CatalogFilters = useMemo(() => {
-    const sort = searchParams.get('sort') as ChannelSort | null;
+    const next: CatalogFilters = {};
+
+    const q = searchParams.get('q');
+    if (q) next.q = q;
+
+    const category = searchParams.get('category');
+    if (category) next.category = category;
+
     const categories = parseArray(searchParams.get('categories'));
+    if (categories) next.categories = categories;
+
     const languages = parseArray(searchParams.get('languages'));
-    return {
-      q: searchParams.get('q') || undefined,
-      category: searchParams.get('category') || undefined,
-      categories,
-      languages,
-      minSubs: searchParams.get('minSubs') ? Number(searchParams.get('minSubs')) : undefined,
-      maxSubs: searchParams.get('maxSubs') ? Number(searchParams.get('maxSubs')) : undefined,
-      minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-      maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
-      sort: sort && channelSortValues.includes(sort) ? sort : undefined,
-    };
+    if (languages) next.languages = languages;
+
+    const minSubs = searchParams.get('minSubs');
+    if (minSubs) next.minSubs = Number(minSubs);
+
+    const maxSubs = searchParams.get('maxSubs');
+    if (maxSubs) next.maxSubs = Number(maxSubs);
+
+    const minPrice = searchParams.get('minPrice');
+    if (minPrice) next.minPrice = Number(minPrice);
+
+    const maxPrice = searchParams.get('maxPrice');
+    if (maxPrice) next.maxPrice = Number(maxPrice);
+
+    const sort = searchParams.get('sort') as ChannelSort | null;
+    if (sort && channelSortValues.includes(sort)) next.sort = sort;
+
+    return next;
   }, [searchParams]);
 
   const setFilters = useCallback(

@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), mkcert()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      '@': resolve(process.cwd(), 'src'),
     },
   },
   server: {

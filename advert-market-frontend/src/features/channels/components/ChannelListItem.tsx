@@ -19,7 +19,7 @@ export function ChannelListItem({ channel, onClick }: ChannelListItemProps) {
     <motion.div {...listItem} {...pressScale}>
       <GroupItem
         text={channel.title}
-        description={`${formatCompactNumber(channel.subscriberCount)} ${t('catalog.channel.subscribers', { count: '' }).trim()}`}
+        description={`${formatCompactNumber(channel.subscriberCount)} ${t('catalog.channel.subs')}`}
         before={<ChannelAvatar title={channel.title} size="sm" />}
         after={
           channel.pricePerPostNano ? (

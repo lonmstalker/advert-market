@@ -39,6 +39,19 @@ jar {
     enabled = true
 }
 
+tasks.named('processResources').configure {
+    // Spring MessageSource in an executable bootJar expects bundles on the main classpath.
+    // Copy bot/notification bundles into this module so they end up under BOOT-INF/classes/messages/*.
+    from(project(':advert-market-communication').sourceSets.main.resources) {
+        include 'messages/*.properties'
+    }
+}
+
+tasks.named('test').configure {
+    // Packaging assertions read the produced bootJar.
+    dependsOn tasks.named('bootJar')
+}
+
 springBoot {
     mainClass = 'com.advertmarket.app.AdvertMarketApplication'
 }

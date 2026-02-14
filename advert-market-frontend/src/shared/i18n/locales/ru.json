@@ -179,7 +179,16 @@
     "retry": "Повторить",
     "cancel": "Отмена",
     "save": "Сохранить",
-    "back": "Назад"
+    "back": "Назад",
+    "toast.saveFailed": "Не удалось сохранить",
+    "toast.saved": "Сохранено"
+  },
+  "auth": {
+    "guard": {
+      "title": "Не удалось войти",
+      "description": "Откройте мини-приложение из Telegram и попробуйте снова.",
+      "retry": "Повторить"
+    }
   },
   "catalog": {
     "title": "Каталог",
@@ -431,19 +440,138 @@
     }
   },
   "wallet": {
-    "title": "Кошелёк",
+    "title": "Финансы",
     "empty": {
-      "title": "История пуста",
+      "title": "Транзакций пока нет",
       "description": "Здесь будет история ваших транзакций",
       "cta": "Перейти в каталог"
+    },
+    "hero": {
+      "earned": "Заработано за всё время",
+      "spent": "Потрачено за всё время"
+    },
+    "stats": {
+      "inEscrow": "В эскроу",
+      "completedDeals": "Завершённых сделок",
+      "activeDeals": "Активных сделок"
+    },
+    "recentTransactions": "Последние операции",
+    "viewAll": "Все",
+    "txType": {
+      "escrowDeposit": "Депозит в эскроу",
+      "payout": "Выплата",
+      "refund": "Возврат",
+      "commission": "Комиссия"
+    },
+    "status": {
+      "pending": "Ожидание",
+      "confirmed": "Подтверждено",
+      "failed": "Ошибка"
+    },
+    "history": {
+      "title": "История операций",
+      "empty": "Нет транзакций",
+      "emptyFiltered": "Нет транзакций с выбранными фильтрами",
+      "endOfList": "Вот и всё"
+    },
+    "filters": {
+      "title": "Фильтры",
+      "button": "Фильтры",
+      "type": "Тип транзакции",
+      "reset": "Сбросить",
+      "apply": "Применить"
+    },
+    "dayGroup": {
+      "today": "Сегодня",
+      "yesterday": "Вчера"
+    },
+    "detail": {
+      "type": "Тип",
+      "date": "Дата",
+      "description": "Описание",
+      "channel": "Канал",
+      "deal": "Сделка",
+      "viewDeal": "К сделке",
+      "commission": "Комиссия",
+      "txHash": "Хэш транзакции",
+      "from": "Отправитель",
+      "to": "Получатель",
+      "viewInExplorer": "Открыть в TON Explorer"
     }
   },
   "profile": {
     "title": "Профиль",
+    "account": "Аккаунт",
+    "channels": "Мои каналы",
+    "channels.empty": {
+      "title": "Нет каналов",
+      "description": "Добавьте свой канал, чтобы получать сделки",
+      "cta": "Добавить канал"
+    },
+    "settings": "Настройки",
+    "language": "Язык",
+    "language.ru": "Русский",
+    "language.en": "English",
+    "currency": "Валюта отображения",
+    "currency.title": "Выберите валюту",
+    "currency.hint": "Цены будут отображаться в выбранной валюте (приблизительный пересчёт)",
+    "currency.USD": "Доллар США ($)",
+    "currency.EUR": "Евро (€)",
+    "currency.RUB": "Российский рубль (₽)",
+    "notifications": "Уведомления",
+    "notifications.deals": "Сделки",
+    "notifications.newOffers": "Новые предложения",
+    "notifications.acceptReject": "Принятие и отклонение",
+    "notifications.deliveryStatus": "Статус доставки",
+    "notifications.financial": "Финансы",
+    "notifications.deposits": "Депозиты",
+    "notifications.payouts": "Выплаты",
+    "notifications.escrow": "Эскроу",
+    "notifications.disputes": "Споры",
+    "notifications.opened": "Открытие спора",
+    "notifications.resolved": "Разрешение спора",
+    "creatives.description": "Библиотека рекламных шаблонов"
+  },
+  "creatives": {
+    "title": "Мои креативы",
+    "newTitle": "Новый креатив",
+    "editTitle": "Редактирование",
     "empty": {
-      "title": "Настройки профиля",
-      "description": "Здесь будут ваши настройки и управление каналами",
-      "cta": "Перейти в каталог"
+      "title": "Нет креативов",
+      "description": "Создайте шаблон рекламного поста с превью",
+      "cta": "Создать креатив"
+    },
+    "endOfList": "Вот и всё",
+    "mediaCount_one": "{{count}} файл",
+    "mediaCount_few": "{{count}} файла",
+    "mediaCount_many": "{{count}} файлов",
+    "tabs": {
+      "editor": "Редактор",
+      "preview": "Превью"
+    },
+    "form": {
+      "title": "Название",
+      "titlePlaceholder": "Название креатива...",
+      "text": "Текст поста",
+      "textPlaceholder": "Введите текст рекламного поста...",
+      "media": "Медиа",
+      "addMedia": "Добавить медиа",
+      "buttons": "Кнопки",
+      "addButton": "Добавить кнопку",
+      "buttonText": "Текст кнопки",
+      "disablePreview": "Отключить превью ссылок",
+      "linkPrompt": "Введите URL ссылки:"
+    },
+    "history": {
+      "title": "История версий",
+      "show": "Версии",
+      "version": "Версия"
+    },
+    "toast": {
+      "created": "Креатив создан",
+      "updated": "Креатив обновлён",
+      "deleted": "Креатив удалён",
+      "error": "Не удалось сохранить"
     }
   },
   "error": {
@@ -462,7 +590,7 @@
   "tabs": {
     "catalog": "Каталог",
     "deals": "Сделки",
-    "wallet": "Кошелёк",
+    "wallet": "Финансы",
     "profile": "Профиль"
   }
 }

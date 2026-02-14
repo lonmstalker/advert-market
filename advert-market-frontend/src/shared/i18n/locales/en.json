@@ -179,7 +179,16 @@
     "retry": "Retry",
     "cancel": "Cancel",
     "save": "Save",
-    "back": "Back"
+    "back": "Back",
+    "toast.saveFailed": "Failed to save",
+    "toast.saved": "Saved"
+  },
+  "auth": {
+    "guard": {
+      "title": "Couldn't sign in",
+      "description": "Open the Mini App from Telegram and try again.",
+      "retry": "Retry"
+    }
   },
   "catalog": {
     "title": "Catalog",
@@ -427,19 +436,137 @@
     }
   },
   "wallet": {
-    "title": "Wallet",
+    "title": "Finance",
     "empty": {
-      "title": "History is empty",
+      "title": "No transactions yet",
       "description": "Your transaction history will appear here",
       "cta": "Go to catalog"
+    },
+    "hero": {
+      "earned": "Total earned",
+      "spent": "Total spent"
+    },
+    "stats": {
+      "inEscrow": "In escrow",
+      "completedDeals": "Completed deals",
+      "activeDeals": "Active deals"
+    },
+    "recentTransactions": "Recent transactions",
+    "viewAll": "View all",
+    "txType": {
+      "escrowDeposit": "Escrow deposit",
+      "payout": "Payout",
+      "refund": "Refund",
+      "commission": "Commission"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "failed": "Failed"
+    },
+    "history": {
+      "title": "Transaction history",
+      "empty": "No transactions",
+      "emptyFiltered": "No transactions matching filters",
+      "endOfList": "That's all"
+    },
+    "filters": {
+      "title": "Filters",
+      "button": "Filters",
+      "type": "Transaction type",
+      "reset": "Reset",
+      "apply": "Apply"
+    },
+    "dayGroup": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "detail": {
+      "type": "Type",
+      "date": "Date",
+      "description": "Description",
+      "channel": "Channel",
+      "deal": "Deal",
+      "viewDeal": "View deal",
+      "commission": "Commission",
+      "txHash": "Transaction hash",
+      "from": "From",
+      "to": "To",
+      "viewInExplorer": "View in TON Explorer"
     }
   },
   "profile": {
     "title": "Profile",
+    "account": "Account",
+    "channels": "My Channels",
+    "channels.empty": {
+      "title": "No channels",
+      "description": "Add your channel to receive deals",
+      "cta": "Add channel"
+    },
+    "settings": "Settings",
+    "language": "Language",
+    "language.ru": "Русский",
+    "language.en": "English",
+    "currency": "Display Currency",
+    "currency.title": "Choose currency",
+    "currency.hint": "Prices will be shown in the selected currency (approximate conversion)",
+    "currency.USD": "US Dollar ($)",
+    "currency.EUR": "Euro (€)",
+    "currency.RUB": "Russian Ruble (₽)",
+    "notifications": "Notifications",
+    "notifications.deals": "Deals",
+    "notifications.newOffers": "New offers",
+    "notifications.acceptReject": "Accept & reject",
+    "notifications.deliveryStatus": "Delivery status",
+    "notifications.financial": "Financial",
+    "notifications.deposits": "Deposits",
+    "notifications.payouts": "Payouts",
+    "notifications.escrow": "Escrow",
+    "notifications.disputes": "Disputes",
+    "notifications.opened": "Dispute opened",
+    "notifications.resolved": "Dispute resolved",
+    "creatives.description": "Ad template library"
+  },
+  "creatives": {
+    "title": "My Creatives",
+    "newTitle": "New Creative",
+    "editTitle": "Edit Creative",
     "empty": {
-      "title": "Profile Settings",
-      "description": "Your settings and channel management will be here",
-      "cta": "Go to catalog"
+      "title": "No creatives",
+      "description": "Create an ad post template with preview",
+      "cta": "Create creative"
+    },
+    "endOfList": "That's all",
+    "mediaCount_one": "{{count}} file",
+    "mediaCount_other": "{{count}} files",
+    "tabs": {
+      "editor": "Editor",
+      "preview": "Preview"
+    },
+    "form": {
+      "title": "Title",
+      "titlePlaceholder": "Creative title...",
+      "text": "Post text",
+      "textPlaceholder": "Enter ad post text...",
+      "media": "Media",
+      "addMedia": "Add media",
+      "buttons": "Buttons",
+      "addButton": "Add button",
+      "buttonText": "Button text",
+      "disablePreview": "Disable link previews",
+      "linkPrompt": "Enter link URL:"
+    },
+    "history": {
+      "title": "Version History",
+      "show": "Versions",
+      "version": "Version"
+    },
+    "toast": {
+      "created": "Creative created",
+      "updated": "Creative updated",
+      "deleted": "Creative deleted",
+      "error": "Failed to save"
     }
   },
   "error": {
@@ -458,7 +585,7 @@
   "tabs": {
     "catalog": "Catalog",
     "deals": "Deals",
-    "wallet": "Wallet",
+    "wallet": "Finance",
     "profile": "Profile"
   }
 }

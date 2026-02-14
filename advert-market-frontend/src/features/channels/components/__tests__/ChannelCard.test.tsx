@@ -40,7 +40,7 @@ describe('ChannelCard', () => {
 
   it('renders subscribers label', () => {
     renderCard();
-    expect(screen.getByText(/subscribers/)).toBeInTheDocument();
+    expect(screen.getByText(/subs/)).toBeInTheDocument();
   });
 
   it('renders avatar with first letter of title', () => {

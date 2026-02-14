@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/features/auth/hooks/use-auth';
-import { channelKeys } from '@/shared/api/query-keys';
+import { channelKeys } from '@/shared/api';
+import { useAuth } from '@/shared/hooks/use-auth';
 import { fetchChannelTeam } from '../api/channels';
 
 export function useChannelRights(channelId: number) {

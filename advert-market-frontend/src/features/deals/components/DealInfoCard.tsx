@@ -45,12 +45,16 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
       }}
     >
       {/* Centered price */}
-      <Text type="title1" weight="bold" style={{ textAlign: 'center', display: 'block' }}>
-        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
-      </Text>
-      <Text type="caption1" color="secondary" style={{ textAlign: 'center', display: 'block', marginTop: 2 }}>
-        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
-      </Text>
+      <div style={{ textAlign: 'center' }}>
+        <Text type="title1" weight="bold">
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
+        </Text>
+      </div>
+      <div style={{ textAlign: 'center', marginTop: 2 }}>
+        <Text type="caption1" color="secondary">
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
+        </Text>
+      </div>
 
       {/* Chips row */}
       <div
@@ -100,9 +104,11 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
             marginTop: 12,
           }}
         >
-          <Text type="caption1" color="secondary" style={{ whiteSpace: 'pre-wrap', fontStyle: 'italic' }}>
-            {deal.message}
-          </Text>
+          <div style={{ whiteSpace: 'pre-wrap', fontStyle: 'italic' }}>
+            <Text type="caption1" color="secondary">
+              {deal.message}
+            </Text>
+          </div>
         </div>
       )}
     </div>

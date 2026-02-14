@@ -29,7 +29,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
           {channel.title}
         </Text>
         <Text type="subheadline2" color="secondary">
-          {formatCompactNumber(channel.subscriberCount)} {t('catalog.channel.subscribers', { count: '' }).trim()}
+          {formatCompactNumber(channel.subscriberCount)} {t('catalog.channel.subs')}
         </Text>
       </div>
     </div>

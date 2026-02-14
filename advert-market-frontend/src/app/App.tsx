@@ -19,7 +19,14 @@ const DealsPage = lazy(() => import('@/pages/deals/DealsPage'));
 const CreateDealPage = lazy(() => import('@/pages/deals/CreateDealPage'));
 const DealDetailPage = lazy(() => import('@/pages/deals/DealDetailPage'));
 const WalletPage = lazy(() => import('@/pages/wallet/WalletPage'));
+const HistoryPage = lazy(() => import('@/pages/wallet/HistoryPage'));
+const TransactionDetailPage = lazy(() => import('@/pages/wallet/TransactionDetailPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
+const LanguagePage = lazy(() => import('@/pages/profile/LanguagePage'));
+const CurrencyPage = lazy(() => import('@/pages/profile/CurrencyPage'));
+const NotificationsPage = lazy(() => import('@/pages/profile/NotificationsPage'));
+const CreativesPage = lazy(() => import('@/pages/creatives/CreativesPage'));
+const CreativeEditorPage = lazy(() => import('@/pages/creatives/CreativeEditorPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,7 +56,7 @@ function useTelegramTheme(): 'light' | 'dark' {
 
     const handler = () => setTheme(getTheme());
     webApp.onEvent('themeChanged', handler);
-    return () => webApp.offEvent('themeChanged', handler);
+    return () => webApp.offEvent?.('themeChanged', handler);
   }, []);
 
   return theme;
@@ -85,6 +92,14 @@ export function App() {
                         <Route path="/catalog/channels/:channelId" element={<ChannelDetailPage />} />
                         <Route path="/deals/:dealId" element={<DealDetailPage />} />
                         <Route path="/deals/new" element={<CreateDealPage />} />
+                        <Route path="/wallet/history" element={<HistoryPage />} />
+                        <Route path="/wallet/history/:txId" element={<TransactionDetailPage />} />
+                        <Route path="/profile/language" element={<LanguagePage />} />
+                        <Route path="/profile/currency" element={<CurrencyPage />} />
+                        <Route path="/profile/notifications" element={<NotificationsPage />} />
+                        <Route path="/profile/creatives" element={<CreativesPage />} />
+                        <Route path="/profile/creatives/new" element={<CreativeEditorPage />} />
+                        <Route path="/profile/creatives/:creativeId/edit" element={<CreativeEditorPage />} />
                       </Route>
 
                       <Route path="*" element={<Navigate to="/catalog" replace />} />

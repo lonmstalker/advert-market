@@ -1,4 +1,5 @@
 import { Icon } from '@telegram-tools/ui-kit';
+import { easeOut } from 'motion';
 import { motion } from 'motion/react';
 import { useLocation } from 'react-router';
 
@@ -43,7 +44,7 @@ export function StepIndicator() {
                 flexShrink: 0,
               }}
             >
-              {isCompleted && <Icon name="check" color="white" size="6px" />}
+              {isCompleted && <Icon name="check" size="6px" className="am-icon-white" />}
             </motion.div>
             {i < STEPS.length - 1 && (
               <div
@@ -58,7 +59,7 @@ export function StepIndicator() {
                 <motion.div
                   initial={false}
                   animate={{ width: i < currentStep ? '100%' : '0%' }}
-                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  transition={{ duration: 0.3, ease: easeOut }}
                   style={{
                     height: '100%',
                     backgroundColor: 'var(--color-accent-primary)',

@@ -1,7 +1,10 @@
 /**
  * Resolves channel languages, falling back to the legacy single-language field.
  */
-export function getChannelLanguages(channel: { languages?: string[] | null; language?: string | null }): string[] {
+export function getChannelLanguages(channel: {
+  languages?: string[] | null | undefined;
+  language?: string | null | undefined;
+}): string[] {
   if (channel.languages && channel.languages.length > 0) return channel.languages;
   if (channel.language) return [channel.language];
   return [];

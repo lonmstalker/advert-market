@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
+import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -60,13 +61,52 @@ export default function CatalogPage() {
   filtersRef.current = filters;
 
   useEffect(() => {
-    setFilters({ ...filtersRef.current, q: debouncedSearch || undefined });
+    const next = { ...filtersRef.current };
+    if (debouncedSearch) {
+      next.q = debouncedSearch;
+    } else {
+      delete next.q;
+    }
+    setFilters(next);
   }, [debouncedSearch, setFilters]);
 
-  const queryFilters = { ...filters, q: debouncedSearch || undefined };
+  const queryFilters = useMemo(() => {
+    const next = { ...filters };
+    if (debouncedSearch) {
+      next.q = debouncedSearch;
+    } else {
+      delete next.q;
+    }
+    return next;
+  }, [filters, debouncedSearch]);
+
+  const queryKeyParams = useMemo(
+    () => ({
+      q: queryFilters.q,
+      category: queryFilters.category,
+      categories: queryFilters.categories?.join(','),
+      languages: queryFilters.languages?.join(','),
+      minSubs: queryFilters.minSubs,
+      maxSubs: queryFilters.maxSubs,
+      minPrice: queryFilters.minPrice,
+      maxPrice: queryFilters.maxPrice,
+      sort: queryFilters.sort,
+    }),
+    [
+      queryFilters.q,
+      queryFilters.category,
+      queryFilters.categories,
+      queryFilters.languages,
+      queryFilters.minSubs,
+      queryFilters.maxSubs,
+      queryFilters.minPrice,
+      queryFilters.maxPrice,
+      queryFilters.sort,
+    ],
+  );
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } = useInfiniteQuery({
-    queryKey: channelKeys.list(queryFilters),
+    queryKey: channelKeys.list(queryKeyParams),
     queryFn: ({ pageParam }) => fetchChannels({ ...queryFilters, cursor: pageParam, limit: 20 }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => (lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined),
@@ -75,7 +115,7 @@ export default function CatalogPage() {
   const observerRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage, threshold: 0.1 });
 
   const channels = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
-  const totalCount = data?.pages[0]?.total;
+  const totalCount = channels.length;
 
   const summary = useMemo(() => {
     if (channels.length === 0) return null;
@@ -125,7 +165,7 @@ export default function CatalogPage() {
             animate={{
               scale: searchFocused ? 1.01 : 1,
             }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            transition={{ duration: 0.15, ease: easeOut }}
           >
             <div
               style={{
@@ -269,7 +309,7 @@ export default function CatalogPage() {
           </motion.div>
         ) : (
           <motion.div key="list" {...staggerChildren}>
-            {totalCount != null && summary && (
+            {summary && (
               <div style={{ padding: '8px 16px 4px' }}>
                 <Text type="footnote" color="secondary">
                   {summary.avgCpm != null
@@ -310,9 +350,11 @@ export default function CatalogPage() {
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 40px 8px' }}
               >
                 <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
-                <Text type="caption1" color="tertiary" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  {t('catalog.endOfList')}
-                </Text>
+                <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <Text type="caption1" color="tertiary">
+                    {t('catalog.endOfList')}
+                  </Text>
+                </span>
                 <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
               </motion.div>
             )}

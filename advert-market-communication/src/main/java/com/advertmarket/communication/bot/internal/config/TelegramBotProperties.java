@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
  * @param botUsername the Telegram bot username
  * @param webhook     webhook configuration
  * @param webapp      web app configuration
+ * @param welcome     welcome message configuration
  */
 @ConfigurationProperties(prefix = "app.telegram")
 @PropertyGroupDoc(
@@ -50,7 +51,13 @@ public record TelegramBotProperties(
                 description = "Telegram Web App configuration",
                 required = Requirement.REQUIRED
         )
-        @Valid WebApp webapp
+        @Valid WebApp webapp,
+
+        @PropertyDoc(
+                description = "Welcome message configuration",
+                required = Requirement.OPTIONAL
+        )
+        @Valid @DefaultValue Welcome welcome
 ) {
 
     /**
@@ -86,6 +93,20 @@ public record TelegramBotProperties(
                     required = Requirement.REQUIRED
             )
             @NotBlank String url
+    ) {
+    }
+
+    /**
+     * Welcome message configuration.
+     *
+     * @param customEmojiId custom emoji id to prefix the welcome message
+     */
+    public record Welcome(
+            @PropertyDoc(
+                    description = "Custom emoji id to prefix the welcome message (MarkdownV2: ![x](tg://emoji?id=...))",
+                    required = Requirement.OPTIONAL
+            )
+            @DefaultValue("") String customEmojiId
     ) {
     }
 }

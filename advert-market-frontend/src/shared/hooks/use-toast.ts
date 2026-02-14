@@ -10,13 +10,13 @@ export function useToast() {
     () => ({
       showToast,
       showSuccess(message: string, duration?: number) {
-        showToast(message, { type: 'success', duration });
+        showToast(message, { type: 'success', ...(duration != null ? { duration } : {}) });
       },
       showError(message: string, duration?: number) {
-        showToast(message, { type: 'error', duration });
+        showToast(message, { type: 'error', ...(duration != null ? { duration } : {}) });
       },
       showInfo(message: string, duration?: number) {
-        showToast(message, { type: 'info', duration });
+        showToast(message, { type: 'info', ...(duration != null ? { duration } : {}) });
       },
     }),
     [showToast],

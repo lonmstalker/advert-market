@@ -10,7 +10,7 @@ vi.mock('@telegram-apps/sdk-react', () => ({
   retrieveRawInitData: vi.fn(() => 'mock-init-data'),
 }));
 
-vi.mock('@/features/auth/hooks/use-auth', () => ({
+vi.mock('@/shared/hooks/use-auth', () => ({
   useAuth: () => ({
     profile: mockProfile,
     isAuthenticated: !!mockProfile,

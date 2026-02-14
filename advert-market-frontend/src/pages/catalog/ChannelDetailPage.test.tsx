@@ -4,7 +4,7 @@ import { server } from '@/test/mocks/server';
 import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import ChannelDetailPage from './ChannelDetailPage';
 
-vi.mock('@/features/auth/hooks/use-auth', () => ({
+vi.mock('@/shared/hooks/use-auth', () => ({
   useAuth: () => ({
     profile: { id: 1 },
     isAuthenticated: true,
@@ -68,7 +68,7 @@ describe('ChannelDetailPage', () => {
     it('shows verified badge', async () => {
       renderPage(1);
       await waitFor(() => {
-        expect(screen.getByTitle('Verified')).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: /verified/i })).toBeInTheDocument();
       });
     });
 

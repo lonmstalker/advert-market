@@ -70,7 +70,7 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
                     marginTop: '2px',
                   }}
                 >
-                  <Icon name="check" color="white" size="10px" />
+                  <Icon name="check" size="10px" className="am-icon-white" />
                 </div>
               ) : isActive ? (
                 <motion.div
