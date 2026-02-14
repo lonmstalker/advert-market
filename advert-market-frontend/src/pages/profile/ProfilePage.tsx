@@ -83,7 +83,7 @@ export default function ProfilePage() {
     return t('profile.memberSince', { date: formatted });
   }, [profile?.createdAt, langCode, t]);
 
-  const accountDescription = [username, roleBadge, memberSince].filter(Boolean).join('\n');
+  const accountDescription = [username, roleBadge, memberSince].filter(Boolean).join(' \u00B7 ');
 
   return (
     <motion.div {...fadeIn} style={{ padding: '16px' }}>
