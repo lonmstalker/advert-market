@@ -24,6 +24,7 @@ set -euo pipefail
 #   --ssh <user@host>     Override DEPLOY_SSH
 #   --dir <path>          Override DEPLOY_DIR
 #   --domain <domain>     Domain for informational output / optional checks (default: teleinsight.in)
+#   --env-server <path>   Load server connection vars from a .env-style file (default: .env.server)
 #   --no-checks           Skip local checks/builds (not recommended)
 #   --no-remote           Skip remote deploy (checks + git push only)
 
@@ -36,20 +37,87 @@ Production deploy helper.
 
 Examples:
   DEPLOY_SSH=ad-marketplace@teleinsight.in DEPLOY_DIR=/home/ad-marketplace/advert-market ./scripts/deploy-prod.sh
+  ./scripts/deploy-prod.sh --env-server .env.server
   ./scripts/deploy-prod.sh --tag advertmarket:v0.2.0 --ssh user@host --dir /srv/advert-market
 
 Notes:
   - This script deploys from the current local git HEAD (must be on main and clean).
   - It uploads built artifacts (bootJar + frontend dist) and runs blue/green deploy on the server.
+  - Server connection file (.env.server by default) can define:
+      SERVER_HOST, SERVER_USER, SSH_KEY (optional), DEPLOY_DIR (optional)
 USAGE
 }
 
+ENV_SERVER_FILE="${ENV_SERVER_FILE:-.env.server}"
+
 DEPLOY_SSH="${DEPLOY_SSH:-}"
-DEPLOY_DIR="${DEPLOY_DIR:-/home/ad-marketplace/advert-market}"
+DEPLOY_DIR="${DEPLOY_DIR:-}"
 DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-teleinsight.in}"
 IMAGE_TAG="${IMAGE_TAG:-}"
 NO_CHECKS=0
 NO_REMOTE=0
+
+expand_tilde() {
+  local raw="$1"
+  if [[ "${raw}" == "~" ]]; then
+    echo "${HOME}"
+    return
+  fi
+  if [[ "${raw}" == "~/"* ]]; then
+    echo "${HOME}/${raw#~/}"
+    return
+  fi
+  echo "${raw}"
+}
+
+load_env_server_file() {
+  local file="$1"
+  if [[ ! -f "${file}" ]]; then
+    return 0
+  fi
+
+  # .env.server is developer-local. Expect KEY=VALUE format.
+  # shellcheck disable=SC1090
+  set -a
+  source "${file}"
+  set +a
+
+  # Derived defaults.
+  if [[ -z "${DEPLOY_SSH:-}" && -n "${SERVER_USER:-}" && -n "${SERVER_HOST:-}" ]]; then
+    DEPLOY_SSH="${SERVER_USER}@${SERVER_HOST}"
+  fi
+  if [[ -z "${DEPLOY_DIR:-}" && -n "${SERVER_USER:-}" ]]; then
+    DEPLOY_DIR="/home/${SERVER_USER}/advert-market"
+  fi
+
+  if [[ -n "${SSH_KEY:-}" && -z "${DEPLOY_SSH_OPTS:-}" ]]; then
+    local key
+    key="$(expand_tilde "${SSH_KEY}")"
+    DEPLOY_SSH_OPTS="-i ${key} -o IdentitiesOnly=yes"
+  fi
+}
+
+SSH_CMD=(ssh)
+RSYNC_SSH="ssh"
+DEPLOY_SSH_OPTS="${DEPLOY_SSH_OPTS:-}"
+
+# First pass: allow overriding env-server path.
+args=("$@")
+for ((i=0; i<${#args[@]}; i++)); do
+  if [[ "${args[$i]}" == "--env-server" ]]; then
+    ENV_SERVER_FILE="${args[$((i+1))]:?--env-server requires a value}"
+  fi
+done
+
+load_env_server_file "${ENV_SERVER_FILE}"
+
+if [[ -n "${DEPLOY_SSH_OPTS}" ]]; then
+  # Split opts into array safely.
+  # shellcheck disable=SC2206
+  DEPLOY_SSH_OPTS_ARR=(${DEPLOY_SSH_OPTS})
+  SSH_CMD=(ssh "${DEPLOY_SSH_OPTS_ARR[@]}")
+  RSYNC_SSH="ssh ${DEPLOY_SSH_OPTS}"
+fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -73,6 +141,10 @@ while [[ $# -gt 0 ]]; do
       DEPLOY_DOMAIN="${2:?--domain requires a value}"
       shift 2
       ;;
+    --env-server)
+      # Already processed in the first pass. Keep for UX.
+      shift 2
+      ;;
     --no-checks)
       NO_CHECKS=1
       shift
@@ -88,6 +160,10 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ -z "${DEPLOY_DIR}" ]]; then
+  DEPLOY_DIR="/home/${SERVER_USER:-ad-marketplace}/advert-market"
+fi
 
 require_cmd() {
   local cmd="$1"
@@ -188,7 +264,7 @@ require_cmd ssh
 require_cmd rsync
 
 echo "==> Remote update (git pull with autostash to preserve runtime nginx state files)"
-ssh "${DEPLOY_SSH}" "set -euo pipefail; cd '${DEPLOY_DIR}'; git fetch origin; git checkout main; git pull --rebase --autostash origin main"
+"${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; cd '${DEPLOY_DIR}'; git fetch origin; git checkout main; git pull --rebase --autostash origin main"
 
 if [[ "${NO_CHECKS}" -eq 0 ]]; then
   BOOT_JAR="$(select_boot_jar)"
@@ -210,19 +286,19 @@ else
 fi
 
 echo "==> Upload boot jar"
-ssh "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/advert-market-app/build/libs'; rm -f '${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-'*'.jar'"
-rsync -az "${BOOT_JAR}" "${DEPLOY_SSH}:${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-deploy.jar"
+"${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/advert-market-app/build/libs'; rm -f '${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-'*'.jar'"
+rsync -az -e "${RSYNC_SSH}" "${BOOT_JAR}" "${DEPLOY_SSH}:${DEPLOY_DIR}/advert-market-app/build/libs/advert-market-app-deploy.jar"
 
 echo "==> Upload frontend dist"
 if [[ ! -d advert-market-frontend/dist ]]; then
   echo "ERROR: advert-market-frontend/dist not found. Build the frontend first." >&2
   exit 1
 fi
-ssh "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/nginx/html'"
-rsync -az --delete --exclude '.gitkeep' "advert-market-frontend/dist/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/nginx/html/"
+"${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/nginx/html'"
+rsync -az -e "${RSYNC_SSH}" --delete --exclude '.gitkeep' "advert-market-frontend/dist/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/nginx/html/"
 
 echo "==> Remote build + blue/green deploy"
-ssh "${DEPLOY_SSH}" "set -euo pipefail;
+"${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail;
   cd '${DEPLOY_DIR}';
   docker build -t '${IMAGE_TAG}' .;
   cd deploy;

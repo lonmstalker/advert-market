@@ -88,7 +88,14 @@ docker compose -f docker-compose.prod.yml up -d app-blue nginx
 # End-to-end from dev machine (run from repo root):
 # checks -> build -> git push -> upload artifacts -> blue/green
 # (requires SSH access to the server and repo cloned at DEPLOY_DIR)
-DEPLOY_SSH=ad-marketplace@teleinsight.in \
+# Option A (recommended): put connection vars into .env.server (developer-local):
+# SERVER_HOST=94.228.112.90
+# SERVER_USER=ad-marketplace
+# SSH_KEY=~/.ssh/id_ed25519_ad_marketplace
+./scripts/deploy-prod.sh
+
+# Option B: pass explicitly
+DEPLOY_SSH=ad-marketplace@94.228.112.90 \
 DEPLOY_DIR=/home/ad-marketplace/advert-market \
 ./scripts/deploy-prod.sh
 

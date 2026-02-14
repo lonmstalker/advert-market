@@ -9,7 +9,8 @@ This folder contains everything needed to run Advert Market on a Linux server us
 This document describes **server preparation**. For deployment steps, see `RUNBOOK.md`.
 
 For a one-command deploy from a dev machine (checks -> build -> git push -> upload artifacts -> blue/green),
-use `scripts/deploy-prod.sh` from the repo root.
+use `scripts/deploy-prod.sh` from the repo root. For convenience, you can keep
+server connection vars in `.env.server` (developer-local, not committed).
 
 ## 1) DNS
 
