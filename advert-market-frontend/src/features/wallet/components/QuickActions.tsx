@@ -100,9 +100,9 @@ export function QuickActions() {
           >
             {action.icon}
           </button>
-          <Text type="caption1" style={{ marginTop: 8 }}>
-            {t(action.i18nKey)}
-          </Text>
+          <div style={{ marginTop: 8 }}>
+            <Text type="caption1">{t(action.i18nKey)}</Text>
+          </div>
         </motion.div>
       ))}
     </div>

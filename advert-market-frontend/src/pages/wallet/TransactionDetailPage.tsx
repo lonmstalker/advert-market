@@ -5,7 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { TransactionStatusBadge } from '@/features/wallet/components/TransactionStatusBadge';
 import { useTransactionDetail } from '@/features/wallet/hooks/useTransactionDetail';
-import { getAmountColor, getTransactionTypeConfig, getTransactionTypeTint } from '@/features/wallet/lib/transaction-type';
+import {
+  getAmountColor,
+  getTransactionTypeConfig,
+  getTransactionTypeTint,
+} from '@/features/wallet/lib/transaction-type';
 import { copyToClipboard } from '@/shared/lib/clipboard';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
@@ -81,7 +85,7 @@ export default function TransactionDetailPage() {
               right: 30,
               width: 14,
               height: 14,
-              opacity: 0.20,
+              opacity: 0.2,
               color: 'var(--color-foreground-primary)',
               pointerEvents: 'none',
             }}

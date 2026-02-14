@@ -4,7 +4,12 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTonCompact } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
-import { formatAmountWithSign, getAmountColor, getTransactionTypeConfig, getTransactionTypeTint } from '../lib/transaction-type';
+import {
+  formatAmountWithSign,
+  getAmountColor,
+  getTransactionTypeConfig,
+  getTransactionTypeTint,
+} from '../lib/transaction-type';
 import type { Transaction } from '../types/wallet';
 
 type TransactionListItemProps = {

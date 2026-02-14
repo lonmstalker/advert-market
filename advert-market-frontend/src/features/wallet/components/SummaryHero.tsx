@@ -47,7 +47,7 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           right: 28,
           width: 16,
           height: 16,
-          opacity: 0.20,
+          opacity: 0.2,
           color: 'var(--color-accent-primary)',
           pointerEvents: 'none',
         }}
