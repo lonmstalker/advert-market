@@ -34,7 +34,7 @@ export function getTransactionTypeConfig(type: TransactionType): TransactionType
 }
 
 const TYPE_TINT_COLORS: Record<TransactionType, string> = {
-  escrow_deposit: 'rgba(0, 122, 255, 0.1)',
+  escrow_deposit: 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.1)',
   payout: 'rgba(52, 199, 89, 0.1)',
   refund: 'rgba(255, 159, 10, 0.1)',
   commission: 'rgba(142, 142, 147, 0.1)',

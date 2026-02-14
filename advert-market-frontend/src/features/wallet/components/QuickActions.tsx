@@ -91,7 +91,7 @@ export function QuickActions() {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#fff',
+              color: 'var(--color-static-white)',
               border: 'none',
               padding: 0,
             }}

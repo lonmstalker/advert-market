@@ -104,7 +104,7 @@ export default function ProfilePage() {
 
         <motion.div {...fadeIn}>
           <EmptyState
-            emoji="\uD83D\uDCE1"
+            emoji={'\uD83D\uDCE1'}
             title={t('profile.channels.empty.title')}
             description={t('profile.channels.empty.description')}
             actionLabel={t('profile.channels.empty.cta')}
@@ -116,7 +116,7 @@ export default function ProfilePage() {
           <Group header={t('creatives.title')}>
             <motion.div {...pressScale}>
               <GroupItem
-                before={<SettingsIcon emoji="\uD83C\uDFA8" />}
+                before={<SettingsIcon emoji={'\uD83C\uDFA8'} />}
                 text={t('creatives.title')}
                 description={t('profile.creatives.description')}
                 chevron

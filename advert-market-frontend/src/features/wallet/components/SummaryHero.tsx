@@ -34,7 +34,7 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           height: 140,
           background: isOwner
             ? 'linear-gradient(180deg, rgba(52, 199, 89, 0.06) 0%, transparent 100%)'
-            : 'linear-gradient(180deg, rgba(0, 122, 255, 0.06) 0%, transparent 100%)',
+            : 'linear-gradient(180deg, rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.06) 0%, transparent 100%)',
           pointerEvents: 'none',
         }}
       />

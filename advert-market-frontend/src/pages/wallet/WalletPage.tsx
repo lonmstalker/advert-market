@@ -60,7 +60,7 @@ export default function WalletPage() {
 
       <SummaryHero summary={summary} />
 
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '4px 16px 16px' }}>
         <QuickActions />
       </div>
 
