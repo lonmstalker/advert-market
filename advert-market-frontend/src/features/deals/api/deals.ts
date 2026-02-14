@@ -24,6 +24,7 @@ export function fetchDeals(params: {
   role?: DealRole;
   cursor?: string;
   limit?: number;
+  statuses?: string[];
 }): Promise<PaginatedResponse<DealListItem>> {
   return api
     .get('/deals', {
@@ -32,6 +33,7 @@ export function fetchDeals(params: {
         role: params.role,
         cursor: params.cursor,
         limit: params.limit ?? 20,
+        statuses: params.statuses?.join(','),
       },
     })
     .catch((error: unknown) => {

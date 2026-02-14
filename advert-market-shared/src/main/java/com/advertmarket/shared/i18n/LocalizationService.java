@@ -1,6 +1,9 @@
 package com.advertmarket.shared.i18n;
 
+import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -32,8 +35,47 @@ public class LocalizationService {
         try {
             return messageSource.getMessage(key, args, locale);
         } catch (NoSuchMessageException e) {
+            String fallback = tryResourceBundleFallback(
+                    key, locale, args);
+            if (fallback != null) {
+                return fallback;
+            }
             return key;
         }
+    }
+
+    private static @Nullable String tryResourceBundleFallback(
+            @NonNull String key, @NonNull Locale locale,
+            Object @NonNull ... args) {
+        String basename = inferBasename(key);
+        if (basename == null) {
+            return null;
+        }
+        try {
+            ResourceBundle bundle =
+                    ResourceBundle.getBundle(basename, locale);
+            String pattern = bundle.getString(key);
+            if (args.length == 0) {
+                return pattern;
+            }
+            return new MessageFormat(pattern, locale).format(args);
+        } catch (MissingResourceException e) {
+            return null;
+        }
+    }
+
+    private static @Nullable String inferBasename(
+            @NonNull String key) {
+        if (key.startsWith("bot.")) {
+            return "messages/bot";
+        }
+        if (key.startsWith("notification.")) {
+            return "messages/notifications";
+        }
+        if (key.startsWith("error.")) {
+            return "messages/errors";
+        }
+        return null;
     }
 
     /**

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Text } from '@telegram-tools/ui-kit';
-import { motion } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { fetchChannelDetail, useChannelRights } from '@/features/channels';
@@ -10,16 +10,16 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { getMinPrice } from '@/shared/lib/channel-utils';
 import { copyToClipboard } from '@/shared/lib/clipboard';
 import { computeCpm } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState, PageLoader } from '@/shared/ui';
-import { slideUp } from '@/shared/ui/animations';
+import { BackButtonHandler, EmptyState, PageLoader, SegmentControl } from '@/shared/ui';
 import { SearchOffIcon } from '@/shared/ui/icons';
+import { ChannelAboutTab } from './components/ChannelAboutTab';
 import { ChannelDetailCta } from './components/ChannelDetailCta';
 import { ChannelDetailHeader } from './components/ChannelDetailHeader';
-import { ChannelDetailStats } from './components/ChannelDetailStats';
 import { ChannelNextSlot } from './components/ChannelNextSlot';
-import { ChannelOpenTelegram } from './components/ChannelOpenTelegram';
-import { ChannelOwnerNote } from './components/ChannelOwnerNote';
-import { ChannelPricingSection } from './components/ChannelPricingSection';
+import { ChannelPricingTab } from './components/ChannelPricingTab';
+import { ChannelRulesTab } from './components/ChannelRulesTab';
+
+type DetailTab = 'about' | 'pricing' | 'rules';
 
 export default function ChannelDetailPage() {
   const { t } = useTranslation();
@@ -28,6 +28,7 @@ export default function ChannelDetailPage() {
   const haptic = useHaptic();
   const { showSuccess } = useToast();
   const id = Number(channelId);
+  const [activeTab, setActiveTab] = useState<DetailTab>('about');
 
   const {
     data: channel,
@@ -78,6 +79,12 @@ export default function ChannelDetailPage() {
     }
   };
 
+  const tabs: { value: DetailTab; label: string }[] = [
+    { value: 'about', label: t('catalog.channel.tabAbout') },
+    { value: 'pricing', label: t('catalog.channel.tabPricing') },
+    { value: 'rules', label: t('catalog.channel.tabRules') },
+  ];
+
   return (
     <>
       <BackButtonHandler />
@@ -86,23 +93,15 @@ export default function ChannelDetailPage() {
 
         {channel.nextAvailableSlot && <ChannelNextSlot nextAvailableSlot={channel.nextAvailableSlot} />}
 
-        <ChannelDetailStats channel={channel} />
+        <div style={{ padding: '8px 16px 12px' }}>
+          <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
+        </div>
 
-        {channel.description && (
-          <motion.div {...slideUp} style={{ padding: 16 }}>
-            <div style={{ whiteSpace: 'pre-wrap' }}>
-              <Text type="subheadline1" color="secondary">
-                {channel.description}
-              </Text>
-            </div>
-          </motion.div>
-        )}
-
-        {channel.rules?.customRules && <ChannelOwnerNote customRules={channel.rules.customRules} />}
-
-        {telegramLink && <ChannelOpenTelegram link={telegramLink} username={channel.username} />}
-
-        <ChannelPricingSection channel={channel} minPrice={minPrice} heroCpm={heroCpm} />
+        <AnimatePresence mode="wait">
+          {activeTab === 'about' && <ChannelAboutTab channel={channel} telegramLink={telegramLink} />}
+          {activeTab === 'pricing' && <ChannelPricingTab channel={channel} minPrice={minPrice} heroCpm={heroCpm} />}
+          {activeTab === 'rules' && <ChannelRulesTab channel={channel} />}
+        </AnimatePresence>
       </div>
 
       {!isOwner && <ChannelDetailCta channelId={channel.id} minPrice={minPrice} />}

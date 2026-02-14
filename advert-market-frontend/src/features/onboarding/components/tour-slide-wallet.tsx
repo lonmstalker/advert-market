@@ -1,8 +1,10 @@
 import { Group, GroupItem, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
+import { CheckCircleIcon, CoinIcon, LockIcon, NewspaperIcon } from '@/shared/ui/icons';
 import { ChannelHeader } from './channel-header';
 import { MockupContainer } from './mockup-container';
 import { MockupTextButton } from './mockup-text-button';
@@ -11,12 +13,12 @@ import { TaskHint } from './task-hint';
 type WalletView = 'details' | 'flow' | 'policy';
 
 function EscrowFlowStep({
-  emoji,
+  icon,
   title,
   subtitle,
   showLine,
 }: {
-  emoji: string;
+  icon: ReactNode;
   title: string;
   subtitle: string;
   showLine: boolean;
@@ -42,10 +44,9 @@ function EscrowFlowStep({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '16px',
           }}
         >
-          {emoji}
+          {icon}
         </div>
         {showLine && (
           <div
@@ -70,6 +71,8 @@ function EscrowFlowStep({
   );
 }
 
+const flowIconStyle = { width: 16, height: 16, color: 'var(--color-foreground-secondary)' };
+
 export function TourSlideWallet() {
   const { t } = useTranslation();
   const [view, setView] = useState<WalletView>('details');
@@ -93,13 +96,17 @@ export function TourSlideWallet() {
         <AnimatePresence mode="wait">
           {view === 'details' && (
             <motion.div key="details" exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
-              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="5.00 TON" />
+              <ChannelHeader
+                icon={<NewspaperIcon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />}
+                name={t('onboarding.tour.mockup.channelName1')}
+                detail="5.00 TON"
+              />
 
               <Group header={t('onboarding.tour.mockup.paymentStatus')}>
                 <GroupItem
                   text={t('onboarding.tour.mockup.escrow')}
                   description={t('onboarding.tour.mockup.fundsSecured')}
-                  before={<span style={{ fontSize: '20px' }}>💎</span>}
+                  before={<LockIcon style={{ width: 20, height: 20, color: 'var(--color-accent-primary)' }} />}
                   onClick={handleEscrowClick}
                   chevron
                 />
@@ -134,19 +141,19 @@ export function TourSlideWallet() {
             >
               <div style={{ padding: '8px 0' }}>
                 <EscrowFlowStep
-                  emoji="💰"
+                  icon={<CoinIcon style={flowIconStyle} />}
                   title={t('onboarding.tour.mockup.escrowFlow1Title')}
                   subtitle={t('onboarding.tour.mockup.escrowFlow1Desc')}
                   showLine
                 />
                 <EscrowFlowStep
-                  emoji="🔒"
+                  icon={<LockIcon style={flowIconStyle} />}
                   title={t('onboarding.tour.mockup.escrowFlow2Title')}
                   subtitle={t('onboarding.tour.mockup.escrowFlow2Desc')}
                   showLine
                 />
                 <EscrowFlowStep
-                  emoji="✅"
+                  icon={<CheckCircleIcon style={flowIconStyle} />}
                   title={t('onboarding.tour.mockup.escrowFlow3Title')}
                   subtitle={t('onboarding.tour.mockup.escrowFlow3Desc')}
                   showLine={false}

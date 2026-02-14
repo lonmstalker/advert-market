@@ -61,9 +61,9 @@ describe('ProfilePage', () => {
     };
   });
 
-  it('renders title "Profile"', () => {
+  it('renders display name', () => {
     renderPage();
-    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Test User')).toBeInTheDocument();
   });
 
   it('shows displayName and @username', () => {
@@ -100,16 +100,16 @@ describe('ProfilePage', () => {
     expect(screen.getByText(/Member since/)).toBeInTheDocument();
   });
 
-  it('shows settings icons (emoji circles)', () => {
+  it('shows settings items as SVG icons', () => {
     renderPage();
-    expect(screen.getByText('\uD83C\uDF10')).toBeInTheDocument();
-    expect(screen.getByText('\uD83D\uDCB0')).toBeInTheDocument();
-    expect(screen.getByText('\uD83D\uDD14')).toBeInTheDocument();
+    expect(screen.getByText('Language')).toBeInTheDocument();
+    expect(screen.getByText('Display Currency')).toBeInTheDocument();
+    expect(screen.getByText('Notifications')).toBeInTheDocument();
   });
 
-  it('shows creatives icon', () => {
+  it('shows creatives section', () => {
     renderPage();
-    expect(screen.getByText('\uD83C\uDFA8')).toBeInTheDocument();
+    expect(screen.getByText('My Creatives')).toBeInTheDocument();
   });
 
   it('shows EmptyState with "Add channel" CTA', () => {

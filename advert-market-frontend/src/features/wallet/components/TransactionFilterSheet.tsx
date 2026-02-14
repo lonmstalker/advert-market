@@ -1,5 +1,6 @@
-import { Button, Group, GroupItem, Sheet, Text } from '@telegram-tools/ui-kit';
+import { Button, Sheet, Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
+import { ToggleChip } from '@/shared/ui';
 import { TRANSACTION_TYPES, type TransactionFilters, type TransactionType } from '../types/wallet';
 
 type TransactionFilterSheetProps = {
@@ -17,42 +18,40 @@ export function TransactionFilterSheet({ open, onClose, filters, onApply, onRese
     onApply({ ...filters, type: filters.type === type ? undefined : type });
   };
 
+  const handleApply = () => {
+    onClose();
+  };
+
   const FiltersSheet = () => (
-    <div style={{ padding: '16px' }}>
+    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Text type="title2" weight="bold">
         {t('wallet.filters.title')}
       </Text>
 
-      <div style={{ marginTop: 16 }}>
+      <div>
         <div style={{ marginBottom: 8 }}>
-          <Text type="caption1" weight="bold" color="secondary">
+          <Text type="body" weight="medium">
             {t('wallet.filters.type')}
           </Text>
         </div>
-        <Group>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {TRANSACTION_TYPES.map((type) => (
-            <GroupItem
+            <ToggleChip
               key={type}
-              text={t(`wallet.txType.${typeToKey(type)}`)}
+              label={t(`wallet.txType.${typeToKey(type)}`)}
+              active={filters.type === type}
               onClick={() => handleTypeSelect(type)}
-              after={
-                filters.type === type ? (
-                  <Text type="body" color="accent">
-                    ✓
-                  </Text>
-                ) : null
-              }
             />
           ))}
-        </Group>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1 }}>
           <Button text={t('wallet.filters.reset')} type="secondary" onClick={onReset} />
         </div>
         <div style={{ flex: 1 }}>
-          <Button text={t('wallet.filters.apply')} type="primary" onClick={onClose} />
+          <Button text={t('wallet.filters.apply')} type="primary" onClick={handleApply} />
         </div>
       </div>
     </div>

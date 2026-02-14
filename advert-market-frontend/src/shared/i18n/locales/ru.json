@@ -180,6 +180,8 @@
     "cancel": "Отмена",
     "save": "Сохранить",
     "back": "Назад",
+    "reset": "Сбросить",
+    "apply": "Применить",
     "toast.saveFailed": "Не удалось сохранить",
     "toast.saved": "Сохранено"
   },
@@ -288,6 +290,9 @@
       "noRules": "Правила не указаны",
       "pricingOverview": "Стоимость размещения",
       "conditions": "Условия размещения",
+      "tabAbout": "О канале",
+      "tabPricing": "Цены",
+      "tabRules": "Правила",
       "perThousandViews": "за 1 000 просмотров",
       "ownerNote": "Заметка от владельца",
       "overlapTooltipLine1": "~{{freq}}ч — реклама на 1-м месте",
@@ -335,7 +340,17 @@
     "empty": {
       "title": "Нет активных сделок",
       "description": "Ваши сделки по размещению рекламы появятся здесь",
+      "filteredDescription": "Нет сделок с выбранными фильтрами",
       "cta": "Найти канал"
+    },
+    "filter": {
+      "title": "Фильтр по статусу",
+      "new": "Новые",
+      "active": "Активные",
+      "publishing": "Публикация",
+      "completed": "Завершённые",
+      "cancelled": "Отменённые",
+      "disputed": "Спорные"
     },
     "endOfList": "Вот и всё",
     "tabs": {

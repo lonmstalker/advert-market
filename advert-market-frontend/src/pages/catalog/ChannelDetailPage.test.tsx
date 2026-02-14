@@ -110,13 +110,15 @@ describe('ChannelDetailPage', () => {
       expect(await screen.findByText('Open channel in Telegram')).toBeInTheDocument();
     });
 
-    it('shows pricing section title', async () => {
+    it('shows tab buttons including Pricing', async () => {
       renderPage(1);
-      expect(await screen.findByText('Pricing')).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Pricing' })).toBeInTheDocument();
     });
 
-    it('shows pricing rule cards with post type names', async () => {
-      renderPage(1);
+    it('shows pricing rule cards with post type names after switching to Pricing tab', async () => {
+      const { user } = renderPage(1);
+      const pricingTab = await screen.findByRole('button', { name: 'Pricing' });
+      await user.click(pricingTab);
       await waitFor(() => {
         expect(screen.getAllByText('Native post').length).toBeGreaterThanOrEqual(1);
       });
@@ -124,8 +126,10 @@ describe('ChannelDetailPage', () => {
       expect(screen.getByText('Repost')).toBeInTheDocument();
     });
 
-    it('shows pricing rule prices in TON', async () => {
-      renderPage(1);
+    it('shows pricing rule prices in TON after switching to Pricing tab', async () => {
+      const { user } = renderPage(1);
+      const pricingTab = await screen.findByRole('button', { name: 'Pricing' });
+      await user.click(pricingTab);
       await waitFor(() => {
         expect(screen.getByText('5 TON')).toBeInTheDocument();
       });
@@ -134,36 +138,38 @@ describe('ChannelDetailPage', () => {
       expect(screen.getByText('3 TON')).toBeInTheDocument();
     });
 
-    it('shows placement conditions section title', async () => {
-      renderPage(1);
-      expect(await screen.findByText('Placement conditions')).toBeInTheDocument();
+    it('shows rules content after switching to Rules tab', async () => {
+      const { user } = renderPage(1);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
+      expect(await screen.findByText('Media')).toBeInTheDocument();
     });
 
-    it('shows rules: media allowed after switching to Conditions tab', async () => {
+    it('shows rules: media allowed after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
-      await user.click(conditionsTab);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
       expect(await screen.findByText('Media allowed')).toBeInTheDocument();
     });
 
-    it('shows rules: links allowed after switching to Conditions tab', async () => {
+    it('shows rules: links allowed after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
-      await user.click(conditionsTab);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
       expect(await screen.findByText('Links allowed')).toBeInTheDocument();
     });
 
-    it('shows rules: text formatting allowed after switching to Conditions tab', async () => {
+    it('shows rules: text formatting allowed after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
-      await user.click(conditionsTab);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
       expect(await screen.findByText('Text formatting allowed')).toBeInTheDocument();
     });
 
-    it('shows prohibited topics after switching to Conditions tab', async () => {
+    it('shows prohibited topics after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const conditionsTab = await screen.findByRole('button', { name: 'Placement conditions' });
-      await user.click(conditionsTab);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
       await waitFor(() => {
         expect(screen.getByText('Казино')).toBeInTheDocument();
       });
@@ -171,8 +177,10 @@ describe('ChannelDetailPage', () => {
       expect(screen.getByText('P2P-обменники')).toBeInTheDocument();
     });
 
-    it('shows owner note section', async () => {
-      renderPage(1);
+    it('shows owner note section after switching to Rules tab', async () => {
+      const { user } = renderPage(1);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
       expect(await screen.findByText("Owner's note")).toBeInTheDocument();
       expect(screen.getByText(/Пост должен быть на тему криптовалют или блокчейна/)).toBeInTheDocument();
     });
@@ -229,10 +237,11 @@ describe('ChannelDetailPage', () => {
       });
     });
 
-    it('shows hero CPM in pricing section', async () => {
-      renderPage(1);
+    it('shows hero CPM in pricing tab', async () => {
+      const { user } = renderPage(1);
+      const pricingTab = await screen.findByRole('button', { name: 'Pricing' });
+      await user.click(pricingTab);
       await waitFor(() => {
-        // minPrice=3_000_000_000, avgReach=45000 → CPM shown
         expect(screen.getByText(/per 1K views/)).toBeInTheDocument();
       });
     });
@@ -288,8 +297,10 @@ describe('ChannelDetailPage', () => {
       expect(await screen.findByText('create-deal-page')).toBeInTheDocument();
     });
 
-    it('shows custom rules text', async () => {
-      renderPage(5);
+    it('shows custom rules text after switching to Rules tab', async () => {
+      const { user } = renderPage(5);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
       expect(await screen.findByText(/Только маркетинговая тематика/)).toBeInTheDocument();
     });
   });
@@ -335,7 +346,7 @@ describe('ChannelDetailPage', () => {
   // --- Corner cases ---
 
   describe('corner cases', () => {
-    it('channel without rules shows "No rules specified"', async () => {
+    it('channel without rules shows "No rules specified" after switching to Rules tab', async () => {
       server.use(
         http.get(`${API_BASE}/channels/:channelId`, () => {
           return HttpResponse.json({
@@ -367,7 +378,9 @@ describe('ChannelDetailPage', () => {
           return HttpResponse.json({ members: [] });
         }),
       );
-      renderPage(51);
+      const { user } = renderPage(51);
+      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      await user.click(rulesTab);
       expect(await screen.findByText('No rules specified')).toBeInTheDocument();
     });
 

@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { QuickActions } from '@/features/wallet/components/QuickActions';
 import { SummaryHero } from '@/features/wallet/components/SummaryHero';
 import { SummaryStats } from '@/features/wallet/components/SummaryStats';
 import { TransactionGroupList } from '@/features/wallet/components/TransactionGroupList';
@@ -11,6 +10,7 @@ import { useTransactions } from '@/features/wallet/hooks/useTransactions';
 import { useWalletSummary } from '@/features/wallet/hooks/useWalletSummary';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { ScrollIcon } from '@/shared/ui/icons';
 
 export default function WalletPage() {
   const { t } = useTranslation();
@@ -40,7 +40,7 @@ export default function WalletPage() {
           {t('wallet.title')}
         </Text>
         <EmptyState
-          emoji="📜"
+          icon={<ScrollIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
           title={t('wallet.empty.title')}
           description={t('wallet.empty.description')}
           actionLabel={t('wallet.empty.cta')}
@@ -59,10 +59,6 @@ export default function WalletPage() {
       </div>
 
       <SummaryHero summary={summary} />
-
-      <div style={{ padding: '4px 16px 16px' }}>
-        <QuickActions />
-      </div>
 
       <div style={{ padding: '0 16px 16px' }}>
         <SummaryStats summary={summary} />

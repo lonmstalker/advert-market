@@ -396,27 +396,6 @@ Primary (positive) + Secondary (negative), both `flex: 1`:
 </div>
 ```
 
-### Quick Actions (wallet)
-
-Row of circular icon buttons with labels (Wallet pattern: Top Up / Withdraw / Transfer):
-
-```tsx
-<div style={{ display: 'flex', justifyContent: 'center', gap: '24px' }}>
-  {actions.map(action => (
-    <motion.div {...pressScale} key={action.id} style={{ textAlign: 'center' }}>
-      <div style={{
-        width: '56px', height: '56px', borderRadius: '50%',
-        backgroundColor: 'var(--color-accent-primary)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
-        <Icon customIcon={action.icon} color="default" />
-      </div>
-      <Text type="caption1" style={{ marginTop: '8px' }}>{action.label}</Text>
-    </motion.div>
-  ))}
-</div>
-```
-
 ---
 
 ## 12. Animations

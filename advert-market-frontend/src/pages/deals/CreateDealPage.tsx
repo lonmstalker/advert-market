@@ -12,6 +12,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState, PageLoader, TextareaField } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { SadFaceIcon } from '@/shared/ui/icons';
 
 export default function CreateDealPage() {
   const { t } = useTranslation();
@@ -74,7 +75,7 @@ export default function CreateDealPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          emoji="😔"
+          icon={<SadFaceIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
           title={t('errors.notFound')}
           description={t('catalog.empty.description')}
           actionLabel={t('common.back')}

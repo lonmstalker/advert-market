@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
+import { NewspaperIcon } from '@/shared/ui/icons';
 import { ChannelHeader } from './channel-header';
 import { MiniTimeline } from './mini-timeline';
 import { MockupContainer } from './mockup-container';
@@ -187,7 +188,11 @@ export function TourSlideDeal() {
         <AnimatePresence mode="wait">
           {dealView === 'timeline' ? (
             <motion.div key="timeline" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <ChannelHeader emoji="📰" name={t('onboarding.tour.mockup.channelName1')} detail="5.00 TON" />
+              <ChannelHeader
+                icon={<NewspaperIcon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />}
+                name={t('onboarding.tour.mockup.channelName1')}
+                detail="5.00 TON"
+              />
 
               <AnimatePresence mode="wait">
                 <motion.div

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { CreativeListItem, useCreatives } from '@/features/creatives';
 import { BackButtonHandler, EmptyState, EndOfList, Tappable } from '@/shared/ui';
 import { fadeIn, listItem, pressScale, scaleIn, staggerChildren } from '@/shared/ui/animations';
+import { PaletteIcon } from '@/shared/ui/icons';
 
 const addButtonStyle: CSSProperties = {
   width: 36,
@@ -66,7 +67,7 @@ export default function CreativesPage() {
         ) : allCreatives.length === 0 ? (
           <motion.div key="empty" {...scaleIn}>
             <EmptyState
-              emoji={'\uD83C\uDFA8'}
+              icon={<PaletteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
               title={t('creatives.empty.title')}
               description={t('creatives.empty.description')}
               actionLabel={t('creatives.empty.cta')}

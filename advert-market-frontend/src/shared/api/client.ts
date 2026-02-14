@@ -5,9 +5,15 @@ import { ApiError, problemDetailSchema } from './types';
 
 const BASE_URL = import.meta.env.VITE_MOCK_API === 'true' ? '' : import.meta.env.VITE_API_BASE_URL || '';
 const API_PREFIX = '/api/v1';
+const REQUEST_TIMEOUT_MS =
+  Number(import.meta.env.VITE_API_TIMEOUT_MS) > 0 ? Number(import.meta.env.VITE_API_TIMEOUT_MS) : 15_000;
 
 function getAuthToken(): string | null {
   return sessionStorage.getItem('access_token');
+}
+
+function isAbortError(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && 'name' in err && (err as { name?: unknown }).name === 'AbortError';
 }
 
 function deriveCanaryKey(initData: string): string {
@@ -102,11 +108,30 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     headers['X-Canary-Key'] = canaryKey;
   }
 
-  const response = await fetch(url.toString(), {
-    method,
-    headers,
-    body: options?.body ? JSON.stringify(options.body) : undefined,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      method,
+      headers,
+      body: options?.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (isAbortError(err)) {
+      throw new ApiError(0, {
+        type: 'about:blank',
+        title: 'Request timed out',
+        status: 0,
+        detail: `Request to ${url.pathname} timed out after ${REQUEST_TIMEOUT_MS}ms`,
+      });
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     if (response.status === 401 && !options?._isRetrying) {

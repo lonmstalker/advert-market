@@ -20,7 +20,7 @@ import { buildOverlapLabel } from '@/shared/lib/overlap-label';
 import { formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState, PageLoader, Popover } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
-import { InfoIcon, TelegramIcon, TonDiamondIcon } from '@/shared/ui/icons';
+import { InfoIcon, SadFaceIcon, TelegramIcon, TonDiamondIcon } from '@/shared/ui/icons';
 
 const TERMINAL_STATUSES = new Set([
   'COMPLETED_RELEASED',
@@ -77,7 +77,7 @@ export default function DealDetailPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          emoji="😔"
+          icon={<SadFaceIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
           title={t('errors.notFound')}
           description={t('deals.empty.description')}
           actionLabel={t('common.back')}

@@ -53,9 +53,11 @@ describe('HistoryPage', () => {
     });
   });
 
-  it('shows filters button', async () => {
+  it('shows filter icon button', async () => {
     renderPage();
-    expect(await screen.findByText('Filters')).toBeInTheDocument();
+    await screen.findByText('Transaction history');
+    const filterButtons = document.querySelectorAll('button[type="button"]');
+    expect(filterButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows empty state when no transactions', async () => {

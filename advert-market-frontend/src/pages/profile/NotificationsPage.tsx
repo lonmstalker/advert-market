@@ -59,29 +59,38 @@ export default function NotificationsPage() {
             <GroupItem
               text={t('profile.notifications.newOffers')}
               description={t('profile.notifications.newOffers.hint')}
+              onClick={() => handleToggle('deals', 'newOffers', !notificationSettings.deals.newOffers)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.deals.newOffers}
-                  onChange={(v) => handleToggle('deals', 'newOffers', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.deals.newOffers}
+                    onChange={(v) => handleToggle('deals', 'newOffers', v)}
+                  />
+                </span>
               }
             />
             <GroupItem
               text={t('profile.notifications.acceptReject')}
+              onClick={() => handleToggle('deals', 'acceptReject', !notificationSettings.deals.acceptReject)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.deals.acceptReject}
-                  onChange={(v) => handleToggle('deals', 'acceptReject', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.deals.acceptReject}
+                    onChange={(v) => handleToggle('deals', 'acceptReject', v)}
+                  />
+                </span>
               }
             />
             <GroupItem
               text={t('profile.notifications.deliveryStatus')}
+              onClick={() => handleToggle('deals', 'deliveryStatus', !notificationSettings.deals.deliveryStatus)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.deals.deliveryStatus}
-                  onChange={(v) => handleToggle('deals', 'deliveryStatus', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.deals.deliveryStatus}
+                    onChange={(v) => handleToggle('deals', 'deliveryStatus', v)}
+                  />
+                </span>
               }
             />
           </Group>
@@ -92,30 +101,39 @@ export default function NotificationsPage() {
             <GroupItem
               text={t('profile.notifications.deposits')}
               description={t('profile.notifications.deposits.hint')}
+              onClick={() => handleToggle('financial', 'deposits', !notificationSettings.financial.deposits)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.financial.deposits}
-                  onChange={(v) => handleToggle('financial', 'deposits', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.financial.deposits}
+                    onChange={(v) => handleToggle('financial', 'deposits', v)}
+                  />
+                </span>
               }
             />
             <GroupItem
               text={t('profile.notifications.payouts')}
+              onClick={() => handleToggle('financial', 'payouts', !notificationSettings.financial.payouts)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.financial.payouts}
-                  onChange={(v) => handleToggle('financial', 'payouts', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.financial.payouts}
+                    onChange={(v) => handleToggle('financial', 'payouts', v)}
+                  />
+                </span>
               }
             />
             <GroupItem
               text={t('profile.notifications.escrow')}
               description={t('profile.notifications.escrow.hint')}
+              onClick={() => handleToggle('financial', 'escrow', !notificationSettings.financial.escrow)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.financial.escrow}
-                  onChange={(v) => handleToggle('financial', 'escrow', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.financial.escrow}
+                    onChange={(v) => handleToggle('financial', 'escrow', v)}
+                  />
+                </span>
               }
             />
           </Group>
@@ -125,20 +143,26 @@ export default function NotificationsPage() {
           <Group header={t('profile.notifications.disputes')}>
             <GroupItem
               text={t('profile.notifications.opened')}
+              onClick={() => handleToggle('disputes', 'opened', !notificationSettings.disputes.opened)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.disputes.opened}
-                  onChange={(v) => handleToggle('disputes', 'opened', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.disputes.opened}
+                    onChange={(v) => handleToggle('disputes', 'opened', v)}
+                  />
+                </span>
               }
             />
             <GroupItem
               text={t('profile.notifications.resolved')}
+              onClick={() => handleToggle('disputes', 'resolved', !notificationSettings.disputes.resolved)}
               after={
-                <Toggle
-                  isEnabled={notificationSettings.disputes.resolved}
-                  onChange={(v) => handleToggle('disputes', 'resolved', v)}
-                />
+                <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <Toggle
+                    isEnabled={notificationSettings.disputes.resolved}
+                    onChange={(v) => handleToggle('disputes', 'resolved', v)}
+                  />
+                </span>
               }
             />
           </Group>

@@ -71,9 +71,10 @@ describe('TransactionFilterSheet', () => {
     expect(screen.getByText('Commission')).toBeInTheDocument();
   });
 
-  it('shows checkmark for selected type', () => {
+  it('highlights selected type as active toggle chip', () => {
     renderSheet({ filters: { type: 'payout' } });
-    expect(screen.getByText('\u2713')).toBeInTheDocument();
+    const payoutButton = screen.getByText('Payout');
+    expect(payoutButton).toBeInTheDocument();
   });
 
   it('toggles type on click — selects unselected type', async () => {

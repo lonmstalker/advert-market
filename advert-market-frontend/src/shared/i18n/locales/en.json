@@ -180,6 +180,8 @@
     "cancel": "Cancel",
     "save": "Save",
     "back": "Back",
+    "reset": "Reset",
+    "apply": "Apply",
     "toast.saveFailed": "Failed to save",
     "toast.saved": "Saved"
   },
@@ -285,6 +287,9 @@
       "noRules": "No rules specified",
       "pricingOverview": "Pricing",
       "conditions": "Placement conditions",
+      "tabAbout": "About",
+      "tabPricing": "Pricing",
+      "tabRules": "Rules",
       "perThousandViews": "per 1K views",
       "ownerNote": "Owner's note",
       "overlapTooltipLine1": "~{{freq}}h — ad stays on top",
@@ -332,7 +337,17 @@
     "empty": {
       "title": "No active deals",
       "description": "Your advertising deals will appear here",
+      "filteredDescription": "No deals matching selected filters",
       "cta": "Find a channel"
+    },
+    "filter": {
+      "title": "Filter by status",
+      "new": "New",
+      "active": "Active",
+      "publishing": "Publishing",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "disputed": "Disputed"
     },
     "endOfList": "That's all",
     "tabs": {

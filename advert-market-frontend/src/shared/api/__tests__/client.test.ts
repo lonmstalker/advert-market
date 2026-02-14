@@ -238,6 +238,60 @@ describe('api client', () => {
     });
   });
 
+  // -------- Timeouts / Abort --------
+
+  describe('timeouts', () => {
+    it('aborts a hanging request after timeout', async () => {
+      vi.useFakeTimers();
+
+      const originalFetch = globalThis.fetch;
+      try {
+        globalThis.fetch = vi.fn((_url: string, init?: RequestInit) => {
+          const signal = init?.signal;
+          return new Promise((_resolve, reject) => {
+            if (signal) {
+              signal.addEventListener('abort', () => {
+                reject(new DOMException('Aborted', 'AbortError'));
+              });
+            }
+          }) as Promise<Response>;
+        }) as typeof fetch;
+
+        const requestPromise = api.get('/hang');
+
+        const outcomePromise = Promise.race([
+          requestPromise.then(
+            () => 'resolved' as const,
+            () => 'rejected' as const,
+          ),
+          new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 20_000)),
+        ]);
+
+        await vi.advanceTimersByTimeAsync(20_000);
+
+        const outcome = await outcomePromise;
+        expect(outcome).toBe('rejected');
+        await expect(requestPromise).rejects.toBeInstanceOf(ApiError);
+      } finally {
+        globalThis.fetch = originalFetch;
+        vi.useRealTimers();
+      }
+    });
+
+    it('wraps AbortError into ApiError', async () => {
+      const originalFetch = globalThis.fetch;
+      try {
+        globalThis.fetch = vi.fn(() =>
+          Promise.reject(new DOMException('Aborted', 'AbortError')),
+        ) as unknown as typeof fetch;
+
+        await expect(api.get('/abort')).rejects.toBeInstanceOf(ApiError);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
+
   // -------- 401 handling & re-login --------
 
   describe('401 handling', () => {

@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { fadeIn, pressScale } from '../animations';
 
 type EmptyStateProps = {
-  emoji?: string;
   icon?: ReactNode;
   title: string;
   description: string;
@@ -12,7 +11,7 @@ type EmptyStateProps = {
   onAction?: () => void;
 };
 
-export function EmptyState({ emoji, icon, title, description, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
     <motion.div
       {...fadeIn}
@@ -26,7 +25,7 @@ export function EmptyState({ emoji, icon, title, description, actionLabel, onAct
         gap: '12px',
       }}
     >
-      {icon ? (
+      {icon && (
         <div
           style={{
             width: 64,
@@ -41,9 +40,7 @@ export function EmptyState({ emoji, icon, title, description, actionLabel, onAct
         >
           {icon}
         </div>
-      ) : emoji ? (
-        <span style={{ fontSize: '48px', lineHeight: 1 }}>{emoji}</span>
-      ) : null}
+      )}
       <Text type="title2" weight="bold">
         {title}
       </Text>

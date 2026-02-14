@@ -1,8 +1,9 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
+import type { ReactNode } from 'react';
 
 type RolePreviewItemProps = {
-  emoji: string;
+  icon: ReactNode;
   text: string;
 };
 
@@ -11,7 +12,7 @@ const itemVariant = {
   animate: { opacity: 1, y: 0 },
 };
 
-export function RolePreviewItem({ emoji, text }: RolePreviewItemProps) {
+export function RolePreviewItem({ icon, text }: RolePreviewItemProps) {
   return (
     <motion.div
       variants={itemVariant}
@@ -22,7 +23,7 @@ export function RolePreviewItem({ emoji, text }: RolePreviewItemProps) {
         padding: '4px 0',
       }}
     >
-      <span style={{ fontSize: '16px', lineHeight: 1, flexShrink: 0 }}>{emoji}</span>
+      <span style={{ display: 'flex', flexShrink: 0 }}>{icon}</span>
       <Text type="caption1" color="secondary">
         {text}
       </Text>

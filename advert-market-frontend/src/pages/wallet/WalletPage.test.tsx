@@ -86,11 +86,9 @@ describe('WalletPage', () => {
     expect(await screen.findByText('detail-page')).toBeInTheDocument();
   });
 
-  it('renders Quick Actions section with 3 buttons', async () => {
+  it('does not render Quick Actions section', async () => {
     renderPage();
     await screen.findByText('Total earned');
-    expect(screen.getByRole('button', { name: 'Top up' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Withdraw' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Transfer' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Top up' })).not.toBeInTheDocument();
   });
 });

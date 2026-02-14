@@ -6,6 +6,9 @@ import { useOnboardingStore } from '@/features/onboarding';
 import { RoleCard } from '@/features/onboarding/components/role-card';
 import { RolePreviewItem } from '@/features/onboarding/components/role-preview-item';
 import { MonitorIcon, pressScale, SpeakerIcon, slideUp } from '@/shared/ui';
+import { ChartBarIcon, ClipboardIcon, CoinIcon, HandshakeIcon, SearchIcon, TonDiamondIcon } from '@/shared/ui/icons';
+
+const previewIconStyle = { width: 16, height: 16, color: 'var(--color-foreground-secondary)' };
 
 export default function OnboardingInterestPage() {
   const { t } = useTranslation();
@@ -43,9 +46,18 @@ export default function OnboardingInterestPage() {
           isSelected={interests.has('advertiser')}
           onToggle={() => toggleInterest('advertiser')}
         >
-          <RolePreviewItem emoji="🔍" text={t('onboarding.interest.advertiserPreview1')} />
-          <RolePreviewItem emoji="💰" text={t('onboarding.interest.advertiserPreview2')} />
-          <RolePreviewItem emoji="📊" text={t('onboarding.interest.advertiserPreview3')} />
+          <RolePreviewItem
+            icon={<SearchIcon style={previewIconStyle} />}
+            text={t('onboarding.interest.advertiserPreview1')}
+          />
+          <RolePreviewItem
+            icon={<CoinIcon style={previewIconStyle} />}
+            text={t('onboarding.interest.advertiserPreview2')}
+          />
+          <RolePreviewItem
+            icon={<ChartBarIcon style={previewIconStyle} />}
+            text={t('onboarding.interest.advertiserPreview3')}
+          />
         </RoleCard>
 
         <RoleCard
@@ -55,9 +67,18 @@ export default function OnboardingInterestPage() {
           isSelected={interests.has('owner')}
           onToggle={() => toggleInterest('owner')}
         >
-          <RolePreviewItem emoji="📋" text={t('onboarding.interest.ownerPreview1')} />
-          <RolePreviewItem emoji="🤝" text={t('onboarding.interest.ownerPreview2')} />
-          <RolePreviewItem emoji="💎" text={t('onboarding.interest.ownerPreview3')} />
+          <RolePreviewItem
+            icon={<ClipboardIcon style={previewIconStyle} />}
+            text={t('onboarding.interest.ownerPreview1')}
+          />
+          <RolePreviewItem
+            icon={<HandshakeIcon style={previewIconStyle} />}
+            text={t('onboarding.interest.ownerPreview2')}
+          />
+          <RolePreviewItem
+            icon={<TonDiamondIcon style={previewIconStyle} />}
+            text={t('onboarding.interest.ownerPreview3')}
+          />
         </RoleCard>
 
         <AnimatePresence>

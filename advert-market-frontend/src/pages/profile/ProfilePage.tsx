@@ -1,12 +1,15 @@
 import { Group, GroupItem, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
+import type { ComponentType, SVGProps } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
-import { ChannelAvatar, EmptyState } from '@/shared/ui';
+import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
+import { ArrowRightIcon, BellIcon, CoinIcon, GlobeIcon, PaletteIcon, SatelliteIcon } from '@/shared/ui/icons';
+import { ProfileHero } from './components/ProfileHero';
 
 const CURRENCY_LABELS: Record<string, string> = {
   USD: '$ USD',
@@ -19,28 +22,26 @@ const LANGUAGE_LABELS: Record<string, string> = {
   en: 'English',
 };
 
-const SETTINGS_ITEMS = [
-  { key: 'language', emoji: '\uD83C\uDF10', route: '/profile/language' },
-  { key: 'currency', emoji: '\uD83D\uDCB0', route: '/profile/currency' },
-  { key: 'notifications', emoji: '\uD83D\uDD14', route: '/profile/notifications' },
-] as const;
+const SETTINGS_ITEMS: { key: string; icon: ComponentType<SVGProps<SVGSVGElement>>; route: string }[] = [
+  { key: 'language', icon: GlobeIcon, route: '/profile/language' },
+  { key: 'currency', icon: CoinIcon, route: '/profile/currency' },
+  { key: 'notifications', icon: BellIcon, route: '/profile/notifications' },
+];
 
-function SettingsIcon({ emoji, active = false }: { emoji: string; active?: boolean }) {
+function SettingsIcon({ icon: Icon }: { icon: ComponentType<SVGProps<SVGSVGElement>> }) {
   return (
     <div
       style={{
         width: 36,
         height: 36,
         borderRadius: '50%',
-        background: active
-          ? 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)'
-          : 'var(--color-background-section)',
+        background: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <span style={{ fontSize: 18 }}>{emoji}</span>
+      <Icon style={{ width: 18, height: 18, color: 'var(--color-accent-primary)' }} />
     </div>
   );
 }
@@ -83,43 +84,41 @@ export default function ProfilePage() {
     return t('profile.memberSince', { date: formatted });
   }, [profile?.createdAt, langCode, t]);
 
-  const accountDescription = [username, roleBadge, memberSince].filter(Boolean).join(' \u00B7 ');
-
   return (
-    <motion.div {...fadeIn} style={{ padding: '16px' }}>
-      <Text type="title1" weight="bold">
-        {t('profile.title')}
-      </Text>
+    <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+      <ProfileHero
+        displayName={displayName}
+        username={username || undefined}
+        roleBadge={roleBadge}
+        memberSince={memberSince}
+      />
 
-      <motion.div {...staggerChildren} initial="initial" animate="animate" style={{ marginTop: 16 }}>
+      <motion.div
+        {...staggerChildren}
+        initial="initial"
+        animate="animate"
+        style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}
+      >
         <motion.div {...fadeIn}>
-          <Group header={t('profile.account')}>
-            <GroupItem
-              before={<ChannelAvatar title={displayName || 'U'} size="lg" />}
-              text={displayName}
-              description={accountDescription || undefined}
+          <Group header={t('profile.channels')}>
+            <EmptyState
+              icon={<SatelliteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+              title={t('profile.channels.empty.title')}
+              description={t('profile.channels.empty.description')}
+              actionLabel={t('profile.channels.empty.cta')}
+              onAction={() => navigate('/profile/channels/new')}
             />
           </Group>
         </motion.div>
 
         <motion.div {...fadeIn}>
-          <EmptyState
-            emoji={'\uD83D\uDCE1'}
-            title={t('profile.channels.empty.title')}
-            description={t('profile.channels.empty.description')}
-            actionLabel={t('profile.channels.empty.cta')}
-            onAction={() => navigate('/profile/channels/new')}
-          />
-        </motion.div>
-
-        <motion.div {...fadeIn}>
-          <Group header={t('creatives.title')}>
+          <Group>
             <motion.div {...pressScale}>
               <GroupItem
-                before={<SettingsIcon emoji={'\uD83C\uDFA8'} />}
+                before={<SettingsIcon icon={PaletteIcon} />}
                 text={t('creatives.title')}
                 description={t('profile.creatives.description')}
-                chevron
+                after={<ArrowRightIcon style={{ width: 16, height: 16, color: 'var(--color-foreground-tertiary)' }} />}
                 onClick={() => navigate('/profile/creatives')}
               />
             </motion.div>
@@ -128,10 +127,10 @@ export default function ProfilePage() {
 
         <motion.div {...fadeIn}>
           <Group header={t('profile.settings')}>
-            {SETTINGS_ITEMS.map(({ key, emoji, route }) => (
+            {SETTINGS_ITEMS.map(({ key, icon, route }) => (
               <motion.div key={key} {...pressScale}>
                 <GroupItem
-                  before={<SettingsIcon emoji={emoji} />}
+                  before={<SettingsIcon icon={icon} />}
                   text={t(`profile.${key}`)}
                   after={
                     key === 'language' ? (

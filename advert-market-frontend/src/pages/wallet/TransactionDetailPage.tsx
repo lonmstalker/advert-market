@@ -16,7 +16,7 @@ import { formatFiat } from '@/shared/lib/fiat-format';
 import { formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState, PageLoader } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
-import { TonDiamondIcon } from '@/shared/ui/icons';
+import { SadFaceIcon, TonDiamondIcon } from '@/shared/ui/icons';
 
 export default function TransactionDetailPage() {
   const { t, i18n } = useTranslation();
@@ -39,7 +39,7 @@ export default function TransactionDetailPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          emoji="😔"
+          icon={<SadFaceIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
           title={t('errors.notFound')}
           description={t('wallet.empty.description')}
           actionLabel={t('common.back')}

@@ -1,12 +1,13 @@
 import { Text } from '@telegram-tools/ui-kit';
+import type { ReactNode } from 'react';
 
 type ChannelHeaderProps = {
-  emoji: string;
+  icon: ReactNode;
   name: string;
   detail: string;
 };
 
-export function ChannelHeader({ emoji, name, detail }: ChannelHeaderProps) {
+export function ChannelHeader({ icon, name, detail }: ChannelHeaderProps) {
   return (
     <div
       style={{
@@ -26,11 +27,10 @@ export function ChannelHeader({ emoji, name, detail }: ChannelHeaderProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '18px',
           flexShrink: 0,
         }}
       >
-        {emoji}
+        {icon}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <Text type="subheadline1" weight="medium">

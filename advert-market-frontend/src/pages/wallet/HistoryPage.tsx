@@ -10,6 +10,7 @@ import type { TransactionFilters } from '@/features/wallet/types/wallet';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
 import { BackButtonHandler, EmptyState, EndOfList } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { FilterIcon, ScrollIcon } from '@/shared/ui/icons';
 
 const EMPTY_FILTERS: TransactionFilters = {};
 
@@ -40,20 +41,48 @@ export default function HistoryPage() {
             type="button"
             onClick={() => setSheetOpen(true)}
             style={{
-              background: activeFilterCount > 0 ? 'var(--color-accent-primary)' : 'var(--color-background-secondary)',
-              border: 'none',
-              borderRadius: 8,
-              padding: '6px 12px',
-              cursor: 'pointer',
+              position: 'relative',
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+              border: '1px solid var(--color-border-separator)',
+              background: activeFilterCount > 0 ? 'var(--color-accent-primary)' : 'var(--color-background-base)',
               display: 'flex',
               alignItems: 'center',
-              gap: 4,
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
             }}
           >
-            <Text type="caption1" weight="bold" color={activeFilterCount > 0 ? 'white' : 'primary'}>
-              {t('wallet.filters.button')}
-              {activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-            </Text>
+            <FilterIcon
+              style={{
+                width: 20,
+                height: 20,
+                color: activeFilterCount > 0 ? 'var(--color-static-white)' : 'var(--color-foreground-secondary)',
+              }}
+            />
+            {activeFilterCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 18,
+                  height: 18,
+                  borderRadius: '50%',
+                  background: 'var(--color-destructive)',
+                  color: 'var(--color-static-white)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid var(--color-background-base)',
+                }}
+              >
+                {activeFilterCount}
+              </span>
+            )}
           </motion.button>
         </div>
 
@@ -63,7 +92,7 @@ export default function HistoryPage() {
           </div>
         ) : transactions.length === 0 ? (
           <EmptyState
-            emoji="📜"
+            icon={<ScrollIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
             title={t('wallet.history.empty')}
             description={activeFilterCount > 0 ? t('wallet.history.emptyFiltered') : t('wallet.empty.description')}
             actionLabel={activeFilterCount > 0 ? t('wallet.filters.reset') : undefined}

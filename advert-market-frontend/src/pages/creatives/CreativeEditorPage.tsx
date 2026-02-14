@@ -14,7 +14,7 @@ import {
   useEntities,
   useUpdateCreative,
 } from '@/features/creatives';
-import { BackButtonHandler, Tappable, TelegramPostPreview } from '@/shared/ui';
+import { BackButtonHandler, Tappable, TelegramChatSimulator } from '@/shared/ui';
 import { fadeIn } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
@@ -140,8 +140,8 @@ export default function CreativeEditorPage() {
           isSubmitting={createMutation.isPending || updateMutation.isPending}
         />
       ) : (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
-          <TelegramPostPreview
+        <div style={{ padding: '16px 0' }}>
+          <TelegramChatSimulator
             text={text}
             entities={entities}
             media={media}

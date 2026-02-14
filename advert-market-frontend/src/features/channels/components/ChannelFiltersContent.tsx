@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
 import { parseTonToNano } from '@/shared/lib/ton-format';
+import { ToggleChip } from '@/shared/ui';
 import { fetchCategories, fetchChannelCount } from '../api/channels';
 import type { CatalogFilters, ChannelSort } from '../types/channel';
 import { channelSortValues } from '../types/channel';
@@ -27,30 +28,6 @@ function FilterSection({ children }: { children: React.ReactNode }) {
     >
       {children}
     </div>
-  );
-}
-
-function ToggleChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        padding: '6px 14px',
-        borderRadius: 16,
-        border: active ? 'none' : '1px solid var(--color-border-separator)',
-        background: active ? 'var(--color-accent-primary)' : 'var(--color-background-base)',
-        color: active ? 'var(--color-static-white)' : 'var(--color-foreground-secondary)',
-        fontSize: 13,
-        fontWeight: 500,
-        whiteSpace: 'nowrap',
-        cursor: 'pointer',
-        WebkitTapHighlightColor: 'transparent',
-        lineHeight: 1.2,
-      }}
-    >
-      {label}
-    </button>
   );
 }
 
