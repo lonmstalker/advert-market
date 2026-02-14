@@ -44,6 +44,28 @@ public class LocalizationService {
         }
     }
 
+    /**
+     * Resolves a message by key and language code string.
+     *
+     * @param key      the message key
+     * @param langCode language code (e.g. "ru", "en"), or null
+     * @param args     optional message arguments
+     * @return the resolved message, or the key itself on miss
+     */
+    @NonNull
+    public String msg(@NonNull String key, @Nullable String langCode,
+            Object @NonNull ... args) {
+        Locale locale;
+        try {
+            locale = StringUtils.isNotBlank(langCode)
+                    ? Locale.of(langCode)
+                    : DEFAULT_LOCALE;
+        } catch (IllegalArgumentException e) {
+            locale = DEFAULT_LOCALE;
+        }
+        return msg(key, locale, args);
+    }
+
     private static @Nullable String tryResourceBundleFallback(
             @NonNull String key, @NonNull Locale locale,
             Object @NonNull ... args) {
@@ -76,27 +98,5 @@ public class LocalizationService {
             return "messages/errors";
         }
         return null;
-    }
-
-    /**
-     * Resolves a message by key and language code string.
-     *
-     * @param key      the message key
-     * @param langCode language code (e.g. "ru", "en"), or null
-     * @param args     optional message arguments
-     * @return the resolved message, or the key itself on miss
-     */
-    @NonNull
-    public String msg(@NonNull String key, @Nullable String langCode,
-            Object @NonNull ... args) {
-        Locale locale;
-        try {
-            locale = StringUtils.isNotBlank(langCode)
-                    ? Locale.of(langCode)
-                    : DEFAULT_LOCALE;
-        } catch (IllegalArgumentException e) {
-            locale = DEFAULT_LOCALE;
-        }
-        return msg(key, locale, args);
     }
 }

@@ -19,9 +19,11 @@ import com.advertmarket.identity.service.AuthServiceImpl;
 import com.advertmarket.identity.service.UserServiceImpl;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.RedisSupport;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserBlockCheckPort;
 import com.advertmarket.shared.model.UserId;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -83,7 +85,10 @@ class IdentityWorkflowIntegrationTest {
                 new UserBlockProperties("tg:block:"));
         userBlockCheckPort = blockService;
         metricsFacade = new MetricsFacade(new SimpleMeterRegistry());
-        userRepository = new JooqUserRepository(dsl);
+        userRepository = new JooqUserRepository(
+                dsl,
+                new JsonFacade(new ObjectMapper()
+                        .findAndRegisterModules()));
         authService = new AuthServiceImpl(
                 null, userRepository,
                 jwtTokenProvider, tokenBlacklistPort,

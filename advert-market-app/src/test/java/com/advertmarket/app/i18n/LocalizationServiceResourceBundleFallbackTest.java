@@ -47,10 +47,9 @@ class LocalizationServiceResourceBundleFallbackTest {
         assertThat(welcome).contains("Advert Market");
 
         String selected = i18n.msg("bot.language.selected", "ru",
-                "RU \u0420\u0443\u0441\u0441\u043a\u0438\u0439");
+                "RU Русский");
         assertThat(selected)
                 .contains("RU")
-                .contains("\u2714");
+                .contains("✔");
     }
 }
-

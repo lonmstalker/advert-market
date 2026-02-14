@@ -54,13 +54,15 @@ public class UserServiceImpl implements UserPort {
     public @NonNull UserProfile updateSettings(
             @NonNull UserId userId,
             @NonNull UpdateSettingsRequest request) {
-        if (request.displayCurrency() != null) {
+        String displayCurrency = request.displayCurrency();
+        if (displayCurrency != null) {
             userRepository.updateDisplayCurrency(
-                    userId, request.displayCurrency());
+                    userId, displayCurrency);
         }
-        if (request.notificationSettings() != null) {
+        var notificationSettings = request.notificationSettings();
+        if (notificationSettings != null) {
             userRepository.updateNotificationSettings(
-                    userId, request.notificationSettings());
+                    userId, notificationSettings);
         }
         return getProfile(userId);
     }

@@ -420,6 +420,11 @@ class TeamServiceTest {
                     }
 
                     @Override
+                    public long getTokenExpSeconds() {
+                        return 0;
+                    }
+
+                    @Override
                     public Collection<? extends GrantedAuthority> getAuthorities() {
                         return List.of();
                     }

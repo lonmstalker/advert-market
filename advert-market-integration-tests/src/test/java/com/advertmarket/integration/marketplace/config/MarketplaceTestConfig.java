@@ -111,8 +111,8 @@ public class MarketplaceTestConfig {
     }
 
     @Bean
-    UserRepository userRepository(DSLContext dsl) {
-        return new JooqUserRepository(dsl);
+    UserRepository userRepository(DSLContext dsl, JsonFacade jsonFacade) {
+        return new JooqUserRepository(dsl, jsonFacade);
     }
 
     @Bean

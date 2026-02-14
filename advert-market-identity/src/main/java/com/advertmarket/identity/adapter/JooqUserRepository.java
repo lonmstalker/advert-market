@@ -136,43 +136,54 @@ public class JooqUserRepository implements UserRepository {
         long id = record.get(USERS.ID);
         String firstName = record.get(USERS.FIRST_NAME);
         String lastName = record.get(USERS.LAST_NAME);
-        String username = record.get(USERS.USERNAME);
-        String languageCode = record.get(USERS.LANGUAGE_CODE);
-        String displayCurrency = record.get(USERS.DISPLAY_CURRENCY);
-        JSON notifJson = record.get(USERS.NOTIFICATION_SETTINGS);
-        Boolean onboardingCompleted = record.get(
-                USERS.ONBOARDING_COMPLETED);
-        String[] interests = record.get(USERS.INTERESTS);
-        OffsetDateTime createdAt = record.get(USERS.CREATED_AT);
-
-        String displayName = lastName != null
-                && !lastName.isBlank()
-                ? firstName + " " + lastName
-                : firstName != null ? firstName : "";
-
-        NotificationSettings notificationSettings =
-                notifJson != null && notifJson.data() != null
-                        ? jsonFacade.fromJson(notifJson.data(),
-                        NotificationSettings.class)
-                        : NotificationSettings.defaults();
-
         return new UserProfile(
                 id,
-                username != null ? username : "",
-                displayName,
-                languageCode != null ? languageCode : "ru",
-                displayCurrency != null ? displayCurrency : "USD",
-                notificationSettings,
-                Boolean.TRUE.equals(onboardingCompleted),
-                interests != null
-                        ? Arrays.asList(interests)
-                        : List.of(),
-                createdAt != null
-                        ? createdAt.toInstant()
-                        : Instant.now());
+                orEmpty(record.get(USERS.USERNAME)),
+                displayName(firstName, lastName),
+                defaultLanguage(record.get(USERS.LANGUAGE_CODE)),
+                defaultCurrency(record.get(USERS.DISPLAY_CURRENCY)),
+                notificationSettings(record.get(USERS.NOTIFICATION_SETTINGS)),
+                Boolean.TRUE.equals(record.get(USERS.ONBOARDING_COMPLETED)),
+                interests(record.get(USERS.INTERESTS)),
+                createdAt(record.get(USERS.CREATED_AT)));
     }
 
     private static String defaultCurrencyForLanguage(String languageCode) {
         return "ru".equals(languageCode) ? "RUB" : "USD";
+    }
+
+    private static String orEmpty(String value) {
+        return value != null ? value : "";
+    }
+
+    private static String defaultLanguage(String languageCode) {
+        return languageCode != null ? languageCode : "ru";
+    }
+
+    private static String defaultCurrency(String currency) {
+        return currency != null ? currency : "USD";
+    }
+
+    private static String displayName(String firstName, String lastName) {
+        if (lastName != null && !lastName.isBlank()) {
+            return (firstName != null ? firstName : "") + " " + lastName;
+        }
+        return firstName != null ? firstName : "";
+    }
+
+    private NotificationSettings notificationSettings(JSON notifJson) {
+        if (notifJson != null && notifJson.data() != null) {
+            return jsonFacade.fromJson(notifJson.data(),
+                    NotificationSettings.class);
+        }
+        return NotificationSettings.defaults();
+    }
+
+    private static List<String> interests(String[] interests) {
+        return interests != null ? Arrays.asList(interests) : List.of();
+    }
+
+    private static Instant createdAt(OffsetDateTime createdAt) {
+        return createdAt != null ? createdAt.toInstant() : Instant.now();
     }
 }

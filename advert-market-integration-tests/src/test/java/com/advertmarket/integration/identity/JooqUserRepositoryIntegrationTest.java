@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.advertmarket.identity.adapter.JooqUserRepository;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.UserId;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,7 +32,10 @@ class JooqUserRepositoryIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        repository = new JooqUserRepository(dsl);
+        repository = new JooqUserRepository(
+                dsl,
+                new JsonFacade(new ObjectMapper()
+                        .findAndRegisterModules()));
         DatabaseSupport.cleanUserTables(dsl);
     }
 

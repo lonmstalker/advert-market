@@ -103,7 +103,8 @@ public record TelegramBotProperties(
      */
     public record Welcome(
             @PropertyDoc(
-                    description = "Custom emoji id to prefix the welcome message (MarkdownV2: ![x](tg://emoji?id=...))",
+                    description = "Custom emoji id to prefix the welcome message (MarkdownV2: "
+                            + "![x](tg://emoji?id=...))",
                     required = Requirement.OPTIONAL
             )
             @DefaultValue("") String customEmojiId
