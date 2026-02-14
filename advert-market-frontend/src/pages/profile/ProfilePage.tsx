@@ -1,5 +1,6 @@
 import { Group, GroupItem, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/shared/hooks';
@@ -18,6 +19,49 @@ const LANGUAGE_LABELS: Record<string, string> = {
   en: 'English',
 };
 
+const SETTINGS_ITEMS = [
+  { key: 'language', emoji: '\uD83C\uDF10', route: '/profile/language' },
+  { key: 'currency', emoji: '\uD83D\uDCB0', route: '/profile/currency' },
+  { key: 'notifications', emoji: '\uD83D\uDD14', route: '/profile/notifications' },
+] as const;
+
+function SettingsIcon({ emoji, active = false }: { emoji: string; active?: boolean }) {
+  return (
+    <div
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: '50%',
+        background: active
+          ? 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)'
+          : 'var(--color-background-section)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <span style={{ fontSize: 18 }}>{emoji}</span>
+    </div>
+  );
+}
+
+function formatMemberSince(dateStr: string, locale: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function getRoleBadge(interests: string[], t: (key: string) => string): string | null {
+  if (interests.includes('advertiser') && interests.includes('channel_owner')) {
+    return `${t('profile.role.advertiser')} & ${t('profile.role.channel_owner')}`;
+  }
+  if (interests.includes('advertiser')) return t('profile.role.advertiser');
+  if (interests.includes('channel_owner')) return t('profile.role.channel_owner');
+  return null;
+}
+
 export default function ProfilePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -27,6 +71,19 @@ export default function ProfilePage() {
   const displayName = profile?.displayName ?? '';
   const username = profile?.username ? `@${profile.username}` : '';
   const langCode = profile?.languageCode ?? 'en';
+
+  const roleBadge = useMemo(
+    () => (profile?.interests ? getRoleBadge(profile.interests, t) : null),
+    [profile?.interests, t],
+  );
+
+  const memberSince = useMemo(() => {
+    if (!profile?.createdAt) return null;
+    const formatted = formatMemberSince(profile.createdAt, langCode);
+    return t('profile.memberSince', { date: formatted });
+  }, [profile?.createdAt, langCode, t]);
+
+  const accountDescription = [username, roleBadge, memberSince].filter(Boolean).join('\n');
 
   return (
     <motion.div {...fadeIn} style={{ padding: '16px' }}>
@@ -40,14 +97,14 @@ export default function ProfilePage() {
             <GroupItem
               before={<ChannelAvatar title={displayName || 'U'} size="lg" />}
               text={displayName}
-              description={username}
+              description={accountDescription || undefined}
             />
           </Group>
         </motion.div>
 
         <motion.div {...fadeIn}>
           <EmptyState
-            emoji="📡"
+            emoji="\uD83D\uDCE1"
             title={t('profile.channels.empty.title')}
             description={t('profile.channels.empty.description')}
             actionLabel={t('profile.channels.empty.cta')}
@@ -59,6 +116,7 @@ export default function ProfilePage() {
           <Group header={t('creatives.title')}>
             <motion.div {...pressScale}>
               <GroupItem
+                before={<SettingsIcon emoji="\uD83C\uDFA8" />}
                 text={t('creatives.title')}
                 description={t('profile.creatives.description')}
                 chevron
@@ -70,33 +128,27 @@ export default function ProfilePage() {
 
         <motion.div {...fadeIn}>
           <Group header={t('profile.settings')}>
-            <motion.div {...pressScale}>
-              <GroupItem
-                text={t('profile.language')}
-                after={
-                  <Text type="body" color="secondary">
-                    {LANGUAGE_LABELS[langCode] ?? langCode}
-                  </Text>
-                }
-                chevron
-                onClick={() => navigate('/profile/language')}
-              />
-            </motion.div>
-            <motion.div {...pressScale}>
-              <GroupItem
-                text={t('profile.currency')}
-                after={
-                  <Text type="body" color="secondary">
-                    {CURRENCY_LABELS[displayCurrency] ?? displayCurrency}
-                  </Text>
-                }
-                chevron
-                onClick={() => navigate('/profile/currency')}
-              />
-            </motion.div>
-            <motion.div {...pressScale}>
-              <GroupItem text={t('profile.notifications')} chevron onClick={() => navigate('/profile/notifications')} />
-            </motion.div>
+            {SETTINGS_ITEMS.map(({ key, emoji, route }) => (
+              <motion.div key={key} {...pressScale}>
+                <GroupItem
+                  before={<SettingsIcon emoji={emoji} />}
+                  text={t(`profile.${key}`)}
+                  after={
+                    key === 'language' ? (
+                      <Text type="body" color="secondary">
+                        {LANGUAGE_LABELS[langCode] ?? langCode}
+                      </Text>
+                    ) : key === 'currency' ? (
+                      <Text type="body" color="secondary">
+                        {CURRENCY_LABELS[displayCurrency] ?? displayCurrency}
+                      </Text>
+                    ) : undefined
+                  }
+                  chevron
+                  onClick={() => navigate(route)}
+                />
+              </motion.div>
+            ))}
           </Group>
         </motion.div>
       </motion.div>

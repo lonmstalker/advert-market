@@ -56,6 +56,17 @@ describe('LanguagePage', () => {
     expect(screen.getByText('Language')).toBeInTheDocument();
   });
 
+  it('renders flag icons in colored circles', () => {
+    renderPage();
+    expect(screen.getByText('\uD83C\uDDF7\uD83C\uDDFA')).toBeInTheDocument();
+    expect(screen.getByText('\uD83C\uDDEC\uD83C\uDDE7')).toBeInTheDocument();
+  });
+
+  it('shows footer hint text', () => {
+    renderPage();
+    expect(screen.getByText('App interface language')).toBeInTheDocument();
+  });
+
   it('does not call mutation when clicking already selected language', async () => {
     let mutationCalled = false;
     server.use(

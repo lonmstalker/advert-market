@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { QuickActions } from '@/features/wallet/components/QuickActions';
 import { SummaryHero } from '@/features/wallet/components/SummaryHero';
 import { SummaryStats } from '@/features/wallet/components/SummaryStats';
 import { TransactionGroupList } from '@/features/wallet/components/TransactionGroupList';
@@ -58,6 +59,10 @@ export default function WalletPage() {
       </div>
 
       <SummaryHero summary={summary} />
+
+      <div style={{ padding: '0 16px' }}>
+        <QuickActions />
+      </div>
 
       <div style={{ padding: '0 16px 16px' }}>
         <SummaryStats summary={summary} />

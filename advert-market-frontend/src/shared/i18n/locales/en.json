@@ -481,6 +481,11 @@
       "today": "Today",
       "yesterday": "Yesterday"
     },
+    "quickAction": {
+      "topUp": "Top up",
+      "withdraw": "Withdraw",
+      "transfer": "Transfer"
+    },
     "detail": {
       "type": "Type",
       "date": "Date",
@@ -517,15 +522,22 @@
     "notifications": "Notifications",
     "notifications.deals": "Deals",
     "notifications.newOffers": "New offers",
+    "notifications.newOffers.hint": "When someone wants to buy advertising",
     "notifications.acceptReject": "Accept & reject",
     "notifications.deliveryStatus": "Delivery status",
     "notifications.financial": "Financial",
     "notifications.deposits": "Deposits",
+    "notifications.deposits.hint": "Top-ups to your wallet",
     "notifications.payouts": "Payouts",
     "notifications.escrow": "Escrow",
+    "notifications.escrow.hint": "Locking and releasing funds",
     "notifications.disputes": "Disputes",
     "notifications.opened": "Dispute opened",
     "notifications.resolved": "Dispute resolved",
+    "role.advertiser": "Advertiser",
+    "role.channel_owner": "Channel Owner",
+    "memberSince": "Member since {{date}}",
+    "language.hint": "App interface language",
     "creatives.description": "Ad template library"
   },
   "creatives": {

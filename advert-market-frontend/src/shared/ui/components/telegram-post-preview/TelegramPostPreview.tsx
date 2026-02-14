@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import type { InlineButton, MediaItem, TextEntity } from '@/shared/types/text-entity';
-import { scaleIn } from '../../animations';
+import { slideUp } from '../../animations';
 import { postBubble } from './styles';
 import { TelegramPostBody } from './TelegramPostBody';
 import { TelegramPostButtons } from './TelegramPostButtons';
@@ -25,7 +25,7 @@ export function TelegramPostPreview({
   channelAvatar,
 }: TelegramPostPreviewProps) {
   return (
-    <motion.div {...scaleIn} style={postBubble}>
+    <motion.div {...slideUp} style={postBubble}>
       <TelegramPostHeader channelTitle={channelTitle} channelAvatar={channelAvatar} />
       <TelegramPostMedia media={media} />
       <TelegramPostBody text={text} entities={entities} />

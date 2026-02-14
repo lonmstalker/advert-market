@@ -1,7 +1,18 @@
 import { Button, Input, Text } from '@telegram-tools/ui-kit';
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tappable } from '@/shared/ui';
 import type { InlineButton } from '../types/creative';
+
+const buttonRowStyle: CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  alignItems: 'flex-start',
+  padding: 12,
+  borderRadius: 12,
+  background: 'var(--color-background-base)',
+  border: '1px solid var(--color-border-separator)',
+};
 
 type ButtonBuilderProps = {
   buttons: InlineButton[];
@@ -33,7 +44,7 @@ export function ButtonBuilder({ buttons, onChange, max = 5 }: ButtonBuilderProps
       </Text>
       {buttons.map((btn, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: buttons have no stable ID
-        <div key={index} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+        <div key={index} style={buttonRowStyle}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Input
               value={btn.text}

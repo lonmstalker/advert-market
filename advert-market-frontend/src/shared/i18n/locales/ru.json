@@ -485,6 +485,11 @@
       "today": "Сегодня",
       "yesterday": "Вчера"
     },
+    "quickAction": {
+      "topUp": "Пополнить",
+      "withdraw": "Вывести",
+      "transfer": "Перевод"
+    },
     "detail": {
       "type": "Тип",
       "date": "Дата",
@@ -521,15 +526,22 @@
     "notifications": "Уведомления",
     "notifications.deals": "Сделки",
     "notifications.newOffers": "Новые предложения",
+    "notifications.newOffers.hint": "Когда кто-то хочет купить рекламу",
     "notifications.acceptReject": "Принятие и отклонение",
     "notifications.deliveryStatus": "Статус доставки",
     "notifications.financial": "Финансы",
     "notifications.deposits": "Депозиты",
+    "notifications.deposits.hint": "Пополнения вашего кошелька",
     "notifications.payouts": "Выплаты",
     "notifications.escrow": "Эскроу",
+    "notifications.escrow.hint": "Блокировка и разблокировка средств",
     "notifications.disputes": "Споры",
     "notifications.opened": "Открытие спора",
     "notifications.resolved": "Разрешение спора",
+    "role.advertiser": "Рекламодатель",
+    "role.channel_owner": "Владелец канала",
+    "memberSince": "Участник с {{date}}",
+    "language.hint": "Язык интерфейса приложения",
     "creatives.description": "Библиотека рекламных шаблонов"
   },
   "creatives": {

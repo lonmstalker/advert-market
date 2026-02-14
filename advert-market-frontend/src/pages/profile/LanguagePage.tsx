@@ -8,11 +8,11 @@ import { profileKeys } from '@/shared/api';
 import { useAuth, useToast } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { BackButtonHandler } from '@/shared/ui';
-import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
+import { pressScale, slideFromRight, staggerChildren } from '@/shared/ui/animations';
 
 const LANGUAGES = [
-  { code: 'ru', label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', flag: '🇷🇺' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'ru', label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', flag: '\uD83C\uDDF7\uD83C\uDDFA' },
+  { code: 'en', label: 'English', flag: '\uD83C\uDDEC\uD83C\uDDE7' },
 ] as const;
 
 export default function LanguagePage() {
@@ -46,20 +46,38 @@ export default function LanguagePage() {
   }
 
   return (
-    <motion.div {...fadeIn} style={{ padding: '16px' }}>
+    <motion.div {...slideFromRight} style={{ padding: '16px' }}>
       <BackButtonHandler />
       <Text type="title1" weight="bold">
         {t('profile.language')}
       </Text>
 
       <motion.div {...staggerChildren} initial="initial" animate="animate" style={{ marginTop: 16 }}>
-        <motion.div {...fadeIn}>
-          <Group>
+        <motion.div {...slideFromRight}>
+          <Group footer={t('profile.language.hint')}>
             {LANGUAGES.map(({ code, label, flag }) => (
               <motion.div key={code} {...pressScale}>
                 <GroupItem
                   text={label}
-                  before={<Text type="body">{flag}</Text>}
+                  before={
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        background:
+                          selected === code
+                            ? 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)'
+                            : 'var(--color-background-section)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'background 0.2s ease',
+                      }}
+                    >
+                      <span style={{ fontSize: 18 }}>{flag}</span>
+                    </div>
+                  }
                   after={selected === code ? <Icon name="check" color="accent" /> : undefined}
                   onClick={() => handleSelect(code)}
                 />

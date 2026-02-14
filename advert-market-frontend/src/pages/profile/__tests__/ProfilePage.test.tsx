@@ -69,7 +69,7 @@ describe('ProfilePage', () => {
   it('shows displayName and @username', () => {
     renderPage();
     expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('@testuser')).toBeInTheDocument();
+    expect(screen.getByText(/@testuser/)).toBeInTheDocument();
   });
 
   it('shows "U" avatar when displayName is empty', () => {
@@ -82,6 +82,34 @@ describe('ProfilePage', () => {
     currentProfile = { ...currentProfile, username: null as unknown as string };
     renderPage();
     expect(screen.queryByText(/@/)).not.toBeInTheDocument();
+  });
+
+  it('shows role badge for advertiser', () => {
+    renderPage();
+    expect(screen.getByText(/Advertiser/)).toBeInTheDocument();
+  });
+
+  it('shows role badge for channel owner', () => {
+    currentProfile = { ...currentProfile, interests: ['channel_owner'] };
+    renderPage();
+    expect(screen.getByText(/Channel Owner/)).toBeInTheDocument();
+  });
+
+  it('shows member since date', () => {
+    renderPage();
+    expect(screen.getByText(/Member since/)).toBeInTheDocument();
+  });
+
+  it('shows settings icons (emoji circles)', () => {
+    renderPage();
+    expect(screen.getByText('\uD83C\uDF10')).toBeInTheDocument();
+    expect(screen.getByText('\uD83D\uDCB0')).toBeInTheDocument();
+    expect(screen.getByText('\uD83D\uDD14')).toBeInTheDocument();
+  });
+
+  it('shows creatives icon', () => {
+    renderPage();
+    expect(screen.getByText('\uD83C\uDFA8')).toBeInTheDocument();
   });
 
   it('shows EmptyState with "Add channel" CTA', () => {

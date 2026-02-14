@@ -7,7 +7,7 @@ import { profileKeys } from '@/shared/api';
 import { useToast } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { BackButtonHandler } from '@/shared/ui';
-import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
+import { pressScale, slideFromRight, staggerChildren } from '@/shared/ui/animations';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', labelKey: 'profile.currency.USD' },
@@ -46,14 +46,14 @@ export default function CurrencyPage() {
   }
 
   return (
-    <motion.div {...fadeIn} style={{ padding: '16px' }}>
+    <motion.div {...slideFromRight} style={{ padding: '16px' }}>
       <BackButtonHandler />
       <Text type="title1" weight="bold">
         {t('profile.currency')}
       </Text>
 
       <motion.div {...staggerChildren} initial="initial" animate="animate" style={{ marginTop: 16 }}>
-        <motion.div {...fadeIn}>
+        <motion.div {...slideFromRight}>
           <Group header={t('profile.currency.title')} footer={t('profile.currency.hint')}>
             {CURRENCIES.map(({ code, symbol, labelKey }) => (
               <motion.div key={code} {...pressScale}>

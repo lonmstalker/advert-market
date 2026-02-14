@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { TransactionStatusBadge } from '@/features/wallet/components/TransactionStatusBadge';
 import { useTransactionDetail } from '@/features/wallet/hooks/useTransactionDetail';
-import { getAmountColor, getTransactionTypeConfig } from '@/features/wallet/lib/transaction-type';
+import { getAmountColor, getTransactionTypeConfig, getTransactionTypeTint } from '@/features/wallet/lib/transaction-type';
 import { copyToClipboard } from '@/shared/lib/clipboard';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
@@ -79,9 +79,9 @@ export default function TransactionDetailPage() {
               position: 'absolute',
               top: 16,
               right: 30,
-              width: 11,
-              height: 11,
-              opacity: 0.12,
+              width: 14,
+              height: 14,
+              opacity: 0.20,
               color: 'var(--color-foreground-primary)',
               pointerEvents: 'none',
             }}
@@ -91,9 +91,9 @@ export default function TransactionDetailPage() {
               position: 'absolute',
               top: 40,
               right: 68,
-              width: 15,
-              height: 15,
-              opacity: 0.08,
+              width: 18,
+              height: 18,
+              opacity: 0.15,
               color: 'var(--color-foreground-primary)',
               pointerEvents: 'none',
             }}
@@ -103,9 +103,9 @@ export default function TransactionDetailPage() {
               position: 'absolute',
               top: 24,
               left: 22,
-              width: 9,
-              height: 9,
-              opacity: 0.15,
+              width: 12,
+              height: 12,
+              opacity: 0.22,
               color: 'var(--color-foreground-primary)',
               pointerEvents: 'none',
             }}
@@ -118,7 +118,7 @@ export default function TransactionDetailPage() {
                 width: 56,
                 height: 56,
                 borderRadius: 16,
-                background: 'var(--color-background-secondary)',
+                background: getTransactionTypeTint(tx.type),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

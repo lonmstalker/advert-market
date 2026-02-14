@@ -9,7 +9,7 @@ import { profileKeys } from '@/shared/api';
 import { useToast } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { BackButtonHandler } from '@/shared/ui';
-import { fadeIn, staggerChildren } from '@/shared/ui/animations';
+import { slideFromRight, staggerChildren } from '@/shared/ui/animations';
 
 const DEBOUNCE_MS = 500;
 
@@ -47,17 +47,18 @@ export default function NotificationsPage() {
   }
 
   return (
-    <motion.div {...fadeIn} style={{ padding: '16px' }}>
+    <motion.div {...slideFromRight} style={{ padding: '16px' }}>
       <BackButtonHandler />
       <Text type="title1" weight="bold">
         {t('profile.notifications')}
       </Text>
 
       <motion.div {...staggerChildren} initial="initial" animate="animate" style={{ marginTop: 16 }}>
-        <motion.div {...fadeIn}>
+        <motion.div {...slideFromRight}>
           <Group header={t('profile.notifications.deals')}>
             <GroupItem
               text={t('profile.notifications.newOffers')}
+              description={t('profile.notifications.newOffers.hint')}
               after={
                 <Toggle
                   isEnabled={notificationSettings.deals.newOffers}
@@ -86,10 +87,11 @@ export default function NotificationsPage() {
           </Group>
         </motion.div>
 
-        <motion.div {...fadeIn}>
+        <motion.div {...slideFromRight}>
           <Group header={t('profile.notifications.financial')}>
             <GroupItem
               text={t('profile.notifications.deposits')}
+              description={t('profile.notifications.deposits.hint')}
               after={
                 <Toggle
                   isEnabled={notificationSettings.financial.deposits}
@@ -108,6 +110,7 @@ export default function NotificationsPage() {
             />
             <GroupItem
               text={t('profile.notifications.escrow')}
+              description={t('profile.notifications.escrow.hint')}
               after={
                 <Toggle
                   isEnabled={notificationSettings.financial.escrow}
@@ -118,7 +121,7 @@ export default function NotificationsPage() {
           </Group>
         </motion.div>
 
-        <motion.div {...fadeIn}>
+        <motion.div {...slideFromRight}>
           <Group header={t('profile.notifications.disputes')}>
             <GroupItem
               text={t('profile.notifications.opened')}

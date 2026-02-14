@@ -8,11 +8,32 @@ vi.mock('@telegram-tools/ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@telegram-tools/ui-kit')>();
   return {
     ...actual,
-    Sheet: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
-      open ? <div data-testid="sheet">{children}</div> : null,
-    GroupItem: ({ title, onClick, after }: { title: string; onClick?: () => void; after?: React.ReactNode }) => (
+    Sheet: ({
+      opened,
+      sheets,
+      activeSheet,
+    }: {
+      opened: boolean;
+      sheets: Record<string, React.ComponentType>;
+      activeSheet: string;
+    }) => {
+      if (!opened) return null;
+      const Active = sheets[activeSheet];
+      if (!Active) return null;
+      return (
+        <div data-testid="sheet">
+          <Active />
+        </div>
+      );
+    },
+    Button: ({ text, onClick }: { text: string; onClick?: () => void }) => (
+      <button type="button" onClick={onClick}>
+        {text}
+      </button>
+    ),
+    GroupItem: ({ text, onClick, after }: { text: string; onClick?: () => void; after?: React.ReactNode }) => (
       <button type="button" data-group-item="true" onClick={onClick}>
-        <span>{title}</span>
+        <span>{text}</span>
         {after && <span>{after}</span>}
       </button>
     ),

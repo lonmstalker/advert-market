@@ -8,6 +8,8 @@ type TextareaProps = {
   maxLength?: number;
   rows?: number;
   style?: CSSProperties;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
 const baseStyle: CSSProperties = {
@@ -25,7 +27,17 @@ const baseStyle: CSSProperties = {
   outline: 'none',
 };
 
-export function Textarea({ ref, value, onChange, placeholder, maxLength, rows = 4, style }: TextareaProps) {
+export function Textarea({
+  ref,
+  value,
+  onChange,
+  placeholder,
+  maxLength,
+  rows = 4,
+  style,
+  onFocus,
+  onBlur,
+}: TextareaProps) {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value), [onChange]);
 
   return (
@@ -37,6 +49,8 @@ export function Textarea({ ref, value, onChange, placeholder, maxLength, rows = 
       maxLength={maxLength}
       rows={rows}
       style={{ ...baseStyle, ...style }}
+      onFocus={onFocus}
+      onBlur={onBlur}
     />
   );
 }

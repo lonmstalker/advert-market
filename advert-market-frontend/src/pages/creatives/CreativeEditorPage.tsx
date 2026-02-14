@@ -1,18 +1,20 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import {
-  type CreativeDraft,
   CreativeForm,
   CreativeHistorySheet,
+  type InlineButton,
+  type MediaItem,
   useCreateCreative,
   useCreativeDetail,
   useCreativeVersions,
+  useEntities,
   useUpdateCreative,
 } from '@/features/creatives';
-import { Tappable, TelegramPostPreview } from '@/shared/ui';
+import { BackButtonHandler, Tappable, TelegramPostPreview } from '@/shared/ui';
 import { fadeIn } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
@@ -32,37 +34,53 @@ export default function CreativeEditorPage() {
   const [activeTab, setActiveTab] = useState<EditorTab>('editor');
   const [showHistory, setShowHistory] = useState(false);
 
-  // Live preview state
-  const [previewText, setPreviewText] = useState('');
-  const [previewDraft, setPreviewDraft] = useState<CreativeDraft | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = useCallback(
-    (title: string, draft: CreativeDraft) => {
-      const req = {
-        title,
-        text: draft.text,
-        entities: draft.entities,
-        media: draft.media,
-        buttons: draft.buttons,
-        disableWebPagePreview: draft.disableWebPagePreview,
-      };
+  const [title, setTitle] = useState(creative?.title ?? '');
+  const [text, setText] = useState(creative?.draft.text ?? '');
+  const [media, setMedia] = useState<MediaItem[]>(creative?.draft.media ?? []);
+  const [buttons, setButtons] = useState<InlineButton[]>(creative?.draft.buttons ?? []);
+  const [disableWebPagePreview, setDisableWebPagePreview] = useState(creative?.draft.disableWebPagePreview ?? false);
+  const { entities, toggleEntity, isActive } = useEntities(creative?.draft.entities ?? []);
 
-      if (isEditing) {
-        updateMutation.mutate(req, {
-          onSuccess: () => navigate('/profile/creatives'),
-        });
-      } else {
-        createMutation.mutate(req, {
-          onSuccess: () => navigate('/profile/creatives'),
-        });
-      }
-    },
-    [isEditing, createMutation, updateMutation, navigate],
-  );
+  const handleSubmit = useCallback(() => {
+    if (!title.trim() || !text.trim()) return;
+
+    const req = {
+      title: title.trim(),
+      text,
+      entities,
+      media,
+      buttons: buttons.filter((b) => b.text && b.url),
+      disableWebPagePreview,
+    };
+
+    if (isEditing) {
+      updateMutation.mutate(req, {
+        onSuccess: () => navigate('/profile/creatives'),
+      });
+    } else {
+      createMutation.mutate(req, {
+        onSuccess: () => navigate('/profile/creatives'),
+      });
+    }
+  }, [
+    title,
+    text,
+    entities,
+    media,
+    buttons,
+    disableWebPagePreview,
+    isEditing,
+    createMutation,
+    updateMutation,
+    navigate,
+  ]);
 
   if (isEditing && isLoading) {
     return (
       <div style={{ padding: 16, textAlign: 'center' }}>
+        <BackButtonHandler />
         <Text type="body" color="secondary">
           {t('common.loading')}
         </Text>
@@ -77,6 +95,8 @@ export default function CreativeEditorPage() {
 
   return (
     <motion.div {...fadeIn} style={{ padding: 16 }}>
+      <BackButtonHandler />
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Text type="title1" weight="bold">
           {isEditing ? t('creatives.editTitle') : t('creatives.newTitle')}
@@ -103,22 +123,29 @@ export default function CreativeEditorPage() {
 
       {activeTab === 'editor' ? (
         <CreativeForm
-          initialDraft={creative?.draft}
-          initialTitle={creative?.title}
-          onSubmit={(title, draft) => {
-            setPreviewText(draft.text);
-            setPreviewDraft(draft);
-            handleSubmit(title, draft);
-          }}
+          title={title}
+          onTitleChange={setTitle}
+          text={text}
+          onTextChange={setText}
+          media={media}
+          onMediaChange={setMedia}
+          buttons={buttons}
+          onButtonsChange={setButtons}
+          toggleEntity={toggleEntity}
+          isActive={isActive}
+          disableWebPagePreview={disableWebPagePreview}
+          onDisableWebPagePreviewChange={setDisableWebPagePreview}
+          textareaRef={textareaRef}
+          onSubmit={handleSubmit}
           isSubmitting={createMutation.isPending || updateMutation.isPending}
         />
       ) : (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
           <TelegramPostPreview
-            text={previewDraft?.text ?? creative?.draft.text ?? previewText}
-            entities={previewDraft?.entities ?? creative?.draft.entities ?? []}
-            media={previewDraft?.media ?? creative?.draft.media ?? []}
-            buttons={previewDraft?.buttons ?? creative?.draft.buttons ?? []}
+            text={text}
+            entities={entities}
+            media={media}
+            buttons={buttons.filter((b) => b.text && b.url)}
           />
         </div>
       )}

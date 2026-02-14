@@ -1,39 +1,57 @@
 import { Button, Input, Text, Toggle } from '@telegram-tools/ui-kit';
-import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
+import { type RefObject, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/shared/ui';
-import { useEntities } from '../hooks/useEntities';
-import type { CreativeDraft, InlineButton, MediaItem, TextEntityType } from '../types/creative';
+import type { InlineButton, MediaItem, TextEntityType } from '../types/creative';
 import { ButtonBuilder } from './ButtonBuilder';
 import { FormattingToolbar } from './FormattingToolbar';
 import { MediaItemList } from './MediaItemList';
 
 type CreativeFormProps = {
-  initialDraft?: CreativeDraft;
-  initialTitle?: string;
-  onSubmit: (title: string, draft: CreativeDraft) => void;
+  title: string;
+  onTitleChange: (title: string) => void;
+  text: string;
+  onTextChange: (text: string) => void;
+  media: MediaItem[];
+  onMediaChange: (media: MediaItem[]) => void;
+  buttons: InlineButton[];
+  onButtonsChange: (buttons: InlineButton[]) => void;
+  toggleEntity: (type: TextEntityType, selection: { start: number; end: number }, extra?: { url?: string }) => void;
+  isActive: (type: TextEntityType, cursorPos: number) => boolean;
+  disableWebPagePreview: boolean;
+  onDisableWebPagePreviewChange: (value: boolean) => void;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  onSubmit: () => void;
   isSubmitting?: boolean;
 };
 
 const MAX_TEXT_LENGTH = 4096;
 
-export function CreativeForm({ initialDraft, initialTitle, onSubmit, isSubmitting }: CreativeFormProps) {
+export function CreativeForm({
+  title,
+  onTitleChange,
+  text,
+  onTextChange,
+  media,
+  onMediaChange,
+  buttons,
+  onButtonsChange,
+  toggleEntity,
+  isActive,
+  disableWebPagePreview,
+  onDisableWebPagePreviewChange,
+  textareaRef,
+  onSubmit,
+  isSubmitting,
+}: CreativeFormProps) {
   const { t } = useTranslation();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const [title, setTitle] = useState(initialTitle ?? '');
-  const [text, setText] = useState(initialDraft?.text ?? '');
-  const [media, setMedia] = useState<MediaItem[]>(initialDraft?.media ?? []);
-  const [buttons, setButtons] = useState<InlineButton[]>(initialDraft?.buttons ?? []);
-  const [disableWebPagePreview, setDisableWebPagePreview] = useState(initialDraft?.disableWebPagePreview ?? false);
-
-  const { entities, toggleEntity, isActive } = useEntities(initialDraft?.entities ?? []);
+  const [isFocused, setIsFocused] = useState(false);
 
   const getSelection = useCallback((): { start: number; end: number } => {
     const ta = textareaRef.current;
     if (!ta) return { start: 0, end: 0 };
     return { start: ta.selectionStart, end: ta.selectionEnd };
-  }, []);
+  }, [textareaRef]);
 
   const hasSelection = useCallback((): boolean => {
     const sel = getSelection();
@@ -47,7 +65,7 @@ export function CreativeForm({ initialDraft, initialTitle, onSubmit, isSubmittin
       toggleEntity(type, sel);
       textareaRef.current?.focus();
     },
-    [getSelection, toggleEntity],
+    [getSelection, toggleEntity, textareaRef],
   );
 
   const handleLink = useCallback(() => {
@@ -57,9 +75,10 @@ export function CreativeForm({ initialDraft, initialTitle, onSubmit, isSubmittin
     if (!url) return;
     toggleEntity('TEXT_LINK' as TextEntityType, sel, { url });
     textareaRef.current?.focus();
-  }, [getSelection, toggleEntity, t]);
+  }, [getSelection, toggleEntity, t, textareaRef]);
 
   const activeTypes = useMemo(() => {
+    if (!isFocused) return new Set<TextEntityType>();
     const sel = getSelection();
     const cursorPos = sel.start;
     const active = new Set<TextEntityType>();
@@ -76,18 +95,7 @@ export function CreativeForm({ initialDraft, initialTitle, onSubmit, isSubmittin
       if (isActive(type, cursorPos)) active.add(type);
     }
     return active;
-  }, [getSelection, isActive]);
-
-  const handleSubmit = useCallback(() => {
-    if (!title.trim() || !text.trim()) return;
-    onSubmit(title.trim(), {
-      text,
-      entities,
-      media,
-      buttons: buttons.filter((b) => b.text && b.url),
-      disableWebPagePreview,
-    });
-  }, [title, text, entities, media, buttons, disableWebPagePreview, onSubmit]);
+  }, [isFocused, getSelection, isActive]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -97,7 +105,7 @@ export function CreativeForm({ initialDraft, initialTitle, onSubmit, isSubmittin
             {t('creatives.form.title')}
           </Text>
         </div>
-        <Input value={title} onChange={setTitle} placeholder={t('creatives.form.titlePlaceholder')} />
+        <Input value={title} onChange={onTitleChange} placeholder={t('creatives.form.titlePlaceholder')} />
       </div>
 
       <div>
@@ -115,10 +123,12 @@ export function CreativeForm({ initialDraft, initialTitle, onSubmit, isSubmittin
         <Textarea
           ref={textareaRef}
           value={text}
-          onChange={setText}
+          onChange={onTextChange}
           placeholder={t('creatives.form.textPlaceholder')}
           maxLength={MAX_TEXT_LENGTH}
           rows={6}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
         <div style={{ textAlign: 'right' }}>
           <Text type="caption1" color="secondary">
@@ -127,15 +137,15 @@ export function CreativeForm({ initialDraft, initialTitle, onSubmit, isSubmittin
         </div>
       </div>
 
-      <MediaItemList media={media} onChange={setMedia} />
-      <ButtonBuilder buttons={buttons} onChange={setButtons} />
+      <MediaItemList media={media} onChange={onMediaChange} />
+      <ButtonBuilder buttons={buttons} onChange={onButtonsChange} />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text type="body">{t('creatives.form.disablePreview')}</Text>
-        <Toggle isEnabled={disableWebPagePreview} onChange={setDisableWebPagePreview} />
+        <Toggle isEnabled={disableWebPagePreview} onChange={onDisableWebPagePreviewChange} />
       </div>
 
-      <Button text={t('common.save')} type="primary" loading={isSubmitting} onClick={handleSubmit} />
+      <Button text={t('common.save')} type="primary" loading={isSubmitting} onClick={onSubmit} />
     </div>
   );
 }

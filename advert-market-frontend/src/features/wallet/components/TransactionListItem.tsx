@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTonCompact } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
-import { formatAmountWithSign, getAmountColor, getTransactionTypeConfig } from '../lib/transaction-type';
+import { formatAmountWithSign, getAmountColor, getTransactionTypeConfig, getTransactionTypeTint } from '../lib/transaction-type';
 import type { Transaction } from '../types/wallet';
 
 type TransactionListItemProps = {
@@ -40,7 +40,7 @@ export const TransactionListItem = memo(function TransactionListItem({
             width: 36,
             height: 36,
             borderRadius: 10,
-            background: 'var(--color-background-secondary)',
+            background: getTransactionTypeTint(transaction.type),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

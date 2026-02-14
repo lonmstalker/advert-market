@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 export const postBubble: CSSProperties = {
   background: 'var(--color-background-base)',
   borderRadius: 12,
+  border: '1px solid var(--color-border-separator)',
   overflow: 'hidden',
   maxWidth: 400,
   width: '100%',

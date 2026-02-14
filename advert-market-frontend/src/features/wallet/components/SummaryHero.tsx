@@ -31,8 +31,10 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           top: 0,
           left: 0,
           right: 0,
-          height: 120,
-          background: 'linear-gradient(180deg, rgba(0, 122, 255, 0.06) 0%, transparent 100%)',
+          height: 140,
+          background: isOwner
+            ? 'linear-gradient(180deg, rgba(52, 199, 89, 0.06) 0%, transparent 100%)'
+            : 'linear-gradient(180deg, rgba(0, 122, 255, 0.06) 0%, transparent 100%)',
           pointerEvents: 'none',
         }}
       />
@@ -43,9 +45,9 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           position: 'absolute',
           top: 14,
           right: 28,
-          width: 12,
-          height: 12,
-          opacity: 0.12,
+          width: 16,
+          height: 16,
+          opacity: 0.20,
           color: 'var(--color-accent-primary)',
           pointerEvents: 'none',
         }}
@@ -55,9 +57,9 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           position: 'absolute',
           top: 38,
           right: 64,
-          width: 16,
-          height: 16,
-          opacity: 0.08,
+          width: 20,
+          height: 20,
+          opacity: 0.15,
           color: 'var(--color-accent-primary)',
           pointerEvents: 'none',
         }}
@@ -67,9 +69,9 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           position: 'absolute',
           top: 22,
           left: 20,
-          width: 10,
-          height: 10,
-          opacity: 0.14,
+          width: 14,
+          height: 14,
+          opacity: 0.22,
           color: 'var(--color-accent-primary)',
           pointerEvents: 'none',
         }}
@@ -91,7 +93,7 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
           style={{ marginTop: 6 }}
         >
-          <Text type="largeTitle" weight="bold">
+          <Text type="hero" weight="bold">
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(heroAmount)}</span>
           </Text>
         </motion.div>

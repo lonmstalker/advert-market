@@ -69,6 +69,13 @@ describe('NotificationsPage', () => {
     expect(screen.getByText('Dispute resolved')).toBeInTheDocument();
   });
 
+  it('shows descriptions on key notification items', () => {
+    renderPage();
+    expect(screen.getByText('When someone wants to buy advertising')).toBeInTheDocument();
+    expect(screen.getByText('Top-ups to your wallet')).toBeInTheDocument();
+    expect(screen.getByText('Locking and releasing funds')).toBeInTheDocument();
+  });
+
   it('toggle click instantly updates store', async () => {
     const { user } = renderPage();
     const toggles = screen.getAllByRole('switch');
