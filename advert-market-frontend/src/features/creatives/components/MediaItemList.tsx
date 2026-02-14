@@ -1,7 +1,9 @@
-import { Button, GroupItem, Text } from '@telegram-tools/ui-kit';
-import type { ComponentType, SVGProps } from 'react';
+import { GroupItem, Text } from '@telegram-tools/ui-kit';
+import { motion } from 'motion/react';
+import type { ComponentType, CSSProperties, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tappable } from '@/shared/ui';
+import { pulse } from '@/shared/ui/animations';
 import { FileIcon, ImageIcon, VideoIcon } from '@/shared/ui/icons';
 import type { MediaItem } from '../types/creative';
 
@@ -18,6 +20,34 @@ const MEDIA_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
 };
 
 const mediaIconStyle = { width: 20, height: 20, color: 'var(--color-foreground-secondary)' };
+
+const dropZoneStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  padding: '28px 16px',
+  borderRadius: 12,
+  border: '2px dashed color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
+  background: 'color-mix(in srgb, var(--color-accent-primary) 5%, transparent)',
+  cursor: 'default',
+  position: 'relative',
+  overflow: 'hidden',
+};
+
+const comingSoonBadge: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '2px 10px',
+  borderRadius: 20,
+  background: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'var(--color-accent-primary)',
+  letterSpacing: 0.5,
+  textTransform: 'uppercase',
+};
 
 export function MediaItemList({ media, onChange }: MediaItemListProps) {
   const { t } = useTranslation();
@@ -56,7 +86,15 @@ export function MediaItemList({ media, onChange }: MediaItemListProps) {
           />
         );
       })}
-      <Button text={t('creatives.form.addMedia')} type="secondary" disabled onClick={() => {}} />
+      <div style={dropZoneStyle}>
+        <motion.div {...pulse}>
+          <ImageIcon style={{ width: 32, height: 32, color: 'var(--color-accent-primary)', opacity: 0.5 }} />
+        </motion.div>
+        <Text type="caption1" color="secondary">
+          {t('creatives.form.addMedia')}
+        </Text>
+        <span style={comingSoonBadge}>Coming soon</span>
+      </div>
     </div>
   );
 }

@@ -43,6 +43,7 @@ export {
   ReviewIcon,
   StoryIcon,
 } from './post-type-icons';
+export { RefundIcon } from './refund-icon';
 export { SadFaceIcon } from './sad-face-icon';
 export { SatelliteIcon } from './satellite-icon';
 export { ScrollIcon } from './scroll-icon';

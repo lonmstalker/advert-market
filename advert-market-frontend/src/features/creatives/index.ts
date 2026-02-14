@@ -3,6 +3,7 @@ export { CreativeForm } from './components/CreativeForm';
 export { CreativeHistorySheet } from './components/CreativeHistorySheet';
 export { CreativeListItem } from './components/CreativeListItem';
 export { FormattingToolbar } from './components/FormattingToolbar';
+export { LinkInputSheet } from './components/LinkInputSheet';
 export { MediaItemList } from './components/MediaItemList';
 export { useCreativeDetail, useCreativeVersions } from './hooks/useCreativeDetail';
 export { useCreateCreative, useDeleteCreative, useUpdateCreative } from './hooks/useCreativeMutations';

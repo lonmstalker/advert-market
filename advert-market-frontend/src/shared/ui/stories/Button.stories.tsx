@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { pressScale } from '../animations';
+import { TonDiamondIcon } from '../icons';
 
 const meta: Meta<typeof Button> = {
   title: 'UI Kit/Button',
@@ -34,7 +35,7 @@ export const Disabled: Story = {
 };
 
 export const WithIcon: Story = {
-  render: (args) => <Button {...args} icon={<span style={{ fontSize: '18px' }}>💎</span>} />,
+  render: (args) => <Button {...args} icon={<TonDiamondIcon style={{ width: 18, height: 18 }} />} />,
   args: { text: 'Send TON', type: 'primary' },
 };
 

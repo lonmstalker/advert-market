@@ -37,6 +37,13 @@ export const slideFromRight = {
   transition: { duration: 0.25, ease: easeOut },
 } as const;
 
+export const slideFromLeft = {
+  initial: { opacity: 0, x: -30 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -30 },
+  transition: { duration: 0.25, ease: easeOut },
+} as const;
+
 export const slideFromBottom = {
   initial: { y: '100%' },
   animate: { y: 0 },
@@ -73,7 +80,7 @@ export const shimmer = {
 export const pulse = {
   animate: { opacity: [1, 0.5, 1] },
   transition: { duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: easeInOut },
-} as const;
+};
 
 export const toast = {
   initial: { opacity: 0, y: -40, scale: 0.95 },

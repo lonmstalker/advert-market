@@ -14,6 +14,7 @@ import {
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { fadeIn, listItem, pressScale, scaleIn, slideUp, staggerChildren } from '../animations';
+import { MailboxIcon } from '../icons';
 
 const meta: Meta = {
   title: 'Compositions',
@@ -240,9 +241,7 @@ export const EmptyState: Story = {
   name: 'Empty State',
   render: () => (
     <motion.div {...scaleIn} style={{ width: '360px', textAlign: 'center', padding: '40px 20px' }}>
-      <Text type="title1" style={{ fontSize: '48px' }}>
-        📭
-      </Text>
+      <MailboxIcon style={{ width: 48, height: 48, color: 'var(--color-foreground-tertiary)' }} />
       <Text type="title3" weight="bold" style={{ marginTop: '16px' }}>
         No deals yet
       </Text>

@@ -34,5 +34,9 @@ public enum NotificationType {
     /** Deal cancelled by a party. */
     DEAL_CANCELLED,
     /** Financial reconciliation alert. */
-    RECONCILIATION_ALERT
+    RECONCILIATION_ALERT,
+    /** Bot was removed from a channel. */
+    CHANNEL_BOT_REMOVED,
+    /** Bot was demoted in a channel (lost admin rights). */
+    CHANNEL_BOT_DEMOTED
 }

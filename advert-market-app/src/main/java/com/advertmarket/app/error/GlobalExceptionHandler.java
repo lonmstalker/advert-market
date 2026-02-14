@@ -69,9 +69,12 @@ public class GlobalExceptionHandler
     }
 
     /** Handles generic domain exceptions. */
+    @SuppressWarnings("fenum:argument")
     @ExceptionHandler(DomainException.class)
     public ProblemDetail handleDomainException(
             DomainException ex, Locale locale) {
+        log.warn("Domain exception: code={}, message={}",
+                ex.getErrorCode(), ex.getMessage(), ex);
         var code = ErrorCode.resolve(ex.getErrorCode());
         int status = code != null
                 ? code.httpStatus()

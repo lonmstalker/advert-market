@@ -30,6 +30,8 @@ export const TransactionListItem = memo(function TransactionListItem({
     new Date(transaction.createdAt),
   );
 
+  const Icon = config.Icon;
+
   return (
     <motion.div {...listItem} {...pressScale} onClick={onClick} style={{ cursor: 'pointer' }}>
       <div
@@ -50,11 +52,9 @@ export const TransactionListItem = memo(function TransactionListItem({
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            fontSize: 18,
-            lineHeight: 1,
           }}
         >
-          {config.icon}
+          <Icon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />
         </span>
 
         <div style={{ flex: 1, minWidth: 0 }}>

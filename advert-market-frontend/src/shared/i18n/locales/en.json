@@ -43,20 +43,20 @@
       "slide1": {
         "title": "Find Channels",
         "hint": "Tap a channel to see its details",
-        "taskHint": "👆 Tap on 'Crypto News Daily'",
-        "taskDone": "✓ That's what channel details look like!"
+        "taskHint": "Tap on 'Crypto News Daily'",
+        "taskDone": "That's what channel details look like!"
       },
       "slide2": {
         "title": "Secure Deals",
         "hint": "Approve the creative to see deal progress",
-        "taskHint": "👆 Tap 'Approve' to advance to the next stage",
-        "taskDone": "✓ Creative approved! Moving to publication."
+        "taskHint": "Tap 'Approve' to advance to the next stage",
+        "taskDone": "Creative approved! Moving to publication."
       },
       "slide3": {
         "title": "Secure Payments",
         "hint": "Tap escrow to see the flow",
-        "taskHint": "👆 Tap on 'Escrow'",
-        "taskDone": "✓ That's how secure escrow works!"
+        "taskHint": "Tap on 'Escrow'",
+        "taskDone": "That's how secure escrow works!"
       },
       "mockup": {
         "dealTimeline": "Deal timeline",
@@ -564,6 +564,16 @@
       "description": "Create an ad post template with preview",
       "cta": "Create creative"
     },
+    "search": {
+      "placeholder": "Search creatives..."
+    },
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "byName": "By name"
+    },
+    "buttonsCount_one": "{{count}} button",
+    "buttonsCount_other": "{{count}} buttons",
     "endOfList": "That's all",
     "mediaCount_one": "{{count}} file",
     "mediaCount_other": "{{count}} files",
@@ -581,8 +591,10 @@
       "buttons": "Buttons",
       "addButton": "Add button",
       "buttonText": "Button text",
+      "buttonUrl": "Link URL",
       "disablePreview": "Disable link previews",
       "linkPrompt": "Enter link URL:",
+      "linkInvalid": "Enter a valid URL starting with http:// or https://",
       "formatting": {
         "bold": "Bold",
         "italic": "Italic",

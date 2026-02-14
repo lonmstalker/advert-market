@@ -5,11 +5,8 @@ import com.advertmarket.communication.bot.internal.builder.Reply;
 import com.advertmarket.communication.bot.internal.error.BotErrorHandler;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.shared.i18n.LocalizationService;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Component;
@@ -25,6 +22,7 @@ public class BotDispatcher {
     private final Map<String, BotCommand> commands;
     private final List<CallbackHandler> callbackHandlers;
     private final List<MessageHandler> messageHandlers;
+    private final List<ChatMemberUpdateHandler> chatMemberHandlers;
     private final TelegramSender sender;
     private final BotErrorHandler errorHandler;
     private final UserBlockPort userBlockPort;
@@ -32,33 +30,20 @@ public class BotDispatcher {
 
     /** Creates the dispatcher with all discovered handlers. */
     public BotDispatcher(
-            @NonNull List<BotCommand> commandList,
-            @NonNull List<CallbackHandler> callbackHandlerList,
-            @NonNull List<MessageHandler> messageHandlerList,
+            @NonNull HandlerRegistry handlers,
             @NonNull TelegramSender sender,
             @NonNull BotErrorHandler errorHandler,
             @NonNull UserBlockPort userBlockPort,
             @NonNull LocalizationService i18n) {
-        this.commands = commandList.stream()
-                .collect(Collectors.toMap(
-                        BotCommand::command, Function.identity()));
-        this.callbackHandlers = callbackHandlerList.stream()
-                .sorted(Comparator.comparingInt(
-                        (CallbackHandler h) -> h.prefix().length())
-                        .reversed())
-                .toList();
-        this.messageHandlers = messageHandlerList.stream()
-                .sorted(Comparator.comparingInt(
-                        MessageHandler::order))
-                .toList();
+        this.commands = handlers.getCommands();
+        this.callbackHandlers = handlers.getCallbackHandlers();
+        this.messageHandlers = handlers.getMessageHandlers();
+        this.chatMemberHandlers =
+                handlers.getChatMemberHandlers();
         this.sender = sender;
         this.errorHandler = errorHandler;
         this.userBlockPort = userBlockPort;
         this.i18n = i18n;
-        log.info("Registered {} commands, {} callback handlers, "
-                + "{} message handlers",
-                commands.size(), callbackHandlers.size(),
-                messageHandlers.size());
     }
 
     /**
@@ -68,6 +53,10 @@ public class BotDispatcher {
      */
     public void dispatch(UpdateContext ctx) {
         try {
+            if (ctx.isMyChatMemberUpdate()) {
+                dispatchChatMemberUpdate(ctx);
+                return;
+            }
             if (userBlockPort.isBlocked(ctx.userId())) {
                 Reply.localized(ctx, i18n, "bot.blocked")
                         .send(sender);
@@ -85,6 +74,25 @@ public class BotDispatcher {
                     ctx.update().updateId(),
                     ctx.userId(), ctx.languageCode());
         }
+    }
+
+    private void dispatchChatMemberUpdate(UpdateContext ctx) {
+        var update = ctx.myChatMember();
+        if (update == null) {
+            return;
+        }
+        for (var handler : chatMemberHandlers) {
+            if (handler.canHandle(update)) {
+                log.debug("Dispatching chat member update "
+                        + "handler={} update_id={}",
+                        handler.getClass().getSimpleName(),
+                        ctx.update().updateId());
+                handler.handle(update);
+                return;
+            }
+        }
+        log.debug("Unhandled my_chat_member update: "
+                + "update_id={}", ctx.update().updateId());
     }
 
     private void dispatchTextMessage(UpdateContext ctx) {

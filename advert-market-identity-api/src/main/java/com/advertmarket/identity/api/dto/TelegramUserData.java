@@ -1,5 +1,6 @@
 package com.advertmarket.identity.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -14,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param username     username without @ (optional)
  * @param languageCode IETF language tag (optional)
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Parsed Telegram user data from initData")
 public record TelegramUserData(
         @Schema(description = "Telegram user ID", example = "42")

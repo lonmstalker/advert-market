@@ -56,10 +56,10 @@ describe('LanguagePage', () => {
     expect(screen.getByText('Language')).toBeInTheDocument();
   });
 
-  it('renders flag icons in colored circles', () => {
+  it('renders language abbreviations in styled circles', () => {
     renderPage();
-    expect(screen.getByText('\uD83C\uDDF7\uD83C\uDDFA')).toBeInTheDocument();
-    expect(screen.getByText('\uD83C\uDDEC\uD83C\uDDE7')).toBeInTheDocument();
+    expect(screen.getByText('RU')).toBeInTheDocument();
+    expect(screen.getByText('EN')).toBeInTheDocument();
   });
 
   it('shows footer hint text', () => {

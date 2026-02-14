@@ -20,7 +20,7 @@ import { buildOverlapLabel } from '@/shared/lib/overlap-label';
 import { formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState, PageLoader, Popover } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
-import { InfoIcon, SadFaceIcon, TelegramIcon, TonDiamondIcon } from '@/shared/ui/icons';
+import { ClockIcon, InfoIcon, SadFaceIcon, TelegramIcon, TonDiamondIcon } from '@/shared/ui/icons';
 
 const TERMINAL_STATUSES = new Set([
   'COMPLETED_RELEASED',
@@ -239,6 +239,15 @@ export default function DealDetailPage() {
               <Text type="title1" weight="bold">
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
               </Text>
+              <div
+                style={{
+                  width: 48,
+                  height: 3,
+                  borderRadius: 2,
+                  background: 'linear-gradient(90deg, var(--color-accent-primary), #9b59b6)',
+                  margin: '6px auto 4px',
+                }}
+              />
               <div style={{ marginTop: 2 }}>
                 <Text type="caption1" color="secondary">
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
@@ -281,7 +290,8 @@ export default function DealDetailPage() {
               <span style={heroChipStyle}>{formatDate(deal.createdAt, i18n.language)}</span>
               {countdown && (
                 <span style={heroChipStyle}>
-                  {'\u23f1'} {countdown}
+                  <ClockIcon style={{ width: 14, height: 14, color: 'var(--color-foreground-secondary)' }} />
+                  {countdown}
                 </span>
               )}
             </div>

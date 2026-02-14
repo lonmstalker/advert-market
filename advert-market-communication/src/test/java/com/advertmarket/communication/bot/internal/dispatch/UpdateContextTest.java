@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Chat;
+import com.pengrad.telegrambot.model.ChatMemberUpdated;
 import com.pengrad.telegrambot.model.InlineQuery;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
@@ -133,7 +134,49 @@ class UpdateContextTest {
         assertThat(ctx.languageCode()).isEqualTo("ru");
     }
 
+    @Test
+    @DisplayName("Detects my_chat_member update")
+    void isMyChatMemberUpdate_true() throws Exception {
+        var update = createUpdateWithMyChatMember(1L);
+        var ctx = new UpdateContext(update);
+        assertThat(ctx.isMyChatMemberUpdate()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Returns false for non my_chat_member update")
+    void isMyChatMemberUpdate_false() throws Exception {
+        var update = createUpdateWithText(1L, "hello");
+        var ctx = new UpdateContext(update);
+        assertThat(ctx.isMyChatMemberUpdate()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Returns myChatMember from update")
+    void myChatMember_returnsValue() throws Exception {
+        var update = createUpdateWithMyChatMember(1L);
+        var ctx = new UpdateContext(update);
+        assertThat(ctx.myChatMember()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Extracts user from myChatMember")
+    void user_fromMyChatMember() throws Exception {
+        var update = createUpdateWithMyChatMember(77777L);
+        var ctx = new UpdateContext(update);
+        assertThat(ctx.userId()).isEqualTo(77777L);
+    }
+
     // --- Helpers ---
+
+    private Update createUpdateWithMyChatMember(long userId)
+            throws Exception {
+        var user = new User(userId);
+        var memberUpdated = new ChatMemberUpdated();
+        setField(memberUpdated, "from", user);
+        var update = new Update();
+        setField(update, "my_chat_member", memberUpdated);
+        return update;
+    }
 
     private Update createUpdateWithMessageFrom(long userId)
             throws Exception {

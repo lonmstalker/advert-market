@@ -1,5 +1,5 @@
 import { Text } from '@telegram-tools/ui-kit';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
@@ -14,8 +14,8 @@ import {
   useEntities,
   useUpdateCreative,
 } from '@/features/creatives';
-import { BackButtonHandler, Tappable, TelegramChatSimulator } from '@/shared/ui';
-import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { BackButtonHandler, DeviceFrame, Tappable, TelegramChatSimulator } from '@/shared/ui';
+import { fadeIn, pressScale, scaleIn, slideFromLeft, slideFromRight } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
 type EditorTab = 'editor' | 'preview';
@@ -95,6 +95,14 @@ export default function CreativeEditorPage() {
     { value: 'preview' as const, label: t('creatives.tabs.preview') },
   ];
 
+  const filteredButtons = buttons.filter((b) => b.text && b.url);
+
+  const previewContent = (
+    <DeviceFrame>
+      <TelegramChatSimulator text={text} entities={entities} media={media} buttons={filteredButtons} />
+    </DeviceFrame>
+  );
+
   return (
     <motion.div {...fadeIn} style={{ paddingBottom: 72 }}>
       <BackButtonHandler />
@@ -127,37 +135,64 @@ export default function CreativeEditorPage() {
         )}
       </div>
 
-      <div style={{ padding: '0 16px', marginBottom: 16 }}>
+      {/* Mobile: tab switcher */}
+      <div className="creative-editor-mobile" style={{ padding: '0 16px', marginBottom: 16 }}>
         <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
       </div>
 
-      <div style={{ padding: '0 16px' }}>
-        {activeTab === 'editor' ? (
-          <CreativeForm
-            title={title}
-            onTitleChange={setTitle}
-            text={text}
-            onTextChange={setText}
-            media={media}
-            onMediaChange={setMedia}
-            buttons={buttons}
-            onButtonsChange={setButtons}
-            toggleEntity={toggleEntity}
-            isActive={isActive}
-            disableWebPagePreview={disableWebPagePreview}
-            onDisableWebPagePreviewChange={setDisableWebPagePreview}
-            textareaRef={textareaRef}
-          />
-        ) : (
-          <div style={{ padding: '16px 0' }}>
-            <TelegramChatSimulator
+      {/* Mobile: tabbed content */}
+      <div className="creative-editor-mobile" style={{ padding: '0 16px' }}>
+        <AnimatePresence mode="wait">
+          {activeTab === 'editor' ? (
+            <motion.div key="editor" {...slideFromLeft}>
+              <CreativeForm
+                title={title}
+                onTitleChange={setTitle}
+                text={text}
+                onTextChange={setText}
+                media={media}
+                onMediaChange={setMedia}
+                buttons={buttons}
+                onButtonsChange={setButtons}
+                toggleEntity={toggleEntity}
+                isActive={isActive}
+                disableWebPagePreview={disableWebPagePreview}
+                onDisableWebPagePreviewChange={setDisableWebPagePreview}
+                textareaRef={textareaRef}
+              />
+            </motion.div>
+          ) : (
+            <motion.div key="preview" {...slideFromRight}>
+              <motion.div {...scaleIn}>{previewContent}</motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Desktop: split view */}
+      <div className="creative-editor-desktop" style={{ padding: '0 16px' }}>
+        <div style={{ display: 'flex', gap: 24 }}>
+          <div style={{ flex: '1 1 60%', minWidth: 0 }}>
+            <CreativeForm
+              title={title}
+              onTitleChange={setTitle}
               text={text}
-              entities={entities}
+              onTextChange={setText}
               media={media}
-              buttons={buttons.filter((b) => b.text && b.url)}
+              onMediaChange={setMedia}
+              buttons={buttons}
+              onButtonsChange={setButtons}
+              toggleEntity={toggleEntity}
+              isActive={isActive}
+              disableWebPagePreview={disableWebPagePreview}
+              onDisableWebPagePreviewChange={setDisableWebPagePreview}
+              textareaRef={textareaRef}
             />
           </div>
-        )}
+          <div style={{ flex: '1 1 40%', minWidth: 0, position: 'sticky', top: 16, alignSelf: 'flex-start' }}>
+            {previewContent}
+          </div>
+        </div>
       </div>
 
       <div

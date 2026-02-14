@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import type { InlineButton, MediaItem, TextEntity } from '@/shared/types/text-entity';
 import { slideUp } from '../../animations';
-import { EyeIcon } from '../../icons';
+import { ArrowRightIcon, EyeIcon } from '../../icons';
 import {
   chatArea,
   chatTopBar,
@@ -47,6 +47,15 @@ export function TelegramChatSimulator({
   return (
     <div style={chatArea}>
       <div style={chatTopBar}>
+        <ArrowRightIcon
+          style={{
+            width: 18,
+            height: 18,
+            color: 'var(--color-accent-primary)',
+            transform: 'rotate(180deg)',
+            flexShrink: 0,
+          }}
+        />
         {channelAvatar ? (
           <img src={channelAvatar} alt={title} style={{ ...chatTopBarAvatar, objectFit: 'cover' }} />
         ) : (
@@ -59,12 +68,12 @@ export function TelegramChatSimulator({
       </div>
 
       <motion.div {...slideUp} style={postContent}>
-        <TelegramPostHeader channelTitle={channelTitle} channelAvatar={channelAvatar} time={time} />
+        <TelegramPostHeader channelTitle={channelTitle} channelAvatar={channelAvatar} />
         <TelegramPostMedia media={media} />
         <TelegramPostBody text={text} entities={entities} />
 
         <div style={viewCounter}>
-          <EyeIcon style={{ width: 14, height: 14 }} />
+          <EyeIcon style={{ width: 13, height: 13 }} />
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>1.2K</span>
           <span style={{ marginLeft: 4 }}>{time}</span>
         </div>

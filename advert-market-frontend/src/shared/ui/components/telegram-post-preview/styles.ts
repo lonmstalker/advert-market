@@ -30,7 +30,6 @@ export const headerAvatar: CSSProperties = {
 export const headerInfo: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
   flex: 1,
   minWidth: 0,
 };
@@ -52,7 +51,7 @@ export const headerTime: CSSProperties = {
 };
 
 export const postBody: CSSProperties = {
-  padding: '4px 12px 8px',
+  padding: '4px 12px 2px',
   fontSize: 15,
   lineHeight: 1.4,
   color: 'var(--color-foreground-primary)',
@@ -94,14 +93,14 @@ export const inlineButton: CSSProperties = {
   justifyContent: 'center',
   gap: 6,
   padding: '8px 16px',
-  borderRadius: 20,
-  background: 'transparent',
-  border: '1px solid color-mix(in srgb, var(--color-accent-primary) 40%, transparent)',
+  borderRadius: 6,
+  background: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
+  border: 'none',
   color: 'var(--color-accent-primary)',
   fontSize: 14,
   fontWeight: 500,
   textDecoration: 'none',
-  transition: 'border-color 0.15s, color 0.15s',
+  cursor: 'pointer',
 };
 
 export const spoilerHidden: CSSProperties = {
@@ -145,12 +144,8 @@ export const linkStyle: CSSProperties = {
 
 export const chatArea: CSSProperties = {
   background: 'var(--color-background-secondary)',
-  backgroundImage:
-    'radial-gradient(circle, color-mix(in srgb, var(--color-foreground-primary) 6%, transparent) 1px, transparent 1px)',
-  backgroundSize: '24px 24px',
   padding: '0 0 16px',
   minHeight: 200,
-  borderRadius: 16,
   overflow: 'hidden',
 };
 
@@ -196,7 +191,7 @@ export const viewCounter: CSSProperties = {
   alignItems: 'center',
   gap: 4,
   justifyContent: 'flex-end',
-  padding: '4px 12px 6px',
+  padding: '2px 12px 8px',
   fontSize: 12,
   color: 'var(--color-foreground-tertiary)',
 };

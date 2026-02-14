@@ -3,10 +3,11 @@ import { TRANSACTION_TYPES, type TransactionType } from '../../types/wallet';
 import { formatAmountWithSign, getAmountColor, getTransactionTypeConfig } from '../transaction-type';
 
 describe('getTransactionTypeConfig', () => {
-  it.each(TRANSACTION_TYPES)('returns config with icon and i18nKey for type "%s"', (type) => {
+  it.each(TRANSACTION_TYPES)('returns config with Icon component and i18nKey for type "%s"', (type) => {
     const config = getTransactionTypeConfig(type);
     expect(config).toBeDefined();
-    expect(config.icon).toBeTruthy();
+    expect(config.Icon).toBeTruthy();
+    expect(typeof config.Icon).toBe('function');
     expect(config.i18nKey).toBeTruthy();
   });
 

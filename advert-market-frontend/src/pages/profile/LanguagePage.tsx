@@ -11,8 +11,8 @@ import { BackButtonHandler } from '@/shared/ui';
 import { pressScale, slideFromRight, staggerChildren } from '@/shared/ui/animations';
 
 const LANGUAGES = [
-  { code: 'ru', label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', flag: '\uD83C\uDDF7\uD83C\uDDFA' },
-  { code: 'en', label: 'English', flag: '\uD83C\uDDEC\uD83C\uDDE7' },
+  { code: 'ru', label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', abbr: 'RU' },
+  { code: 'en', label: 'English', abbr: 'EN' },
 ] as const;
 
 export default function LanguagePage() {
@@ -55,7 +55,7 @@ export default function LanguagePage() {
       <motion.div {...staggerChildren} initial="initial" animate="animate" style={{ marginTop: 16 }}>
         <motion.div {...slideFromRight}>
           <Group footer={t('profile.language.hint')}>
-            {LANGUAGES.map(({ code, label, flag }) => (
+            {LANGUAGES.map(({ code, label, abbr }) => (
               <motion.div key={code} {...pressScale}>
                 <GroupItem
                   text={label}
@@ -73,9 +73,13 @@ export default function LanguagePage() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         transition: 'background 0.2s ease',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: selected === code ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
+                        letterSpacing: '0.02em',
                       }}
                     >
-                      <span style={{ fontSize: 18 }}>{flag}</span>
+                      {abbr}
                     </div>
                   }
                   after={selected === code ? <Icon name="check" color="accent" /> : undefined}

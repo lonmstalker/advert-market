@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
+import { NewspaperIcon } from '@/shared/ui/icons';
 import { MockupContainer } from './mockup-container';
 import { MockupSearchBar } from './mockup-search-bar';
 import { MockupTextButton } from './mockup-text-button';
@@ -94,10 +95,9 @@ export function TourSlideCatalog() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '18px',
                       }}
                     >
-                      📰
+                      <NewspaperIcon style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }} />
                     </div>
                   }
                 />

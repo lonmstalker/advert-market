@@ -25,7 +25,9 @@ class TelegramWebhookRegistrarTest {
         TelegramBot bot = mock(TelegramBot.class);
 
         var props = mock(TelegramBotProperties.class);
-        when(props.webhook()).thenReturn(new TelegramBotProperties.Webhook("", "secret"));
+        when(props.webhook()).thenReturn(
+                new TelegramBotProperties.Webhook(
+                        "", "secret"));
 
         var registrar = new TelegramWebhookRegistrar(bot, props);
         registrar.registerWebhook();
@@ -39,28 +41,43 @@ class TelegramWebhookRegistrarTest {
         TelegramBot bot = mock(TelegramBot.class);
 
         var props = mock(TelegramBotProperties.class);
+        var webhookUrl =
+                "https://example.com/api/v1/bot/webhook";
         when(props.webhook()).thenReturn(
-                new TelegramBotProperties.Webhook("https://example.com/api/v1/bot/webhook", "secret-token")
-        );
+                new TelegramBotProperties.Webhook(
+                        webhookUrl, "secret-token"));
 
         BaseResponse ok = mock(BaseResponse.class);
         when(ok.isOk()).thenReturn(true);
-        when(bot.execute(any(SetWebhook.class))).thenReturn(ok);
+        when(bot.execute(any(SetWebhook.class)))
+                .thenReturn(ok);
 
-        var registrar = new TelegramWebhookRegistrar(bot, props);
+        var registrar =
+                new TelegramWebhookRegistrar(bot, props);
         registrar.registerWebhook();
 
-        var captor = ArgumentCaptor.forClass(SetWebhook.class);
+        var captor =
+                ArgumentCaptor.forClass(SetWebhook.class);
         verify(bot).execute(captor.capture());
 
         SetWebhook request = captor.getValue();
-        assertThat(request.getParameters()).containsEntry("url", "https://example.com/api/v1/bot/webhook");
-        assertThat(request.getParameters()).containsEntry("secret_token", "secret-token");
-        assertThat(request.getParameters()).containsKey("allowed_updates");
+        assertThat(request.getParameters())
+                .containsEntry("url", webhookUrl);
+        assertThat(request.getParameters())
+                .containsEntry("secret_token",
+                        "secret-token");
+        assertThat(request.getParameters())
+                .containsKey("allowed_updates");
 
-        Object allowedUpdatesRaw = request.getParameters().get("allowed_updates");
-        assertThat(allowedUpdatesRaw).isInstanceOf(String[].class);
-        assertThat((String[]) allowedUpdatesRaw).containsExactly("message", "callback_query");
+        Object allowedUpdatesRaw =
+                request.getParameters()
+                        .get("allowed_updates");
+        assertThat(allowedUpdatesRaw)
+                .isInstanceOf(String[].class);
+        assertThat((String[]) allowedUpdatesRaw)
+                .containsExactly("message",
+                        "callback_query",
+                        "my_chat_member");
     }
 
     @Test
@@ -70,16 +87,20 @@ class TelegramWebhookRegistrarTest {
 
         var props = mock(TelegramBotProperties.class);
         when(props.webhook()).thenReturn(
-                new TelegramBotProperties.Webhook("https://example.com/api/v1/bot/webhook", "secret-token")
-        );
+                new TelegramBotProperties.Webhook(
+                        "https://example.com/webhook",
+                        "secret-token"));
 
         BaseResponse rejected = mock(BaseResponse.class);
         when(rejected.isOk()).thenReturn(false);
         when(rejected.errorCode()).thenReturn(401);
-        when(rejected.description()).thenReturn("Unauthorized");
-        when(bot.execute(any(SetWebhook.class))).thenReturn(rejected);
+        when(rejected.description())
+                .thenReturn("Unauthorized");
+        when(bot.execute(any(SetWebhook.class)))
+                .thenReturn(rejected);
 
-        var registrar = new TelegramWebhookRegistrar(bot, props);
+        var registrar =
+                new TelegramWebhookRegistrar(bot, props);
 
         assertThatThrownBy(registrar::registerWebhook)
                 .isInstanceOf(IllegalStateException.class)

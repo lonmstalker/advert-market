@@ -1,25 +1,27 @@
+import type { ComponentType, SVGProps } from 'react';
+import { ClipboardIcon, CoinIcon, LockIcon, RefundIcon } from '@/shared/ui/icons';
 import type { TransactionDirection, TransactionType } from '../types/wallet';
 
 type TransactionTypeConfig = {
-  icon: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
   i18nKey: string;
 };
 
 const TYPE_CONFIG: Record<TransactionType, TransactionTypeConfig> = {
   escrow_deposit: {
-    icon: '\uD83D\uDD12',
+    Icon: LockIcon,
     i18nKey: 'wallet.txType.escrowDeposit',
   },
   payout: {
-    icon: '\uD83D\uDCB0',
+    Icon: CoinIcon,
     i18nKey: 'wallet.txType.payout',
   },
   refund: {
-    icon: '\u21A9\uFE0F',
+    Icon: RefundIcon,
     i18nKey: 'wallet.txType.refund',
   },
   commission: {
-    icon: '\uD83D\uDCCB',
+    Icon: ClipboardIcon,
     i18nKey: 'wallet.txType.commission',
   },
 };

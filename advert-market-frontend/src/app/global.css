@@ -40,3 +40,20 @@ body {
   outline-offset: 2px;
 }
 
+/* Creative editor responsive layout */
+.creative-editor-desktop {
+  display: none;
+}
+.creative-editor-mobile {
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .creative-editor-desktop {
+    display: block;
+  }
+  .creative-editor-mobile {
+    display: none;
+  }
+}
+

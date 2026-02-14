@@ -1,12 +1,11 @@
-import { headerAvatar, headerInfo, headerTime, headerTitle, postHeader } from './styles';
+import { headerAvatar, headerInfo, headerTitle, postHeader } from './styles';
 
 type TelegramPostHeaderProps = {
   channelTitle?: string;
   channelAvatar?: string;
-  time?: string;
 };
 
-export function TelegramPostHeader({ channelTitle, channelAvatar, time }: TelegramPostHeaderProps) {
+export function TelegramPostHeader({ channelTitle, channelAvatar }: TelegramPostHeaderProps) {
   const title = channelTitle || 'Channel';
   const initial = title.charAt(0).toUpperCase();
 
@@ -19,7 +18,6 @@ export function TelegramPostHeader({ channelTitle, channelAvatar, time }: Telegr
       )}
       <div style={headerInfo}>
         <span style={headerTitle}>{title}</span>
-        <span style={headerTime}>{time ?? '12:00'}</span>
       </div>
     </div>
   );

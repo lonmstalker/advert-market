@@ -1,12 +1,16 @@
 import { Group, Text } from '@telegram-tools/ui-kit';
+import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
-import { type CSSProperties, useCallback } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import type { CreativeTemplate } from '@/features/creatives';
 import { CreativeListItem, useCreatives } from '@/features/creatives';
-import { BackButtonHandler, EmptyState, EndOfList, Tappable } from '@/shared/ui';
+import { BackButtonHandler, EmptyState, EndOfList, SegmentControl, Tappable } from '@/shared/ui';
 import { fadeIn, listItem, pressScale, scaleIn, staggerChildren } from '@/shared/ui/animations';
-import { PaletteIcon } from '@/shared/ui/icons';
+import { PaletteIcon, SearchIcon, SearchOffIcon } from '@/shared/ui/icons';
+
+type SortMode = 'newest' | 'oldest' | 'byName';
 
 const addButtonStyle: CSSProperties = {
   width: 36,
@@ -23,12 +27,49 @@ const addButtonStyle: CSSProperties = {
   color: 'var(--color-accent-primary)',
 };
 
+function useDebounce(value: string, delay: number): string {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+function sortCreatives(items: CreativeTemplate[], mode: SortMode): CreativeTemplate[] {
+  const sorted = [...items];
+  switch (mode) {
+    case 'newest':
+      return sorted.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    case 'oldest':
+      return sorted.sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime());
+    case 'byName':
+      return sorted.sort((a, b) => a.title.localeCompare(b.title));
+  }
+}
+
 export default function CreativesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useCreatives();
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>('newest');
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
   const allCreatives = data?.pages.flatMap((p) => p.items) ?? [];
+
+  const filteredAndSorted = useMemo(() => {
+    let items = allCreatives;
+    if (debouncedQuery) {
+      const q = debouncedQuery.toLowerCase();
+      items = items.filter((c) => c.title.toLowerCase().includes(q) || c.draft.text.toLowerCase().includes(q));
+    }
+    return sortCreatives(items, sortMode);
+  }, [allCreatives, debouncedQuery, sortMode]);
 
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
@@ -40,11 +81,25 @@ export default function CreativesPage() {
     [hasNextPage, isFetchingNextPage, fetchNextPage],
   );
 
+  const sortTabs = [
+    { value: 'newest' as const, label: t('creatives.sort.newest') },
+    { value: 'oldest' as const, label: t('creatives.sort.oldest') },
+    { value: 'byName' as const, label: t('creatives.sort.byName') },
+  ];
+
   return (
-    <div style={{ padding: 16 }} onScroll={handleScroll}>
+    <div style={{ paddingBottom: 24 }} onScroll={handleScroll}>
       <BackButtonHandler />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          padding: '16px 16px 0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <Text type="title1" weight="bold">
           {t('creatives.title')}
         </Text>
@@ -54,6 +109,66 @@ export default function CreativesPage() {
           </Tappable>
         </motion.div>
       </div>
+
+      {!isLoading && allCreatives.length > 0 && (
+        <div
+          style={{
+            padding: '0 16px 12px',
+            position: 'sticky',
+            top: 0,
+            zIndex: 5,
+            background: 'var(--color-background-secondary)',
+          }}
+        >
+          <motion.div
+            style={{ marginBottom: 12 }}
+            animate={{ scale: searchFocused ? 1.01 : 1 }}
+            transition={{ duration: 0.15, ease: easeOut }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                borderRadius: 12,
+                background: 'var(--color-background-base)',
+                border: `1.5px solid ${searchFocused ? 'var(--color-accent-primary)' : 'var(--color-border-separator)'}`,
+                transition: 'border-color 0.2s ease',
+              }}
+            >
+              <SearchIcon
+                style={{
+                  width: 18,
+                  height: 18,
+                  color: searchFocused ? 'var(--color-accent-primary)' : 'var(--color-foreground-tertiary)',
+                  flexShrink: 0,
+                  transition: 'color 0.2s ease',
+                }}
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder={t('creatives.search.placeholder')}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  fontSize: 15,
+                  color: 'var(--color-foreground-primary)',
+                  lineHeight: 1.3,
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+          </motion.div>
+          <SegmentControl tabs={sortTabs} active={sortMode} onChange={setSortMode} />
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {isLoading ? (
@@ -74,10 +189,18 @@ export default function CreativesPage() {
               onAction={() => navigate('/profile/creatives/new')}
             />
           </motion.div>
+        ) : filteredAndSorted.length === 0 ? (
+          <motion.div key="no-results" {...scaleIn}>
+            <EmptyState
+              icon={<SearchOffIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+              title={t('catalog.empty.title')}
+              description={t('catalog.empty.description')}
+            />
+          </motion.div>
         ) : (
           <motion.div key="list" {...staggerChildren} initial="initial" animate="animate">
             <Group>
-              {allCreatives.map((creative) => (
+              {filteredAndSorted.map((creative) => (
                 <motion.div key={creative.id} {...listItem}>
                   <CreativeListItem
                     creative={creative}

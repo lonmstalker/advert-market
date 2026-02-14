@@ -3,6 +3,7 @@ export { AuthGuard } from './components/auth-guard';
 export { BackButtonHandler } from './components/back-button-handler';
 export { BottomTabs } from './components/bottom-tabs';
 export { ChannelAvatar, computeAvatarHue } from './components/channel-avatar';
+export { DeviceFrame } from './components/device-frame/DeviceFrame';
 export { EmptyState } from './components/empty-state';
 export { EndOfList } from './components/end-of-list';
 export { ErrorBoundary } from './components/error-boundary';

@@ -1,6 +1,7 @@
 package com.advertmarket.communication.bot.internal.dispatch;
 
 import com.pengrad.telegrambot.model.CallbackQuery;
+import com.pengrad.telegrambot.model.ChatMemberUpdated;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -48,6 +49,10 @@ public record UpdateContext(Update update) {
                 && update.inlineQuery().from() != null) {
             return update.inlineQuery().from();
         }
+        if (update.myChatMember() != null
+                && update.myChatMember().from() != null) {
+            return update.myChatMember().from();
+        }
         return null;
     }
 
@@ -78,6 +83,17 @@ public record UpdateContext(Update update) {
     /** Returns true if this update is a callback query. */
     public boolean isCallbackQuery() {
         return update.callbackQuery() != null;
+    }
+
+    /** Returns true if this update is a my_chat_member update. */
+    public boolean isMyChatMemberUpdate() {
+        return update.myChatMember() != null;
+    }
+
+    /** Returns the my_chat_member update, or null. */
+    @Nullable
+    public ChatMemberUpdated myChatMember() {
+        return update.myChatMember();
     }
 
     /** Returns the user's language code from their Telegram profile. */

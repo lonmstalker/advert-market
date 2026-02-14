@@ -52,6 +52,7 @@ export default function TransactionDetailPage() {
   const config = getTransactionTypeConfig(tx.type);
   const amountColor = getAmountColor(tx.type, tx.direction);
   const sign = tx.direction === 'income' ? '+' : '\u2212';
+  const TypeIcon = config.Icon;
 
   const truncateAddress = (addr: string) => `${addr.slice(0, 8)}...${addr.slice(-6)}`;
 
@@ -127,11 +128,9 @@ export default function TransactionDetailPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 12px',
-                fontSize: 28,
-                lineHeight: 1,
               }}
             >
-              {config.icon}
+              <TypeIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-secondary)' }} />
             </div>
 
             {/* Amount with animated entry */}

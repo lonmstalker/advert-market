@@ -11,6 +11,9 @@ import com.advertmarket.communication.bot.internal.error.BotErrorHandler;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.shared.i18n.LocalizationService;
 import com.pengrad.telegrambot.model.CallbackQuery;
+import com.pengrad.telegrambot.model.Chat;
+import com.pengrad.telegrambot.model.ChatMember;
+import com.pengrad.telegrambot.model.ChatMemberUpdated;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
@@ -48,9 +51,8 @@ class BotDispatcherTest {
                 handled.set(true);
             }
         };
-        var dispatcher = new BotDispatcher(List.of(cmd),
-                List.of(), List.of(), sender, errorHandler,
-                blockPort, i18n);
+        var dispatcher = dispatcher(
+                List.of(cmd), List.of(), List.of(), List.of());
         var ctx = new UpdateContext(
                 createUpdateWithText(1L, "/test arg"));
 
@@ -75,9 +77,8 @@ class BotDispatcherTest {
                 handled.set(true);
             }
         };
-        var dispatcher = new BotDispatcher(List.of(),
-                List.of(handler), List.of(), sender,
-                errorHandler, blockPort, i18n);
+        var dispatcher = dispatcher(
+                List.of(), List.of(handler), List.of(), List.of());
         var ctx = new UpdateContext(
                 createUpdateWithCallback(1L, "action:123"));
 
@@ -115,9 +116,9 @@ class BotDispatcherTest {
                 longHandled.set(true);
             }
         };
-        var dispatcher = new BotDispatcher(List.of(),
-                List.of(shortHandler, longHandler), List.of(),
-                sender, errorHandler, blockPort, i18n);
+        var dispatcher = dispatcher(List.of(),
+                List.of(shortHandler, longHandler),
+                List.of(), List.of());
         var ctx = new UpdateContext(
                 createUpdateWithCallback(1L, "a:detail:xyz"));
 
@@ -142,9 +143,8 @@ class BotDispatcherTest {
                 throw new RuntimeException("boom");
             }
         };
-        var dispatcher = new BotDispatcher(List.of(cmd),
-                List.of(), List.of(), sender, errorHandler,
-                blockPort, i18n);
+        var dispatcher = dispatcher(
+                List.of(cmd), List.of(), List.of(), List.of());
         var update = createUpdateWithText(1L, "/fail");
         setField(update, "update_id", 42);
         var ctx = new UpdateContext(update);
@@ -163,9 +163,8 @@ class BotDispatcherTest {
     @Test
     @DisplayName("Ignores unknown commands")
     void unknownCommandIgnored() throws Exception {
-        var dispatcher = new BotDispatcher(List.of(),
-                List.of(), List.of(), sender, errorHandler,
-                blockPort, i18n);
+        var dispatcher = dispatcher(
+                List.of(), List.of(), List.of(), List.of());
         var ctx = new UpdateContext(
                 createUpdateWithText(1L, "/unknown"));
 
@@ -190,9 +189,8 @@ class BotDispatcherTest {
                 handled.set(true);
             }
         };
-        var dispatcher = new BotDispatcher(List.of(cmd),
-                List.of(), List.of(), sender, errorHandler,
-                blockPort, i18n);
+        var dispatcher = dispatcher(
+                List.of(cmd), List.of(), List.of(), List.of());
         var ctx = new UpdateContext(
                 createUpdateWithText(1L, "/start@MyBot"));
 
@@ -207,9 +205,8 @@ class BotDispatcherTest {
         when(blockPort.isBlocked(1L)).thenReturn(true);
         when(i18n.msg("bot.blocked", "ru"))
                 .thenReturn("Blocked");
-        var dispatcher = new BotDispatcher(List.of(),
-                List.of(), List.of(), sender, errorHandler,
-                blockPort, i18n);
+        var dispatcher = dispatcher(
+                List.of(), List.of(), List.of(), List.of());
         var ctx = new UpdateContext(
                 createUpdateWithText(1L, "/start"));
 
@@ -234,10 +231,9 @@ class BotDispatcherTest {
                 handled.set(true);
             }
         };
-        var dispatcher = new BotDispatcher(List.of(),
-                List.of(), List.of(handler), sender,
-                errorHandler, blockPort, i18n);
-        // Text message that doesn't start with /
+        var dispatcher = dispatcher(
+                List.of(), List.of(), List.of(handler),
+                List.of());
         var ctx = new UpdateContext(
                 createUpdateWithText(1L, "hello world"));
 
@@ -246,7 +242,87 @@ class BotDispatcherTest {
         assertThat(handled).isTrue();
     }
 
-    // --- Helpers ---
+    @Test
+    @DisplayName("Dispatches my_chat_member to matching handler")
+    void dispatchesChatMemberUpdate() throws Exception {
+        var handled = new AtomicBoolean();
+        var cmHandler = chatMemberHandler(handled, true);
+        var dispatcher = dispatcher(
+                List.of(), List.of(), List.of(),
+                List.of(cmHandler));
+        var ctx = new UpdateContext(
+                createUpdateWithMyChatMember(1L, -100L));
+
+        dispatcher.dispatch(ctx);
+
+        assertThat(handled).isTrue();
+    }
+
+    @Test
+    @DisplayName("my_chat_member skips block check")
+    void chatMemberUpdate_skipsBlockCheck() throws Exception {
+        when(blockPort.isBlocked(1L)).thenReturn(true);
+        var handled = new AtomicBoolean();
+        var cmHandler = chatMemberHandler(handled, true);
+        var dispatcher = dispatcher(
+                List.of(), List.of(), List.of(),
+                List.of(cmHandler));
+        var ctx = new UpdateContext(
+                createUpdateWithMyChatMember(1L, -100L));
+
+        dispatcher.dispatch(ctx);
+
+        assertThat(handled).isTrue();
+        verifyNoInteractions(blockPort);
+    }
+
+    @Test
+    @DisplayName("Unhandled my_chat_member is silently ignored")
+    void chatMemberUpdate_unhandledIgnored() throws Exception {
+        var cmHandler = chatMemberHandler(
+                new AtomicBoolean(), false);
+        var dispatcher = dispatcher(
+                List.of(), List.of(), List.of(),
+                List.of(cmHandler));
+        var ctx = new UpdateContext(
+                createUpdateWithMyChatMember(1L, -100L));
+
+        dispatcher.dispatch(ctx);
+
+        verifyNoInteractions(errorHandler);
+    }
+
+    // --- Factory helpers ---
+
+    private BotDispatcher dispatcher(
+            List<BotCommand> cmds,
+            List<CallbackHandler> cbs,
+            List<MessageHandler> msgs,
+            List<ChatMemberUpdateHandler> cms) {
+        var registry = new HandlerRegistry(
+                cmds, cbs, msgs, cms);
+        return new BotDispatcher(registry, sender,
+                errorHandler, blockPort, i18n);
+    }
+
+    private ChatMemberUpdateHandler chatMemberHandler(
+            AtomicBoolean handled, boolean accepts) {
+        return new ChatMemberUpdateHandler() {
+            @Override
+            public boolean canHandle(
+                    ChatMemberUpdated update) {
+                return accepts;
+            }
+
+            @Override
+            public void handle(
+                    ChatMemberUpdated update) {
+                handled.set(true);
+            }
+        };
+    }
+
+    // --- Telegram model helpers ---
 
     private Update createUpdateWithText(long userId, String text)
             throws Exception {
@@ -256,6 +332,26 @@ class BotDispatcherTest {
         setField(message, "text", text);
         var update = new Update();
         setField(update, "message", message);
+        return update;
+    }
+
+    private Update createUpdateWithMyChatMember(long userId,
+            long chatId) throws Exception {
+        var chat = new Chat();
+        setField(chat, "id", chatId);
+        setField(chat, "type", Chat.Type.channel);
+        var oldMember = new ChatMember();
+        setField(oldMember, "status",
+                ChatMember.Status.administrator);
+        var newMember = new ChatMember();
+        setField(newMember, "status", ChatMember.Status.left);
+        var memberUpdated = new ChatMemberUpdated();
+        setField(memberUpdated, "chat", chat);
+        setField(memberUpdated, "from", new User(userId));
+        setField(memberUpdated, "old_chat_member", oldMember);
+        setField(memberUpdated, "new_chat_member", newMember);
+        var update = new Update();
+        setField(update, "my_chat_member", memberUpdated);
         return update;
     }
 

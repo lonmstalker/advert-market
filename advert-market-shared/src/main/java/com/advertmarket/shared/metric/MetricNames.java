@@ -68,6 +68,10 @@ public final class MetricNames {
             "channel.cache.miss";
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_CACHE_STALE =
             "channel.cache.stale";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_BOT_STATUS_CHANGE =
+            "channel.bot.status.change";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_DEACTIVATED_TOTAL =
+            "channel.deactivated.total";
 
     // --- Delivery ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String DELIVERY_VERIFIED =

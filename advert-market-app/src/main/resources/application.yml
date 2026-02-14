@@ -58,6 +58,7 @@ app:
     allowed-origins:
       - "https://localhost:3000"
       - "https://web.telegram.org"
+      - "https://teleinsight.in"
   auth:
     jwt:
       secret: ${JWT_SECRET}

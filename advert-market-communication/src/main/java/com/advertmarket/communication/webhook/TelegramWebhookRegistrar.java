@@ -60,7 +60,8 @@ public class TelegramWebhookRegistrar {
         BaseResponse response = bot.execute(new SetWebhook()
                 .url(url)
                 .secretToken(botProperties.webhook().secret())
-                .allowedUpdates("message", "callback_query")
+                .allowedUpdates("message", "callback_query",
+                        "my_chat_member")
         );
 
         if (!response.isOk()) {

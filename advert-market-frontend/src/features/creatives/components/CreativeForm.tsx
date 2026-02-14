@@ -5,6 +5,7 @@ import { Textarea } from '@/shared/ui';
 import type { InlineButton, MediaItem, TextEntityType } from '../types/creative';
 import { ButtonBuilder } from './ButtonBuilder';
 import { FormattingToolbar } from './FormattingToolbar';
+import { LinkInputSheet } from './LinkInputSheet';
 import { MediaItemList } from './MediaItemList';
 
 type CreativeFormProps = {
@@ -42,6 +43,8 @@ export function CreativeForm({
 }: CreativeFormProps) {
   const { t } = useTranslation();
   const [isFocused, setIsFocused] = useState(false);
+  const [linkSheetOpen, setLinkSheetOpen] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<{ start: number; end: number } | null>(null);
 
   const getSelection = useCallback((): { start: number; end: number } => {
     const ta = textareaRef.current;
@@ -67,11 +70,19 @@ export function CreativeForm({
   const handleLink = useCallback(() => {
     const sel = getSelection();
     if (sel.start === sel.end) return;
-    const url = prompt(t('creatives.form.linkPrompt'));
-    if (!url) return;
-    toggleEntity('TEXT_LINK' as TextEntityType, sel, { url });
-    textareaRef.current?.focus();
-  }, [getSelection, toggleEntity, t, textareaRef]);
+    setPendingSelection(sel);
+    setLinkSheetOpen(true);
+  }, [getSelection]);
+
+  const handleLinkSubmit = useCallback(
+    (url: string) => {
+      if (!pendingSelection) return;
+      toggleEntity('TEXT_LINK' as TextEntityType, pendingSelection, { url });
+      setPendingSelection(null);
+      textareaRef.current?.focus();
+    },
+    [pendingSelection, toggleEntity, textareaRef],
+  );
 
   const activeTypes = useMemo(() => {
     if (!isFocused) return new Set<TextEntityType>();
@@ -93,11 +104,19 @@ export function CreativeForm({
     return active;
   }, [isFocused, getSelection, isActive]);
 
+  const charRatio = text.length / MAX_TEXT_LENGTH;
+  const counterColor =
+    charRatio > 0.95
+      ? 'var(--color-destructive)'
+      : charRatio > 0.8
+        ? 'var(--color-warning)'
+        : 'var(--color-foreground-tertiary)';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <div style={{ marginBottom: 4 }}>
-          <Text type="subheadline1" weight="medium">
+        <div style={{ marginBottom: 8 }}>
+          <Text type="subheadline2" color="secondary">
             {t('creatives.form.title')}
           </Text>
         </div>
@@ -105,41 +124,47 @@ export function CreativeForm({
       </div>
 
       <div>
-        <div style={{ marginBottom: 4 }}>
-          <Text type="subheadline1" weight="medium">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Text type="subheadline2" color="secondary">
             {t('creatives.form.text')}
           </Text>
-        </div>
-        <FormattingToolbar
-          onFormat={handleFormat}
-          onLink={handleLink}
-          activeTypes={activeTypes}
-          disabled={!hasSelection()}
-        />
-        <div style={{ position: 'relative' }}>
-          <Textarea
-            ref={textareaRef}
-            value={text}
-            onChange={onTextChange}
-            placeholder={t('creatives.form.textPlaceholder')}
-            maxLength={MAX_TEXT_LENGTH}
-            rows={6}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-          <div
+          <span
             style={{
-              position: 'absolute',
-              bottom: 8,
-              right: 12,
-              pointerEvents: 'none',
+              fontSize: 12,
+              fontVariantNumeric: 'tabular-nums',
+              color: counterColor,
+              transition: 'color 0.3s',
             }}
           >
-            <Text type="caption1" color="secondary">
-              {text.length}/{MAX_TEXT_LENGTH}
-            </Text>
-          </div>
+            {text.length}/{MAX_TEXT_LENGTH}
+          </span>
         </div>
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 5,
+            background: 'var(--color-background-secondary)',
+            paddingBottom: 4,
+          }}
+        >
+          <FormattingToolbar
+            onFormat={handleFormat}
+            onLink={handleLink}
+            activeTypes={activeTypes}
+            disabled={!hasSelection()}
+          />
+        </div>
+        <Textarea
+          ref={textareaRef}
+          value={text}
+          onChange={onTextChange}
+          placeholder={t('creatives.form.textPlaceholder')}
+          maxLength={MAX_TEXT_LENGTH}
+          rows={6}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+        />
       </div>
 
       <MediaItemList media={media} onChange={onMediaChange} />
@@ -149,6 +174,15 @@ export function CreativeForm({
         <Text type="body">{t('creatives.form.disablePreview')}</Text>
         <Toggle isEnabled={disableWebPagePreview} onChange={onDisableWebPagePreviewChange} />
       </div>
+
+      <LinkInputSheet
+        open={linkSheetOpen}
+        onClose={() => {
+          setLinkSheetOpen(false);
+          setPendingSelection(null);
+        }}
+        onSubmit={handleLinkSubmit}
+      />
     </div>
   );
 }
