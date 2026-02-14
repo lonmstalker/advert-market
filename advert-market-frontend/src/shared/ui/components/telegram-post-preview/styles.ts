@@ -38,7 +38,7 @@ export const headerInfo: CSSProperties = {
 export const headerTitle: CSSProperties = {
   fontSize: 14,
   fontWeight: 600,
-  color: 'var(--color-foreground-primary)',
+  color: 'var(--color-accent-primary)',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -101,6 +101,7 @@ export const inlineButton: CSSProperties = {
   fontSize: 14,
   fontWeight: 500,
   textDecoration: 'none',
+  transition: 'border-color 0.15s, color 0.15s',
 };
 
 export const spoilerHidden: CSSProperties = {
@@ -145,9 +146,9 @@ export const linkStyle: CSSProperties = {
 export const chatArea: CSSProperties = {
   background: 'var(--color-background-secondary)',
   backgroundImage:
-    'radial-gradient(circle, color-mix(in srgb, var(--color-foreground-primary) 4%, transparent) 1px, transparent 1px)',
+    'radial-gradient(circle, color-mix(in srgb, var(--color-foreground-primary) 6%, transparent) 1px, transparent 1px)',
   backgroundSize: '24px 24px',
-  padding: '12px 0 16px',
+  padding: '0 0 16px',
   minHeight: 200,
   borderRadius: 16,
   overflow: 'hidden',
@@ -195,7 +196,7 @@ export const viewCounter: CSSProperties = {
   alignItems: 'center',
   gap: 4,
   justifyContent: 'flex-end',
-  padding: '2px 12px 4px',
+  padding: '4px 12px 6px',
   fontSize: 12,
   color: 'var(--color-foreground-tertiary)',
 };

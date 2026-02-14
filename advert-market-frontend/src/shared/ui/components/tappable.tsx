@@ -1,4 +1,6 @@
+import { motion } from 'motion/react';
 import type { CSSProperties, ReactNode } from 'react';
+import { tapScale } from '@/shared/ui/animations';
 
 type TappableProps = {
   children: ReactNode;
@@ -11,8 +13,8 @@ type TappableProps = {
 
 export function Tappable({ children, onClick, disabled, style, ...ariaProps }: TappableProps) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} style={style} {...ariaProps}>
+    <motion.button {...tapScale} type="button" onClick={onClick} disabled={disabled} style={style} {...ariaProps}>
       {children}
-    </button>
+    </motion.button>
   );
 }

@@ -22,7 +22,7 @@ export function ChannelDetailCta({ channelId, minPrice }: ChannelDetailCtaProps)
         bottom: 0,
         left: 0,
         right: 0,
-        padding: '10px 16px',
+        padding: '10px 16px calc(10px + env(safe-area-inset-bottom))',
         background: 'var(--color-background-base)',
         borderTop: '1px solid var(--color-border-separator)',
         display: 'flex',
