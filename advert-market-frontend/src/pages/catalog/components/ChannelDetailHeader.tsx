@@ -52,11 +52,10 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
             <Text type="subheadline1" color="secondary">
               <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {channel.username ? `@${channel.username}` : t('catalog.channel.privateChannel')}
-                <span style={{ color: 'var(--color-foreground-tertiary)' }}>
-                  {' \u00b7 '}
-                  {formatChannelAge(channel.createdAt, t)}
-                </span>
               </span>
+            </Text>
+            <Text type="caption1" color="tertiary">
+              {formatChannelAge(channel.createdAt, t)}
             </Text>
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>

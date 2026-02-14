@@ -25,14 +25,14 @@ describe('SegmentControl', () => {
   it('applies active styles to the selected tab', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
     const activeButton = screen.getByText('Second');
-    expect(activeButton.style.fontWeight).toBe('600');
-    expect(activeButton.style.background).toContain('var(--color-accent-primary)');
+    expect(activeButton.style.fontWeight).toBe('500');
+    expect(activeButton.style.color).toBe('var(--color-static-white)');
   });
 
   it('applies inactive styles to non-selected tabs', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
     const inactiveButton = screen.getByText('First');
-    expect(inactiveButton.style.fontWeight).toBe('400');
+    expect(inactiveButton.style.fontWeight).toBe('500');
     expect(inactiveButton.style.background).toBe('transparent');
   });
 

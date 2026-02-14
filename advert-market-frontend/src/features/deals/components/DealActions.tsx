@@ -37,7 +37,7 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
       <div
         style={{
           flexShrink: 0,
-          padding: '12px 16px 32px',
+          padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 20px))',
           display: 'flex',
           gap: 8,
           borderTop: '0.5px solid var(--color-border-separator)',

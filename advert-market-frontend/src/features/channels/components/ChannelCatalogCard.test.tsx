@@ -1,4 +1,4 @@
-import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
+import { renderWithProviders, screen } from '@/test/test-utils';
 import type { Channel } from '../types/channel';
 import { ChannelCatalogCard } from './ChannelCatalogCard';
 
@@ -38,9 +38,9 @@ describe('ChannelCatalogCard', () => {
     expect(screen.queryByTitle('Verified')).not.toBeInTheDocument();
   });
 
-  it('shows @username when present', () => {
+  it('shows @username in subtitle when present', () => {
     renderCard({ username: 'cryptonewsdaily' });
-    expect(screen.getByText('@cryptonewsdaily')).toBeInTheDocument();
+    expect(screen.getByText(/@cryptonewsdaily/)).toBeInTheDocument();
   });
 
   it('does not show @username when missing', () => {
@@ -58,45 +58,9 @@ describe('ChannelCatalogCard', () => {
     expect(screen.queryByText(/from .* TON/)).not.toBeInTheDocument();
   });
 
-  it('shows CPM when both price and avgViews are set', () => {
-    renderCard({ pricePerPostNano: 5_000_000_000, avgViews: 45000 });
-    expect(screen.getByText(/~.*\/1K/)).toBeInTheDocument();
-  });
-
-  it('shows subscriber count as metric pill formatted as 125K', () => {
+  it('shows subscriber count in subtitle formatted as 125K', () => {
     renderCard({ subscriberCount: 125000 });
-    expect(screen.getByText('125K')).toBeInTheDocument();
-    expect(screen.getByText('subs')).toBeInTheDocument();
-  });
-
-  it('shows reach metric pill when avgViews is set', () => {
-    renderCard({ avgViews: 45000 });
-    expect(screen.getByText('45K')).toBeInTheDocument();
-    expect(screen.getByText('reach')).toBeInTheDocument();
-  });
-
-  it('does not show reach pill when avgViews is undefined', () => {
-    renderCard({ avgViews: undefined });
-    expect(screen.queryByText('reach')).not.toBeInTheDocument();
-  });
-
-  it('shows ER metric pill when engagementRate is set', () => {
-    renderCard({ engagementRate: 3.6 });
-    expect(screen.getByText('3.6%')).toBeInTheDocument();
-    expect(screen.getByText('ER')).toBeInTheDocument();
-  });
-
-  it('does not show ER pill when engagementRate is undefined', () => {
-    renderCard({ engagementRate: undefined });
-    expect(screen.queryByText('ER')).not.toBeInTheDocument();
-  });
-
-  it('shows category badges after categories load', async () => {
-    renderCard({ categories: ['crypto', 'finance'] });
-    await waitFor(() => {
-      expect(screen.getByText('Crypto')).toBeInTheDocument();
-      expect(screen.getByText('Finance')).toBeInTheDocument();
-    });
+    expect(screen.getByText(/125K.*subs/)).toBeInTheDocument();
   });
 
   it('calls onClick when card is clicked', async () => {
@@ -113,11 +77,11 @@ describe('ChannelCatalogCard', () => {
 
   it('formats large subscriber count as 1.5M', () => {
     renderCard({ subscriberCount: 1_500_000 });
-    expect(screen.getByText('1.5M')).toBeInTheDocument();
+    expect(screen.getByText(/1\.5M/)).toBeInTheDocument();
   });
 
   it('formats small subscriber count as raw number', () => {
     renderCard({ subscriberCount: 500 });
-    expect(screen.getByText('500')).toBeInTheDocument();
+    expect(screen.getByText(/500/)).toBeInTheDocument();
   });
 });

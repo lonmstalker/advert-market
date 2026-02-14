@@ -1,3 +1,6 @@
+import { motion } from 'motion/react';
+import { useId } from 'react';
+
 type Tab<T extends string> = {
   value: T;
   label: string;
@@ -10,11 +13,12 @@ type SegmentControlProps<T extends string> = {
 };
 
 export function SegmentControl<T extends string>({ tabs, active, onChange }: SegmentControlProps<T>) {
+  const id = useId();
   return (
     <div
       style={{
         display: 'flex',
-        gap: 0,
+        position: 'relative',
         borderRadius: 10,
         padding: 2,
         background: 'var(--color-background-base)',
@@ -30,19 +34,34 @@ export function SegmentControl<T extends string>({ tabs, active, onChange }: Seg
             onClick={() => onChange(tab.value)}
             style={{
               flex: 1,
+              position: 'relative',
+              zIndex: 1,
               padding: '8px 16px',
               borderRadius: 8,
               border: 'none',
               cursor: 'pointer',
-              background: isActive ? 'var(--color-accent-primary)' : 'transparent',
-              color: isActive ? 'var(--color-static-white)' : 'var(--color-foreground-primary)',
+              background: 'transparent',
+              color: isActive ? 'var(--color-static-white)' : 'var(--color-foreground-secondary)',
               fontSize: 14,
-              fontWeight: isActive ? 600 : 400,
+              fontWeight: 500,
               fontFamily: 'inherit',
               WebkitTapHighlightColor: 'transparent',
-              transition: 'background 0.2s, color 0.2s',
+              transition: 'color 0.2s ease',
             }}
           >
+            {isActive && (
+              <motion.div
+                layoutId={`segment-pill-${id}`}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 8,
+                  background: 'var(--color-accent-primary)',
+                  zIndex: -1,
+                }}
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              />
+            )}
             {tab.label}
           </button>
         );

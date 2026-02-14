@@ -134,7 +134,7 @@ export default function DealDetailPage() {
               right: 32,
               width: 10,
               height: 10,
-              opacity: 0.08,
+              opacity: 0.15,
               color: 'var(--color-foreground-primary)',
               pointerEvents: 'none',
             }}
@@ -146,7 +146,7 @@ export default function DealDetailPage() {
               right: 72,
               width: 14,
               height: 14,
-              opacity: 0.06,
+              opacity: 0.1,
               color: 'var(--color-foreground-primary)',
               pointerEvents: 'none',
             }}
@@ -158,7 +158,7 @@ export default function DealDetailPage() {
               left: 24,
               width: 8,
               height: 8,
-              opacity: 0.1,
+              opacity: 0.18,
               color: 'var(--color-foreground-primary)',
               pointerEvents: 'none',
             }}
@@ -315,7 +315,7 @@ export default function DealDetailPage() {
                 gap: 8,
               }}
             >
-              {!isTerminal && <span style={pulsingDotStyle(statusConfig.color)} />}
+              {!isTerminal && <PulsingDot color={statusConfig.color} />}
               <div>
                 <DealStatusBadge status={deal.status} />
                 <Text type="caption1" color="secondary" style={{ marginTop: 4, display: 'block' }}>
@@ -368,23 +368,27 @@ const heroChipStyle: React.CSSProperties = {
   fontVariantNumeric: 'tabular-nums',
 };
 
-function pulsingDotStyle(color: string): React.CSSProperties {
-  const colorVar =
-    color === 'accent'
-      ? 'var(--color-accent-primary)'
-      : color === 'warning'
-        ? 'var(--color-warning)'
-        : color === 'success'
-          ? 'var(--color-success)'
-          : color === 'destructive'
-            ? 'var(--color-destructive)'
-            : 'var(--color-foreground-secondary)';
-  return {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    background: colorVar,
-    flexShrink: 0,
-    animation: 'deal-pulse 2s ease-in-out infinite',
-  };
+const statusColorVars: Record<string, string> = {
+  accent: 'var(--color-accent-primary)',
+  warning: 'var(--color-warning)',
+  success: 'var(--color-success)',
+  destructive: 'var(--color-destructive)',
+};
+
+function PulsingDot({ color }: { color: string }) {
+  const colorVar = statusColorVars[color] ?? 'var(--color-foreground-secondary)';
+  return (
+    <motion.span
+      animate={{ opacity: [1, 0.4, 1] }}
+      transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+      style={{
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        background: colorVar,
+        flexShrink: 0,
+        display: 'block',
+      }}
+    />
+  );
 }
