@@ -8,6 +8,9 @@ This folder contains everything needed to run Advert Market on a Linux server us
 
 This document describes **server preparation**. For deployment steps, see `RUNBOOK.md`.
 
+For a one-command deploy from a dev machine (checks -> build -> git push -> upload artifacts -> blue/green),
+use `scripts/deploy-prod.sh` from the repo root.
+
 ## 1) DNS
 
 Point these records to your server public IP:
@@ -143,4 +146,3 @@ Health checks:
 
 - nginx: `http://<domain>/health`
 - app readiness (from inside container): `curl -sf http://localhost:8080/actuator/health/readiness`
-

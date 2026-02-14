@@ -104,6 +104,12 @@ Rules:
 | `GET` | `/api/v1/deals/{id}/dispute` | Get dispute status | `advert-market-4fr.1` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/dispute/evidence` | Attach evidence | `advert-market-4fr.1` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/dispute/resolve` | Resolve dispute | `advert-market-4fr.1` | `advert-market-deal` |
+| `GET` | `/api/v1/creatives` | Creative library list | `advert-market-7lx` | `advert-market-marketplace` |
+| `POST` | `/api/v1/creatives` | Create creative template | `advert-market-7lx` | `advert-market-marketplace` |
+| `GET` | `/api/v1/creatives/{id}` | Creative template detail | `advert-market-7lx` | `advert-market-marketplace` |
+| `PUT` | `/api/v1/creatives/{id}` | Update creative template | `advert-market-7lx` | `advert-market-marketplace` |
+| `DELETE` | `/api/v1/creatives/{id}` | Delete creative template (soft) | `advert-market-7lx` | `advert-market-marketplace` |
+| `GET` | `/api/v1/creatives/{id}/versions` | Creative template version history | `advert-market-7lx` | `advert-market-marketplace` |
 | `GET` | `/api/v1/wallet/summary` | Wallet aggregates | `advert-market-av4.6` | `advert-market-financial` |
 | `GET` | `/api/v1/wallet/transactions` | Wallet history | `advert-market-av4.6` | `advert-market-financial` |
 | `GET` | `/api/v1/wallet/transactions/{txId}` | Wallet transaction detail | `advert-market-av4.6` | `advert-market-financial` |

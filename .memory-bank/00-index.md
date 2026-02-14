@@ -89,6 +89,7 @@
 | [15-frontend-pages/05-profile.md](./15-frontend-pages/05-profile.md) | Profile: settings, channel registration, management, team |
 | [15-frontend-pages/06-shared-components.md](./15-frontend-pages/06-shared-components.md) | Shared: sheets, modals, toasts, skeletons, empty states, navigation, routing |
 | [15-frontend-pages/07-ton-connect-integration.md](./15-frontend-pages/07-ton-connect-integration.md) | TON Connect lifecycle, hooks, error mapping, deposit/withdraw flows |
+| [15-frontend-pages/08-creatives.md](./15-frontend-pages/08-creatives.md) | Creatives: personal template library, editor with Telegram-like preview |
 
 ### Infrastructure & Operations
 
@@ -152,4 +153,4 @@
 
 ---
 
-*Generated from C4 architecture model. 97 files total.*
+*Generated from C4 architecture model. 98 files total.*

@@ -85,6 +85,13 @@ docker compose -f docker-compose.prod.yml up -d app-blue nginx
 ## 2. Blue-Green Deployment (New Version)
 
 ```bash
+# End-to-end from dev machine (run from repo root):
+# checks -> build -> git push -> upload artifacts -> blue/green
+# (requires SSH access to the server and repo cloned at DEPLOY_DIR)
+DEPLOY_SSH=ad-marketplace@teleinsight.in \
+DEPLOY_DIR=/home/ad-marketplace/advert-market \
+./scripts/deploy-prod.sh
+
 # Automated (recommended):
 ./scripts/deploy-blue-green.sh advertmarket:v0.2.0
 

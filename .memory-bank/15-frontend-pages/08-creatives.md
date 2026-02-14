@@ -22,7 +22,7 @@
 | `GET` | `/api/v1/creatives/{id}` | Get template | Authenticated |
 | `PUT` | `/api/v1/creatives/{id}` | Update template | Authenticated |
 | `DELETE` | `/api/v1/creatives/{id}` | Soft delete | Authenticated |
-| `GET` | `/api/v1/creatives/{id}/history` | Version history | Authenticated |
+| `GET` | `/api/v1/creatives/{id}/versions` | Version history | Authenticated |
 | `POST` | `/api/v1/creatives/import-from-deal` | Import from deal | Authenticated |
 | `POST` | `/api/v1/deals/{dealId}/creative/import-from-library` | Import to deal | Authenticated |
 
@@ -256,7 +256,7 @@ const creativeFormSchema = z.object({
 ### API
 
 ```
-GET /api/v1/creatives/:creativeId/history
+GET /api/v1/creatives/:creativeId/versions
 ```
 
 **Query keys:** `creativeLibraryKeys.history(creativeId)`
@@ -307,7 +307,7 @@ type TelegramPostPreviewProps = {
 │ └──────────────────────────────────────┘ │
 │                                          │
 │  Formatted **bold** and _italic_ text    │  ← TelegramPostBody
-│  with [links](url) and `code`...         │
+│  with [links](https://example.com) and `code`... │
 │                                          │
 │ ┌──────────┐ ┌──────────┐               │  ← TelegramPostButtons
 │ │ Button 1 │ │ Button 2 │               │
@@ -341,7 +341,7 @@ Supported formatting:
 - `||spoiler||` → click-to-reveal `<span>`
 - `` `code` `` → `<code>`
 - ```` ```pre``` ```` → `<pre><code>`
-- `[text](url)` → `<a>`
+- `[text](https://example.com)` → `<a>`
 - `\` escape character
 
 Tests in `telegram-markdown-parser.test.ts` covering all formatting combinations.
@@ -432,38 +432,7 @@ src/pages/creatives/
 
 ## i18n keys
 
-### Russian (`ru.json`)
-
-```
-creatives.title: "Мои креативы"
-creatives.empty.title: "Нет креативов"
-creatives.empty.description: "Создайте шаблон рекламного поста"
-creatives.empty.cta: "Создать креатив"
-creatives.mediaCount: "{{count}} медиа"
-creatives.editor.edit: "Редактор"
-creatives.editor.preview: "Превью"
-creatives.editor.title: "Название"
-creatives.editor.parseMode: "Формат"
-creatives.editor.text: "Текст поста"
-creatives.editor.media: "Медиа"
-creatives.editor.addMedia: "Добавить медиа"
-creatives.editor.buttons: "Кнопки"
-creatives.editor.buttonText: "Текст кнопки"
-creatives.editor.buttonUrl: "Ссылка"
-creatives.editor.addButton: "Добавить кнопку"
-creatives.editor.disablePreview: "Без превью ссылки"
-creatives.preview.channelName: "Мой канал"
-creatives.toast.created: "Креатив создан"
-creatives.toast.saved: "Креатив сохранён"
-creatives.toast.deleted: "Креатив удалён"
-creatives.history.title: "История версий"
-creatives.history.count: "{{count}} версий"
-creatives.history.restore: "Восстановить эту версию?"
-creatives.importFromLibrary: "Из библиотеки"
-creatives.saveToLibrary: "Сохранить в библиотеку"
-```
-
-### English (`en.json`)
+Example values (en):
 
 ```
 creatives.title: "My Creatives"
