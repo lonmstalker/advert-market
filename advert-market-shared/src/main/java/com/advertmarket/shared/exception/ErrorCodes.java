@@ -64,6 +64,12 @@ public final class ErrorCodes {
             "COMMISSION_CALCULATION_ERROR";
     public static final @Fenum(FenumGroup.ERROR_CODE) String INVALID_CURSOR =
             "INVALID_CURSOR";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String TON_API_ERROR =
+            "TON_API_ERROR";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String TON_TX_FAILED =
+            "TON_TX_FAILED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String TON_INSUFFICIENT_GAS =
+            "TON_INSUFFICIENT_GAS";
 
     // --- Channel ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_NOT_FOUND =

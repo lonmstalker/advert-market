@@ -12,6 +12,7 @@ dependencies {
     compileOnly 'org.springframework:spring-context'
     compileOnly 'org.springframework.data:spring-data-redis'
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'org.jooq:jooq'
 
     // Logging: MDC support for MdcKeys
     api 'org.slf4j:slf4j-api'
@@ -24,6 +25,7 @@ dependencies {
     testImplementation 'org.springframework.data:spring-data-redis'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    testImplementation 'org.jooq:jooq'
     testRuntimeOnly 'ch.qos.logback:logback-classic'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'

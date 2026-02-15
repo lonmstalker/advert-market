@@ -20,6 +20,7 @@ dependencies {
 
         // TON SDK
         api 'io.github.neodix42:smartcontract:1.3.2'
+        api 'io.github.neodix42:toncenter:1.3.2'
         api 'io.github.neodix42:tonlib:1.3.2'
         api 'io.github.neodix42:address:1.3.2'
 

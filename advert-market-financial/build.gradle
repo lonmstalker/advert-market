@@ -16,8 +16,12 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
 
     implementation 'io.github.neodix42:smartcontract'
+    implementation 'io.github.neodix42:toncenter'
     implementation 'io.github.neodix42:tonlib'
     implementation 'io.github.neodix42:address'
+
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker'
+    implementation 'io.github.resilience4j:resilience4j-bulkhead'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.micrometer:micrometer-core'

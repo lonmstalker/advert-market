@@ -59,6 +59,20 @@ public final class MetricNames {
     public static final @Fenum(FenumGroup.METRIC_NAME) String BALANCE_CACHE_MISS =
             "balance.cache.miss";
 
+    // --- TON Blockchain ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String TON_API_REQUEST =
+            "ton.api.request";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String TON_API_ERROR =
+            "ton.api.error";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String TON_TX_SUBMITTED =
+            "ton.tx.submitted";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String TON_DEPOSIT_DETECTED =
+            "ton.deposit.detected";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String TON_DEPOSIT_CONFIRMED =
+            "ton.deposit.confirmed";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String TON_DEPOSIT_TIMEOUT =
+            "ton.deposit.timeout";
+
     // --- Channel ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_REGISTERED =
             "channel.registered";
