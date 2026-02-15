@@ -90,6 +90,16 @@ public class JooqDealRepository implements DealRepository {
     }
 
     @Override
+    public void setCancellationReason(@NonNull DealId dealId,
+                                       @NonNull String reason) {
+        dsl.update(DEALS)
+                .set(DEALS.CANCELLATION_REASON, reason)
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
+    @Override
     @NonNull
     public List<DealRecord> listByUser(long userId,
                                         @NonNull DealListCriteria criteria) {

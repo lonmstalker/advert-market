@@ -84,6 +84,12 @@ public class DealTransitionService {
 
         var now = Instant.now();
 
+        // Persist cancellation reason if provided
+        var reason = command.reason();
+        if (targetStatus == DealStatus.CANCELLED && reason != null) {
+            dealRepository.setCancellationReason(dealId, reason);
+        }
+
         // Append event
         appendEvent(deal, targetStatus, command, now);
 
@@ -131,6 +137,9 @@ public class DealTransitionService {
     @SuppressWarnings("fenum:argument")
     private void appendEvent(DealRecord deal, DealStatus targetStatus,
                               DealTransitionCommand command, Instant now) {
+        String payload = command.reason() != null
+                ? jsonFacade.toJson(Map.of("reason", command.reason()))
+                : "{}";
         var event = new DealEventRecord(
                 null,
                 deal.id(),
@@ -139,7 +148,7 @@ public class DealTransitionService {
                 targetStatus.name(),
                 command.actorId(),
                 command.actorType().name(),
-                "{}",
+                payload,
                 now);
         dealEventRepository.append(event);
     }
@@ -218,19 +227,19 @@ public class DealTransitionService {
 
         // OFFER_PENDING
         map.put(new TransitionKey(DealStatus.OFFER_PENDING, DealStatus.NEGOTIATING),
-                EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.OFFER_PENDING, DealStatus.ACCEPTED),
-                EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.OFFER_PENDING, DealStatus.CANCELLED),
-                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.OFFER_PENDING, DealStatus.EXPIRED),
                 EnumSet.of(ActorType.SYSTEM));
 
         // NEGOTIATING
         map.put(new TransitionKey(DealStatus.NEGOTIATING, DealStatus.ACCEPTED),
-                EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.NEGOTIATING, DealStatus.CANCELLED),
-                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.NEGOTIATING, DealStatus.EXPIRED),
                 EnumSet.of(ActorType.SYSTEM));
 
@@ -238,7 +247,7 @@ public class DealTransitionService {
         map.put(new TransitionKey(DealStatus.ACCEPTED, DealStatus.AWAITING_PAYMENT),
                 EnumSet.of(ActorType.SYSTEM));
         map.put(new TransitionKey(DealStatus.ACCEPTED, DealStatus.CANCELLED),
-                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER));
 
         // AWAITING_PAYMENT
         map.put(new TransitionKey(DealStatus.AWAITING_PAYMENT, DealStatus.FUNDED),
@@ -250,9 +259,9 @@ public class DealTransitionService {
 
         // FUNDED
         map.put(new TransitionKey(DealStatus.FUNDED, DealStatus.CREATIVE_SUBMITTED),
-                EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.FUNDED, DealStatus.CANCELLED),
-                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.FUNDED, DealStatus.EXPIRED),
                 EnumSet.of(ActorType.SYSTEM));
 
@@ -266,11 +275,11 @@ public class DealTransitionService {
 
         // CREATIVE_APPROVED
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.SCHEDULED),
-                EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.PUBLISHED),
-                EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.CANCELLED),
-                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.EXPIRED),
                 EnumSet.of(ActorType.SYSTEM));
 
@@ -278,7 +287,7 @@ public class DealTransitionService {
         map.put(new TransitionKey(DealStatus.SCHEDULED, DealStatus.PUBLISHED),
                 EnumSet.of(ActorType.SYSTEM));
         map.put(new TransitionKey(DealStatus.SCHEDULED, DealStatus.CANCELLED),
-                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(ActorType.ADVERTISER, ActorType.CHANNEL_OWNER));
         map.put(new TransitionKey(DealStatus.SCHEDULED, DealStatus.EXPIRED),
                 EnumSet.of(ActorType.SYSTEM));
 

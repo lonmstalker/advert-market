@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,8 +26,10 @@ import com.advertmarket.shared.model.DealStatus;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -278,6 +281,77 @@ class DealTransitionServiceTest {
 
             verify(dealEventRepository).append(any(DealEventRecord.class));
             verify(outboxRepository).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Reason persistence")
+    class ReasonPersistence {
+
+        @Test
+        @DisplayName("cancellation with reason should store cancellation reason on deal")
+        void transition_cancelWithReason_shouldStoreCancellationReason() {
+            var dealId = DealId.generate();
+            var deal = dealInStatus(dealId, DealStatus.DRAFT, 0);
+            when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
+            when(dealRepository.updateStatus(dealId, DealStatus.DRAFT,
+                    DealStatus.CANCELLED, 0)).thenReturn(1);
+            when(jsonFacade.toJson(any())).thenReturn("{}");
+
+            var command = new DealTransitionCommand(
+                    dealId, DealStatus.CANCELLED, 100L,
+                    ActorType.ADVERTISER, "Changed my mind");
+            service.transition(command);
+
+            verify(dealRepository).setCancellationReason(
+                    dealId, "Changed my mind");
+        }
+
+        @Test
+        @DisplayName("cancellation without reason should not call setCancellationReason")
+        void transition_cancelWithoutReason_shouldNotCallSetCancellationReason() {
+            var dealId = DealId.generate();
+            var deal = dealInStatus(dealId, DealStatus.DRAFT, 0);
+            when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
+            when(dealRepository.updateStatus(dealId, DealStatus.DRAFT,
+                    DealStatus.CANCELLED, 0)).thenReturn(1);
+            when(jsonFacade.toJson(any())).thenReturn("{}");
+
+            var command = new DealTransitionCommand(
+                    dealId, DealStatus.CANCELLED, 100L,
+                    ActorType.ADVERTISER, null);
+            service.transition(command);
+
+            verify(dealRepository, never()).setCancellationReason(any(), any());
+        }
+
+        @Test
+        @DisplayName("cancellation with reason should include reason in event payload")
+        void transition_cancelWithReason_shouldIncludeReasonInEventPayload() {
+            var dealId = DealId.generate();
+            var deal = dealInStatus(dealId, DealStatus.DRAFT, 0);
+            when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
+            when(dealRepository.updateStatus(dealId, DealStatus.DRAFT,
+                    DealStatus.CANCELLED, 0)).thenReturn(1);
+            when(jsonFacade.toJson(any())).thenAnswer(inv -> {
+                Object arg = inv.getArgument(0);
+                if (arg instanceof Map<?, ?> map
+                        && map.containsKey("reason")) {
+                    return "{\"reason\":\"Changed my mind\"}";
+                }
+                return "{}";
+            });
+
+            var command = new DealTransitionCommand(
+                    dealId, DealStatus.CANCELLED, 100L,
+                    ActorType.ADVERTISER, "Changed my mind");
+            service.transition(command);
+
+            var captor = ArgumentCaptor.forClass(DealEventRecord.class);
+            verify(dealEventRepository).append(captor.capture());
+            assertThat(captor.getValue().payload()).contains("reason");
+            assertThat(captor.getValue().payload())
+                    .contains("Changed my mind");
         }
     }
 
