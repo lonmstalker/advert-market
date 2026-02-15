@@ -200,6 +200,8 @@ MUST follow these documents:
 - [TypeScript Conventions](../.memory-bank/17-typescript-conventions.md) — strict TS, testing, performance, financial data rules
 - [API Contracts](../.memory-bank/11-api-contracts.md) — endpoints, request/response schemas, pagination, errors
 - [Module Architecture](../.memory-bank/15-module-architecture.md) — project structure, dependency rules
+- Design system patterns in [.interface-design/system.md](.interface-design/system.md) — update when new patterns are established
+- SHOULD use `codex` skill when you have feature architecture, plan, definition of done and you need implement and write tests
 
 ## Environment Variables
 

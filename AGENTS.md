@@ -12,6 +12,7 @@
 - MUST follow [Module Architecture](.memory-bank/15-module-architecture.md) for project structure and dependencies
 - MUST follow [Java Conventions](.memory-bank/16-java-conventions.md) for all backend code
 - MUST follow [TypeScript Conventions](.memory-bank/17-typescript-conventions.md) for all frontend code
+- SHOULD use `codex` skill when you have feature architecture, plan, definition of done and you need implement and write tests
 
 ## Quick Reference
 
