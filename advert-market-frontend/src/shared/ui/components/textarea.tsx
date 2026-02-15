@@ -10,6 +10,10 @@ type TextareaProps = {
   style?: CSSProperties;
   onFocus?: () => void;
   onBlur?: () => void;
+  onSelect?: () => void;
+  onKeyUp?: () => void;
+  onMouseUp?: () => void;
+  onTouchEnd?: () => void;
 };
 
 const baseStyle: CSSProperties = {
@@ -37,6 +41,10 @@ export function Textarea({
   style,
   onFocus,
   onBlur,
+  onSelect,
+  onKeyUp,
+  onMouseUp,
+  onTouchEnd,
 }: TextareaProps) {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value), [onChange]);
 
@@ -51,6 +59,10 @@ export function Textarea({
       style={{ ...baseStyle, ...style }}
       onFocus={onFocus}
       onBlur={onBlur}
+      onSelect={onSelect}
+      onKeyUp={onKeyUp}
+      onMouseUp={onMouseUp}
+      onTouchEnd={onTouchEnd}
     />
   );
 }

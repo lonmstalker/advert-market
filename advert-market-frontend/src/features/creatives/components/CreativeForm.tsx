@@ -43,8 +43,17 @@ export function CreativeForm({
 }: CreativeFormProps) {
   const { t } = useTranslation();
   const [isFocused, setIsFocused] = useState(false);
+  const [selection, setSelection] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
   const [linkSheetOpen, setLinkSheetOpen] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<{ start: number; end: number } | null>(null);
+
+  const syncSelection = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+
+    const next = { start: ta.selectionStart, end: ta.selectionEnd };
+    setSelection((prev) => (prev.start === next.start && prev.end === next.end ? prev : next));
+  }, [textareaRef]);
 
   const getSelection = useCallback((): { start: number; end: number } => {
     const ta = textareaRef.current;
@@ -52,10 +61,7 @@ export function CreativeForm({
     return { start: ta.selectionStart, end: ta.selectionEnd };
   }, [textareaRef]);
 
-  const hasSelection = useCallback((): boolean => {
-    const sel = getSelection();
-    return sel.start !== sel.end;
-  }, [getSelection]);
+  const hasSelection = selection.start !== selection.end;
 
   const handleFormat = useCallback(
     (type: TextEntityType) => {
@@ -86,8 +92,7 @@ export function CreativeForm({
 
   const activeTypes = useMemo(() => {
     if (!isFocused) return new Set<TextEntityType>();
-    const sel = getSelection();
-    const cursorPos = sel.start;
+    const cursorPos = selection.start;
     const active = new Set<TextEntityType>();
     const allTypes: TextEntityType[] = [
       'BOLD',
@@ -102,7 +107,7 @@ export function CreativeForm({
       if (isActive(type, cursorPos)) active.add(type);
     }
     return active;
-  }, [isFocused, getSelection, isActive]);
+  }, [isFocused, selection.start, isActive]);
 
   const charRatio = text.length / MAX_TEXT_LENGTH;
   const counterColor =
@@ -143,9 +148,9 @@ export function CreativeForm({
           onFormat={handleFormat}
           onLink={handleLink}
           activeTypes={activeTypes}
-          disabled={!hasSelection()}
+          disabled={!hasSelection}
         />
-        {!hasSelection() && isFocused && (
+        {!hasSelection && isFocused && (
           <Text type="caption2" color="tertiary" style={{ marginTop: 2, marginBottom: 4 }}>
             {t('creatives.form.selectTextHint')}
           </Text>
@@ -157,8 +162,18 @@ export function CreativeForm({
           placeholder={t('creatives.form.textPlaceholder')}
           maxLength={MAX_TEXT_LENGTH}
           rows={6}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={() => {
+            setIsFocused(true);
+            syncSelection();
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            setSelection({ start: 0, end: 0 });
+          }}
+          onSelect={syncSelection}
+          onKeyUp={syncSelection}
+          onMouseUp={syncSelection}
+          onTouchEnd={syncSelection}
         />
       </div>
 

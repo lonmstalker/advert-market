@@ -1,6 +1,6 @@
 import { Button, Group, GroupItem, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
 import { NewspaperIcon } from '@/shared/ui/icons';
@@ -165,16 +165,6 @@ export function TourSlideDeal() {
   function handleStepClick(index: number) {
     setExpandedStep((prev) => (prev === index ? null : index));
   }
-
-  useEffect(() => {
-    if (dealState === 'approved') {
-      const timer = setTimeout(() => {
-        setDealState('initial');
-        setExpandedStep(1);
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [dealState]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
