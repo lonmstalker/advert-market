@@ -17,6 +17,9 @@ import com.pengrad.telegrambot.response.SendResponse;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -40,6 +43,8 @@ public class TelegramSender {
     private static final String CANT_PARSE_ENTITIES =
             "can't parse entities";
     private static final int MAX_LOG_TEXT_LEN = 200;
+    private static final char[] HEX =
+            "0123456789abcdef".toCharArray();
 
     private final TelegramBot bot;
     private final RateLimiterPort rateLimiter;
@@ -242,12 +247,16 @@ public class TelegramSender {
         String channelUsername = original.getChannelUsername();
         String text = original.getText();
 
-        log.warn("Telegram rejected MarkdownV2 message "
-                + "(falling back to plain text): "
-                + "chat_id={} channel={} desc={} text={}",
+        log.warn("Telegram rejected MarkdownV2 message (falling back to plain text): "
+                        + "chat_id={} channel={} desc={} text_len={} text_sha256={}",
                 chatId, channelUsername,
-                originalResponse.description(),
-                sanitizeForLog(text));
+                sanitizeForLog(originalResponse.description()),
+                safeLen(text),
+                sha256Hex12(text));
+        if (log.isDebugEnabled()) {
+            log.debug("MarkdownV2 rejected message redacted_text={}",
+                    redactForLog(text));
+        }
 
         SendMessage fallback;
         if (chatId != null) {
@@ -288,6 +297,36 @@ public class TelegramSender {
         });
     }
 
+    private static int safeLen(String text) {
+        return text == null ? 0 : text.length();
+    }
+
+    private static String sha256Hex12(String text) {
+        if (text == null) {
+            return "<null>";
+        }
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            // Should not happen on a supported JDK, but keep logs stable if it does.
+            return "<sha256-unavailable>";
+        }
+        byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
+        return toHex(hash, 12);
+    }
+
+    private static String toHex(byte[] bytes, int maxChars) {
+        int n = Math.min(bytes.length * 2, maxChars);
+        var out = new char[n];
+        for (int i = 0; i < n / 2; i++) {
+            int v = bytes[i] & 0xFF;
+            out[i * 2] = HEX[v >>> 4];
+            out[i * 2 + 1] = HEX[v & 0x0F];
+        }
+        return new String(out);
+    }
+
     private static String sanitizeForLog(String text) {
         if (text == null) {
             return "<null>";
@@ -300,6 +339,29 @@ public class TelegramSender {
         }
         return normalized.substring(0, MAX_LOG_TEXT_LEN)
                 + "...(len=" + normalized.length() + ")";
+    }
+
+    private static String redactForLog(String text) {
+        if (text == null) {
+            return "<null>";
+        }
+        String normalized = text
+                .replace("\r", "\\\\r")
+                .replace("\n", "\\\\n");
+        int limit = Math.min(normalized.length(), MAX_LOG_TEXT_LEN);
+        var out = new StringBuilder(limit + 32);
+        for (int i = 0; i < limit; i++) {
+            char c = normalized.charAt(i);
+            if (Character.isLetterOrDigit(c)) {
+                out.append('*');
+            } else {
+                out.append(c);
+            }
+        }
+        if (normalized.length() > MAX_LOG_TEXT_LEN) {
+            out.append("...(len=").append(normalized.length()).append(')');
+        }
+        return out.toString();
     }
 
     private <T extends BaseRequest<T, R>, R extends BaseResponse>
