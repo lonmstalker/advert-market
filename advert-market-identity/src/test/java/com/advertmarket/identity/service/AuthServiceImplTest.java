@@ -15,6 +15,7 @@ import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.identity.mapper.LoginResponseMapper;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 @DisplayName("AuthServiceImpl — login and logout flow")
 class AuthServiceImplTest {
@@ -44,7 +46,8 @@ class AuthServiceImplTest {
         authService = new AuthServiceImpl(
                 initDataValidator, userRepository,
                 jwtTokenProvider, tokenBlacklistPort,
-                metricsFacade);
+                metricsFacade,
+                Mappers.getMapper(LoginResponseMapper.class));
     }
 
     @Test

@@ -7,17 +7,16 @@ import com.advertmarket.marketplace.api.dto.TeamMemberDto;
 import com.advertmarket.marketplace.api.model.ChannelMembershipRole;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
+import com.advertmarket.marketplace.team.mapper.ChannelRightsJsonConverter;
+import com.advertmarket.marketplace.team.mapper.TeamMemberDtoMapper;
+import com.advertmarket.marketplace.team.mapper.TeamMemberRow;
 import com.advertmarket.shared.json.JsonFacade;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
-import org.jooq.JSON;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -29,32 +28,28 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
 
     private final DSLContext dsl;
     private final JsonFacade jsonFacade;
+    private final TeamMemberDtoMapper mapper;
 
     @Override
     @NonNull
     public List<TeamMemberDto> findByChannelId(long channelId) {
-        return dsl.select(
-                        CHANNEL_MEMBERSHIPS.USER_ID,
-                        USERS.USERNAME,
-                        USERS.FIRST_NAME,
-                        CHANNEL_MEMBERSHIPS.ROLE,
-                        CHANNEL_MEMBERSHIPS.RIGHTS,
-                        CHANNEL_MEMBERSHIPS.INVITED_BY,
-                        CHANNEL_MEMBERSHIPS.CREATED_AT)
+        var rows = dsl.select(
+                        CHANNEL_MEMBERSHIPS.USER_ID.as("userId"),
+                        USERS.USERNAME.as("username"),
+                        USERS.FIRST_NAME.as("firstName"),
+                        CHANNEL_MEMBERSHIPS.ROLE.as("role"),
+                        CHANNEL_MEMBERSHIPS.RIGHTS.as("rights"),
+                        CHANNEL_MEMBERSHIPS.INVITED_BY.as("invitedBy"),
+                        CHANNEL_MEMBERSHIPS.CREATED_AT.as("createdAt"))
                 .from(CHANNEL_MEMBERSHIPS)
                 .join(USERS).on(USERS.ID.eq(CHANNEL_MEMBERSHIPS.USER_ID))
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
                 .orderBy(CHANNEL_MEMBERSHIPS.ROLE.asc(),
                         CHANNEL_MEMBERSHIPS.CREATED_AT.asc())
-                .fetch(r -> new TeamMemberDto(
-                        r.get(CHANNEL_MEMBERSHIPS.USER_ID),
-                        r.get(USERS.USERNAME),
-                        r.get(USERS.FIRST_NAME),
-                        ChannelMembershipRole.valueOf(
-                                r.get(CHANNEL_MEMBERSHIPS.ROLE)),
-                        parseRights(r.get(CHANNEL_MEMBERSHIPS.RIGHTS)),
-                        r.get(CHANNEL_MEMBERSHIPS.INVITED_BY),
-                        r.get(CHANNEL_MEMBERSHIPS.CREATED_AT)));
+                .fetchInto(TeamMemberRow.class);
+        return rows.stream()
+                .map(r -> mapper.toDto(r, jsonFacade))
+                .toList();
     }
 
     @Override
@@ -65,8 +60,8 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
                 .from(CHANNEL_MEMBERSHIPS)
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
                 .and(CHANNEL_MEMBERSHIPS.USER_ID.eq(userId))
-                .fetchOptional(r -> ChannelMembershipRole.valueOf(
-                        r.get(CHANNEL_MEMBERSHIPS.ROLE)));
+                .fetchOptional(CHANNEL_MEMBERSHIPS.ROLE)
+                .map(mapper::toRole);
     }
 
     @Override
@@ -80,7 +75,8 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
                 .set(CHANNEL_MEMBERSHIPS.ROLE,
                         ChannelMembershipRole.MANAGER.name())
                 .set(CHANNEL_MEMBERSHIPS.RIGHTS,
-                        rightsToJson(rights))
+                        ChannelRightsJsonConverter.rightsToJson(
+                                rights, jsonFacade))
                 .set(CHANNEL_MEMBERSHIPS.INVITED_BY, invitedBy)
                 .returning()
                 .fetchSingle();
@@ -94,14 +90,14 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
                 ? userInfo.get(USERS.FIRST_NAME)
                 : "";
 
-        return new TeamMemberDto(
+        return mapper.toDto(new TeamMemberRow(
                 record.getUserId(),
                 username,
                 firstName,
-                ChannelMembershipRole.MANAGER,
-                Set.copyOf(rights),
+                record.getRole(),
+                record.getRights(),
                 record.getInvitedBy(),
-                record.getCreatedAt());
+                record.getCreatedAt()), jsonFacade);
     }
 
     @Override
@@ -109,7 +105,9 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
     public Optional<TeamMemberDto> updateRights(long channelId, long userId,
                                                  @NonNull Set<ChannelRight> rights) {
         int updated = dsl.update(CHANNEL_MEMBERSHIPS)
-                .set(CHANNEL_MEMBERSHIPS.RIGHTS, rightsToJson(rights))
+                .set(CHANNEL_MEMBERSHIPS.RIGHTS,
+                        ChannelRightsJsonConverter.rightsToJson(
+                                rights, jsonFacade))
                 .set(CHANNEL_MEMBERSHIPS.VERSION,
                         CHANNEL_MEMBERSHIPS.VERSION.plus(1))
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
@@ -121,26 +119,19 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
         }
 
         return dsl.select(
-                        CHANNEL_MEMBERSHIPS.USER_ID,
-                        USERS.USERNAME,
-                        USERS.FIRST_NAME,
-                        CHANNEL_MEMBERSHIPS.ROLE,
-                        CHANNEL_MEMBERSHIPS.RIGHTS,
-                        CHANNEL_MEMBERSHIPS.INVITED_BY,
-                        CHANNEL_MEMBERSHIPS.CREATED_AT)
+                        CHANNEL_MEMBERSHIPS.USER_ID.as("userId"),
+                        USERS.USERNAME.as("username"),
+                        USERS.FIRST_NAME.as("firstName"),
+                        CHANNEL_MEMBERSHIPS.ROLE.as("role"),
+                        CHANNEL_MEMBERSHIPS.RIGHTS.as("rights"),
+                        CHANNEL_MEMBERSHIPS.INVITED_BY.as("invitedBy"),
+                        CHANNEL_MEMBERSHIPS.CREATED_AT.as("createdAt"))
                 .from(CHANNEL_MEMBERSHIPS)
                 .join(USERS).on(USERS.ID.eq(CHANNEL_MEMBERSHIPS.USER_ID))
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
                 .and(CHANNEL_MEMBERSHIPS.USER_ID.eq(userId))
-                .fetchOptional(r -> new TeamMemberDto(
-                        r.get(CHANNEL_MEMBERSHIPS.USER_ID),
-                        r.get(USERS.USERNAME),
-                        r.get(USERS.FIRST_NAME),
-                        ChannelMembershipRole.valueOf(
-                                r.get(CHANNEL_MEMBERSHIPS.ROLE)),
-                        parseRights(r.get(CHANNEL_MEMBERSHIPS.RIGHTS)),
-                        r.get(CHANNEL_MEMBERSHIPS.INVITED_BY),
-                        r.get(CHANNEL_MEMBERSHIPS.CREATED_AT)));
+                .fetchOptionalInto(TeamMemberRow.class)
+                .map(r -> mapper.toDto(r, jsonFacade));
     }
 
     @Override
@@ -167,32 +158,5 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
                 dsl.selectOne()
                         .from(USERS)
                         .where(USERS.ID.eq(userId)));
-    }
-
-    @SuppressWarnings("unchecked")
-    private Set<ChannelRight> parseRights(JSON json) {
-        if (json == null || json.data() == null
-                || json.data().isBlank()
-                || "{}".equals(json.data())) {
-            return Set.of();
-        }
-        Map<String, Object> map = jsonFacade.fromJson(
-                json.data(), Map.class);
-        var result = EnumSet.noneOf(ChannelRight.class);
-        for (var entry : map.entrySet()) {
-            if (Boolean.TRUE.equals(entry.getValue())) {
-                result.add(ChannelRight.valueOf(
-                        entry.getKey().toUpperCase()));
-            }
-        }
-        return result;
-    }
-
-    private JSON rightsToJson(@NonNull Set<ChannelRight> rights) {
-        Map<String, Boolean> map = new LinkedHashMap<>();
-        for (ChannelRight right : rights) {
-            map.put(right.name().toLowerCase(), true);
-        }
-        return JSON.json(jsonFacade.toJson(map));
     }
 }

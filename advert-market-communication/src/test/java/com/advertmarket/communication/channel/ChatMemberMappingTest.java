@@ -2,6 +2,7 @@ package com.advertmarket.communication.channel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.advertmarket.communication.channel.mapper.TelegramChannelConverters;
 import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
 import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.pengrad.telegrambot.model.ChatMember;
@@ -13,14 +14,16 @@ import org.junit.jupiter.api.Test;
 @DisplayName("ChatMember mapping from Telegram to domain model")
 class ChatMemberMappingTest {
 
+    private final TelegramChannelConverters converters =
+            new TelegramChannelConverters();
+
     @Test
     @DisplayName("Creator gets all permissions set to true")
     void creator_allPermissionsTrue() {
         ChatMember cm = buildChatMember(
                 ChatMember.Status.creator, 100L);
 
-        ChatMemberInfo info =
-                TelegramChannelService.mapChatMember(cm);
+        ChatMemberInfo info = converters.toChatMemberInfo(cm);
 
         assertThat(info.userId()).isEqualTo(100L);
         assertThat(info.status()).isEqualTo(ChatMemberStatus.CREATOR);
@@ -40,8 +43,7 @@ class ChatMemberMappingTest {
         setField(cm, "can_delete_messages", true);
         setField(cm, "can_manage_chat", false);
 
-        ChatMemberInfo info =
-                TelegramChannelService.mapChatMember(cm);
+        ChatMemberInfo info = converters.toChatMemberInfo(cm);
 
         assertThat(info.status())
                 .isEqualTo(ChatMemberStatus.ADMINISTRATOR);
@@ -57,8 +59,7 @@ class ChatMemberMappingTest {
         ChatMember cm = buildChatMember(
                 ChatMember.Status.administrator, 201L);
 
-        ChatMemberInfo info =
-                TelegramChannelService.mapChatMember(cm);
+        ChatMemberInfo info = converters.toChatMemberInfo(cm);
 
         assertThat(info.canPostMessages()).isFalse();
         assertThat(info.canEditMessages()).isFalse();
@@ -72,8 +73,7 @@ class ChatMemberMappingTest {
         ChatMember cm = buildChatMember(
                 ChatMember.Status.member, 300L);
 
-        ChatMemberInfo info =
-                TelegramChannelService.mapChatMember(cm);
+        ChatMemberInfo info = converters.toChatMemberInfo(cm);
 
         assertThat(info.status()).isEqualTo(ChatMemberStatus.MEMBER);
         assertThat(info.canPostMessages()).isFalse();
@@ -88,8 +88,7 @@ class ChatMemberMappingTest {
         ChatMember cm = buildChatMember(
                 ChatMember.Status.restricted, 400L);
 
-        ChatMemberInfo info =
-                TelegramChannelService.mapChatMember(cm);
+        ChatMemberInfo info = converters.toChatMemberInfo(cm);
 
         assertThat(info.status())
                 .isEqualTo(ChatMemberStatus.RESTRICTED);
@@ -102,8 +101,7 @@ class ChatMemberMappingTest {
         ChatMember cm = buildChatMember(
                 ChatMember.Status.left, 500L);
 
-        ChatMemberInfo info =
-                TelegramChannelService.mapChatMember(cm);
+        ChatMemberInfo info = converters.toChatMemberInfo(cm);
 
         assertThat(info.status()).isEqualTo(ChatMemberStatus.LEFT);
     }
@@ -114,8 +112,7 @@ class ChatMemberMappingTest {
         ChatMember cm = buildChatMember(
                 ChatMember.Status.kicked, 600L);
 
-        ChatMemberInfo info =
-                TelegramChannelService.mapChatMember(cm);
+        ChatMemberInfo info = converters.toChatMemberInfo(cm);
 
         assertThat(info.status()).isEqualTo(ChatMemberStatus.KICKED);
     }

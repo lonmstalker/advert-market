@@ -10,6 +10,7 @@ import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.config.AuthProperties;
 import com.advertmarket.identity.config.RateLimiterProperties;
+import com.advertmarket.identity.mapper.UserProfileMapper;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.support.TestExceptionHandler;
@@ -25,6 +26,7 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultExecuteListenerProvider;
+import org.mapstruct.factory.Mappers;
 import org.springframework.boot.jooq.autoconfigure.ExceptionTranslatorExecuteListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -112,7 +114,10 @@ public class MarketplaceTestConfig {
 
     @Bean
     UserRepository userRepository(DSLContext dsl, JsonFacade jsonFacade) {
-        return new JooqUserRepository(dsl, jsonFacade);
+        return new JooqUserRepository(
+                dsl,
+                jsonFacade,
+                Mappers.getMapper(UserProfileMapper.class));
     }
 
     @Bean

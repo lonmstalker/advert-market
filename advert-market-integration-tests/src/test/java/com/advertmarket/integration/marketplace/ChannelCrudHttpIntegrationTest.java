@@ -27,12 +27,14 @@ import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.ChannelSearchPort;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
+import com.advertmarket.marketplace.channel.mapper.CategoryDtoMapper;
 import com.advertmarket.marketplace.channel.mapper.ChannelRecordMapper;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
 import com.advertmarket.marketplace.channel.service.ChannelService;
 import com.advertmarket.marketplace.channel.web.ChannelController;
+import com.advertmarket.marketplace.channel.web.ChannelSearchCriteriaConverter;
 import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.shared.json.JsonFacade;
@@ -320,8 +322,11 @@ class ChannelCrudHttpIntegrationTest {
 
         @Bean
         CategoryRepository categoryRepository(
-                DSLContext dsl, JsonFacade jsonFacade) {
-            return new JooqCategoryRepository(dsl, jsonFacade);
+                DSLContext dsl,
+                JsonFacade jsonFacade,
+                CategoryDtoMapper categoryDtoMapper) {
+            return new JooqCategoryRepository(
+                    dsl, jsonFacade, categoryDtoMapper);
         }
 
         @Bean
@@ -362,11 +367,17 @@ class ChannelCrudHttpIntegrationTest {
         }
 
         @Bean
+        ChannelSearchCriteriaConverter channelSearchCriteriaConverter() {
+            return new ChannelSearchCriteriaConverter();
+        }
+
+        @Bean
         ChannelController channelController(
                 ChannelRegistrationService registrationService,
-                ChannelService channelService) {
+                ChannelService channelService,
+                ChannelSearchCriteriaConverter converter) {
             return new ChannelController(
-                    registrationService, channelService);
+                    registrationService, channelService, converter);
         }
     }
 }

@@ -9,6 +9,8 @@ import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
 import com.advertmarket.marketplace.api.port.CategoryRepository;
 import com.advertmarket.marketplace.api.port.ChannelSearchPort;
+import com.advertmarket.marketplace.channel.mapper.ChannelListItemMapper;
+import com.advertmarket.marketplace.channel.mapper.ChannelRow;
 import com.advertmarket.shared.pagination.CursorCodec;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.math.BigDecimal;
@@ -21,7 +23,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.OrderField;
-import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +38,7 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
 
     private final DSLContext dsl;
     private final CategoryRepository categoryRepository;
+    private final ChannelListItemMapper channelListItemMapper;
 
     // ParadeDB uses pdb.score(id) for BM25 relevance. Keep it unqualified
     // (pdb.score(id), not pdb.score(channels.id)) to match pg_search expectations.
@@ -63,51 +65,43 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         // n+1 pattern: fetch one extra to determine hasNext
         int fetchLimit = criteria.limit() + 1;
 
-        var selectFields = new java.util.ArrayList<org.jooq.SelectFieldOrAsterisk>();
-        selectFields.add(CHANNELS.ID);
-        selectFields.add(CHANNELS.TITLE);
-        selectFields.add(CHANNELS.USERNAME);
-        selectFields.add(CHANNELS.SUBSCRIBER_COUNT);
-        selectFields.add(CHANNELS.AVG_VIEWS);
-        selectFields.add(CHANNELS.ENGAGEMENT_RATE);
-        selectFields.add(CHANNELS.PRICE_PER_POST_NANO);
-        selectFields.add(CHANNELS.IS_ACTIVE);
-        selectFields.add(CHANNELS.UPDATED_AT);
-
-        var records = dsl.select(
-                        selectFields.toArray(
-                                org.jooq.SelectFieldOrAsterisk[]::new))
+        var rows = dsl.select(
+                        CHANNELS.ID.as("id"),
+                        CHANNELS.TITLE.as("title"),
+                        CHANNELS.USERNAME.as("username"),
+                        CHANNELS.SUBSCRIBER_COUNT.as("subscriberCount"),
+                        CHANNELS.AVG_VIEWS.as("avgViews"),
+                        CHANNELS.ENGAGEMENT_RATE.as("engagementRate"),
+                        CHANNELS.PRICE_PER_POST_NANO.as("pricePerPostNano"),
+                        CHANNELS.IS_ACTIVE.as("isActive"),
+                        CHANNELS.UPDATED_AT.as("updatedAt"))
                 .from(CHANNELS)
                 .where(condition)
                 .orderBy(orderBy)
                 .limit(fetchLimit)
-                .fetch();
+                .fetchInto(ChannelRow.class);
 
-        boolean hasNext = records.size() > criteria.limit();
-        var pageRecords = hasNext
-                ? records.subList(0, criteria.limit())
-                : records;
+        boolean hasNext = rows.size() > criteria.limit();
+        var pageRows = hasNext
+                ? rows.subList(0, criteria.limit())
+                : rows;
 
-        var channelIds = pageRecords.stream()
-                .map(r -> r.get(CHANNELS.ID))
+        List<Long> channelIds = pageRows.stream()
+                .map(r -> r.id())
                 .toList();
         Map<Long, List<String>> categoriesByChannel =
                 categoryRepository.findCategorySlugsForChannels(channelIds);
 
-        List<ChannelListItem> items = pageRecords.stream()
-                .map(r -> {
-                    Long id = r.get(CHANNELS.ID);
-                    List<String> categories = id != null
-                            ? categoriesByChannel.getOrDefault(id, List.of())
-                            : List.of();
-                    return toListItem(r, categories);
-                })
+        List<ChannelListItem> items = pageRows.stream()
+                .map(r -> channelListItemMapper.toDto(
+                        r,
+                        categoriesByChannel.getOrDefault(r.id(), List.of())))
                 .toList();
 
         String nextCursor = null;
-        if (hasNext && !pageRecords.isEmpty()) {
-            var last = pageRecords.getLast();
-            nextCursor = buildCursor(last, criteria.sort(), hasTextQuery);
+        if (hasNext && !pageRows.isEmpty()) {
+            var last = pageRows.getLast();
+            nextCursor = buildCursor(last, criteria.sort());
         }
 
         return new CursorPage<>(items, nextCursor);
@@ -133,43 +127,38 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
             }
         }
 
-        var records = dsl.select(
-                        CHANNELS.ID,
-                        CHANNELS.TITLE,
-                        CHANNELS.USERNAME,
-                        CHANNELS.SUBSCRIBER_COUNT,
-                        CHANNELS.AVG_VIEWS,
-                        CHANNELS.ENGAGEMENT_RATE,
-                        CHANNELS.PRICE_PER_POST_NANO,
-                        CHANNELS.IS_ACTIVE,
-                        CHANNELS.UPDATED_AT,
-                        SCORE_FIELD.as("score"))
+        var rows = dsl.select(
+                        CHANNELS.ID.as("id"),
+                        CHANNELS.TITLE.as("title"),
+                        CHANNELS.USERNAME.as("username"),
+                        CHANNELS.SUBSCRIBER_COUNT.as("subscriberCount"),
+                        CHANNELS.AVG_VIEWS.as("avgViews"),
+                        CHANNELS.ENGAGEMENT_RATE.as("engagementRate"),
+                        CHANNELS.PRICE_PER_POST_NANO.as("pricePerPostNano"),
+                        CHANNELS.IS_ACTIVE.as("isActive"),
+                        CHANNELS.UPDATED_AT.as("updatedAt"))
                 .from(CHANNELS)
                 .where(baseCondition)
                 .orderBy(SCORE_FIELD.desc(), CHANNELS.ID.desc())
                 .limit(fetchLimit)
                 .offset(offset)
-                .fetch();
+                .fetchInto(ChannelRow.class);
 
-        boolean hasNext = records.size() > criteria.limit();
-        var pageRecords = hasNext
-                ? records.subList(0, criteria.limit())
-                : records;
+        boolean hasNext = rows.size() > criteria.limit();
+        var pageRows = hasNext
+                ? rows.subList(0, criteria.limit())
+                : rows;
 
-        var channelIds = pageRecords.stream()
-                .map(r -> r.get(CHANNELS.ID))
+        List<Long> channelIds = pageRows.stream()
+                .map(r -> r.id())
                 .toList();
         Map<Long, List<String>> categoriesByChannel =
                 categoryRepository.findCategorySlugsForChannels(channelIds);
 
-        List<ChannelListItem> items = pageRecords.stream()
-                .map(r -> {
-                    Long id = r.get(CHANNELS.ID);
-                    List<String> categories = id != null
-                            ? categoriesByChannel.getOrDefault(id, List.of())
-                            : List.of();
-                    return toListItem(r, categories);
-                })
+        List<ChannelListItem> items = pageRows.stream()
+                .map(r -> channelListItemMapper.toDto(
+                        r,
+                        categoriesByChannel.getOrDefault(r.id(), List.of())))
                 .toList();
 
         String nextCursor = null;
@@ -387,58 +376,20 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         return fields;
     }
 
-    private static String buildCursor(Record last, ChannelSort sort) {
-        String id = String.valueOf(last.get(CHANNELS.ID));
+    private static String buildCursor(ChannelRow last, ChannelSort sort) {
+        String id = String.valueOf(last.id());
         String sortValue = switch (sort) {
             case SUBSCRIBERS_DESC, SUBSCRIBERS_ASC ->
-                    String.valueOf(last.get(CHANNELS.SUBSCRIBER_COUNT));
+                    String.valueOf(last.subscriberCount());
             case PRICE_ASC, PRICE_DESC ->
-                    String.valueOf(last.get(CHANNELS.PRICE_PER_POST_NANO));
+                    String.valueOf(last.pricePerPostNano());
             case ENGAGEMENT_DESC ->
-                    String.valueOf(last.get(CHANNELS.ENGAGEMENT_RATE));
+                    String.valueOf(last.engagementRate());
             case UPDATED ->
-                    last.get(CHANNELS.UPDATED_AT).toString();
-            case RELEVANCE -> "0";
+                    last.updatedAt().toString();
+            // RELEVANCE without query falls back to subscribers desc.
+            case RELEVANCE -> String.valueOf(last.subscriberCount());
         };
         return CursorCodec.encode(Map.of("id", id, "sort", sortValue));
-    }
-
-    private static String buildCursor(
-            Record last, ChannelSort sort, boolean hasTextQuery) {
-        String id = String.valueOf(last.get(CHANNELS.ID));
-        String sortValue = switch (sort) {
-            case SUBSCRIBERS_DESC, SUBSCRIBERS_ASC ->
-                    String.valueOf(last.get(CHANNELS.SUBSCRIBER_COUNT));
-            case PRICE_ASC, PRICE_DESC ->
-                    String.valueOf(last.get(CHANNELS.PRICE_PER_POST_NANO));
-            case ENGAGEMENT_DESC ->
-                    String.valueOf(last.get(CHANNELS.ENGAGEMENT_RATE));
-            case UPDATED ->
-                    last.get(CHANNELS.UPDATED_AT).toString();
-            case RELEVANCE -> {
-                if (hasTextQuery) {
-                    BigDecimal score = last.get("score", BigDecimal.class);
-                    yield score != null ? score.toPlainString() : "0";
-                }
-                // When query is missing, RELEVANCE falls back to subscribers desc.
-                yield String.valueOf(last.get(CHANNELS.SUBSCRIBER_COUNT));
-            }
-        };
-        return CursorCodec.encode(Map.of("id", id, "sort", sortValue));
-    }
-
-    private static ChannelListItem toListItem(Record r,
-                                              List<String> categories) {
-        return new ChannelListItem(
-                r.get(CHANNELS.ID),
-                r.get(CHANNELS.TITLE),
-                r.get(CHANNELS.USERNAME),
-                categories,
-                r.get(CHANNELS.SUBSCRIBER_COUNT),
-                r.get(CHANNELS.AVG_VIEWS),
-                r.get(CHANNELS.ENGAGEMENT_RATE),
-                r.get(CHANNELS.PRICE_PER_POST_NANO),
-                r.get(CHANNELS.IS_ACTIVE),
-                r.get(CHANNELS.UPDATED_AT));
     }
 }

@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.advertmarket.deal.api.dto.DealEventRecord;
 import com.advertmarket.deal.api.dto.DealListCriteria;
 import com.advertmarket.deal.api.dto.DealRecord;
+import com.advertmarket.deal.mapper.DealEventRecordMapper;
+import com.advertmarket.deal.mapper.DealRecordMapper;
 import com.advertmarket.deal.repository.JooqDealEventRepository;
 import com.advertmarket.deal.repository.JooqDealRepository;
 import com.advertmarket.integration.support.DatabaseSupport;
@@ -21,9 +23,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 @DisplayName("Deal Lifecycle — PostgreSQL integration")
-class DealLifecycleIT {
+class DealLifecycleIt {
 
     private static DSLContext dsl;
     private JooqDealRepository dealRepo;
@@ -32,6 +35,14 @@ class DealLifecycleIT {
     private static final long ADVERTISER_ID = 100L;
     private static final long OWNER_ID = 200L;
     private static final long CHANNEL_ID = -1001234567890L;
+    private static final long OTHER_USER_ID = 999L;
+
+    private static final long ONE_TON_NANO = 1_000_000_000L;
+    private static final int COMMISSION_RATE_BP = 1000;
+    private static final long COMMISSION_NANO = 100_000_000L;
+
+    private static final int WRONG_VERSION = 99;
+    private static final int PAGE_LIMIT = 20;
 
     @BeforeAll
     static void initDatabase() {
@@ -46,15 +57,17 @@ class DealLifecycleIT {
         TestDataFactory.upsertUser(dsl, OWNER_ID);
         TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
 
-        dealRepo = new JooqDealRepository(dsl);
-        eventRepo = new JooqDealEventRepository(dsl);
+        dealRepo = new JooqDealRepository(
+                dsl, Mappers.getMapper(DealRecordMapper.class));
+        eventRepo = new JooqDealEventRepository(
+                dsl, Mappers.getMapper(DealEventRecordMapper.class));
     }
 
     private DealRecord createDraft(DealId dealId) {
         var now = Instant.now();
         return new DealRecord(
                 dealId.value(), CHANNEL_ID, ADVERTISER_ID, OWNER_ID, null,
-                DealStatus.DRAFT, 1_000_000_000L, 1000, 100_000_000L,
+                DealStatus.DRAFT, ONE_TON_NANO, COMMISSION_RATE_BP, COMMISSION_NANO,
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null,
                 0, now, now);
@@ -79,9 +92,9 @@ class DealLifecycleIT {
             assertThat(deal.advertiserId()).isEqualTo(ADVERTISER_ID);
             assertThat(deal.ownerId()).isEqualTo(OWNER_ID);
             assertThat(deal.status()).isEqualTo(DealStatus.DRAFT);
-            assertThat(deal.amountNano()).isEqualTo(1_000_000_000L);
-            assertThat(deal.commissionRateBp()).isEqualTo(1000);
-            assertThat(deal.commissionNano()).isEqualTo(100_000_000L);
+            assertThat(deal.amountNano()).isEqualTo(ONE_TON_NANO);
+            assertThat(deal.commissionRateBp()).isEqualTo(COMMISSION_RATE_BP);
+            assertThat(deal.commissionNano()).isEqualTo(COMMISSION_NANO);
             assertThat(deal.version()).isEqualTo(0);
         }
 
@@ -108,7 +121,7 @@ class DealLifecycleIT {
             dealRepo.insert(createDraft(dealId));
 
             int updated = dealRepo.updateStatus(
-                    dealId, DealStatus.DRAFT, DealStatus.OFFER_PENDING, 99);
+                    dealId, DealStatus.DRAFT, DealStatus.OFFER_PENDING, WRONG_VERSION);
 
             assertThat(updated).isEqualTo(0);
 
@@ -137,10 +150,10 @@ class DealLifecycleIT {
             dealRepo.insert(createDraft(deal1));
             dealRepo.insert(createDraft(deal2));
 
-            var criteria = new DealListCriteria(null, null, 20);
+            var criteria = new DealListCriteria(null, null, PAGE_LIMIT);
             var advertiserDeals = dealRepo.listByUser(ADVERTISER_ID, criteria);
             var ownerDeals = dealRepo.listByUser(OWNER_ID, criteria);
-            var otherDeals = dealRepo.listByUser(999L, criteria);
+            var otherDeals = dealRepo.listByUser(OTHER_USER_ID, criteria);
 
             assertThat(advertiserDeals).hasSize(2);
             assertThat(ownerDeals).hasSize(2);
@@ -158,7 +171,7 @@ class DealLifecycleIT {
                     DealStatus.OFFER_PENDING, 0);
 
             var draftOnly = new DealListCriteria(
-                    DealStatus.DRAFT, null, 20);
+                    DealStatus.DRAFT, null, PAGE_LIMIT);
             var result = dealRepo.listByUser(ADVERTISER_ID, draftOnly);
 
             assertThat(result).hasSize(1);

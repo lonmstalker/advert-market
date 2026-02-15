@@ -5,14 +5,11 @@ import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
-import com.advertmarket.marketplace.api.dto.ChannelSort;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
 import com.advertmarket.marketplace.channel.service.ChannelService;
-import com.advertmarket.shared.exception.DomainException;
-import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.pagination.CursorPage;
 import com.advertmarket.shared.security.SecurityContextUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +17,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,6 +42,7 @@ public class ChannelController {
 
     private final ChannelRegistrationService registrationService;
     private final ChannelService channelService;
+    private final ChannelSearchCriteriaConverter criteriaConverter;
 
     /**
      * Searches active channels in the catalog.
@@ -70,7 +67,7 @@ public class ChannelController {
             @RequestParam(name = "sort", defaultValue = "SUBSCRIBERS_DESC") String sort,
             @RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "limit", defaultValue = "20") int limit) {
-        var criteria = buildCriteria(
+        var criteria = criteriaConverter.fromRequestParams(
                 query, q, category,
                 minSubscribers, minSubs,
                 maxSubscribers, maxSubs,
@@ -99,12 +96,12 @@ public class ChannelController {
             @RequestParam(name = "maxPrice", required = false) Long maxPrice,
             @RequestParam(name = "minEngagement", required = false) Double minEngagement,
             @RequestParam(name = "language", required = false) String language) {
-        var criteria = buildCriteria(
+        var criteria = criteriaConverter.fromRequestParams(
                 query, q, category,
                 minSubscribers, minSubs,
                 maxSubscribers, maxSubs,
                 minPrice, maxPrice, minEngagement, language,
-                ChannelSort.SUBSCRIBERS_DESC.name(), null,
+                "SUBSCRIBERS_DESC", null,
                 ChannelSearchCriteria.DEFAULT_LIMIT);
         return channelService.count(criteria);
     }
@@ -202,77 +199,5 @@ public class ChannelController {
             @Valid @RequestBody ChannelRegistrationRequest request) {
         long userId = SecurityContextUtil.currentUserId().value();
         return registrationService.register(request, userId);
-    }
-
-    @SuppressWarnings("checkstyle:ParameterNumber")
-    private static ChannelSearchCriteria buildCriteria(
-            String query,
-            String q,
-            String category,
-            Integer minSubscribers,
-            Integer minSubs,
-            Integer maxSubscribers,
-            Integer maxSubs,
-            Long minPrice,
-            Long maxPrice,
-            Double minEngagement,
-            String language,
-            String sort,
-            String cursor,
-            int limit) {
-        return new ChannelSearchCriteria(
-                category,
-                firstNonNull(minSubscribers, minSubs),
-                firstNonNull(maxSubscribers, maxSubs),
-                minPrice,
-                maxPrice,
-                minEngagement,
-                language,
-                firstNonBlank(query, q),
-                parseSort(sort),
-                cursor,
-                limit);
-    }
-
-    private static String firstNonBlank(String primary, String fallback) {
-        if (primary != null && !primary.isBlank()) {
-            return primary;
-        }
-        if (fallback != null && !fallback.isBlank()) {
-            return fallback;
-        }
-        return null;
-    }
-
-    private static <T> T firstNonNull(T primary, T fallback) {
-        return primary != null ? primary : fallback;
-    }
-
-    private static ChannelSort parseSort(String rawSort) {
-        if (rawSort == null || rawSort.isBlank()) {
-            return ChannelSort.SUBSCRIBERS_DESC;
-        }
-        String normalized = rawSort.trim().toLowerCase(Locale.ROOT);
-        // CHECKSTYLE.SUPPRESS: MissingNullCaseInSwitch for +1 lines
-        return switch (normalized) {
-            case "relevance" -> ChannelSort.RELEVANCE;
-            case "subscribers", "subscribers_desc" -> ChannelSort.SUBSCRIBERS_DESC;
-            case "subscribers_asc" -> ChannelSort.SUBSCRIBERS_ASC;
-            case "price_asc" -> ChannelSort.PRICE_ASC;
-            case "price_desc" -> ChannelSort.PRICE_DESC;
-            case "er", "engagement_desc" -> ChannelSort.ENGAGEMENT_DESC;
-            case "updated" -> ChannelSort.UPDATED;
-            default -> {
-                try {
-                    yield ChannelSort.valueOf(rawSort.trim().toUpperCase(
-                            Locale.ROOT));
-                } catch (IllegalArgumentException ex) {
-                    throw new DomainException(
-                            ErrorCodes.INVALID_PARAMETER,
-                            "Unsupported sort value: " + rawSort,
-                            ex);
-                }
-            }
-        };
     }
 }

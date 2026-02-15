@@ -25,11 +25,10 @@ import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
-import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,6 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -84,7 +84,7 @@ class DealTransitionServiceTest {
 
         @Test
         @DisplayName("transition DRAFT → OFFER_PENDING by ADVERTISER should succeed")
-        void transition_DRAFT_OFFER_PENDING_by_ADVERTISER_shouldSucceed() {
+        void transitionDraftToOfferPendingByAdvertiserShouldSucceed() {
             var dealId = DealId.generate();
             var deal = dealInStatus(dealId, DealStatus.DRAFT, 0);
             when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
@@ -104,7 +104,7 @@ class DealTransitionServiceTest {
 
         @Test
         @DisplayName("transition OFFER_PENDING → ACCEPTED by CHANNEL_OWNER should succeed")
-        void transition_OFFER_PENDING_ACCEPTED_by_OWNER_shouldSucceed() {
+        void transitionOfferPendingToAcceptedByOwnerShouldSucceed() {
             var dealId = DealId.generate();
             var deal = dealInStatus(dealId, DealStatus.OFFER_PENDING, 1);
             when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
@@ -125,7 +125,7 @@ class DealTransitionServiceTest {
 
         @Test
         @DisplayName("transition DRAFT → FUNDED by ADVERTISER should reject (invalid graph)")
-        void transition_DRAFT_FUNDED_by_ADVERTISER_shouldReject() {
+        void transitionDraftToFundedByAdvertiserShouldReject() {
             var dealId = DealId.generate();
             var deal = dealInStatus(dealId, DealStatus.DRAFT, 0);
             when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
@@ -157,7 +157,7 @@ class DealTransitionServiceTest {
 
         @Test
         @DisplayName("transition DRAFT → OFFER_PENDING by SYSTEM should reject (wrong actor)")
-        void transition_DRAFT_OFFER_PENDING_by_SYSTEM_shouldReject() {
+        void transitionDraftToOfferPendingBySystemShouldReject() {
             var dealId = DealId.generate();
             var deal = dealInStatus(dealId, DealStatus.DRAFT, 0);
             when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
@@ -171,7 +171,7 @@ class DealTransitionServiceTest {
 
         @Test
         @DisplayName("transition DISPUTED → COMPLETED_RELEASED by ADVERTISER should reject")
-        void transition_DISPUTED_COMPLETED_RELEASED_by_ADVERTISER_shouldReject() {
+        void transitionDisputedToCompletedReleasedByAdvertiserShouldReject() {
             var dealId = DealId.generate();
             var deal = dealInStatus(dealId, DealStatus.DISPUTED, 3);
             when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
@@ -209,7 +209,8 @@ class DealTransitionServiceTest {
     class OptimisticLocking {
 
         @Test
-        @DisplayName("CAS conflict with concurrent transition to same target returns AlreadyInTargetState")
+        @DisplayName("CAS conflict with concurrent transition to same target returns "
+                + "AlreadyInTargetState")
         void transition_casConflict_reReadIdempotent_shouldReturnAlreadyInTargetState() {
             var dealId = DealId.generate();
             var dealV0 = dealInStatus(dealId, DealStatus.DRAFT, 0);
@@ -359,60 +360,179 @@ class DealTransitionServiceTest {
     @DisplayName("Parametrized: all valid transitions")
     class AllValidTransitions {
 
+        private static final Arguments[] VALID_TRANSITIONS = {
+                // DRAFT
+                Arguments.of(
+                        DealStatus.DRAFT,
+                        DealStatus.OFFER_PENDING,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.DRAFT,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                // OFFER_PENDING
+                Arguments.of(
+                        DealStatus.OFFER_PENDING,
+                        DealStatus.NEGOTIATING,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.OFFER_PENDING,
+                        DealStatus.ACCEPTED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.OFFER_PENDING,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.OFFER_PENDING,
+                        DealStatus.CANCELLED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.OFFER_PENDING,
+                        DealStatus.EXPIRED,
+                        ActorType.SYSTEM),
+                // NEGOTIATING
+                Arguments.of(
+                        DealStatus.NEGOTIATING,
+                        DealStatus.ACCEPTED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.NEGOTIATING,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.NEGOTIATING,
+                        DealStatus.CANCELLED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.NEGOTIATING,
+                        DealStatus.EXPIRED,
+                        ActorType.SYSTEM),
+                // ACCEPTED
+                Arguments.of(
+                        DealStatus.ACCEPTED,
+                        DealStatus.AWAITING_PAYMENT,
+                        ActorType.SYSTEM),
+                Arguments.of(
+                        DealStatus.ACCEPTED,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.ACCEPTED,
+                        DealStatus.CANCELLED,
+                        ActorType.CHANNEL_OWNER),
+                // AWAITING_PAYMENT
+                Arguments.of(
+                        DealStatus.AWAITING_PAYMENT,
+                        DealStatus.FUNDED,
+                        ActorType.SYSTEM),
+                Arguments.of(
+                        DealStatus.AWAITING_PAYMENT,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.AWAITING_PAYMENT,
+                        DealStatus.EXPIRED,
+                        ActorType.SYSTEM),
+                // FUNDED
+                Arguments.of(
+                        DealStatus.FUNDED,
+                        DealStatus.CREATIVE_SUBMITTED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.FUNDED,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.FUNDED,
+                        DealStatus.CANCELLED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.FUNDED,
+                        DealStatus.EXPIRED,
+                        ActorType.SYSTEM),
+                // CREATIVE_SUBMITTED
+                Arguments.of(
+                        DealStatus.CREATIVE_SUBMITTED,
+                        DealStatus.CREATIVE_APPROVED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.CREATIVE_SUBMITTED,
+                        DealStatus.FUNDED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.CREATIVE_SUBMITTED,
+                        DealStatus.DISPUTED,
+                        ActorType.ADVERTISER),
+                // CREATIVE_APPROVED
+                Arguments.of(
+                        DealStatus.CREATIVE_APPROVED,
+                        DealStatus.SCHEDULED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.CREATIVE_APPROVED,
+                        DealStatus.PUBLISHED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.CREATIVE_APPROVED,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.CREATIVE_APPROVED,
+                        DealStatus.CANCELLED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.CREATIVE_APPROVED,
+                        DealStatus.EXPIRED,
+                        ActorType.SYSTEM),
+                // SCHEDULED
+                Arguments.of(
+                        DealStatus.SCHEDULED,
+                        DealStatus.PUBLISHED,
+                        ActorType.SYSTEM),
+                Arguments.of(
+                        DealStatus.SCHEDULED,
+                        DealStatus.CANCELLED,
+                        ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.SCHEDULED,
+                        DealStatus.CANCELLED,
+                        ActorType.CHANNEL_OWNER),
+                Arguments.of(
+                        DealStatus.SCHEDULED,
+                        DealStatus.EXPIRED,
+                        ActorType.SYSTEM),
+                // PUBLISHED
+                Arguments.of(
+                        DealStatus.PUBLISHED,
+                        DealStatus.DELIVERY_VERIFYING,
+                        ActorType.SYSTEM),
+                // DELIVERY_VERIFYING
+                Arguments.of(
+                        DealStatus.DELIVERY_VERIFYING,
+                        DealStatus.COMPLETED_RELEASED,
+                        ActorType.SYSTEM),
+                Arguments.of(
+                        DealStatus.DELIVERY_VERIFYING,
+                        DealStatus.DISPUTED,
+                        ActorType.SYSTEM),
+                // DISPUTED
+                Arguments.of(
+                        DealStatus.DISPUTED,
+                        DealStatus.COMPLETED_RELEASED,
+                        ActorType.PLATFORM_OPERATOR),
+                Arguments.of(
+                        DealStatus.DISPUTED,
+                        DealStatus.REFUNDED,
+                        ActorType.PLATFORM_OPERATOR),
+                Arguments.of(
+                        DealStatus.DISPUTED,
+                        DealStatus.PARTIALLY_REFUNDED,
+                        ActorType.PLATFORM_OPERATOR)
+        };
+
         static Stream<Arguments> validTransitions() {
-            return Stream.of(
-                    // DRAFT
-                    Arguments.of(DealStatus.DRAFT, DealStatus.OFFER_PENDING, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.DRAFT, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    // OFFER_PENDING
-                    Arguments.of(DealStatus.OFFER_PENDING, DealStatus.NEGOTIATING, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.OFFER_PENDING, DealStatus.ACCEPTED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.OFFER_PENDING, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.OFFER_PENDING, DealStatus.CANCELLED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.OFFER_PENDING, DealStatus.EXPIRED, ActorType.SYSTEM),
-                    // NEGOTIATING
-                    Arguments.of(DealStatus.NEGOTIATING, DealStatus.ACCEPTED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.NEGOTIATING, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.NEGOTIATING, DealStatus.CANCELLED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.NEGOTIATING, DealStatus.EXPIRED, ActorType.SYSTEM),
-                    // ACCEPTED
-                    Arguments.of(DealStatus.ACCEPTED, DealStatus.AWAITING_PAYMENT, ActorType.SYSTEM),
-                    Arguments.of(DealStatus.ACCEPTED, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.ACCEPTED, DealStatus.CANCELLED, ActorType.CHANNEL_OWNER),
-                    // AWAITING_PAYMENT
-                    Arguments.of(DealStatus.AWAITING_PAYMENT, DealStatus.FUNDED, ActorType.SYSTEM),
-                    Arguments.of(DealStatus.AWAITING_PAYMENT, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.AWAITING_PAYMENT, DealStatus.EXPIRED, ActorType.SYSTEM),
-                    // FUNDED
-                    Arguments.of(DealStatus.FUNDED, DealStatus.CREATIVE_SUBMITTED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.FUNDED, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.FUNDED, DealStatus.CANCELLED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.FUNDED, DealStatus.EXPIRED, ActorType.SYSTEM),
-                    // CREATIVE_SUBMITTED
-                    Arguments.of(DealStatus.CREATIVE_SUBMITTED, DealStatus.CREATIVE_APPROVED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.CREATIVE_SUBMITTED, DealStatus.FUNDED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.CREATIVE_SUBMITTED, DealStatus.DISPUTED, ActorType.ADVERTISER),
-                    // CREATIVE_APPROVED
-                    Arguments.of(DealStatus.CREATIVE_APPROVED, DealStatus.SCHEDULED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.CREATIVE_APPROVED, DealStatus.PUBLISHED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.CREATIVE_APPROVED, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.CREATIVE_APPROVED, DealStatus.CANCELLED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.CREATIVE_APPROVED, DealStatus.EXPIRED, ActorType.SYSTEM),
-                    // SCHEDULED
-                    Arguments.of(DealStatus.SCHEDULED, DealStatus.PUBLISHED, ActorType.SYSTEM),
-                    Arguments.of(DealStatus.SCHEDULED, DealStatus.CANCELLED, ActorType.ADVERTISER),
-                    Arguments.of(DealStatus.SCHEDULED, DealStatus.CANCELLED, ActorType.CHANNEL_OWNER),
-                    Arguments.of(DealStatus.SCHEDULED, DealStatus.EXPIRED, ActorType.SYSTEM),
-                    // PUBLISHED
-                    Arguments.of(DealStatus.PUBLISHED, DealStatus.DELIVERY_VERIFYING, ActorType.SYSTEM),
-                    // DELIVERY_VERIFYING
-                    Arguments.of(DealStatus.DELIVERY_VERIFYING, DealStatus.COMPLETED_RELEASED, ActorType.SYSTEM),
-                    Arguments.of(DealStatus.DELIVERY_VERIFYING, DealStatus.DISPUTED, ActorType.SYSTEM),
-                    // DISPUTED
-                    Arguments.of(DealStatus.DISPUTED, DealStatus.COMPLETED_RELEASED, ActorType.PLATFORM_OPERATOR),
-                    Arguments.of(DealStatus.DISPUTED, DealStatus.REFUNDED, ActorType.PLATFORM_OPERATOR),
-                    Arguments.of(DealStatus.DISPUTED, DealStatus.PARTIALLY_REFUNDED, ActorType.PLATFORM_OPERATOR)
-            );
+            return Stream.of(VALID_TRANSITIONS);
         }
 
         @ParameterizedTest(name = "{0} → {1} by {2}")
@@ -422,13 +542,15 @@ class DealTransitionServiceTest {
             var dealId = DealId.generate();
             var deal = dealInStatus(dealId, from, 0);
             when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
-            when(dealRepository.updateStatus(eq(dealId), eq(from), eq(to), eq(0))).thenReturn(1);
+            when(dealRepository.updateStatus(
+                    eq(dealId), eq(from), eq(to), eq(0))).thenReturn(1);
             when(jsonFacade.toJson(any())).thenReturn("{}");
 
             var result = service.transition(cmd(dealId, to, actor));
 
             assertThat(result).isInstanceOf(DealTransitionResult.Success.class);
-            assertThat(((DealTransitionResult.Success) result).newStatus()).isEqualTo(to);
+            assertThat(((DealTransitionResult.Success) result).newStatus())
+                    .isEqualTo(to);
         }
     }
 }

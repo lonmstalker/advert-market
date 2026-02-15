@@ -14,6 +14,7 @@ import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.dto.NewChannel;
+import com.advertmarket.marketplace.channel.mapper.CategoryDtoMapper;
 import com.advertmarket.marketplace.channel.mapper.ChannelRecordMapper;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
@@ -53,7 +54,10 @@ class JooqChannelRepositoryIntegrationTest {
     @BeforeEach
     void setUp() {
         var jsonFacade = new JsonFacade(new ObjectMapper());
-        var categoryRepo = new JooqCategoryRepository(dsl, jsonFacade);
+        var categoryRepo = new JooqCategoryRepository(
+                dsl,
+                jsonFacade,
+                Mappers.getMapper(CategoryDtoMapper.class));
         var pricingRuleMapper = Mappers.getMapper(PricingRuleRecordMapper.class);
         var pricingRuleRepo = new JooqPricingRuleRepository(dsl, pricingRuleMapper);
         repository = new JooqChannelRepository(

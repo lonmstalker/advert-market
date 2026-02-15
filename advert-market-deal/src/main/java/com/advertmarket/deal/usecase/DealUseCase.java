@@ -1,0 +1,129 @@
+package com.advertmarket.deal.usecase;
+
+import com.advertmarket.deal.api.dto.CreateDealCommand;
+import com.advertmarket.deal.api.dto.DealDetailDto;
+import com.advertmarket.deal.api.dto.DealDto;
+import com.advertmarket.deal.api.dto.DealListCriteria;
+import com.advertmarket.deal.api.dto.DealTransitionCommand;
+import com.advertmarket.deal.api.dto.DealTransitionResult;
+import com.advertmarket.deal.api.port.DealAuthorizationPort;
+import com.advertmarket.deal.service.DealService;
+import com.advertmarket.deal.web.CreateDealRequest;
+import com.advertmarket.deal.web.DealTransitionRequest;
+import com.advertmarket.deal.web.DealTransitionResponse;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
+import com.advertmarket.shared.model.ActorType;
+import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.DealStatus;
+import com.advertmarket.shared.pagination.CursorPage;
+import com.advertmarket.shared.security.SecurityContextUtil;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.stereotype.Service;
+
+/**
+ * Orchestrates deal web flows: auth context, command building, service calls.
+ *
+ * <p>Kept outside {@code ..web..} to keep controllers thin.
+ */
+@Service
+@RequiredArgsConstructor
+public class DealUseCase {
+
+    private final DealService dealService;
+    private final DealAuthorizationPort dealAuthorizationPort;
+
+    /**
+     * Creates a new deal for the current authenticated user.
+     */
+    @NonNull
+    public DealDto create(@NonNull CreateDealRequest request) {
+        var userId = SecurityContextUtil.currentUserId().value();
+        var command = new CreateDealCommand(
+                request.channelId(),
+                request.amountNano(),
+                request.pricingRuleId(),
+                request.creativeBrief());
+        return dealService.create(command, userId);
+    }
+
+    /**
+     * Loads deal details by id.
+     */
+    @NonNull
+    public DealDetailDto getDetail(@NonNull UUID id) {
+        return dealService.getDetail(DealId.of(id));
+    }
+
+    /**
+     * Lists deals for the current authenticated user.
+     */
+    @NonNull
+    public CursorPage<DealDto> list(
+            DealStatus status,
+            String cursor,
+            int limit) {
+        var userId = SecurityContextUtil.currentUserId().value();
+        var criteria = new DealListCriteria(status, cursor, limit);
+        return dealService.listForUser(criteria, userId);
+    }
+
+    /**
+     * Performs deal status transition as the current actor (advertiser/owner/operator/system).
+     */
+    @NonNull
+    public DealTransitionResponse transition(
+            @NonNull UUID id,
+            @NonNull DealTransitionRequest request) {
+        var dealId = DealId.of(id);
+        var actorType = resolveActorType(dealId);
+        Long actorId = actorType == ActorType.SYSTEM
+                ? null
+                : SecurityContextUtil.currentUserId().value();
+
+        var command = new DealTransitionCommand(
+                dealId,
+                request.targetStatus(),
+                actorId,
+                actorType,
+                request.reason());
+
+        var result = dealService.transition(command);
+        return toResponse(result);
+    }
+
+    private ActorType resolveActorType(DealId dealId) {
+        // Verify deal exists first (throws 404 if not found)
+        dealAuthorizationPort.getChannelId(dealId);
+
+        if (SecurityContextUtil.isOperator()) {
+            return ActorType.PLATFORM_OPERATOR;
+        }
+        if (dealAuthorizationPort.isAdvertiser(dealId)) {
+            return ActorType.ADVERTISER;
+        }
+        if (dealAuthorizationPort.isOwner(dealId)) {
+            return ActorType.CHANNEL_OWNER;
+        }
+        throw new DomainException(ErrorCodes.DEAL_NOT_PARTICIPANT,
+                "User is not a participant of deal " + dealId);
+    }
+
+    private static DealTransitionResponse toResponse(
+            DealTransitionResult result) {
+        return switch (result) {
+            case null -> throw new IllegalArgumentException(
+                    "Transition result must not be null");
+            case DealTransitionResult.Success s ->
+                    new DealTransitionResponse(
+                            "SUCCESS", s.newStatus(), null);
+            case DealTransitionResult.AlreadyInTargetState a ->
+                    new DealTransitionResponse(
+                            "ALREADY_IN_TARGET_STATE",
+                            null,
+                            a.currentStatus());
+        };
+    }
+}

@@ -7,7 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * REST request body for creating a deal.
  */
-record CreateDealRequest(
+public record CreateDealRequest(
         @NotNull Long channelId,
         @Positive long amountNano,
         @Nullable Long pricingRuleId,

@@ -14,6 +14,8 @@ import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
+import com.advertmarket.marketplace.channel.mapper.CategoryDtoMapper;
+import com.advertmarket.marketplace.channel.mapper.ChannelListItemMapper;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.search.ParadeDbChannelSearch;
 import com.advertmarket.shared.json.JsonFacade;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 /**
  * Integration test for ParadeDbChannelSearch filter-based search.
@@ -56,8 +59,14 @@ class ChannelSearchIntegrationTest {
     @BeforeEach
     void setUp() {
         var jsonFacade = new JsonFacade(new ObjectMapper());
-        var categoryRepo = new JooqCategoryRepository(dsl, jsonFacade);
-        search = new ParadeDbChannelSearch(dsl, categoryRepo);
+        var categoryRepo = new JooqCategoryRepository(
+                dsl,
+                jsonFacade,
+                Mappers.getMapper(CategoryDtoMapper.class));
+        search = new ParadeDbChannelSearch(
+                dsl,
+                categoryRepo,
+                Mappers.getMapper(ChannelListItemMapper.class));
         DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, USER_ID);
     }
