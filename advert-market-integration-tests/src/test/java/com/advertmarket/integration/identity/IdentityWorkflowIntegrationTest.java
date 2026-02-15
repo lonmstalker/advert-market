@@ -68,7 +68,10 @@ class IdentityWorkflowIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        dsl.deleteFrom(USERS).execute();
+        // SharedContainers-based ITs share a single Postgres instance.
+        // Clean all tables to keep this workflow test isolated from
+        // other modules (e.g. deal lifecycle) that insert FK-linked rows.
+        DatabaseSupport.cleanAllTables(dsl);
 
         redisTemplate = RedisSupport.redisTemplate();
         RedisSupport.flushAll();
