@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
-import { NewspaperIcon } from '@/shared/ui/icons';
+import { LockIcon, NewspaperIcon } from '@/shared/ui/icons';
 import { MockupContainer } from './mockup-container';
 import { MockupSearchBar } from './mockup-search-bar';
 import { MockupTextButton } from './mockup-text-button';
@@ -43,33 +43,41 @@ export function TourSlideCatalog() {
                   text={t('onboarding.tour.mockup.channelName1')}
                   description={`125K ${t('catalog.channel.subs')}`}
                   after={
-                    <Text type="caption1" color="accent">
+                    <Text type="callout" weight="bold" color="accent">
                       5 TON
                     </Text>
                   }
                   chevron
                   onClick={handleChannelClick}
                 />
-                <GroupItem
-                  text={t('onboarding.tour.mockup.channelName2')}
-                  description={`89K ${t('catalog.channel.subs')}`}
-                  after={
-                    <Text type="caption1" color="accent">
-                      3 TON
-                    </Text>
-                  }
-                  chevron
-                />
-                <GroupItem
-                  text={t('onboarding.tour.mockup.channelName3')}
-                  description={`67K ${t('catalog.channel.subs')}`}
-                  after={
-                    <Text type="caption1" color="accent">
-                      4.5 TON
-                    </Text>
-                  }
-                  chevron
-                />
+                <div style={{ opacity: 0.5, pointerEvents: 'none' }}>
+                  <GroupItem
+                    text={t('onboarding.tour.mockup.channelName2')}
+                    description={`89K ${t('catalog.channel.subs')}`}
+                    after={
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Text type="callout" weight="bold" color="accent">
+                          3 TON
+                        </Text>
+                        <LockIcon size={14} style={{ color: 'var(--color-foreground-tertiary)' }} />
+                      </div>
+                    }
+                  />
+                </div>
+                <div style={{ opacity: 0.5, pointerEvents: 'none' }}>
+                  <GroupItem
+                    text={t('onboarding.tour.mockup.channelName3')}
+                    description={`67K ${t('catalog.channel.subs')}`}
+                    after={
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Text type="callout" weight="bold" color="accent">
+                          4.5 TON
+                        </Text>
+                        <LockIcon size={14} style={{ color: 'var(--color-foreground-tertiary)' }} />
+                      </div>
+                    }
+                  />
+                </div>
               </Group>
             </motion.div>
           ) : (
@@ -104,7 +112,7 @@ export function TourSlideCatalog() {
                 <GroupItem
                   text={t('onboarding.tour.mockup.postPrice')}
                   after={
-                    <Text type="body" color="accent">
+                    <Text type="callout" weight="bold" color="accent">
                       5 TON
                     </Text>
                   }
@@ -112,7 +120,7 @@ export function TourSlideCatalog() {
                 <GroupItem
                   text={t('onboarding.tour.mockup.topics')}
                   after={
-                    <Text type="caption1" color="secondary">
+                    <Text type="body" color="primary">
                       {t('onboarding.tour.mockup.topicValues')}
                     </Text>
                   }
