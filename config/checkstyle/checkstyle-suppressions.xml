@@ -28,6 +28,10 @@
     <suppress checks="IllegalCatch"
               files="TelegramNotificationService\.java"/>
 
+    <!-- LedgerService: post-commit cache update safety net -->
+    <suppress checks="IllegalCatch"
+              files="LedgerService\.java"/>
+
     <!-- jOOQ generated code: exempt from style checks -->
     <suppress checks=".*"
               files="[/\\]generated[/\\]"/>

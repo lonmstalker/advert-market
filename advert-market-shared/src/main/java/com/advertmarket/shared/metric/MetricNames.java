@@ -54,6 +54,10 @@ public final class MetricNames {
             "ledger.entry.created";
     public static final @Fenum(FenumGroup.METRIC_NAME) String COMMISSION_CALCULATED =
             "commission.calculated";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String BALANCE_CACHE_HIT =
+            "balance.cache.hit";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String BALANCE_CACHE_MISS =
+            "balance.cache.miss";
 
     // --- Channel ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_REGISTERED =

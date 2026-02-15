@@ -1,9 +1,14 @@
 package com.advertmarket.integration.support;
 
+import static com.advertmarket.db.generated.tables.AccountBalances.ACCOUNT_BALANCES;
 import static com.advertmarket.db.generated.tables.ChannelCategories.CHANNEL_CATEGORIES;
 import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 import static com.advertmarket.db.generated.tables.ChannelPricingRules.CHANNEL_PRICING_RULES;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
+import static com.advertmarket.db.generated.tables.DealEvents.DEAL_EVENTS;
+import static com.advertmarket.db.generated.tables.Deals.DEALS;
+import static com.advertmarket.db.generated.tables.LedgerEntries.LEDGER_ENTRIES;
+import static com.advertmarket.db.generated.tables.LedgerIdempotencyKeys.LEDGER_IDEMPOTENCY_KEYS;
 import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATION_OUTBOX;
 import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_RULE_POST_TYPES;
 import static com.advertmarket.db.generated.tables.Users.USERS;
@@ -66,6 +71,8 @@ public final class DatabaseSupport {
      * Deletes all rows in FK-dependency order (all tables).
      */
     public static void cleanAllTables(DSLContext dsl) {
+        cleanDealTables(dsl);
+        cleanFinancialTables(dsl);
         dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
         dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
         dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
@@ -73,6 +80,17 @@ public final class DatabaseSupport {
         dsl.deleteFrom(CHANNELS).execute();
         dsl.deleteFrom(NOTIFICATION_OUTBOX).execute();
         dsl.deleteFrom(USERS).execute();
+    }
+
+    /**
+     * Cleans financial tables (ledger entries, balances, idempotency keys).
+     * Uses TRUNCATE for ledger_entries since it has an immutability trigger
+     * that prevents DELETE.
+     */
+    public static void cleanFinancialTables(DSLContext dsl) {
+        dsl.truncate(LEDGER_ENTRIES).cascade().execute();
+        dsl.deleteFrom(ACCOUNT_BALANCES).execute();
+        dsl.deleteFrom(LEDGER_IDEMPOTENCY_KEYS).execute();
     }
 
     /**
@@ -84,6 +102,14 @@ public final class DatabaseSupport {
         dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
         dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
         dsl.deleteFrom(CHANNELS).execute();
+    }
+
+    /**
+     * Deletes deal tables (deal_events, deals) in FK-dependency order.
+     */
+    public static void cleanDealTables(DSLContext dsl) {
+        dsl.deleteFrom(DEAL_EVENTS).execute();
+        dsl.deleteFrom(DEALS).execute();
     }
 
     /**

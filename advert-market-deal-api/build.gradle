@@ -6,6 +6,8 @@ dependencies {
     api platform(project(':platform-bom'))
     api project(':advert-market-shared')
 
+    compileOnly 'jakarta.validation:jakarta.validation-api'
+
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
 }
