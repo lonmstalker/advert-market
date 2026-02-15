@@ -81,6 +81,32 @@ test.describe('Onboarding Flow', () => {
     await page.waitForURL('**/catalog');
   });
 
+  test('locked channels are not clickable in tour', async ({ page }) => {
+    await page.getByRole('button', { name: 'Get Started' }).click();
+    await page.getByRole('button', { name: /advertiser/i }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    // "Tech Digest" and "AI Weekly" should be visually locked (opacity 0.5, pointer-events none)
+    const techDigest = page.getByText('Tech Digest').locator('..');
+    await expect(techDigest).toBeVisible();
+
+    // Click on locked channel should not open detail
+    await page.getByText('Tech Digest').click({ force: true });
+    await expect(page.getByText('Post Price')).not.toBeVisible();
+  });
+
+  test('settings sheet opens from welcome screen', async ({ page }) => {
+    // Globe button should be visible
+    const settingsBtn = page.getByRole('button', { name: /settings/i });
+    await expect(settingsBtn).toBeVisible();
+
+    await settingsBtn.click();
+
+    // Settings sheet should show language and currency sections
+    await expect(page.getByText('Language')).toBeVisible();
+    await expect(page.getByText('Display Currency')).toBeVisible();
+  });
+
   test('redirects to interest page when navigating directly to tour', async ({ page }) => {
     await page.goto('/onboarding/tour');
     await expect(page.getByText('Who are you?')).toBeVisible();
