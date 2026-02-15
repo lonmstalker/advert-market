@@ -10,25 +10,47 @@ import { DeepLinkHandler } from './deep-link-handler';
 import { OnboardingLayout } from './layouts/onboarding-layout';
 import { TabLayout } from './layouts/tab-layout';
 
-const OnboardingPage = lazy(() => import('@/pages/onboarding/OnboardingPage'));
-const OnboardingInterestPage = lazy(() => import('@/pages/onboarding/OnboardingInterestPage'));
-const OnboardingTourPage = lazy(() => import('@/pages/onboarding/OnboardingTourPage'));
+function lazyRetry<T extends { default: React.ComponentType }>(
+  factory: () => Promise<T>,
+  retries = 2,
+): React.LazyExoticComponent<T['default']> {
+  return lazy(() =>
+    factory().catch((err: unknown) => {
+      if (retries > 0) {
+        return new Promise<T>((resolve) => setTimeout(resolve, 500)).then(
+          () => lazyRetry(factory, retries - 1) as unknown as T,
+        );
+      }
+      // After retries exhausted, force reload to get fresh assets.
+      const reloaded = sessionStorage.getItem('chunk_reload');
+      if (!reloaded) {
+        sessionStorage.setItem('chunk_reload', '1');
+        window.location.reload();
+      }
+      throw err;
+    }),
+  );
+}
 
-const CatalogPage = lazy(() => import('@/pages/catalog/CatalogPage'));
-const ChannelDetailPage = lazy(() => import('@/pages/catalog/ChannelDetailPage'));
-const DealsPage = lazy(() => import('@/pages/deals/DealsPage'));
-const CreateDealPage = lazy(() => import('@/pages/deals/CreateDealPage'));
-const DealDetailPage = lazy(() => import('@/pages/deals/DealDetailPage'));
-const WalletPage = lazy(() => import('@/pages/wallet/WalletPage'));
-const HistoryPage = lazy(() => import('@/pages/wallet/HistoryPage'));
-const TransactionDetailPage = lazy(() => import('@/pages/wallet/TransactionDetailPage'));
-const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
-const LanguagePage = lazy(() => import('@/pages/profile/LanguagePage'));
-const CurrencyPage = lazy(() => import('@/pages/profile/CurrencyPage'));
-const NotificationsPage = lazy(() => import('@/pages/profile/NotificationsPage'));
-const RegisterChannelPage = lazy(() => import('@/pages/profile/RegisterChannelPage'));
-const CreativesPage = lazy(() => import('@/pages/creatives/CreativesPage'));
-const CreativeEditorPage = lazy(() => import('@/pages/creatives/CreativeEditorPage'));
+const OnboardingPage = lazyRetry(() => import('@/pages/onboarding/OnboardingPage'));
+const OnboardingInterestPage = lazyRetry(() => import('@/pages/onboarding/OnboardingInterestPage'));
+const OnboardingTourPage = lazyRetry(() => import('@/pages/onboarding/OnboardingTourPage'));
+
+const CatalogPage = lazyRetry(() => import('@/pages/catalog/CatalogPage'));
+const ChannelDetailPage = lazyRetry(() => import('@/pages/catalog/ChannelDetailPage'));
+const DealsPage = lazyRetry(() => import('@/pages/deals/DealsPage'));
+const CreateDealPage = lazyRetry(() => import('@/pages/deals/CreateDealPage'));
+const DealDetailPage = lazyRetry(() => import('@/pages/deals/DealDetailPage'));
+const WalletPage = lazyRetry(() => import('@/pages/wallet/WalletPage'));
+const HistoryPage = lazyRetry(() => import('@/pages/wallet/HistoryPage'));
+const TransactionDetailPage = lazyRetry(() => import('@/pages/wallet/TransactionDetailPage'));
+const ProfilePage = lazyRetry(() => import('@/pages/profile/ProfilePage'));
+const LanguagePage = lazyRetry(() => import('@/pages/profile/LanguagePage'));
+const CurrencyPage = lazyRetry(() => import('@/pages/profile/CurrencyPage'));
+const NotificationsPage = lazyRetry(() => import('@/pages/profile/NotificationsPage'));
+const RegisterChannelPage = lazyRetry(() => import('@/pages/profile/RegisterChannelPage'));
+const CreativesPage = lazyRetry(() => import('@/pages/creatives/CreativesPage'));
+const CreativeEditorPage = lazyRetry(() => import('@/pages/creatives/CreativeEditorPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {

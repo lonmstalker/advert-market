@@ -14,7 +14,7 @@ const sizeMap: Record<ChannelAvatarSize, { container: number; font: number }> = 
   sm: { container: 40, font: 16 },
   md: { container: 44, font: 18 },
   lg: { container: 56, font: 22 },
-  xl: { container: 48, font: 20 },
+  xl: { container: 64, font: 26 },
 };
 
 export function computeAvatarHue(title: string): number {

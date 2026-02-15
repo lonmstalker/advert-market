@@ -47,10 +47,10 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
           {icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Text type="subheadline1" weight="bold">
+          <Text type="body" weight="bold">
             {title}
           </Text>
-          <Text type="caption1" color="secondary">
+          <Text type="subheadline2" color="secondary">
             {hint}
           </Text>
         </div>

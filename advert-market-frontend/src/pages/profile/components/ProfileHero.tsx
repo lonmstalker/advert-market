@@ -36,12 +36,15 @@ export function ProfileHero({ displayName, username, roleBadge, memberSince, ava
             borderRadius: '50%',
             overflow: 'hidden',
             border: '3px solid var(--color-background-base)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           {avatarUrl ? (
             <Image src={avatarUrl} alt={displayName} width="100%" height="100%" borderRadius="50%" objectFit="cover" />
           ) : (
-            <ChannelAvatar title={displayName || 'U'} size="lg" />
+            <ChannelAvatar title={displayName || 'U'} size="xl" />
           )}
         </div>
       </div>

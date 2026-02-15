@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
-import { LockIcon, NewspaperIcon } from '@/shared/ui/icons';
+import { NewspaperIcon } from '@/shared/ui/icons';
 import { MockupContainer } from './mockup-container';
 import { MockupSearchBar } from './mockup-search-bar';
 import { MockupTextButton } from './mockup-text-button';
@@ -50,7 +50,7 @@ export function TourSlideCatalog() {
                     text={t('onboarding.tour.mockup.channelName1')}
                     description={`125K ${t('catalog.channel.subs')}`}
                     after={
-                      <Text type="callout" weight="bold" color="accent">
+                      <Text type="body" weight="bold" color="accent">
                         <span className="tabular-nums">5 TON</span>
                       </Text>
                     }
@@ -58,30 +58,34 @@ export function TourSlideCatalog() {
                     onClick={handleChannelClick}
                   />
                 </div>
-                <div style={{ opacity: 0.5, pointerEvents: 'none' }}>
+                <div style={{ opacity: 0.4, pointerEvents: 'none', filter: 'grayscale(0.5)' }}>
                   <GroupItem
                     text={t('onboarding.tour.mockup.channelName2')}
                     description={`89K ${t('catalog.channel.subs')}`}
                     after={
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Text type="callout" weight="bold" color="accent">
+                        <Text type="body" weight="bold" color="accent">
                           <span className="tabular-nums">3 TON</span>
                         </Text>
-                        <LockIcon size={16} style={{ color: 'var(--color-foreground-tertiary)' }} />
+                        <span aria-hidden="true" style={{ fontSize: 14 }}>
+                          🔐
+                        </span>
                       </div>
                     }
                   />
                 </div>
-                <div style={{ opacity: 0.5, pointerEvents: 'none' }}>
+                <div style={{ opacity: 0.4, pointerEvents: 'none', filter: 'grayscale(0.5)' }}>
                   <GroupItem
                     text={t('onboarding.tour.mockup.channelName3')}
                     description={`67K ${t('catalog.channel.subs')}`}
                     after={
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Text type="callout" weight="bold" color="accent">
+                        <Text type="body" weight="bold" color="accent">
                           <span className="tabular-nums">4.5 TON</span>
                         </Text>
-                        <LockIcon size={16} style={{ color: 'var(--color-foreground-tertiary)' }} />
+                        <span aria-hidden="true" style={{ fontSize: 14 }}>
+                          🔐
+                        </span>
                       </div>
                     }
                   />
@@ -120,7 +124,7 @@ export function TourSlideCatalog() {
                 <GroupItem
                   text={t('onboarding.tour.mockup.postPrice')}
                   after={
-                    <Text type="callout" weight="bold" color="accent">
+                    <Text type="body" weight="bold" color="accent">
                       <span className="tabular-nums">5 TON</span>
                     </Text>
                   }
@@ -128,7 +132,7 @@ export function TourSlideCatalog() {
                 <GroupItem
                   text={t('onboarding.tour.mockup.topics')}
                   after={
-                    <Text type="callout" weight="bold" color="primary">
+                    <Text type="body" weight="bold">
                       {t('onboarding.tour.mockup.topicValues')}
                     </Text>
                   }

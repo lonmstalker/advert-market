@@ -12,7 +12,7 @@ export function MockupContainer({ children }: MockupContainerProps) {
         border: '1px solid var(--color-border-separator)',
         backgroundColor: 'var(--color-background-secondary)',
         padding: '16px',
-        maxHeight: '340px',
+        maxHeight: '420px',
         overflowY: 'auto',
         scrollbarWidth: 'none',
         WebkitOverflowScrolling: 'touch',

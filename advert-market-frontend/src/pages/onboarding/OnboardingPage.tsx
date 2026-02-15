@@ -94,7 +94,7 @@ export default function OnboardingPage() {
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
-            marginTop: '24px',
+            marginTop: '16px',
             width: '100%',
             padding: 10,
             borderRadius: 24,
@@ -119,7 +119,7 @@ export default function OnboardingPage() {
         </motion.div>
       </div>
 
-      <div style={{ flexShrink: 0, paddingBottom: 'calc(24px + var(--am-safe-area-bottom))', paddingTop: '16px' }}>
+      <div style={{ flexShrink: 0, paddingBottom: 'calc(16px + var(--am-safe-area-bottom))', paddingTop: '12px' }}>
         <motion.div {...pressScale}>
           <Button
             text={t('onboarding.welcome.start')}

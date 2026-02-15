@@ -212,13 +212,13 @@ export function TourSlideDeal() {
                 </motion.div>
               </AnimatePresence>
 
-              <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
+              <div style={{ textAlign: 'center', padding: '8px 0 12px' }}>
                 <Text type="caption1" color="tertiary">
                   {t('onboarding.tour.timeline.simplifiedNote')}
                 </Text>
               </div>
 
-              <div style={{ marginTop: 6 }}>
+              <div style={{ marginTop: 12 }}>
                 <TelegramPostPreview
                   text={creativePreview.text}
                   entities={creativePreview.entities}
@@ -228,7 +228,7 @@ export function TourSlideDeal() {
                 />
               </div>
 
-              <div style={{ marginTop: 10 }}>
+              <div style={{ marginTop: 16 }}>
                 <Button
                   text={t('onboarding.tour.mockup.approve')}
                   type="primary"

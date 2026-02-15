@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, DialogModal, Text } from '@telegram-tools/ui-kit';
+import { Button, Text } from '@telegram-tools/ui-kit';
 import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
@@ -11,7 +11,7 @@ import { TourSlideCatalog } from '@/features/onboarding/components/tour-slide-ca
 import { TourSlideDeal } from '@/features/onboarding/components/tour-slide-deal';
 import { TourSlideWallet } from '@/features/onboarding/components/tour-slide-wallet';
 import { profileKeys } from '@/shared/api';
-import { pressScale, Tappable } from '@/shared/ui';
+import { pressScale } from '@/shared/ui';
 
 const SLIDE_COUNT = 3;
 
@@ -30,7 +30,6 @@ export default function OnboardingTourPage() {
   const { interests, tourTasksCompleted, reset } = useOnboardingStore();
   const [activeSlide, setActiveSlide] = useState(0);
   const [showError, setShowError] = useState(false);
-  const [skipConfirmOpen, setSkipConfirmOpen] = useState(false);
   const isAnimating = useRef(false);
   const hasCompleted = useRef(false);
 
@@ -66,11 +65,6 @@ export default function OnboardingTourPage() {
       isAnimating.current = true;
       setActiveSlide((prev) => prev + 1);
     }
-  }
-
-  function handleSkip() {
-    if (mutation.isPending) return;
-    setSkipConfirmOpen(true);
   }
 
   function handleAnimationComplete() {
@@ -201,41 +195,7 @@ export default function OnboardingTourPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {!isLastSlide && (
-          <Tappable
-            className="focusable"
-            onClick={handleSkip}
-            disabled={mutation.isPending}
-            style={{
-              textAlign: 'center',
-              padding: '8px',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-              background: 'none',
-              border: 'none',
-            }}
-          >
-            <Text type="subheadline1" color="secondary" align="center">
-              {t('onboarding.tour.skip')}
-            </Text>
-          </Tappable>
-        )}
       </div>
-
-      <DialogModal
-        active={skipConfirmOpen}
-        title={t('onboarding.tour.skipConfirm.title')}
-        description={t('onboarding.tour.skipConfirm.description')}
-        confirmText={t('onboarding.tour.skip')}
-        closeText={t('common.cancel')}
-        onConfirm={() => {
-          setSkipConfirmOpen(false);
-          setShowError(false);
-          mutation.mutate();
-        }}
-        onClose={() => setSkipConfirmOpen(false)}
-      />
     </div>
   );
 }

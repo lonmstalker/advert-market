@@ -107,9 +107,9 @@ export default function CreativeEditorPage() {
   const previewContent = (
     <div
       style={{
-        borderRadius: 14,
+        borderRadius: 12,
         overflow: 'hidden',
-        border: '1px solid var(--color-border-separator)',
+        backgroundColor: 'var(--color-background-secondary)',
       }}
     >
       <TelegramChatSimulator text={text} entities={entities} media={media} buttons={filteredButtons} />

@@ -10,7 +10,7 @@ export function OnboardingLayout() {
     <>
       <BackButtonHandler />
       <div style={{ paddingTop: 'var(--am-safe-area-top)' }}>
-        {isTour ? <div aria-hidden="true" style={{ height: 40 }} /> : <StepIndicator />}
+        {isTour ? <div aria-hidden="true" style={{ height: 8 }} /> : <StepIndicator />}
       </div>
       <Outlet />
     </>
