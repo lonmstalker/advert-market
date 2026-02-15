@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.financial.api.model.LedgerEntry;
 import com.advertmarket.financial.api.model.Leg;
+import com.advertmarket.financial.ledger.mapper.LedgerEntryMapper;
 import com.advertmarket.financial.ledger.repository.JooqLedgerRepository;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.shared.model.AccountId;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 /**
  * Integration tests for {@link JooqLedgerRepository}.
@@ -39,7 +41,9 @@ class JooqLedgerRepositoryIntegrationTest {
     static void initDatabase() {
         DatabaseSupport.ensureMigrated();
         dsl = DatabaseSupport.dsl();
-        repository = new JooqLedgerRepository(dsl);
+        repository = new JooqLedgerRepository(
+                dsl,
+                Mappers.getMapper(LedgerEntryMapper.class));
     }
 
     @BeforeEach

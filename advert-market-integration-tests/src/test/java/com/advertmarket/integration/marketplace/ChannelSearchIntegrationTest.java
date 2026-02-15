@@ -263,9 +263,13 @@ class ChannelSearchIntegrationTest {
 
             var jsonFacade = new JsonFacade(new ObjectMapper());
             var categoryRepo = new JooqCategoryRepository(
-                    dslWithListener, jsonFacade);
+                    dslWithListener,
+                    jsonFacade,
+                    Mappers.getMapper(CategoryDtoMapper.class));
             var searchWithListener = new ParadeDbChannelSearch(
-                    dslWithListener, categoryRepo);
+                    dslWithListener,
+                    categoryRepo,
+                    Mappers.getMapper(ChannelListItemMapper.class));
 
             statements.set(0);
             CursorPage<ChannelListItem> page = searchWithListener.search(criteria(
