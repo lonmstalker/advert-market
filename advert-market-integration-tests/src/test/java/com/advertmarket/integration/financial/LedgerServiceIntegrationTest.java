@@ -455,19 +455,19 @@ class LedgerServiceIntegrationTest {
             try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
                 List<Future<?>> futures = new java.util.ArrayList<>();
                 for (int i = 0; i < threads; i++) {
-	                    futures.add(executor.submit(() -> {
-	                        try {
-	                            latch.await();
-	                            UUID ref = ledgerService.transfer(request);
-	                            txRefs.put(ref, true);
-	                            successCount.incrementAndGet();
-	                        } catch (InterruptedException e) {
-	                            Thread.currentThread().interrupt();
-	                            throw new IllegalStateException(
-	                                    "Interrupted while awaiting latch", e);
-	                        }
-	                    }));
-	                }
+                    futures.add(executor.submit(() -> {
+                        try {
+                            latch.await();
+                            UUID ref = ledgerService.transfer(request);
+                            txRefs.put(ref, true);
+                            successCount.incrementAndGet();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            throw new IllegalStateException(
+                                    "Interrupted while awaiting latch", e);
+                        }
+                    }));
+                }
                 latch.countDown();
                 for (Future<?> f : futures) {
                     f.get();
