@@ -21,11 +21,12 @@ Root configuration for the Telegram bot
 
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
-| `app.telegram.bot-token` | `NotBlank String` | Telegram bot token from BotFather |  | Yes | NotBlank(must not be blank) | `123456:ABC-DEF...` |
-| `app.telegram.bot-username` | `NotBlank String` | Telegram bot username |  | Yes | NotBlank(must not be blank) |  |
-| `app.telegram.webhook` | `Valid Webhook` | Webhook configuration |  | No |  |  |
-| `app.telegram.webapp` | `Valid WebApp` | Telegram Web App configuration |  | Yes |  |  |
-| `app.telegram.welcome` | `Valid Welcome` | Welcome message configuration |  | No |  |  |
+| `app.telegram.bot-token` | `NotBlank String` | Telegram bot token from BotFather |  | Yes |  | `123456:ABC-DEF...` |
+| `app.telegram.bot-username` | `NotBlank String` | Telegram bot username |  | Yes |  |  |
+| `app.telegram.webhook.url` | `String` | Webhook URL for receiving updates |  | No |  |  |
+| `app.telegram.webhook.secret` | `NotBlank String` | Secret token for webhook validation |  | No |  |  |
+| `app.telegram.webapp.url` | `NotBlank String` | Telegram Web App URL |  | Yes |  |  |
+| `app.telegram.welcome.custom-emoji-id` | `String` | Custom emoji id to prefix the welcome message (MarkdownV2: ![x](tg://emoji?id=...)) |  | No |  |  |
 
 ## User Blocking
 
@@ -63,8 +64,14 @@ Circuit breaker and bulkhead settings for Telegram API
 
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
-| `app.telegram.resilience.circuit-breaker` | `Valid CircuitBreaker` | Circuit breaker settings |  | No |  |  |
-| `app.telegram.resilience.bulkhead` | `Valid Bulkhead` | Bulkhead settings for concurrent call limiting |  | No |  |  |
+| `app.telegram.resilience.circuit-breaker.sliding-window-size` | `Positive int` | Count-based sliding window size |  | No |  |  |
+| `app.telegram.resilience.circuit-breaker.failure-rate-threshold` | `Positive int` | Failure rate percentage to open circuit |  | No |  | `40`, `60` |
+| `app.telegram.resilience.circuit-breaker.slow-call-duration` | `Duration` | Threshold duration for slow calls |  | No |  |  |
+| `app.telegram.resilience.circuit-breaker.wait-in-open-state` | `Duration` | Wait duration in open state before half-open |  | No |  |  |
+| `app.telegram.resilience.circuit-breaker.half-open-calls` | `Positive int` | Permitted calls in half-open state |  | No |  |  |
+| `app.telegram.resilience.circuit-breaker.minimum-calls` | `Positive int` | Minimum calls before evaluating failure rate |  | No |  |  |
+| `app.telegram.resilience.bulkhead.max-concurrent-calls` | `Positive int` | Max concurrent Telegram API calls |  | No |  |  |
+| `app.telegram.resilience.bulkhead.max-wait-duration` | `Duration` | Max wait duration for a bulkhead permit |  | No |  |  |
 
 ## Telegram Retry
 
@@ -73,7 +80,7 @@ Retry behaviour for Telegram API calls
 
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
-| `app.telegram.retry.max-attempts` | `Positive int` | Max retry attempts including initial call |  | No | Positive(must be positive) |  |
+| `app.telegram.retry.max-attempts` | `Positive int` | Max retry attempts including initial call |  | No |  |  |
 | `app.telegram.retry.backoff-intervals` | `Duration>` | Backoff durations between retries |  | No |  |  |
 
 ## Telegram Sender
@@ -83,11 +90,11 @@ Rate limiting and caching for the Telegram message sender
 
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
-| `app.telegram.sender.global-per-sec` | `Positive int` | Global rate limit messages/sec |  | No | Positive(must be positive) |  |
-| `app.telegram.sender.per-chat-per-sec` | `Positive int` | Per-chat rate limit messages/sec |  | No | Positive(must be positive) |  |
+| `app.telegram.sender.global-per-sec` | `Positive int` | Global rate limit messages/sec |  | No |  |  |
+| `app.telegram.sender.per-chat-per-sec` | `Positive int` | Per-chat rate limit messages/sec |  | No |  |  |
 | `app.telegram.sender.cache-expire-after-access` | `Duration` | Per-chat semaphore cache expiry duration |  | No |  |  |
-| `app.telegram.sender.cache-maximum-size` | `Positive int` | Max per-chat semaphore cache entries |  | No | Positive(must be positive) |  |
-| `app.telegram.sender.replenish-fixed-rate-ms` | `Positive long` | Semaphore replenish interval in milliseconds |  | No | Positive(must be positive) |  |
+| `app.telegram.sender.cache-maximum-size` | `Positive int` | Max per-chat semaphore cache entries |  | No |  |  |
+| `app.telegram.sender.replenish-fixed-rate-ms` | `Positive long` | Semaphore replenish interval in milliseconds |  | No |  |  |
 
 ## User State
 

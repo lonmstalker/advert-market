@@ -59,8 +59,8 @@ dependencies {
         api 'org.checkerframework:checker:3.53.1'
 
         // spring-properties-md
-        api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api:v0.2.0'
-        api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-processor:v0.2.0'
+        api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api:v0.3.0'
+        api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-processor:v0.3.0'
 
         // OpenAPI
         api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'

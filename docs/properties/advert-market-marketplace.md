@@ -15,7 +15,8 @@ Bot identity for channel admin verification
 
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
-| `app.marketplace.channel.bot-user-id` | `Positive long` | Telegram user ID of the bot |  | Yes | Positive(must be positive) |  |
+| `app.marketplace.channel.bot-user-id` | `Positive long` | Telegram user ID of the bot |  | Yes |  |  |
+| `app.marketplace.channel.verification-timeout` | `Duration` | Timeout for Telegram API calls during channel verification |  | No |  |  |
 
 ## Team Management
 
@@ -24,4 +25,4 @@ Limits for channel team management
 
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
-| `app.marketplace.team.max-managers` | `Positive int` | Maximum number of managers per channel |  | Yes | Positive(must be positive) |  |
+| `app.marketplace.team.max-managers` | `Positive int` | Maximum number of managers per channel |  | Yes |  |  |
