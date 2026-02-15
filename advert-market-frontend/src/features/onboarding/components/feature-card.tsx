@@ -18,22 +18,25 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
   return (
     <motion.div {...itemVariant}>
       <div
+        data-testid="feature-card"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
-          padding: '20px',
-          borderRadius: '12px',
-          backgroundColor: 'var(--color-background-secondary)',
+          padding: '18px 18px',
+          borderRadius: 16,
+          backgroundColor: 'var(--color-background-base)',
+          border: '1px solid var(--color-border-separator)',
           cursor: 'default',
         }}
       >
         <div
+          data-testid="feature-icon-box"
           style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            backgroundColor: 'color-mix(in srgb, var(--color-accent-primary) 10%, transparent)',
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            backgroundColor: 'var(--am-soft-accent-bg)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -44,7 +47,7 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
           {icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Text type="body" weight="medium">
+          <Text type="subheadline1" weight="bold">
             {title}
           </Text>
           <Text type="caption1" color="secondary">

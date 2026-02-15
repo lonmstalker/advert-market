@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Onboarding Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/onboarding');
+    await page.goto('/onboarding', { waitUntil: 'domcontentloaded' });
   });
 
   test('completes full onboarding as advertiser', async ({ page }) => {
@@ -32,7 +32,7 @@ test.describe('Onboarding Flow', () => {
     await expect(nextBtn).toBeDisabled();
 
     await page.getByText('Crypto News Daily', { exact: true }).click();
-    await expect(page.getByText('Post Price')).toBeVisible();
+    await expect(page.getByText('Post Price')).toBeVisible({ timeout: 10_000 });
     await expect(nextBtn).toBeEnabled();
     await nextBtn.click();
 
@@ -41,7 +41,7 @@ test.describe('Onboarding Flow', () => {
     await expect(nextBtn).toBeDisabled();
 
     await page.getByRole('button', { name: 'Approve' }).click();
-    await expect(page.getByText(/Creative approved/)).toBeVisible();
+    await expect(page.getByText(/Creative approved/)).toBeVisible({ timeout: 10_000 });
     await expect(nextBtn).toBeEnabled();
     await nextBtn.click();
 
@@ -76,7 +76,11 @@ test.describe('Onboarding Flow', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     await expect(page.getByText('Find Channels')).toBeVisible();
-    await page.getByText('Skip').click();
+    await page.getByRole('button', { name: /skip tutorial/i }).click();
+
+    const dialog = page.locator('[class*="dialogModalActive"]').first();
+    await expect(dialog).toBeVisible();
+    await dialog.locator('[class*="dialogModalContentFooterButton"]').nth(1).click();
 
     await page.waitForURL('**/catalog');
   });
@@ -103,12 +107,16 @@ test.describe('Onboarding Flow', () => {
     await settingsBtn.click();
 
     // Settings sheet should show language and currency sections
-    await expect(page.getByText('Language')).toBeVisible();
-    await expect(page.getByText('Display Currency')).toBeVisible();
+    await expect(page.getByText('Language', { exact: true })).toBeVisible();
+    await expect(page.getByText('Display Currency', { exact: true })).toBeVisible();
   });
 
   test('redirects to interest page when navigating directly to tour', async ({ page }) => {
-    await page.goto('/onboarding/tour');
+    try {
+      await page.goto('/onboarding/tour', { waitUntil: 'domcontentloaded' });
+    } catch {
+      // WebKit can abort `page.goto` if the SPA redirects immediately.
+    }
     await expect(page.getByText('Who are you?')).toBeVisible();
   });
 

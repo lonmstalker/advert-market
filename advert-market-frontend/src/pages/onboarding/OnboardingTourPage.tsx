@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, Text } from '@telegram-tools/ui-kit';
+import { Button, DialogModal, Text } from '@telegram-tools/ui-kit';
 import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
@@ -30,6 +30,7 @@ export default function OnboardingTourPage() {
   const { interests, tourTasksCompleted, reset } = useOnboardingStore();
   const [activeSlide, setActiveSlide] = useState(0);
   const [showError, setShowError] = useState(false);
+  const [skipConfirmOpen, setSkipConfirmOpen] = useState(false);
   const isAnimating = useRef(false);
   const hasCompleted = useRef(false);
 
@@ -69,8 +70,7 @@ export default function OnboardingTourPage() {
 
   function handleSkip() {
     if (mutation.isPending) return;
-    setShowError(false);
-    mutation.mutate();
+    setSkipConfirmOpen(true);
   }
 
   function handleAnimationComplete() {
@@ -87,7 +87,7 @@ export default function OnboardingTourPage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: 'calc(100vh - 40px)',
+        minHeight: 'calc(var(--am-viewport-stable-height) - var(--am-onboarding-top-chrome-height, 40px))',
         padding: '0 16px',
       }}
     >
@@ -154,7 +154,7 @@ export default function OnboardingTourPage() {
           paddingBottom: 'calc(16px + var(--am-safe-area-bottom))',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
+          gap: 14,
         }}
       >
         <motion.div {...pressScale}>
@@ -222,6 +222,20 @@ export default function OnboardingTourPage() {
           </Tappable>
         )}
       </div>
+
+      <DialogModal
+        active={skipConfirmOpen}
+        title={t('onboarding.tour.skipConfirm.title')}
+        description={t('onboarding.tour.skipConfirm.description')}
+        confirmText={t('onboarding.tour.skip')}
+        closeText={t('common.cancel')}
+        onConfirm={() => {
+          setSkipConfirmOpen(false);
+          setShowError(false);
+          mutation.mutate();
+        }}
+        onClose={() => setSkipConfirmOpen(false)}
+      />
     </div>
   );
 }

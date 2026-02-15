@@ -1,3 +1,4 @@
+import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -6,9 +7,9 @@ export function DeepLinkHandler() {
 
   useEffect(() => {
     try {
-      const tg = window.Telegram?.WebApp;
-      const startParam = tg?.initDataUnsafe?.start_param;
-      if (!startParam) return;
+      const lp = retrieveLaunchParams(true);
+      const startParam = lp.tgWebAppStartParam ?? lp.tgWebAppData?.startParam;
+      if (typeof startParam !== 'string' || startParam.length === 0) return;
 
       if (startParam.startsWith('channel_')) {
         navigate(`/catalog/channels/${startParam.replace('channel_', '')}`, { replace: true });

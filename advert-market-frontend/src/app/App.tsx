@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { themeParams, useSignal } from '@telegram-apps/sdk-react';
 import { Spinner, ThemeProvider, ToastProvider } from '@telegram-tools/ui-kit';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { MotionConfig } from 'motion/react';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router';
 import { AuthGuard, ErrorBoundary } from '@/shared/ui';
 import { DeepLinkHandler } from './deep-link-handler';
@@ -40,27 +41,15 @@ const queryClient = new QueryClient({
 
 const TON_MANIFEST_URL = import.meta.env.VITE_TON_MANIFEST_URL ?? `${window.location.origin}/tonconnect-manifest.json`;
 
-function getTheme(): 'light' | 'dark' {
-  try {
-    return window.Telegram?.WebApp?.colorScheme === 'dark' ? 'dark' : 'light';
-  } catch {
-    return 'light';
-  }
-}
-
 function useTelegramTheme(): 'light' | 'dark' {
-  const [theme, setTheme] = useState(getTheme);
+  // Telegram-native theme sync (signal updates on theme change).
+  const isDark = useSignal(themeParams.isDark, () => false);
 
-  useEffect(() => {
-    const webApp = window.Telegram?.WebApp;
-    if (!webApp?.onEvent) return;
+  // Force theme for dev/E2E matrix runs outside Telegram.
+  const forced = import.meta.env.VITE_FORCE_THEME;
+  if (forced === 'dark' || forced === 'light') return forced;
 
-    const handler = () => setTheme(getTheme());
-    webApp.onEvent('themeChanged', handler);
-    return () => webApp.offEvent?.('themeChanged', handler);
-  }, []);
-
-  return theme;
+  return isDark ? 'dark' : 'light';
 }
 
 function ErrorBoundaryLayout() {
@@ -150,7 +139,14 @@ export function App() {
 
 function PageLoader() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 'var(--am-viewport-stable-height)',
+      }}
+    >
       <Spinner size="32px" color="accent" />
     </div>
   );

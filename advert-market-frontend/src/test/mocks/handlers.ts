@@ -310,6 +310,8 @@ export const handlers = [
       pricePerPostNano?: number;
     };
 
+    const pricePerPostNano = body.pricePerPostNano ?? 2_000_000_000;
+
     const alreadyRegistered = getAllChannels().find((ch) => ch.id === body.channelId);
     if (alreadyRegistered) {
       return HttpResponse.json(
@@ -324,7 +326,7 @@ export const handlers = [
       username: `channel_${Math.abs(body.channelId)}`,
       subscriberCount: 500,
       categories: body.categories ?? [],
-      ...(body.pricePerPostNano != null && { pricePerPostNano: body.pricePerPostNano }),
+      pricePerPostNano,
       avgViews: 150,
       engagementRate: 3.0,
       isActive: true,
@@ -343,7 +345,7 @@ export const handlers = [
         username: newChannel.username,
         subscriberCount: newChannel.subscriberCount,
         categories: newChannel.categories,
-        ...(newChannel.pricePerPostNano != null && { pricePerPostNano: newChannel.pricePerPostNano }),
+        pricePerPostNano: newChannel.pricePerPostNano,
         isActive: true,
         ownerId: mockProfile.id,
         createdAt: new Date().toISOString(),

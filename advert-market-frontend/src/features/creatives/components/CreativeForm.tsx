@@ -49,36 +49,31 @@ export function CreativeForm({
 
   const syncSelection = useCallback(() => {
     const ta = textareaRef.current;
-    if (!ta) return;
+    if (!ta) {
+      setSelection((prev) => (prev.start === 0 && prev.end === 0 ? prev : { start: 0, end: 0 }));
+      return;
+    }
 
     const next = { start: ta.selectionStart, end: ta.selectionEnd };
     setSelection((prev) => (prev.start === next.start && prev.end === next.end ? prev : next));
-  }, [textareaRef]);
-
-  const getSelection = useCallback((): { start: number; end: number } => {
-    const ta = textareaRef.current;
-    if (!ta) return { start: 0, end: 0 };
-    return { start: ta.selectionStart, end: ta.selectionEnd };
   }, [textareaRef]);
 
   const hasSelection = selection.start !== selection.end;
 
   const handleFormat = useCallback(
     (type: TextEntityType) => {
-      const sel = getSelection();
-      if (sel.start === sel.end) return;
-      toggleEntity(type, sel);
+      if (!hasSelection) return;
+      toggleEntity(type, selection);
       textareaRef.current?.focus();
     },
-    [getSelection, toggleEntity, textareaRef],
+    [hasSelection, selection, toggleEntity, textareaRef],
   );
 
   const handleLink = useCallback(() => {
-    const sel = getSelection();
-    if (sel.start === sel.end) return;
-    setPendingSelection(sel);
+    if (!hasSelection) return;
+    setPendingSelection(selection);
     setLinkSheetOpen(true);
-  }, [getSelection]);
+  }, [hasSelection, selection]);
 
   const handleLinkSubmit = useCallback(
     (url: string) => {
@@ -151,9 +146,11 @@ export function CreativeForm({
           disabled={!hasSelection}
         />
         {!hasSelection && isFocused && (
-          <Text type="caption2" color="tertiary" style={{ marginTop: 2, marginBottom: 4 }}>
-            {t('creatives.form.selectTextHint')}
-          </Text>
+          <div style={{ marginTop: 2, marginBottom: 4 }}>
+            <Text type="caption2" color="tertiary">
+              {t('creatives.form.selectTextHint')}
+            </Text>
+          </div>
         )}
         <Textarea
           ref={textareaRef}

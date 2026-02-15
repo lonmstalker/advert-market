@@ -76,7 +76,7 @@ test.describe('Design quality (TG-native / iOS-like)', () => {
     await seedOnboardedSession(page);
   });
 
-  test('Soft badges: status backgrounds are tinted (semi-transparent)', async ({ page }, testInfo) => {
+  test('Soft badges: deal status backgrounds are tinted (semi-transparent)', async ({ page }, testInfo) => {
     await page.goto('/deals/deal-1', { waitUntil: 'domcontentloaded' });
     await expect(page.getByText(/^Timeline$/)).toBeVisible();
 
@@ -91,6 +91,10 @@ test.describe('Design quality (TG-native / iOS-like)', () => {
     expect((dealColor as ParsedColor).a).toBeGreaterThan(0.01);
     expect((dealColor as ParsedColor).a).toBeLessThanOrEqual(0.25);
 
+    await attachFullPage(page, testInfo);
+  });
+
+  test('Soft badges: wallet status backgrounds are tinted (semi-transparent)', async ({ page }, testInfo) => {
     await page.goto('/wallet/history/tx-1', { waitUntil: 'domcontentloaded' });
     await expect(page.getByText('View in TON Explorer')).toBeVisible();
 
@@ -130,16 +134,16 @@ test.describe('Design quality (TG-native / iOS-like)', () => {
     await attachFullPage(page, testInfo);
   });
 
-  test('feature card icon box is 48px', async ({ page }, testInfo) => {
+  test('feature card icon box is 56px', async ({ page }, testInfo) => {
     await page.goto('/onboarding', { waitUntil: 'domcontentloaded' });
     await expect(page.getByText('Channel Catalog')).toBeVisible();
 
-    const iconBox = page.locator('div[style*="width: 48px"][style*="height: 48px"]').first();
+    const iconBox = page.getByTestId('feature-icon-box').first();
     await expect(iconBox).toBeVisible();
     const box = await iconBox.boundingBox();
     expect(box).not.toBeNull();
-    expect(box!.width).toBeCloseTo(48, 0);
-    expect(box!.height).toBeCloseTo(48, 0);
+    expect(box!.width).toBeCloseTo(56, 0);
+    expect(box!.height).toBeCloseTo(56, 0);
 
     await attachFullPage(page, testInfo);
   });
@@ -160,8 +164,17 @@ test.describe('Design quality (TG-native / iOS-like)', () => {
     await page.goto('/profile/creatives/new', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
 
-    // Switch to preview tab
-    await page.getByText('Preview').click();
+    // Mobile layout: switch to preview tab. Desktop layout renders preview side-by-side.
+    const previewTab = page.getByRole('button', { name: /^Preview$/ });
+    if (await previewTab.isVisible()) {
+      await previewTab.click();
+    }
+    // Preview exists in both desktop (always visible) and mobile (tabbed) layouts; assert against the visible one only.
+    const visiblePreview = page
+      .locator('.creative-editor-mobile:visible, .creative-editor-desktop:visible')
+      .filter({ has: page.locator('text=/subscribers/i') })
+      .first();
+    await expect(visiblePreview.locator('text=/subscribers/i').first()).toBeVisible();
 
     // Should not have DeviceFrame with gradient
     const gradientBorder = page.locator('[class*="device-frame"]');

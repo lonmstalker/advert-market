@@ -12,7 +12,7 @@ type OnboardingSettingsSheetProps = {
   onClose: () => void;
 };
 
-function SettingsContent(_props: { onClose: () => void }) {
+function SettingsContent() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { showError } = useToast();

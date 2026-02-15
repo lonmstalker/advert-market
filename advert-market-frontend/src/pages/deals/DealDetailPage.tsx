@@ -1,4 +1,4 @@
-import { Sheet } from '@telegram-tools/ui-kit';
+import { Sheet, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';

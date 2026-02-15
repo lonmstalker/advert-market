@@ -1,7 +1,6 @@
-import { type CSSProperties, type Ref, useCallback } from 'react';
+import { type CSSProperties, forwardRef, useCallback } from 'react';
 
 type TextareaProps = {
-  ref?: Ref<HTMLTextAreaElement>;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -31,21 +30,23 @@ const baseStyle: CSSProperties = {
   outline: 'none',
 };
 
-export function Textarea({
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
+  {
+    value,
+    onChange,
+    placeholder,
+    maxLength,
+    rows = 4,
+    style,
+    onFocus,
+    onBlur,
+    onSelect,
+    onKeyUp,
+    onMouseUp,
+    onTouchEnd,
+  },
   ref,
-  value,
-  onChange,
-  placeholder,
-  maxLength,
-  rows = 4,
-  style,
-  onFocus,
-  onBlur,
-  onSelect,
-  onKeyUp,
-  onMouseUp,
-  onTouchEnd,
-}: TextareaProps) {
+) {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value), [onChange]);
 
   return (
@@ -65,4 +66,4 @@ export function Textarea({
       onTouchEnd={onTouchEnd}
     />
   );
-}
+});

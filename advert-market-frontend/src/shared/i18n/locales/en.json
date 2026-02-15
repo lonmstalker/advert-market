@@ -35,7 +35,11 @@
       "ownerPreview3": "Earn in TON"
     },
     "tour": {
-      "skip": "Skip",
+      "skip": "Skip tutorial",
+      "skipConfirm": {
+        "title": "Skip tutorial?",
+        "description": "You can open it later in Profile."
+      },
       "next": "Next",
       "finish": "Get Started",
       "error": "Something went wrong. Tap to try again.",
@@ -50,7 +54,9 @@
         "title": "Secure Deals",
         "hint": "Approve the creative to see deal progress",
         "taskHint": "Tap 'Approve' to advance to the next stage",
-        "taskDone": "Creative approved! Moving to publication."
+        "taskDone": "Creative approved! Moving to publication.",
+        "previewText": "Sponsored post draft:\n\nLaunch your product to 125K crypto readers.\n\nLearn more →",
+        "replay": "Replay demo"
       },
       "slide3": {
         "title": "Secure Payments",

@@ -23,7 +23,7 @@ export default function OnboardingInterestPage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: 'calc(100vh - 40px)',
+        minHeight: 'calc(var(--am-viewport-stable-height) - var(--am-onboarding-top-chrome-height, 40px))',
         padding: '16px',
       }}
     >

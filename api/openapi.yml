@@ -1689,6 +1689,160 @@ components:
         sortOrder:
           type: integer
           format: int32
+    DealStatus:
+      type: string
+      description: Deal lifecycle states
+      enum:
+      - DRAFT
+      - OFFER_PENDING
+      - NEGOTIATING
+      - ACCEPTED
+      - AWAITING_PAYMENT
+      - FUNDED
+      - CREATIVE_SUBMITTED
+      - CREATIVE_APPROVED
+      - SCHEDULED
+      - PUBLISHED
+      - DELIVERY_VERIFYING
+      - COMPLETED_RELEASED
+      - DISPUTED
+      - CANCELLED
+      - REFUNDED
+      - PARTIALLY_REFUNDED
+      - EXPIRED
+    DealEventDto:
+      type: object
+      description: Deal event
+      properties:
+        id:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        fromStatus:
+          $ref: "#/components/schemas/DealStatus"
+        toStatus:
+          $ref: "#/components/schemas/DealStatus"
+        actorId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+    DealDto:
+      type: object
+      description: Deal summary
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelId:
+          type: integer
+          format: int64
+        advertiserId:
+          type: integer
+          format: int64
+        ownerId:
+          type: integer
+          format: int64
+        status:
+          $ref: "#/components/schemas/DealStatus"
+        amountNano:
+          type: integer
+          format: int64
+        deadlineAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int32
+    DealDetailDto:
+      type: object
+      description: Deal detail with event timeline
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelId:
+          type: integer
+          format: int64
+        advertiserId:
+          type: integer
+          format: int64
+        ownerId:
+          type: integer
+          format: int64
+        status:
+          $ref: "#/components/schemas/DealStatus"
+        amountNano:
+          type: integer
+          format: int64
+        commissionRateBp:
+          type: integer
+          format: int32
+        commissionNano:
+          type: integer
+          format: int64
+        deadlineAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int32
+        timeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealEventDto"
+    CreateDealRequest:
+      type: object
+      description: REST request body for creating a deal
+      properties:
+        channelId:
+          type: integer
+          format: int64
+        amountNano:
+          type: integer
+          format: int64
+        pricingRuleId:
+          type: integer
+          format: int64
+        creativeBrief:
+          type: string
+    DealTransitionRequest:
+      type: object
+      description: REST request body for transitioning a deal status
+      properties:
+        targetStatus:
+          $ref: "#/components/schemas/DealStatus"
+        reason:
+          type: string
+    DealTransitionResponse:
+      type: object
+      description: REST response for a deal transition result
+      properties:
+        status:
+          type: string
+        newStatus:
+          $ref: "#/components/schemas/DealStatus"
+        currentStatus:
+          $ref: "#/components/schemas/DealStatus"
+    CursorPageDealDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealDto"
+        nextCursor:
+          type: string
+        hasNext:
+          type: boolean
   securitySchemes:
     bearerAuth:
       type: http

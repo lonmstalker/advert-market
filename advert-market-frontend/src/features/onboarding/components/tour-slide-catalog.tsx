@@ -39,17 +39,25 @@ export function TourSlideCatalog() {
             >
               <MockupSearchBar placeholder={t('onboarding.tour.mockup.searchPlaceholder')} />
               <Group header={t('onboarding.tour.mockup.popular')}>
-                <GroupItem
-                  text={t('onboarding.tour.mockup.channelName1')}
-                  description={`125K ${t('catalog.channel.subs')}`}
-                  after={
-                    <Text type="callout" weight="bold" color="accent">
-                      5 TON
-                    </Text>
-                  }
-                  chevron
-                  onClick={handleChannelClick}
-                />
+                <div
+                  style={{
+                    padding: 2,
+                    borderRadius: 16,
+                    background: 'var(--am-soft-accent-bg)',
+                  }}
+                >
+                  <GroupItem
+                    text={t('onboarding.tour.mockup.channelName1')}
+                    description={`125K ${t('catalog.channel.subs')}`}
+                    after={
+                      <Text type="callout" weight="bold" color="accent">
+                        <span className="tabular-nums">5 TON</span>
+                      </Text>
+                    }
+                    chevron
+                    onClick={handleChannelClick}
+                  />
+                </div>
                 <div style={{ opacity: 0.5, pointerEvents: 'none' }}>
                   <GroupItem
                     text={t('onboarding.tour.mockup.channelName2')}
@@ -57,9 +65,9 @@ export function TourSlideCatalog() {
                     after={
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Text type="callout" weight="bold" color="accent">
-                          3 TON
+                          <span className="tabular-nums">3 TON</span>
                         </Text>
-                        <LockIcon size={14} style={{ color: 'var(--color-foreground-tertiary)' }} />
+                        <LockIcon size={16} style={{ color: 'var(--color-foreground-tertiary)' }} />
                       </div>
                     }
                   />
@@ -71,9 +79,9 @@ export function TourSlideCatalog() {
                     after={
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Text type="callout" weight="bold" color="accent">
-                          4.5 TON
+                          <span className="tabular-nums">4.5 TON</span>
                         </Text>
-                        <LockIcon size={14} style={{ color: 'var(--color-foreground-tertiary)' }} />
+                        <LockIcon size={16} style={{ color: 'var(--color-foreground-tertiary)' }} />
                       </div>
                     }
                   />
@@ -113,14 +121,14 @@ export function TourSlideCatalog() {
                   text={t('onboarding.tour.mockup.postPrice')}
                   after={
                     <Text type="callout" weight="bold" color="accent">
-                      5 TON
+                      <span className="tabular-nums">5 TON</span>
                     </Text>
                   }
                 />
                 <GroupItem
                   text={t('onboarding.tour.mockup.topics')}
                   after={
-                    <Text type="body" color="primary">
+                    <Text type="callout" weight="bold" color="primary">
                       {t('onboarding.tour.mockup.topicValues')}
                     </Text>
                   }

@@ -2,7 +2,7 @@ import { act } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { useOnboardingStore } from '@/features/onboarding';
 import { profileKeys } from '@/shared/api';
-import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
+import { renderWithProviders, screen, waitFor, within } from '@/test/test-utils';
 import OnboardingTourPage from './OnboardingTourPage';
 
 vi.mock('@telegram-apps/sdk-react', () => ({
@@ -48,7 +48,7 @@ describe('OnboardingTourPage', () => {
   it('shows Next button and Skip link on first slide', () => {
     renderPage();
     expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
-    expect(screen.getByText('Skip')).toBeInTheDocument();
+    expect(screen.getByText('Skip tutorial')).toBeInTheDocument();
   });
 
   it('Next button is disabled until task is completed', () => {
@@ -93,20 +93,32 @@ describe('OnboardingTourPage', () => {
     completeTask(1);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => {
-      expect(screen.queryByText('Skip')).not.toBeInTheDocument();
+      expect(screen.queryByText('Skip tutorial')).not.toBeInTheDocument();
     });
   });
 
   it('navigates to /catalog on Skip click', async () => {
     const { user } = renderPage();
-    await user.click(screen.getByText('Skip'));
+    await user.click(screen.getByText('Skip tutorial'));
+    await waitFor(() => {
+      expect(screen.getByText('Skip tutorial?')).toBeInTheDocument();
+    });
+    const modal = document.querySelector('[class*="dialogModal"]') as HTMLElement | null;
+    expect(modal).toBeTruthy();
+    if (modal) await user.click(within(modal).getByText('Skip tutorial'));
     expect(await screen.findByText('catalog-page')).toBeInTheDocument();
   });
 
   it('updates profile cache at profileKeys.me after Skip', async () => {
     const { user, queryClient } = renderPage();
     const spy = vi.spyOn(queryClient, 'setQueryData');
-    await user.click(screen.getByText('Skip'));
+    await user.click(screen.getByText('Skip tutorial'));
+    await waitFor(() => {
+      expect(screen.getByText('Skip tutorial?')).toBeInTheDocument();
+    });
+    const modal = document.querySelector('[class*="dialogModal"]') as HTMLElement | null;
+    expect(modal).toBeTruthy();
+    if (modal) await user.click(within(modal).getByText('Skip tutorial'));
     await screen.findByText('catalog-page');
     expect(spy).toHaveBeenCalledWith(profileKeys.me, expect.objectContaining({ onboardingCompleted: true }));
     spy.mockRestore();
@@ -114,7 +126,13 @@ describe('OnboardingTourPage', () => {
 
   it('resets onboarding store after completing', async () => {
     const { user } = renderPage();
-    await user.click(screen.getByText('Skip'));
+    await user.click(screen.getByText('Skip tutorial'));
+    await waitFor(() => {
+      expect(screen.getByText('Skip tutorial?')).toBeInTheDocument();
+    });
+    const modal = document.querySelector('[class*="dialogModal"]') as HTMLElement | null;
+    expect(modal).toBeTruthy();
+    if (modal) await user.click(within(modal).getByText('Skip tutorial'));
     await screen.findByText('catalog-page');
     await waitFor(() => {
       expect(useOnboardingStore.getState().interests.size).toBe(0);

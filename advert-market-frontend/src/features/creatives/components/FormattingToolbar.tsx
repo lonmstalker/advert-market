@@ -68,6 +68,8 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
             key={btn.type}
             disabled={disabled}
             onClick={() => onFormat(btn.type)}
+            onPointerDown={(e) => e.preventDefault()}
+            onMouseDown={(e) => e.preventDefault()}
             style={{
               ...buttonBase,
               background: isActive ? 'var(--am-soft-accent-bg)' : 'transparent',
@@ -84,6 +86,8 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
       <Tappable
         disabled={disabled}
         onClick={onLink}
+        onPointerDown={(e) => e.preventDefault()}
+        onMouseDown={(e) => e.preventDefault()}
         style={{
           ...buttonBase,
           background: activeTypes.has(TextEntityType.TEXT_LINK) ? 'var(--am-soft-accent-bg)' : 'transparent',

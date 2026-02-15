@@ -85,7 +85,9 @@ test.describe('Safe area (fixed-bottom bars)', () => {
     await scrollToBottom(page);
 
     // The last row in the form (toggle + label) should remain above the save bar.
-    const disablePreviewLabel = page.locator('.creative-editor-mobile').getByText('Disable link previews');
+    const textarea = page.locator('textarea[placeholder="Enter ad post text..."]:visible');
+    const form = page.locator('.creative-editor-mobile, .creative-editor-desktop').filter({ has: textarea }).first();
+    const disablePreviewLabel = form.getByText('Disable link previews');
     await expect(disablePreviewLabel).toBeVisible();
 
     const labelBox = await disablePreviewLabel.boundingBox();

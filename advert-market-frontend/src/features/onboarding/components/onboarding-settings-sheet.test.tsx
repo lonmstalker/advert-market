@@ -1,8 +1,8 @@
 import { ToastProvider } from '@telegram-tools/ui-kit';
-import { describe, expect, it, vi } from 'vitest';
 import i18n from 'i18next';
+import { describe, expect, it, vi } from 'vitest';
+import type { NotificationSettings, UserProfile } from '@/shared/api/auth';
 import { updateLanguage } from '@/shared/api/profile';
-import { type NotificationSettings, type UserProfile } from '@/shared/api/auth';
 import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { OnboardingSettingsSheet } from './onboarding-settings-sheet';
 

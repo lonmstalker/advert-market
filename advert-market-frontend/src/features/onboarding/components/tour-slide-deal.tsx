@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
+import type { InlineButton, MediaItem, TextEntity } from '@/shared/types/text-entity';
+import { TelegramPostPreview } from '@/shared/ui';
 import { NewspaperIcon } from '@/shared/ui/icons';
 import { ChannelHeader } from './channel-header';
 import { MiniTimeline } from './mini-timeline';
@@ -19,6 +21,14 @@ export function TourSlideDeal() {
   const [dealState, setDealState] = useState<DealState>('initial');
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
   const { completeTourTask } = useOnboardingStore();
+
+  const creativePreview = useMemo(() => {
+    const text = t('onboarding.tour.slide2.previewText');
+    const entities: TextEntity[] = [];
+    const media: MediaItem[] = [];
+    const buttons: InlineButton[] = [];
+    return { text, entities, media, buttons };
+  }, [t]);
 
   const initialSteps = useMemo(
     () => [
@@ -208,7 +218,17 @@ export function TourSlideDeal() {
                 </Text>
               </div>
 
-              <div style={{ marginTop: '4px' }}>
+              <div style={{ marginTop: 6 }}>
+                <TelegramPostPreview
+                  text={creativePreview.text}
+                  entities={creativePreview.entities}
+                  media={creativePreview.media}
+                  buttons={creativePreview.buttons}
+                  channelTitle={t('onboarding.tour.mockup.channelName1')}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
                 <Button
                   text={t('onboarding.tour.mockup.approve')}
                   type="primary"
@@ -235,6 +255,16 @@ export function TourSlideDeal() {
                 )}
               </AnimatePresence>
 
+              {dealState === 'approved' && (
+                <MockupTextButton
+                  text={t('onboarding.tour.slide2.replay')}
+                  onClick={() => {
+                    setDealState('initial');
+                    setExpandedStep(1);
+                  }}
+                />
+              )}
+
               <MockupTextButton
                 text={t('onboarding.tour.allStates.link')}
                 color="accent"
@@ -249,26 +279,28 @@ export function TourSlideDeal() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Group header={t('onboarding.tour.allStates.groupNegotiation')}>
-                {negotiationStates.map((s) => (
-                  <GroupItem key={s.key} text={s.text} description={s.desc} />
-                ))}
-              </Group>
-              <Group header={t('onboarding.tour.allStates.groupPayment')}>
-                {paymentStates.map((s) => (
-                  <GroupItem key={s.key} text={s.text} description={s.desc} />
-                ))}
-              </Group>
-              <Group header={t('onboarding.tour.allStates.groupPublish')}>
-                {publishStates.map((s) => (
-                  <GroupItem key={s.key} text={s.text} description={s.desc} />
-                ))}
-              </Group>
-              <Group header={t('onboarding.tour.allStates.groupSpecial')}>
-                {specialStates.map((s) => (
-                  <GroupItem key={s.key} text={s.text} description={s.desc} />
-                ))}
-              </Group>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Group header={t('onboarding.tour.allStates.groupNegotiation')}>
+                  {negotiationStates.map((s) => (
+                    <GroupItem key={s.key} text={s.text} description={s.desc} />
+                  ))}
+                </Group>
+                <Group header={t('onboarding.tour.allStates.groupPayment')}>
+                  {paymentStates.map((s) => (
+                    <GroupItem key={s.key} text={s.text} description={s.desc} />
+                  ))}
+                </Group>
+                <Group header={t('onboarding.tour.allStates.groupPublish')}>
+                  {publishStates.map((s) => (
+                    <GroupItem key={s.key} text={s.text} description={s.desc} />
+                  ))}
+                </Group>
+                <Group header={t('onboarding.tour.allStates.groupSpecial')}>
+                  {specialStates.map((s) => (
+                    <GroupItem key={s.key} text={s.text} description={s.desc} />
+                  ))}
+                </Group>
+              </div>
 
               <MockupTextButton text={t('onboarding.tour.allStates.back')} onClick={() => setDealView('timeline')} />
             </motion.div>

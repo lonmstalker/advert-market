@@ -9,8 +9,8 @@ export function OnboardingLayout() {
   return (
     <>
       <BackButtonHandler />
-      <div style={{ opacity: isTour ? 0.4 : 1, transition: 'opacity 0.25s' }}>
-        <StepIndicator />
+      <div style={{ paddingTop: 'var(--am-safe-area-top)' }}>
+        {isTour ? <div aria-hidden="true" style={{ height: 40 }} /> : <StepIndicator />}
       </div>
       <Outlet />
     </>

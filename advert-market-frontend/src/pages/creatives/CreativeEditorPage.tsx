@@ -36,7 +36,9 @@ export default function CreativeEditorPage() {
   const [activeTab, setActiveTab] = useState<EditorTab>('editor');
   const [showHistory, setShowHistory] = useState(false);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Mobile and desktop layouts are both mounted; keep refs separate so formatting/selection is bound to the visible textarea.
+  const textareaRefMobile = useRef<HTMLTextAreaElement>(null);
+  const textareaRefDesktop = useRef<HTMLTextAreaElement>(null);
 
   const [title, setTitle] = useState(creative?.title ?? '');
   const [text, setText] = useState(creative?.draft.text ?? '');
@@ -174,7 +176,7 @@ export default function CreativeEditorPage() {
                 isActive={isActive}
                 disableWebPagePreview={disableWebPagePreview}
                 onDisableWebPagePreviewChange={setDisableWebPagePreview}
-                textareaRef={textareaRef}
+                textareaRef={textareaRefMobile}
               />
             </motion.div>
           ) : (
@@ -202,7 +204,7 @@ export default function CreativeEditorPage() {
               isActive={isActive}
               disableWebPagePreview={disableWebPagePreview}
               onDisableWebPagePreviewChange={setDisableWebPagePreview}
-              textareaRef={textareaRef}
+              textareaRef={textareaRefDesktop}
             />
           </div>
           <div style={{ flex: '1 1 40%', minWidth: 0, position: 'sticky', top: 16, alignSelf: 'flex-start' }}>

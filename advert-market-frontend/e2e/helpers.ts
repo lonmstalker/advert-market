@@ -19,11 +19,16 @@ const E2E_PROFILE_STATE = {
 };
 
 export async function completeOnboarding(page: Page) {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Get Started' }).click();
   await page.getByRole('button', { name: /advertiser/i }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByText('Skip').click();
+  await page.getByRole('button', { name: /skip tutorial/i }).click();
+
+  const dialog = page.locator('[class*="dialogModalActive"]').first();
+  await dialog.waitFor({ state: 'visible' });
+  // DialogModal's footer actions are <div> wrappers (not <button>), so prefer structural locators over roles.
+  await dialog.locator('[class*="dialogModalContentFooterButton"]').nth(1).click();
   await page.waitForURL('**/catalog');
 }
 

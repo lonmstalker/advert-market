@@ -1,5 +1,4 @@
 import { Button, Text } from '@telegram-tools/ui-kit';
-import { Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,11 +6,14 @@ import { useNavigate } from 'react-router';
 import { FeatureCard } from '@/features/onboarding/components/feature-card';
 import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo';
 import { OnboardingSettingsSheet } from '@/features/onboarding/components/onboarding-settings-sheet';
+import { useHaptic } from '@/shared/hooks';
 import { DocumentIcon, pressScale, SearchIcon, staggerChildren, Tappable, WalletIcon } from '@/shared/ui';
+import { GlobeIcon } from '@/shared/ui/icons';
 
 export default function OnboardingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const haptic = useHaptic();
   const [showSettings, setShowSettings] = useState(false);
 
   return (
@@ -19,9 +21,10 @@ export default function OnboardingPage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: 'calc(100vh - 40px)',
+        height: 'calc(var(--am-viewport-stable-height) - var(--am-onboarding-top-chrome-height, 40px))',
         padding: '0 24px',
         position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <Tappable
@@ -44,7 +47,7 @@ export default function OnboardingPage() {
         }}
         aria-label={t('profile.settings')}
       >
-        <Globe size={20} />
+        <GlobeIcon size={20} />
       </Tappable>
 
       <div
@@ -56,6 +59,8 @@ export default function OnboardingPage() {
           justifyContent: 'center',
           textAlign: 'center',
           gap: '12px',
+          minHeight: 0,
+          overflowY: 'auto',
         }}
       >
         <OnboardingLogo />
@@ -91,6 +96,9 @@ export default function OnboardingPage() {
             gap: '12px',
             marginTop: '24px',
             width: '100%',
+            padding: 10,
+            borderRadius: 24,
+            background: 'var(--am-hero-gradient-accent)',
           }}
         >
           <FeatureCard
@@ -111,12 +119,15 @@ export default function OnboardingPage() {
         </motion.div>
       </div>
 
-      <div style={{ flexShrink: 0, paddingBottom: 'calc(16px + var(--am-safe-area-bottom))', paddingTop: '16px' }}>
+      <div style={{ flexShrink: 0, paddingBottom: 'calc(24px + var(--am-safe-area-bottom))', paddingTop: '16px' }}>
         <motion.div {...pressScale}>
           <Button
             text={t('onboarding.welcome.start')}
             type="primary"
-            onClick={() => navigate('/onboarding/interest')}
+            onClick={() => {
+              haptic.impactOccurred('light');
+              navigate('/onboarding/interest');
+            }}
           />
         </motion.div>
         <motion.div
