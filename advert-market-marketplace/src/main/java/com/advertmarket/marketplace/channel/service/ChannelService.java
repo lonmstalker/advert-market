@@ -5,7 +5,6 @@ import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
-import java.util.List;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.ChannelSearchPort;
@@ -13,6 +12,7 @@ import com.advertmarket.marketplace.channel.mapper.ChannelSearchCriteriaNormaliz
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.pagination.CursorPage;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;

@@ -7,6 +7,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.identity.security.JwtTokenProvider;
+import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
+import com.advertmarket.integration.support.ContainerProperties;
+import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
@@ -32,11 +37,6 @@ import com.advertmarket.marketplace.channel.service.ChannelVerificationService;
 import com.advertmarket.marketplace.channel.web.ChannelController;
 import com.advertmarket.marketplace.channel.web.ChannelSearchCriteriaConverter;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
-import com.advertmarket.identity.security.JwtTokenProvider;
-import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
-import com.advertmarket.integration.support.ContainerProperties;
-import com.advertmarket.integration.support.DatabaseSupport;
-import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.time.Duration;
@@ -177,11 +177,11 @@ class ChannelRegistrationFlowIntegrationTest {
                 .uri("/api/v1/channels/my")
                 .headers(h -> h.setBearerAuth(ownerToken))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<
-                        List<ChannelResponse>>() { })
-                .returnResult()
-                .getResponseBody();
+                    .expectStatus().isOk()
+                    .expectBody(new ParameterizedTypeReference<
+                            List<ChannelResponse>>() {})
+                    .returnResult()
+                    .getResponseBody();
 
         assertThat(myChannels).isNotNull();
         assertThat(myChannels).hasSize(1);
@@ -195,11 +195,11 @@ class ChannelRegistrationFlowIntegrationTest {
                 .uri("/api/v1/channels/my")
                 .headers(h -> h.setBearerAuth(otherToken))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<
-                        List<ChannelResponse>>() { })
-                .returnResult()
-                .getResponseBody();
+                    .expectStatus().isOk()
+                    .expectBody(new ParameterizedTypeReference<
+                            List<ChannelResponse>>() {})
+                    .returnResult()
+                    .getResponseBody();
 
         assertThat(otherChannels).isNotNull();
         assertThat(otherChannels).isEmpty();
@@ -323,8 +323,9 @@ class ChannelRegistrationFlowIntegrationTest {
                 true, true, true, true);
     }
 
-    record CursorPageItem(long id, String title, String username) { }
-    record CursorPageBody(List<CursorPageItem> items, String nextCursor) { }
+    record CursorPageItem(long id, String title, String username) {}
+
+    record CursorPageBody(List<CursorPageItem> items, String nextCursor) {}
 
     @Configuration
     @EnableAutoConfiguration
@@ -346,13 +347,13 @@ class ChannelRegistrationFlowIntegrationTest {
                     BOT_USER_ID, Duration.ofSeconds(3));
         }
 
-	        @Bean
-	        CategoryRepository categoryRepository(
-	                DSLContext dsl,
-	                JsonFacade jsonFacade,
-	                CategoryDtoMapper mapper) {
-	            return new JooqCategoryRepository(dsl, jsonFacade, mapper);
-	        }
+        @Bean
+        CategoryRepository categoryRepository(
+                DSLContext dsl,
+                JsonFacade jsonFacade,
+                CategoryDtoMapper mapper) {
+            return new JooqCategoryRepository(dsl, jsonFacade, mapper);
+        }
 
         @Bean
         JooqPricingRuleRepository jooqPricingRuleRepository(
@@ -376,14 +377,14 @@ class ChannelRegistrationFlowIntegrationTest {
                     categoryRepo, pricingRuleRepo);
         }
 
-	        @Bean
-	        ChannelSearchPort channelSearchPort(
-	                DSLContext dsl,
-	                CategoryRepository categoryRepo,
-	                ChannelListItemMapper channelListItemMapper) {
-	            return new ParadeDbChannelSearch(
-	                    dsl, categoryRepo, channelListItemMapper);
-	        }
+        @Bean
+        ChannelSearchPort channelSearchPort(
+                DSLContext dsl,
+                CategoryRepository categoryRepo,
+                ChannelListItemMapper channelListItemMapper) {
+            return new ParadeDbChannelSearch(
+                    dsl, categoryRepo, channelListItemMapper);
+        }
 
         @Bean
         ChannelVerificationService channelVerificationService(
@@ -422,18 +423,18 @@ class ChannelRegistrationFlowIntegrationTest {
                     searchPort, channelRepo, authAdapter);
         }
 
-	        @Bean
-	        ChannelSearchCriteriaConverter channelSearchCriteriaConverter() {
-	            return new ChannelSearchCriteriaConverter();
-	        }
+        @Bean
+        ChannelSearchCriteriaConverter channelSearchCriteriaConverter() {
+            return new ChannelSearchCriteriaConverter();
+        }
 
-	        @Bean
-	        ChannelController channelController(
-	                ChannelRegistrationService regSvc,
-	                ChannelService channelService,
-	                ChannelSearchCriteriaConverter criteriaConverter) {
-	            return new ChannelController(
-	                    regSvc, channelService, criteriaConverter);
-	        }
-	    }
-	}
+        @Bean
+        ChannelController channelController(
+                ChannelRegistrationService regSvc,
+                ChannelService channelService,
+                ChannelSearchCriteriaConverter criteriaConverter) {
+            return new ChannelController(
+                    regSvc, channelService, criteriaConverter);
+        }
+    }
+}

@@ -25,14 +25,22 @@ public record ChannelSearchRequestParams(
         @Nullable Integer limit
 ) {
 
+    /**
+     * Canonical constructor.
+     *
+     * <p>Applies {@link ChannelSearchCriteria#DEFAULT_LIMIT} when {@code limit} is not provided.
+     */
     public ChannelSearchRequestParams {
         if (limit == null) {
             limit = ChannelSearchCriteria.DEFAULT_LIMIT;
         }
     }
 
+    /**
+     * Returns the requested limit or {@link ChannelSearchCriteria#DEFAULT_LIMIT}
+     * when not specified.
+     */
     public int limitOrDefault() {
         return limit != null ? limit : ChannelSearchCriteria.DEFAULT_LIMIT;
     }
 }
-

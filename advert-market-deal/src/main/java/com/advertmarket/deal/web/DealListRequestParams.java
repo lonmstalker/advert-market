@@ -12,14 +12,15 @@ record DealListRequestParams(
         @Nullable Integer limit
 ) {
 
+    private static final int DEFAULT_LIMIT = 20;
+
     DealListRequestParams {
         if (limit == null) {
-            limit = 20;
+            limit = DEFAULT_LIMIT;
         }
     }
 
     int limitOrDefault() {
-        return limit != null ? limit : 20;
+        return limit != null ? limit : DEFAULT_LIMIT;
     }
 }
-
