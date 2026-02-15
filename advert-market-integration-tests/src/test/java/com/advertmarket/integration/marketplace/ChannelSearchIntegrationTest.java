@@ -25,11 +25,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.jooq.DSLContext;
 import org.jooq.ExecuteContext;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultExecuteListener;
 import org.jooq.impl.DefaultExecuteListenerProvider;
-import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -240,7 +240,7 @@ class ChannelSearchIntegrationTest {
 
     @Test
     @DisplayName("Search should not execute N+1 queries for category mapping")
-    void search_shouldNotExecuteNPlusOneQueriesForCategories() throws Exception {
+    void search_shouldNotExecuteNplusOneQueriesForCategories() throws Exception {
         for (int i = 1; i <= 5; i++) {
             insertChannel(-i, "Chan " + i, "tech", i * 1000, null, true);
         }

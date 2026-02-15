@@ -33,7 +33,8 @@ class LayeredMarketplaceArchTest {
                 .that().resideInAPackage("..web..")
                 .should().accessClassesThat()
                 .resideInAPackage("..repository..")
-                .because("Controllers must call services/use-cases; repositories are persistence adapters")
+                .because("Controllers must call services/use-cases; "
+                        + "repositories are persistence adapters")
                 .check(classes);
     }
 
@@ -59,4 +60,3 @@ class LayeredMarketplaceArchTest {
                 .check(classes);
     }
 }
-

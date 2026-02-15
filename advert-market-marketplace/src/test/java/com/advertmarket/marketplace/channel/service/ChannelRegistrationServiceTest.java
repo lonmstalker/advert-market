@@ -9,13 +9,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse.BotStatus;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse.UserStatus;
 import com.advertmarket.marketplace.api.dto.NewChannel;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.shared.exception.DomainException;
 import java.time.OffsetDateTime;

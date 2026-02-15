@@ -23,6 +23,12 @@ public class ChannelRegistrationTxService {
 
     private final ChannelRepository channelRepository;
 
+    /**
+     * Persists a previously verified channel in a single DB transaction.
+     *
+     * @param newChannel verified channel data
+     * @return created channel response
+     */
     @Transactional
     @NonNull
     public ChannelResponse registerVerified(@NonNull NewChannel newChannel) {

@@ -8,13 +8,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
-import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
-import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.communication.channel.internal.ChannelCachePort;
 import com.advertmarket.communication.channel.internal.ChannelRateLimiterPort;
 import com.advertmarket.communication.channel.mapper.TelegramChannelConverters;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.metric.MetricsFacade;

@@ -157,7 +157,8 @@ class ChannelVerificationServiceTest {
     }
 
     @Test
-    @DisplayName("Should propagate DomainException from Telegram port (no CompletionException wrapping)")
+    @DisplayName("Should propagate DomainException from Telegram port "
+            + "(no CompletionException wrapping)")
     void shouldPropagateDomainExceptionFromTelegramPort() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
