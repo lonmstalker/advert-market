@@ -144,6 +144,20 @@ public class JooqChannelRepository implements ChannelRepository {
     }
 
     @Override
+    @NonNull
+    public List<ChannelResponse> findByOwnerId(long ownerId) {
+        return dsl.selectFrom(CHANNELS)
+                .where(CHANNELS.OWNER_ID.eq(ownerId))
+                .and(CHANNELS.IS_ACTIVE.isTrue())
+                .orderBy(CHANNELS.CREATED_AT.desc())
+                .fetch(r -> {
+                    var categories = categoryRepository
+                            .findCategorySlugsForChannel(r.get(CHANNELS.ID));
+                    return channelMapper.toResponse(r, categories);
+                });
+    }
+
+    @Override
     public boolean deactivate(long channelId) {
         int rows = dsl.update(CHANNELS)
                 .set(CHANNELS.IS_ACTIVE, false)

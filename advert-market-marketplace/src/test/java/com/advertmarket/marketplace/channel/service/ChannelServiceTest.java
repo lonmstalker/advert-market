@@ -167,6 +167,19 @@ class ChannelServiceTest {
                 .isEqualTo(ErrorCodes.CHANNEL_NOT_OWNED);
     }
 
+    @Test
+    @DisplayName("Should delegate findByOwnerId to ChannelRepository")
+    void shouldDelegateFindByOwnerId() {
+        var expected = List.of(channelResponse());
+        when(channelRepository.findByOwnerId(222L)).thenReturn(expected);
+
+        var result = channelService.findByOwnerId(222L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().id()).isEqualTo(CHANNEL_ID);
+        verify(channelRepository).findByOwnerId(222L);
+    }
+
     private static ChannelListItem channelListItem() {
         return new ChannelListItem(
                 CHANNEL_ID, "Test Channel", "test",

@@ -328,6 +328,21 @@ class ChannelControllerTest {
                 .isEqualTo(ErrorCodes.CHANNEL_ALREADY_REGISTERED);
     }
 
+    // --- My Channels ---
+
+    @Test
+    @DisplayName("Should return 200 with user's own channels")
+    void shouldReturnMyChannels() throws Exception {
+        when(channelService.findByOwnerId(USER_ID))
+                .thenReturn(List.of(channelResponse()));
+
+        mockMvc.perform(get("/api/v1/channels/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").value(CHANNEL_ID))
+                .andExpect(jsonPath("$[0].ownerId").value(USER_ID));
+    }
+
     // --- Helpers ---
 
     private static ChannelListItem channelListItem() {

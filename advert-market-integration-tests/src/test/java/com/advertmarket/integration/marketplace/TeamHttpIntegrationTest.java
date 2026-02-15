@@ -409,6 +409,11 @@ class TeamHttpIntegrationTest {
                 }
 
                 @Override
+                public java.util.List<ChannelResponse> findByOwnerId(long ownerId) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
                 public boolean deactivate(long channelId) {
                     throw new UnsupportedOperationException();
                 }

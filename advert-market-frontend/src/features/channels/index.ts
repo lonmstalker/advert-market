@@ -4,6 +4,7 @@ export {
   fetchChannelDetail,
   fetchChannels,
   fetchChannelTeam,
+  fetchMyChannels,
   registerChannel,
   verifyChannel,
 } from './api/channels';

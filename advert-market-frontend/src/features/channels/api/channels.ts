@@ -101,3 +101,9 @@ export function registerChannel(request: ChannelRegistrationRequest): Promise<Ch
     schema: channelResponseSchema,
   });
 }
+
+export function fetchMyChannels(): Promise<ChannelResponse[]> {
+  return api.get('/channels/my', {
+    schema: z.array(channelResponseSchema),
+  });
+}
