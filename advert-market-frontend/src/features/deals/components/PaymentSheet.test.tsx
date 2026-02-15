@@ -23,11 +23,11 @@ vi.mock('@tonconnect/ui-react', () => ({
   TonConnectButton: () => <div data-testid="ton-connect-button" />,
 }));
 
-vi.mock('@/features/ton/hooks/useTonWalletStatus', () => ({
+vi.mock('@/shared/ton/hooks/useTonWalletStatus', () => ({
   useTonWalletStatus: () => mockUseTonWalletStatus(),
 }));
 
-vi.mock('@/features/ton/hooks/useTonTransaction', () => ({
+vi.mock('@/shared/ton/hooks/useTonTransaction', () => ({
   useTonTransaction: () => ({ send: mockSend, isPending: false, error: null }),
 }));
 

@@ -107,9 +107,9 @@ export function CreativeForm({
   const charRatio = text.length / MAX_TEXT_LENGTH;
   const counterColor =
     charRatio > 0.95
-      ? 'var(--color-destructive)'
+      ? 'var(--color-state-destructive)'
       : charRatio > 0.8
-        ? 'var(--color-warning)'
+        ? 'var(--color-state-warning)'
         : 'var(--color-foreground-tertiary)';
 
   return (
@@ -139,22 +139,12 @@ export function CreativeForm({
             {text.length}/{MAX_TEXT_LENGTH}
           </span>
         </div>
-        <div
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 5,
-            background: 'var(--color-background-secondary)',
-            paddingBottom: 4,
-          }}
-        >
-          <FormattingToolbar
-            onFormat={handleFormat}
-            onLink={handleLink}
-            activeTypes={activeTypes}
-            disabled={!hasSelection()}
-          />
-        </div>
+        <FormattingToolbar
+          onFormat={handleFormat}
+          onLink={handleLink}
+          activeTypes={activeTypes}
+          disabled={!hasSelection()}
+        />
         <Textarea
           ref={textareaRef}
           value={text}

@@ -3,13 +3,18 @@ import { TonConnectButton } from '@tonconnect/ui-react';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDepositPolling } from '@/features/ton/hooks/useDepositPolling';
-import { useTonTransaction } from '@/features/ton/hooks/useTonTransaction';
-import { useTonWalletStatus } from '@/features/ton/hooks/useTonWalletStatus';
-import { getErrorI18nKey, type TonTransactionError } from '@/features/ton/lib/ton-errors';
-import { clearPendingIntent, loadPendingIntent, savePendingIntent } from '@/features/ton/lib/ton-intent';
 import { useToast } from '@/shared/hooks/use-toast';
 import { formatTon } from '@/shared/lib/ton-format';
+import {
+  clearPendingIntent,
+  getErrorI18nKey,
+  loadPendingIntent,
+  savePendingIntent,
+  type TonTransactionError,
+  useDepositPolling,
+  useTonTransaction,
+  useTonWalletStatus,
+} from '@/shared/ton';
 import { pressScale } from '@/shared/ui/animations';
 import { usePaymentContext } from './PaymentContext';
 

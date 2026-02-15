@@ -52,7 +52,6 @@ describe('DealStatusBadge', () => {
     const { container } = renderWithProviders(<DealStatusBadge status="DISPUTED" />);
     const badge = container.querySelector('span');
     expect(badge).toBeTruthy();
-    // destructive color -> rgba(255, 59, 48, 0.1)
-    expect(badge?.style.backgroundColor).toContain('rgba(255, 59, 48, 0.1)');
+    expect(badge?.style.backgroundColor).toBe('var(--am-soft-destructive-bg)');
   });
 });

@@ -28,7 +28,7 @@ export function BottomTabs() {
         height: '56px',
         backgroundColor: 'var(--color-background-base)',
         borderTop: '0.5px solid var(--color-border-separator)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingBottom: 'var(--am-safe-area-bottom)',
         zIndex: 100,
       }}
     >

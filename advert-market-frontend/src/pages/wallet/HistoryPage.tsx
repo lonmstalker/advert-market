@@ -70,7 +70,7 @@ export default function HistoryPage() {
                   width: 18,
                   height: 18,
                   borderRadius: '50%',
-                  background: 'var(--color-destructive)',
+                  background: 'var(--color-state-destructive)',
                   color: 'var(--color-static-white)',
                   fontSize: 11,
                   fontWeight: 700,

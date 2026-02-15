@@ -18,6 +18,35 @@ body {
   background-color: var(--color-background-secondary);
 }
 
+:root {
+  /* Safe areas (testable via CSS override in Playwright). */
+  --am-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+
+  /* Fixed bottom bar layout contract (see DESIGN_GUIDELINES.md). */
+  --am-fixed-bottom-bar-base: 92px;
+
+  /* Soft badge backgrounds ("pastel" tints). */
+  --am-soft-accent-bg: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+  --am-soft-warning-bg: color-mix(in srgb, var(--color-state-warning) 12%, transparent);
+  --am-soft-success-bg: color-mix(in srgb, var(--color-state-success) 12%, transparent);
+  --am-soft-destructive-bg: color-mix(in srgb, var(--color-state-destructive) 12%, transparent);
+  --am-soft-secondary-bg: color-mix(in srgb, var(--color-foreground-secondary) 12%, transparent);
+
+  /* Hero gradients (avoid hardcoded rgba). */
+  --am-hero-gradient-accent: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent-primary) 6%, transparent) 0%,
+    transparent 100%
+  );
+  --am-hero-gradient-success: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-state-success) 8%, transparent) 0%,
+    transparent 100%
+  );
+}
+
 /* Fix: secondary button text invisible (white on transparent blue) → accent text color */
 [class*="_type-secondary_"][class*="_button_"] {
   color: var(--color-accent-primary);
@@ -25,19 +54,41 @@ body {
 
 /* Destructive (secondary) button text color override */
 .am-button-destructive {
-  color: var(--color-destructive);
+  color: var(--color-state-destructive);
+}
+
+/* Toggle enabled state should follow Telegram theme accent, not hardcoded success-green. */
+[class*="_togglerEnabled_"][class*="_toggler_"] {
+  background-color: var(--color-accent-primary);
 }
 
 /* Force icon SVG to render as white (used on colored badges/backgrounds) */
-.am-icon-white svg path {
-  fill: var(--color-static-white, #fff) !important;
-  stroke: var(--color-static-white, #fff) !important;
+.am-icon-white.am-icon-white svg path {
+  fill: var(--color-static-white);
+  stroke: var(--color-static-white);
 }
 
 /* Focus-visible outline for custom interactive elements */
 .focusable:focus-visible {
   outline: 2px solid var(--color-accent-primary);
   outline-offset: 2px;
+}
+
+/* Reusable utility classes */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Creative editor responsive layout */
@@ -56,4 +107,3 @@ body {
     display: none;
   }
 }
-

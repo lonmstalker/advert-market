@@ -11,18 +11,18 @@ type StatusStyle = {
 // Using rgba for background tints — same pattern as DealStatusBadge (deal-status.ts)
 const STATUS_STYLES: Record<TransactionStatus, StatusStyle> = {
   pending: {
-    colorVar: 'var(--color-warning)',
-    bg: 'rgba(255, 159, 10, 0.1)',
+    colorVar: 'var(--color-state-warning)',
+    bg: 'var(--am-soft-warning-bg)',
     i18nKey: 'wallet.status.pending',
   },
   confirmed: {
-    colorVar: 'var(--color-success)',
-    bg: 'rgba(52, 199, 89, 0.1)',
+    colorVar: 'var(--color-state-success)',
+    bg: 'var(--am-soft-success-bg)',
     i18nKey: 'wallet.status.confirmed',
   },
   failed: {
-    colorVar: 'var(--color-destructive)',
-    bg: 'rgba(255, 59, 48, 0.1)',
+    colorVar: 'var(--color-state-destructive)',
+    bg: 'var(--am-soft-destructive-bg)',
     i18nKey: 'wallet.status.failed',
   },
 };

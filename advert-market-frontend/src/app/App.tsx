@@ -3,7 +3,7 @@ import { Spinner, ThemeProvider, ToastProvider } from '@telegram-tools/ui-kit';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { MotionConfig } from 'motion/react';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router';
 import { AuthGuard, ErrorBoundary } from '@/shared/ui';
 import { DeepLinkHandler } from './deep-link-handler';
 import { OnboardingLayout } from './layouts/onboarding-layout';
@@ -63,6 +63,63 @@ function useTelegramTheme(): 'light' | 'dark' {
   return theme;
 }
 
+function ErrorBoundaryLayout() {
+  const location = useLocation();
+  return (
+    <ErrorBoundary resetKey={location.pathname}>
+      <Outlet />
+    </ErrorBoundary>
+  );
+}
+
+function AppRoutes() {
+  const location = useLocation();
+
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/onboarding" element={<OnboardingLayout />}>
+          <Route index element={<OnboardingPage />} />
+          <Route path="interest" element={<OnboardingInterestPage />} />
+          <Route path="tour" element={<OnboardingTourPage />} />
+        </Route>
+
+        <Route element={<AuthGuard />}>
+          <Route
+            element={
+              <ErrorBoundary resetKey={location.pathname}>
+                <TabLayout />
+              </ErrorBoundary>
+            }
+          >
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/deals" element={<DealsPage />} />
+            <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+
+          <Route element={<ErrorBoundaryLayout />}>
+            <Route path="/catalog/channels/:channelId" element={<ChannelDetailPage />} />
+            <Route path="/deals/:dealId" element={<DealDetailPage />} />
+            <Route path="/deals/new" element={<CreateDealPage />} />
+            <Route path="/wallet/history" element={<HistoryPage />} />
+            <Route path="/wallet/history/:txId" element={<TransactionDetailPage />} />
+            <Route path="/profile/language" element={<LanguagePage />} />
+            <Route path="/profile/currency" element={<CurrencyPage />} />
+            <Route path="/profile/notifications" element={<NotificationsPage />} />
+            <Route path="/profile/channels/new" element={<RegisterChannelPage />} />
+            <Route path="/profile/creatives" element={<CreativesPage />} />
+            <Route path="/profile/creatives/new" element={<CreativeEditorPage />} />
+            <Route path="/profile/creatives/:creativeId/edit" element={<CreativeEditorPage />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/catalog" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
 export function App() {
   const theme = useTelegramTheme();
 
@@ -80,38 +137,7 @@ export function App() {
               <ErrorBoundary>
                 <BrowserRouter>
                   <DeepLinkHandler />
-                  <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                      <Route path="/onboarding" element={<OnboardingLayout />}>
-                        <Route index element={<OnboardingPage />} />
-                        <Route path="interest" element={<OnboardingInterestPage />} />
-                        <Route path="tour" element={<OnboardingTourPage />} />
-                      </Route>
-
-                      <Route element={<AuthGuard />}>
-                        <Route element={<TabLayout />}>
-                          <Route path="/catalog" element={<CatalogPage />} />
-                          <Route path="/deals" element={<DealsPage />} />
-                          <Route path="/wallet" element={<WalletPage />} />
-                          <Route path="/profile" element={<ProfilePage />} />
-                        </Route>
-                        <Route path="/catalog/channels/:channelId" element={<ChannelDetailPage />} />
-                        <Route path="/deals/:dealId" element={<DealDetailPage />} />
-                        <Route path="/deals/new" element={<CreateDealPage />} />
-                        <Route path="/wallet/history" element={<HistoryPage />} />
-                        <Route path="/wallet/history/:txId" element={<TransactionDetailPage />} />
-                        <Route path="/profile/language" element={<LanguagePage />} />
-                        <Route path="/profile/currency" element={<CurrencyPage />} />
-                        <Route path="/profile/notifications" element={<NotificationsPage />} />
-                        <Route path="/profile/channels/new" element={<RegisterChannelPage />} />
-                        <Route path="/profile/creatives" element={<CreativesPage />} />
-                        <Route path="/profile/creatives/new" element={<CreativeEditorPage />} />
-                        <Route path="/profile/creatives/:creativeId/edit" element={<CreativeEditorPage />} />
-                      </Route>
-
-                      <Route path="*" element={<Navigate to="/catalog" replace />} />
-                    </Routes>
-                  </Suspense>
+                  <AppRoutes />
                 </BrowserRouter>
               </ErrorBoundary>
             </QueryClientProvider>

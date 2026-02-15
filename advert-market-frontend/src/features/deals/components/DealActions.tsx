@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHaptic } from '@/shared/hooks/use-haptic';
+import { FixedBottomBar } from '@/shared/ui';
 import { pressScale } from '@/shared/ui/animations';
 import type { DealAction, DealActionType } from '../lib/deal-actions';
 
@@ -38,16 +39,7 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
 
   return (
     <>
-      <div
-        style={{
-          flexShrink: 0,
-          padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 20px))',
-          display: 'flex',
-          gap: 8,
-          borderTop: '0.5px solid var(--color-border-separator)',
-          background: 'var(--color-background-elevated)',
-        }}
-      >
+      <FixedBottomBar style={{ display: 'flex', gap: 8 }}>
         {actions.map((action) => (
           <motion.div key={action.type} {...pressScale} style={{ flex: 1 }}>
             <Button
@@ -59,7 +51,7 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
             />
           </motion.div>
         ))}
-      </div>
+      </FixedBottomBar>
 
       <DialogModal
         active={!!confirmAction}

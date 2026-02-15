@@ -7,6 +7,7 @@ import { updateSettings } from '@/features/profile/api/profile-api';
 import type { NotificationSettings } from '@/shared/api';
 import { profileKeys } from '@/shared/api';
 import { useToast } from '@/shared/hooks';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { BackButtonHandler } from '@/shared/ui';
 import { slideFromRight, staggerChildren } from '@/shared/ui/animations';
@@ -17,6 +18,7 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { showError } = useToast();
+  const haptic = useHaptic();
   const notificationSettings = useSettingsStore((s) => s.notificationSettings);
   const setNotificationSetting = useSettingsStore((s) => s.setNotificationSetting);
   const setFromProfile = useSettingsStore((s) => s.setFromProfile);
@@ -42,6 +44,7 @@ export default function NotificationsPage() {
   }, [mutation]);
 
   function handleToggle(group: keyof NotificationSettings, key: string, value: boolean) {
+    haptic.impactOccurred('light');
     setNotificationSetting(group, key, value);
     scheduleSave();
   }

@@ -1,4 +1,4 @@
-import { Text } from '@telegram-tools/ui-kit';
+import { Button, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,8 @@ import {
   useEntities,
   useUpdateCreative,
 } from '@/features/creatives';
-import { BackButtonHandler, DeviceFrame, Tappable, TelegramChatSimulator } from '@/shared/ui';
+import { useHaptic } from '@/shared/hooks/use-haptic';
+import { BackButtonHandler, DeviceFrame, FixedBottomBar, Tappable, TelegramChatSimulator } from '@/shared/ui';
 import { fadeIn, pressScale, scaleIn, slideFromLeft, slideFromRight } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
@@ -24,6 +25,7 @@ export default function CreativeEditorPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { creativeId } = useParams<{ creativeId: string }>();
+  const haptic = useHaptic();
 
   const isEditing = !!creativeId;
   const { data: creative, isLoading } = useCreativeDetail(creativeId);
@@ -47,6 +49,7 @@ export default function CreativeEditorPage() {
 
   const handleSubmit = useCallback(() => {
     if (!title.trim() || !text.trim()) return;
+    haptic.notificationOccurred('success');
 
     const req = {
       title: title.trim(),
@@ -77,6 +80,7 @@ export default function CreativeEditorPage() {
     createMutation,
     updateMutation,
     navigate,
+    haptic,
   ]);
 
   if (isEditing && isLoading) {
@@ -96,6 +100,7 @@ export default function CreativeEditorPage() {
   ];
 
   const filteredButtons = buttons.filter((b) => b.text && b.url);
+  const bottomInset = 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))';
 
   const previewContent = (
     <DeviceFrame>
@@ -104,7 +109,12 @@ export default function CreativeEditorPage() {
   );
 
   return (
-    <motion.div {...fadeIn} style={{ paddingBottom: 72 }}>
+    <motion.div
+      {...fadeIn}
+      style={{
+        minHeight: 'calc(100vh - 40px)',
+      }}
+    >
       <BackButtonHandler />
 
       <div
@@ -195,40 +205,20 @@ export default function CreativeEditorPage() {
         </div>
       </div>
 
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '10px 16px calc(10px + env(safe-area-inset-bottom))',
-          background: 'var(--color-background-base)',
-          borderTop: '1px solid var(--color-border-separator)',
-          zIndex: 10,
-        }}
-      >
-        <motion.button
-          {...pressScale}
-          type="button"
-          disabled={isPending || !title.trim() || !text.trim()}
-          onClick={handleSubmit}
-          style={{
-            width: '100%',
-            padding: '10px 16px',
-            background: 'var(--color-accent-primary)',
-            border: 'none',
-            borderRadius: 10,
-            cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 600,
-            color: 'var(--color-static-white)',
-            WebkitTapHighlightColor: 'transparent',
-            opacity: isPending || !title.trim() || !text.trim() ? 0.5 : 1,
-          }}
-        >
-          {isPending ? t('common.loading') : t('common.save')}
-        </motion.button>
-      </div>
+      {/* Reserve space for the fixed Save bar so content can scroll above it even on short forms. */}
+      <div aria-hidden="true" style={{ height: bottomInset }} />
+
+      <FixedBottomBar>
+        <motion.div {...pressScale}>
+          <Button
+            text={t('common.save')}
+            type="primary"
+            loading={isPending}
+            disabled={isPending || !title.trim() || !text.trim()}
+            onClick={handleSubmit}
+          />
+        </motion.div>
+      </FixedBottomBar>
 
       {versions && (
         <CreativeHistorySheet open={showHistory} onClose={() => setShowHistory(false)} versions={versions} />

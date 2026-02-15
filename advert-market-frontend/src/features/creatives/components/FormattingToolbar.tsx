@@ -70,8 +70,8 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
             onClick={() => onFormat(btn.type)}
             style={{
               ...buttonBase,
-              background: isActive ? 'var(--color-accent-primary)' : 'var(--color-background-section)',
-              color: isActive ? 'var(--color-static-white)' : 'var(--color-foreground-primary)',
+              background: isActive ? 'var(--am-soft-accent-bg)' : 'transparent',
+              color: isActive ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
               opacity: disabled ? 0.4 : 1,
             }}
             aria-pressed={isActive}
@@ -86,12 +86,10 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
         onClick={onLink}
         style={{
           ...buttonBase,
-          background: activeTypes.has(TextEntityType.TEXT_LINK)
-            ? 'var(--color-accent-primary)'
-            : 'var(--color-background-section)',
+          background: activeTypes.has(TextEntityType.TEXT_LINK) ? 'var(--am-soft-accent-bg)' : 'transparent',
           color: activeTypes.has(TextEntityType.TEXT_LINK)
-            ? 'var(--color-static-white)'
-            : 'var(--color-foreground-primary)',
+            ? 'var(--color-accent-primary)'
+            : 'var(--color-foreground-secondary)',
           opacity: disabled ? 0.4 : 1,
         }}
         aria-label={t('creatives.form.formatting.link')}

@@ -29,9 +29,10 @@ export function OnboardingLogo() {
           animation: 'logo-ring-rotate 8s linear infinite',
           backgroundImage:
             'conic-gradient(from 0deg, var(--color-accent-primary) 0%, transparent 30%, transparent 70%, var(--color-accent-primary) 100%)',
-          mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          mask: 'linear-gradient(var(--color-static-white) 0 0) content-box, linear-gradient(var(--color-static-white) 0 0)',
           maskComposite: 'exclude',
-          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMask:
+            'linear-gradient(var(--color-static-white) 0 0) content-box, linear-gradient(var(--color-static-white) 0 0)',
           WebkitMaskComposite: 'xor',
           padding: '1px',
         }}

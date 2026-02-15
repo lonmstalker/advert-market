@@ -88,7 +88,7 @@ export default function ChannelDetailPage() {
   return (
     <>
       <BackButtonHandler />
-      <div style={{ paddingBottom: 72 }}>
+      <div style={{ paddingBottom: 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))' }}>
         <ChannelDetailHeader channel={channel} isOwner={isOwner} onShare={handleShare} />
 
         {channel.nextAvailableSlot && <ChannelNextSlot nextAvailableSlot={channel.nextAvailableSlot} />}

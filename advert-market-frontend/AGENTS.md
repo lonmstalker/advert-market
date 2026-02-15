@@ -264,7 +264,7 @@ const mutation = useMutation({
 - Shared code: `src/shared/`
 - Pages (lazy-loaded): `src/pages/{name}/`
 - Server state: TanStack Query (mandatory)
-- Client state: Zustand (max 1 store)
+- Client state: Zustand (split by domain, one store per bounded context)
 - Financial values: BigInt only, never Number
 - All strings through i18next `t()` function
 - MSW for API mocking in tests

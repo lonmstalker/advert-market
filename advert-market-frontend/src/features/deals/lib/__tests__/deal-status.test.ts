@@ -267,15 +267,15 @@ describe('statusColorVar', () => {
   });
 
   it('returns CSS variable for warning', () => {
-    expect(statusColorVar('warning')).toBe('var(--color-warning)');
+    expect(statusColorVar('warning')).toBe('var(--color-state-warning)');
   });
 
   it('returns CSS variable for success', () => {
-    expect(statusColorVar('success')).toBe('var(--color-success)');
+    expect(statusColorVar('success')).toBe('var(--color-state-success)');
   });
 
   it('returns CSS variable for destructive', () => {
-    expect(statusColorVar('destructive')).toBe('var(--color-destructive)');
+    expect(statusColorVar('destructive')).toBe('var(--color-state-destructive)');
   });
 
   it('returns CSS variable for secondary', () => {
@@ -284,21 +284,20 @@ describe('statusColorVar', () => {
 });
 
 describe('statusBgVar', () => {
-  it('returns rgba background for each color', () => {
+  it('returns soft background variable for each color', () => {
     const colors: StatusColor[] = ['accent', 'warning', 'success', 'destructive', 'secondary'];
 
     for (const color of colors) {
       const result = statusBgVar(color);
-      expect(result).toContain('rgba(');
-      expect(result).toContain('0.1)');
+      expect(result).toMatch(/^var\(--am-soft-/);
     }
   });
 
   it('returns correct background for accent', () => {
-    expect(statusBgVar('accent')).toBe('rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.1)');
+    expect(statusBgVar('accent')).toBe('var(--am-soft-accent-bg)');
   });
 
   it('returns correct background for destructive', () => {
-    expect(statusBgVar('destructive')).toBe('rgba(255, 59, 48, 0.1)');
+    expect(statusBgVar('destructive')).toBe('var(--am-soft-destructive-bg)');
   });
 });

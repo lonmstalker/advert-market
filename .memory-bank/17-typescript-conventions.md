@@ -91,7 +91,7 @@ All API responses validated with Zod schemas. Types derived via `z.infer<>`. Val
 ### State Management
 
 - **Server state**: TanStack Query (mandatory)
-- **Client state**: Zustand (max 1 store)
+- **Client state**: Zustand (split by domain, one store per bounded context)
 - Redux, MobX, Recoil are FORBIDDEN
 
 ### Query Key Factory

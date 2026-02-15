@@ -31,9 +31,7 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           left: 0,
           right: 0,
           height: 140,
-          background: isOwner
-            ? 'linear-gradient(180deg, rgba(52, 199, 89, 0.06) 0%, transparent 100%)'
-            : 'linear-gradient(180deg, rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.06) 0%, transparent 100%)',
+          background: isOwner ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)',
           pointerEvents: 'none',
         }}
       />
@@ -64,7 +62,7 @@ export function SummaryHero({ summary }: SummaryHeroProps) {
           transition={{ delay: 0.25, duration: 0.3 }}
           style={{ marginTop: 4 }}
         >
-          <Text type="subheadline2" color="secondary">
+          <Text type="body" weight="medium" color="tertiary">
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(heroAmount)}</span>
           </Text>
         </motion.div>

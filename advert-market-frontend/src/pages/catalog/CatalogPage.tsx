@@ -1,12 +1,12 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Sheet, SkeletonElement, Text } from '@telegram-tools/ui-kit';
-import { easeOut } from 'motion';
+import { Sheet, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import {
   CategoryChipRow,
+  ChannelCardSkeleton,
   ChannelCatalogCard,
   ChannelFiltersContent,
   ChannelFiltersProvider,
@@ -18,34 +18,10 @@ import { useDebounce } from '@/shared/hooks/use-debounce';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
 import { formatCompactNumber } from '@/shared/lib/format-number';
 import { computeCpm, formatCpm } from '@/shared/lib/ton-format';
-import { EmptyState } from '@/shared/ui';
-import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
-import { FilterIcon, SearchIcon, SearchOffIcon } from '@/shared/ui/icons';
-
-function SkeletonCard() {
-  return (
-    <div
-      style={{
-        background: 'var(--color-background-base)',
-        border: '1px solid var(--color-border-separator)',
-        borderRadius: 16,
-        padding: 16,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <SkeletonElement style={{ width: 44, height: 44, borderRadius: '50%' }} />
-        <div style={{ flex: 1 }}>
-          <SkeletonElement style={{ width: 120, height: 16, borderRadius: 6 }} />
-        </div>
-        <SkeletonElement style={{ width: 60, height: 16, borderRadius: 6 }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
-        <SkeletonElement style={{ width: 40, height: 14, borderRadius: 6 }} />
-        <SkeletonElement style={{ width: 60, height: 20, borderRadius: 10 }} />
-      </div>
-    </div>
-  );
-}
+import { EmptyState, EndOfList } from '@/shared/ui';
+import { fadeIn, staggerChildren } from '@/shared/ui/animations';
+import { SearchOffIcon } from '@/shared/ui/icons';
+import { CatalogSearchBar } from './components/CatalogSearchBar';
 
 export default function CatalogPage() {
   const { t } = useTranslation();
@@ -57,6 +33,7 @@ export default function CatalogPage() {
   const debouncedSearch = useDebounce(searchInput, 300);
   const [sheetOpened, setSheetOpened] = useState(false);
 
+  // ref breaks the filters→effect→setFilters→filters dependency cycle
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
 
@@ -143,131 +120,15 @@ export default function CatalogPage() {
 
   return (
     <div style={{ paddingBottom: 24 }}>
-      {/* Search bar area */}
-      <div
-        style={{
-          padding: '16px 16px 12px',
-          position: 'sticky',
-          top: 0,
-          zIndex: 5,
-          background: 'var(--color-background-secondary)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            alignItems: 'center',
-          }}
-        >
-          <motion.div
-            style={{ flex: 1 }}
-            animate={{
-              scale: searchFocused ? 1.01 : 1,
-            }}
-            transition={{ duration: 0.15, ease: easeOut }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 12px',
-                borderRadius: 12,
-                background: 'var(--color-background-base)',
-                border: `1.5px solid ${searchFocused ? 'var(--color-accent-primary)' : 'var(--color-border-separator)'}`,
-                transition: 'border-color 0.2s ease',
-              }}
-            >
-              <SearchIcon
-                style={{
-                  width: 18,
-                  height: 18,
-                  color: searchFocused ? 'var(--color-accent-primary)' : 'var(--color-foreground-tertiary)',
-                  flexShrink: 0,
-                  transition: 'color 0.2s ease',
-                }}
-              />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                placeholder={t('catalog.search.placeholder')}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  background: 'transparent',
-                  fontSize: 15,
-                  color: 'var(--color-foreground-primary)',
-                  lineHeight: 1.3,
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-          </motion.div>
-          <motion.button
-            {...pressScale}
-            type="button"
-            onClick={handleOpenFilters}
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 42,
-              height: 42,
-              borderRadius: 12,
-              border:
-                activeFilterCount > 0
-                  ? '1.5px solid var(--color-accent-primary)'
-                  : '1.5px solid var(--color-border-separator)',
-              background:
-                activeFilterCount > 0
-                  ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)'
-                  : 'var(--color-background-base)',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-              flexShrink: 0,
-              padding: 0,
-            }}
-            aria-label={t('catalog.filters.button')}
-          >
-            <FilterIcon
-              style={{
-                width: 20,
-                height: 20,
-                color: activeFilterCount > 0 ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
-              }}
-            />
-            {activeFilterCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  background: 'var(--color-accent-primary)',
-                  color: 'var(--color-static-white)',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  lineHeight: 1,
-                  pointerEvents: 'none',
-                }}
-              >
-                {activeFilterCount}
-              </span>
-            )}
-          </motion.button>
-        </div>
-      </div>
+      <CatalogSearchBar
+        searchInput={searchInput}
+        onSearchChange={setSearchInput}
+        searchFocused={searchFocused}
+        onFocus={() => setSearchFocused(true)}
+        onBlur={() => setSearchFocused(false)}
+        activeFilterCount={activeFilterCount}
+        onOpenFilters={handleOpenFilters}
+      />
 
       <CategoryChipRow
         selected={filters.categories ?? (filters.category ? [filters.category] : [])}
@@ -282,7 +143,7 @@ export default function CatalogPage() {
             style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
           >
             {[1, 2, 3].map((i) => (
-              <SkeletonCard key={i} />
+              <ChannelCardSkeleton key={i} />
             ))}
           </motion.div>
         ) : isError ? (
@@ -336,26 +197,15 @@ export default function CatalogPage() {
 
             {isFetchingNextPage && (
               <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <SkeletonCard />
+                <ChannelCardSkeleton />
               </div>
             )}
 
             <div ref={observerRef} style={{ height: 1 }} />
 
             {!hasNextPage && channels.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 40px 8px' }}
-              >
-                <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
-                <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <Text type="caption1" color="tertiary">
-                    {t('catalog.endOfList')}
-                  </Text>
-                </span>
-                <div style={{ flex: 1, height: '0.5px', background: 'var(--color-border-separator)' }} />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+                <EndOfList label={t('catalog.endOfList')} />
               </motion.div>
             )}
           </motion.div>

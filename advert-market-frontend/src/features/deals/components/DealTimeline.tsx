@@ -3,6 +3,7 @@ import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Tappable } from '@/shared/ui';
 import type { TimelineStep } from '../lib/deal-status';
 
 type DealTimelineProps = {
@@ -126,8 +127,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
 
               {/* Content column */}
               <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 4 }}>
-                <button
-                  type="button"
+                <Tappable
                   onClick={step.description ? () => setExpandedIndex(isExpanded ? null : globalIndex) : undefined}
                   style={{
                     display: 'flex',
@@ -157,7 +157,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                       </Text>
                     </span>
                   )}
-                </button>
+                </Tappable>
 
                 <AnimatePresence>
                   {isExpanded && (
@@ -182,10 +182,8 @@ export function DealTimeline({ steps }: DealTimelineProps) {
         })}
       </ul>
 
-      {/* Expand collapsed pending steps */}
       {showExpandButton && (
-        <button
-          type="button"
+        <Tappable
           onClick={() => setShowAllPending(true)}
           style={{
             display: 'block',
@@ -200,7 +198,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
           }}
         >
           {t('deals.detail.moreSteps', { count: collapsedCount })}
-        </button>
+        </Tappable>
       )}
     </div>
   );

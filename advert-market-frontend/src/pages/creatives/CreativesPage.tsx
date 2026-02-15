@@ -7,9 +7,9 @@ import { useNavigate } from 'react-router';
 import type { CreativeTemplate } from '@/features/creatives';
 import { CreativeListItem, useCreatives } from '@/features/creatives';
 import { useHaptic } from '@/shared/hooks/use-haptic';
-import { BackButtonHandler, EmptyState, EndOfList, Tappable } from '@/shared/ui';
+import { BackButtonHandler, EmptyState, EndOfList, SearchInput, Tappable } from '@/shared/ui';
 import { fadeIn, listItem, pressScale, scaleIn, staggerChildren } from '@/shared/ui/animations';
-import { PaletteIcon, SearchIcon, SearchOffIcon, SortIcon } from '@/shared/ui/icons';
+import { PaletteIcon, SearchOffIcon, SortIcon } from '@/shared/ui/icons';
 
 type SortMode = 'newest' | 'oldest' | 'byName';
 
@@ -162,47 +162,15 @@ export default function CreativesPage() {
             transition={{ duration: 0.15, ease: easeOut }}
             style={{ display: 'flex', gap: 8 }}
           >
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 12px',
-                borderRadius: 12,
-                background: 'var(--color-background-base)',
-                border: `1.5px solid ${searchFocused ? 'var(--color-accent-primary)' : 'var(--color-border-separator)'}`,
-                transition: 'border-color 0.2s ease',
-              }}
-            >
-              <SearchIcon
-                style={{
-                  width: 18,
-                  height: 18,
-                  color: searchFocused ? 'var(--color-accent-primary)' : 'var(--color-foreground-tertiary)',
-                  flexShrink: 0,
-                  transition: 'color 0.2s ease',
-                }}
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                placeholder={t('creatives.search.placeholder')}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  background: 'transparent',
-                  fontSize: 15,
-                  color: 'var(--color-foreground-primary)',
-                  lineHeight: 1.3,
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              placeholder={t('creatives.search.placeholder')}
+              focused={searchFocused}
+              style={{ flex: 1 }}
+            />
             <motion.div {...pressScale}>
               <Tappable
                 onClick={() => {
