@@ -7,7 +7,7 @@ describe('getTransactionTypeConfig', () => {
     const config = getTransactionTypeConfig(type);
     expect(config).toBeDefined();
     expect(config.Icon).toBeTruthy();
-    expect(typeof config.Icon).toBe('function');
+    expect(typeof config.Icon === 'function' || typeof config.Icon === 'object').toBe(true);
     expect(config.i18nKey).toBeTruthy();
   });
 

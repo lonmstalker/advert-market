@@ -1,4 +1,5 @@
 export * from './animations';
+export { AppIcon } from './components/app-icon';
 export { AuthGuard } from './components/auth-guard';
 export { BackButtonHandler } from './components/back-button-handler';
 export { BottomTabs } from './components/bottom-tabs';
