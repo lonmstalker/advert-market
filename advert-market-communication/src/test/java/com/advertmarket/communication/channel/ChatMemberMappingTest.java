@@ -2,8 +2,8 @@ package com.advertmarket.communication.channel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.advertmarket.communication.api.channel.ChatMemberInfo;
-import com.advertmarket.communication.api.channel.ChatMemberStatus;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.pengrad.telegrambot.model.ChatMember;
 import com.pengrad.telegrambot.model.User;
 import java.lang.reflect.Field;

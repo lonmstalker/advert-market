@@ -14,6 +14,7 @@ import com.advertmarket.shared.pagination.CursorPage;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Channel catalog operations: search, detail, update, deactivate.
@@ -73,6 +74,7 @@ public class ChannelService {
      * @throws DomainException CHANNEL_NOT_FOUND if not found
      */
     @NonNull
+    @Transactional
     public ChannelResponse update(long channelId,
                                   @NonNull ChannelUpdateRequest request) {
         requireOwner(channelId);
@@ -89,6 +91,7 @@ public class ChannelService {
      * @throws DomainException CHANNEL_NOT_OWNED if not owner
      * @throws DomainException CHANNEL_NOT_FOUND if not found
      */
+    @Transactional
     public void deactivate(long channelId) {
         requireOwner(channelId);
         boolean deactivated = channelRepository.deactivate(channelId);

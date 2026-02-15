@@ -25,6 +25,7 @@ public class ChannelRegistrationService {
 
     private final ChannelVerificationService verificationService;
     private final ChannelRepository channelRepository;
+    private final ChannelRegistrationTxService registrationTxService;
 
     /**
      * Step 1: verifies channel ownership and bot admin status.
@@ -70,7 +71,7 @@ public class ChannelRegistrationService {
         var categories = request.categories() != null
                 ? request.categories() : List.<String>of();
 
-        return channelRepository.insert(new NewChannel(
+        return registrationTxService.registerVerified(new NewChannel(
                 channelId,
                 verifyResult.title(),
                 verifyResult.username(),

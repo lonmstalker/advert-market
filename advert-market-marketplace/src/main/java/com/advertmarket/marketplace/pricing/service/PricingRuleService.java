@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * CRUD operations for channel pricing rules.
@@ -41,6 +42,7 @@ public class PricingRuleService {
      * @return created rule
      */
     @NonNull
+    @Transactional
     public PricingRuleDto create(long channelId,
                                  @NonNull PricingRuleCreateRequest request) {
         requireOwner(channelId);
@@ -56,6 +58,7 @@ public class PricingRuleService {
      * @return updated rule
      */
     @NonNull
+    @Transactional
     public PricingRuleDto update(long channelId, long ruleId,
                                  @NonNull PricingRuleUpdateRequest request) {
         requireOwner(channelId);
@@ -71,6 +74,7 @@ public class PricingRuleService {
      * @param channelId channel ID (for authorization)
      * @param ruleId    rule ID
      */
+    @Transactional
     public void delete(long channelId, long ruleId) {
         requireOwner(channelId);
         boolean deleted = pricingRuleRepository.deactivate(ruleId);

@@ -11,6 +11,8 @@ import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
 import com.advertmarket.marketplace.channel.service.ChannelService;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.pagination.CursorPage;
 import com.advertmarket.shared.security.SecurityContextUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +34,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Channel verification, registration, search, and management endpoints.
@@ -266,8 +267,8 @@ public class ChannelController {
                     yield ChannelSort.valueOf(rawSort.trim().toUpperCase(
                             Locale.ROOT));
                 } catch (IllegalArgumentException ex) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
+                    throw new DomainException(
+                            ErrorCodes.INVALID_PARAMETER,
                             "Unsupported sort value: " + rawSort,
                             ex);
                 }

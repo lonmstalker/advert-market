@@ -52,6 +52,11 @@ public class SecurityConfig {
                                 SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(
+                                securityExceptionHandler)
+                        .accessDeniedHandler(
+                                securityExceptionHandler))
                 .addFilterBefore(
                         new InternalApiKeyFilter(
                                 internalApiProperties, metricsFacade),

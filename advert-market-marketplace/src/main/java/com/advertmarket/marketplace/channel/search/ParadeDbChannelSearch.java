@@ -38,6 +38,11 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
     private final DSLContext dsl;
     private final CategoryRepository categoryRepository;
 
+    // ParadeDB uses pdb.score(id) for BM25 relevance. Keep it unqualified
+    // (pdb.score(id), not pdb.score(channels.id)) to match pg_search expectations.
+    private static final org.jooq.Field<BigDecimal> SCORE_FIELD =
+            DSL.field("pdb.score(id)::numeric", BigDecimal.class);
+
     @Override
     @NonNull
     public CursorPage<ChannelListItem> search(
@@ -46,7 +51,11 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         boolean hasTextQuery = criteria.query() != null
                 && !criteria.query().isBlank();
 
-        condition = applyKeyset(condition, criteria);
+        if (hasTextQuery && criteria.sort() == ChannelSort.RELEVANCE) {
+            return searchByRelevance(criteria, condition);
+        }
+
+        condition = applyKeyset(condition, criteria, hasTextQuery);
 
         List<OrderField<?>> orderBy = buildOrderBy(criteria.sort(),
                 hasTextQuery);
@@ -54,16 +63,20 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         // n+1 pattern: fetch one extra to determine hasNext
         int fetchLimit = criteria.limit() + 1;
 
+        var selectFields = new java.util.ArrayList<org.jooq.SelectFieldOrAsterisk>();
+        selectFields.add(CHANNELS.ID);
+        selectFields.add(CHANNELS.TITLE);
+        selectFields.add(CHANNELS.USERNAME);
+        selectFields.add(CHANNELS.SUBSCRIBER_COUNT);
+        selectFields.add(CHANNELS.AVG_VIEWS);
+        selectFields.add(CHANNELS.ENGAGEMENT_RATE);
+        selectFields.add(CHANNELS.PRICE_PER_POST_NANO);
+        selectFields.add(CHANNELS.IS_ACTIVE);
+        selectFields.add(CHANNELS.UPDATED_AT);
+
         var records = dsl.select(
-                        CHANNELS.ID,
-                        CHANNELS.TITLE,
-                        CHANNELS.USERNAME,
-                        CHANNELS.SUBSCRIBER_COUNT,
-                        CHANNELS.AVG_VIEWS,
-                        CHANNELS.ENGAGEMENT_RATE,
-                        CHANNELS.PRICE_PER_POST_NANO,
-                        CHANNELS.IS_ACTIVE,
-                        CHANNELS.UPDATED_AT)
+                        selectFields.toArray(
+                                org.jooq.SelectFieldOrAsterisk[]::new))
                 .from(CHANNELS)
                 .where(condition)
                 .orderBy(orderBy)
@@ -75,16 +88,94 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
                 ? records.subList(0, criteria.limit())
                 : records;
 
+        var channelIds = pageRecords.stream()
+                .map(r -> r.get(CHANNELS.ID))
+                .toList();
+        Map<Long, List<String>> categoriesByChannel =
+                categoryRepository.findCategorySlugsForChannels(channelIds);
+
         List<ChannelListItem> items = pageRecords.stream()
-                .map(r -> toListItem(r,
-                        categoryRepository.findCategorySlugsForChannel(
-                                r.get(CHANNELS.ID))))
+                .map(r -> {
+                    Long id = r.get(CHANNELS.ID);
+                    List<String> categories = id != null
+                            ? categoriesByChannel.getOrDefault(id, List.of())
+                            : List.of();
+                    return toListItem(r, categories);
+                })
                 .toList();
 
         String nextCursor = null;
         if (hasNext && !pageRecords.isEmpty()) {
             var last = pageRecords.getLast();
-            nextCursor = buildCursor(last, criteria.sort());
+            nextCursor = buildCursor(last, criteria.sort(), hasTextQuery);
+        }
+
+        return new CursorPage<>(items, nextCursor);
+    }
+
+    private CursorPage<ChannelListItem> searchByRelevance(
+            @NonNull ChannelSearchCriteria criteria,
+            @NonNull Condition baseCondition) {
+        int fetchLimit = criteria.limit() + 1;
+
+        // ParadeDB currently doesn't support keyset pagination using pdb.score(..) in WHERE.
+        // Pragmatic fallback: OFFSET-based pagination for RELEVANCE+query only.
+        int offset = 0;
+        if (criteria.cursor() != null && !criteria.cursor().isBlank()) {
+            Map<String, String> cursor = CursorCodec.decode(criteria.cursor());
+            String offsetValue = cursor.get("o");
+            if (offsetValue != null) {
+                try {
+                    offset = Integer.parseInt(offsetValue);
+                } catch (NumberFormatException ignore) {
+                    offset = 0;
+                }
+            }
+        }
+
+        var records = dsl.select(
+                        CHANNELS.ID,
+                        CHANNELS.TITLE,
+                        CHANNELS.USERNAME,
+                        CHANNELS.SUBSCRIBER_COUNT,
+                        CHANNELS.AVG_VIEWS,
+                        CHANNELS.ENGAGEMENT_RATE,
+                        CHANNELS.PRICE_PER_POST_NANO,
+                        CHANNELS.IS_ACTIVE,
+                        CHANNELS.UPDATED_AT,
+                        SCORE_FIELD.as("score"))
+                .from(CHANNELS)
+                .where(baseCondition)
+                .orderBy(SCORE_FIELD.desc(), CHANNELS.ID.desc())
+                .limit(fetchLimit)
+                .offset(offset)
+                .fetch();
+
+        boolean hasNext = records.size() > criteria.limit();
+        var pageRecords = hasNext
+                ? records.subList(0, criteria.limit())
+                : records;
+
+        var channelIds = pageRecords.stream()
+                .map(r -> r.get(CHANNELS.ID))
+                .toList();
+        Map<Long, List<String>> categoriesByChannel =
+                categoryRepository.findCategorySlugsForChannels(channelIds);
+
+        List<ChannelListItem> items = pageRecords.stream()
+                .map(r -> {
+                    Long id = r.get(CHANNELS.ID);
+                    List<String> categories = id != null
+                            ? categoriesByChannel.getOrDefault(id, List.of())
+                            : List.of();
+                    return toListItem(r, categories);
+                })
+                .toList();
+
+        String nextCursor = null;
+        if (hasNext) {
+            nextCursor = CursorCodec.encode(
+                    Map.of("o", String.valueOf(offset + criteria.limit())));
         }
 
         return new CursorPage<>(items, nextCursor);
@@ -167,7 +258,8 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
     }
 
     private static Condition applyKeyset(Condition condition,
-                                         ChannelSearchCriteria criteria) {
+                                         ChannelSearchCriteria criteria,
+                                         boolean hasTextQuery) {
         if (criteria.cursor() == null || criteria.cursor().isBlank()) {
             return condition;
         }
@@ -184,7 +276,20 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         ChannelSort sort = criteria.sort();
 
         if (sort == ChannelSort.RELEVANCE) {
-            condition = condition.and(CHANNELS.ID.lt(lastChannelId));
+            if (hasTextQuery && lastSort != null) {
+                BigDecimal lastScore = new BigDecimal(lastSort);
+                condition = condition.and(
+                        SCORE_FIELD.lt(lastScore)
+                                .or(SCORE_FIELD.eq(lastScore)
+                                        .and(CHANNELS.ID.lt(lastChannelId))));
+            } else if (!hasTextQuery && lastSort != null) {
+                condition = condition.and(
+                        buildKeysetCondition(ChannelSort.SUBSCRIBERS_DESC,
+                                lastSort, lastChannelId));
+            } else {
+                // Invalid cursor. Best effort: fall back to id-only.
+                condition = condition.and(CHANNELS.ID.lt(lastChannelId));
+            }
         } else {
             condition = condition.and(
                     buildKeysetCondition(sort, lastSort, lastChannelId));
@@ -243,7 +348,7 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
         List<OrderField<?>> fields = new ArrayList<>();
 
         if (hasTextQuery && sort == ChannelSort.RELEVANCE) {
-            fields.add(DSL.field("pdb.score(id)").desc());
+            fields.add(SCORE_FIELD.desc());
             fields.add(CHANNELS.ID.desc());
             return fields;
         }
@@ -294,6 +399,30 @@ public class ParadeDbChannelSearch implements ChannelSearchPort {
             case UPDATED ->
                     last.get(CHANNELS.UPDATED_AT).toString();
             case RELEVANCE -> "0";
+        };
+        return CursorCodec.encode(Map.of("id", id, "sort", sortValue));
+    }
+
+    private static String buildCursor(
+            Record last, ChannelSort sort, boolean hasTextQuery) {
+        String id = String.valueOf(last.get(CHANNELS.ID));
+        String sortValue = switch (sort) {
+            case SUBSCRIBERS_DESC, SUBSCRIBERS_ASC ->
+                    String.valueOf(last.get(CHANNELS.SUBSCRIBER_COUNT));
+            case PRICE_ASC, PRICE_DESC ->
+                    String.valueOf(last.get(CHANNELS.PRICE_PER_POST_NANO));
+            case ENGAGEMENT_DESC ->
+                    String.valueOf(last.get(CHANNELS.ENGAGEMENT_RATE));
+            case UPDATED ->
+                    last.get(CHANNELS.UPDATED_AT).toString();
+            case RELEVANCE -> {
+                if (hasTextQuery) {
+                    BigDecimal score = last.get("score", BigDecimal.class);
+                    yield score != null ? score.toPlainString() : "0";
+                }
+                // When query is missing, RELEVANCE falls back to subscribers desc.
+                yield String.valueOf(last.get(CHANNELS.SUBSCRIBER_COUNT));
+            }
         };
         return CursorCodec.encode(Map.of("id", id, "sort", sortValue));
     }

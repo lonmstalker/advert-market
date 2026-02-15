@@ -6,10 +6,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.communication.api.channel.ChatInfo;
-import com.advertmarket.communication.api.channel.ChatMemberInfo;
-import com.advertmarket.communication.api.channel.ChatMemberStatus;
-import com.advertmarket.communication.api.channel.TelegramChannelPort;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
+import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
 import com.advertmarket.integration.support.ContainerProperties;
@@ -25,11 +25,13 @@ import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
+import com.advertmarket.marketplace.channel.service.ChannelRegistrationTxService;
 import com.advertmarket.marketplace.channel.service.ChannelService;
 import com.advertmarket.marketplace.channel.service.ChannelVerificationService;
 import com.advertmarket.marketplace.channel.web.ChannelController;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.shared.json.JsonFacade;
+import java.time.Duration;
 import java.util.List;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
@@ -312,7 +314,8 @@ class ChannelHttpIntegrationTest {
 
         @Bean
         ChannelBotProperties channelBotProperties() {
-            return new ChannelBotProperties(BOT_USER_ID);
+            return new ChannelBotProperties(
+                    BOT_USER_ID, Duration.ofSeconds(3));
         }
 
         @Bean
@@ -348,14 +351,23 @@ class ChannelHttpIntegrationTest {
         ChannelVerificationService channelVerificationService(
                 TelegramChannelPort tcp,
                 ChannelBotProperties props) {
-            return new ChannelVerificationService(tcp, props);
+            return new ChannelVerificationService(
+                    tcp, props, Runnable::run);
+        }
+
+        @Bean
+        ChannelRegistrationTxService channelRegistrationTxService(
+                ChannelRepository repo) {
+            return new ChannelRegistrationTxService(repo);
         }
 
         @Bean
         ChannelRegistrationService channelRegistrationService(
                 ChannelVerificationService vs,
-                ChannelRepository repo) {
-            return new ChannelRegistrationService(vs, repo);
+                ChannelRepository repo,
+                ChannelRegistrationTxService txService) {
+            return new ChannelRegistrationService(
+                    vs, repo, txService);
         }
 
         @Bean

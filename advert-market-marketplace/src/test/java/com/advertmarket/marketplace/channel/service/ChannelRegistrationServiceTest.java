@@ -9,7 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.communication.api.channel.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
@@ -41,6 +41,9 @@ class ChannelRegistrationServiceTest {
     @Mock
     private ChannelRepository channelRepository;
 
+    @Mock
+    private ChannelRegistrationTxService registrationTxService;
+
     @InjectMocks
     private ChannelRegistrationService service;
 
@@ -69,8 +72,8 @@ class ChannelRegistrationServiceTest {
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(CHANNEL_ALREADY_REGISTERED);
 
-        verify(channelRepository, never())
-                .insert(any(NewChannel.class));
+        verify(registrationTxService, never())
+                .registerVerified(any(NewChannel.class));
     }
 
     @Test
@@ -86,7 +89,7 @@ class ChannelRegistrationServiceTest {
                 .thenReturn(verifyResponse());
 
         var expected = channelResponse();
-        when(channelRepository.insert(any(NewChannel.class)))
+        when(registrationTxService.registerVerified(any(NewChannel.class)))
                 .thenReturn(expected);
 
         var result = service.register(request, USER_ID);

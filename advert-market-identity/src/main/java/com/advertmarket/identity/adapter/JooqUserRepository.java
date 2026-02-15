@@ -64,15 +64,23 @@ public class JooqUserRepository implements UserRepository {
 
     @Override
     public @NonNull Optional<UserProfile> findById(@NonNull UserId userId) {
-        Record record = dsl.select()
+        return dsl.select(
+                        USERS.ID,
+                        USERS.USERNAME,
+                        USERS.FIRST_NAME,
+                        USERS.LAST_NAME,
+                        USERS.LANGUAGE_CODE,
+                        USERS.DISPLAY_CURRENCY,
+                        USERS.NOTIFICATION_SETTINGS,
+                        USERS.ONBOARDING_COMPLETED,
+                        USERS.INTERESTS,
+                        USERS.CREATED_AT)
                 .from(USERS)
                 .where(USERS.ID.eq(userId.value()))
                 .and(USERS.IS_DELETED.isFalse()
                         .or(USERS.IS_DELETED.isNull()))
-                .fetchOne();
-
-        return Optional.ofNullable(
-                record != null ? mapToProfile(record) : null);
+                .fetchOptional()
+                .map(this::mapToProfile);
     }
 
     @Override

@@ -179,6 +179,16 @@ private Condition decodeCursorCondition(String cursor, ChannelSort sort) {
 
 `channel_id` (BIGINT PK) - guarantees uniqueness with the same sort key values.
 
+### Exception: ParadeDB RELEVANCE+query uses OFFSET (Temporary)
+
+ParadeDB relevance sorting uses `pdb.score(id)` (BM25). At the moment, `pdb.score(..)` cannot be used in `WHERE`,
+which makes correct keyset pagination for `RELEVANCE` + `query` impossible.
+
+Current implementation therefore uses OFFSET-based pagination for `sort=RELEVANCE` *only when* the full-text `query`
+parameter is present. Cursor contains the numeric offset (key `o`) and increments by `limit`.
+
+All other sorts continue to use keyset pagination.
+
 ---
 
 ## Full-Text Search

@@ -1,4 +1,4 @@
-package com.advertmarket.communication.api.channel;
+package com.advertmarket.marketplace.api.dto.telegram;
 
 /**
  * Status of a chat member in a Telegram channel.

@@ -9,6 +9,7 @@ import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.integration.support.DatabaseSupport;
+import com.advertmarket.integration.support.SharedContainers;
 import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
@@ -18,6 +19,14 @@ import com.advertmarket.marketplace.channel.search.ParadeDbChannelSearch;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.pagination.CursorPage;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.jooq.ExecuteContext;
+import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultExecuteListener;
+import org.jooq.impl.DefaultExecuteListenerProvider;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -171,6 +180,95 @@ class ChannelSearchIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should paginate relevance without query (fallback order must be cursor-safe)")
+    void shouldPaginateRelevanceWithoutQuery() {
+        for (int i = 1; i <= 5; i++) {
+            insertChannel(-i, "Chan " + i, "tech", i * 1000, null, true);
+        }
+
+        CursorPage<ChannelListItem> page1 = search.search(criteria(
+                null, null, null, null, null,
+                ChannelSort.RELEVANCE, null, 2));
+        CursorPage<ChannelListItem> page2 = search.search(criteria(
+                null, null, null, null, null,
+                ChannelSort.RELEVANCE, page1.nextCursor(), 2));
+
+        assertThat(page1.items()).hasSize(2);
+        assertThat(page1.nextCursor()).isNotNull();
+        assertThat(page2.items()).hasSize(2);
+
+        var page1Ids = page1.items().stream()
+                .map(ChannelListItem::id)
+                .collect(java.util.stream.Collectors.toSet());
+        var page2Ids = page2.items().stream()
+                .map(ChannelListItem::id)
+                .collect(java.util.stream.Collectors.toSet());
+
+        assertThat(page2Ids).doesNotContainAnyElementsOf(page1Ids);
+    }
+
+    @Test
+    @DisplayName("Should paginate relevance with BM25 query using score+id keyset")
+    void shouldPaginateRelevanceWithQuery() {
+        insertChannel(1L, "alpha alpha alpha alpha", "tech", 1000, null, true);
+        insertChannel(2L, "alpha alpha", "tech", 1000, null, true);
+        insertChannel(3L, "alpha", "tech", 1000, null, true);
+
+        CursorPage<ChannelListItem> page1 = search.search(criteriaWithQuery(
+                "alpha", ChannelSort.RELEVANCE, null, 2));
+        CursorPage<ChannelListItem> page2 = search.search(criteriaWithQuery(
+                "alpha", ChannelSort.RELEVANCE, page1.nextCursor(), 2));
+
+        assertThat(page1.items()).hasSize(2);
+        assertThat(page1.nextCursor()).isNotNull();
+        assertThat(page2.items()).hasSize(1);
+
+        Set<Long> distinctIds = new java.util.HashSet<>();
+        page1.items().forEach(it -> distinctIds.add(it.id()));
+        page2.items().forEach(it -> distinctIds.add(it.id()));
+        assertThat(distinctIds).hasSize(3);
+    }
+
+    @Test
+    @DisplayName("Search should not execute N+1 queries for category mapping")
+    void search_shouldNotExecuteNPlusOneQueriesForCategories() throws Exception {
+        for (int i = 1; i <= 5; i++) {
+            insertChannel(-i, "Chan " + i, "tech", i * 1000, null, true);
+        }
+
+        AtomicInteger statements = new AtomicInteger();
+        var listener = new DefaultExecuteListener() {
+            @Override
+            public void executeStart(ExecuteContext ctx) {
+                statements.incrementAndGet();
+            }
+        };
+
+        try (Connection conn = DriverManager.getConnection(
+                SharedContainers.pgJdbcUrl(),
+                SharedContainers.pgUsername(),
+                SharedContainers.pgPassword())) {
+            var dslWithListener = DSL.using(conn, org.jooq.SQLDialect.POSTGRES);
+            dslWithListener.configuration().set(
+                    new DefaultExecuteListenerProvider(listener));
+
+            var jsonFacade = new JsonFacade(new ObjectMapper());
+            var categoryRepo = new JooqCategoryRepository(
+                    dslWithListener, jsonFacade);
+            var searchWithListener = new ParadeDbChannelSearch(
+                    dslWithListener, categoryRepo);
+
+            statements.set(0);
+            CursorPage<ChannelListItem> page = searchWithListener.search(criteria(
+                    null, null, null, null, null,
+                    ChannelSort.SUBSCRIBERS_DESC, null, 5));
+
+            assertThat(page.items()).hasSize(5);
+            assertThat(statements.get()).isLessThanOrEqualTo(4);
+        }
+    }
+
+    @Test
     @DisplayName("Should return empty page when no match")
     void shouldReturnEmptyPageWhenNoMatch() {
         insertChannel(-1L, "Tech", "tech", 1000, null, true);
@@ -193,6 +291,13 @@ class ChannelSearchIntegrationTest {
         return new ChannelSearchCriteria(
                 category, minSub, maxSub, minPrice, maxPrice,
                 null, null, null, sort, cursor, limit);
+    }
+
+    private static ChannelSearchCriteria criteriaWithQuery(
+            String query, ChannelSort sort, String cursor, int limit) {
+        return new ChannelSearchCriteria(
+                null, null, null, null, null,
+                null, null, query, sort, cursor, limit);
     }
 
     private static void insertChannel(long id, String title, String categorySlug,

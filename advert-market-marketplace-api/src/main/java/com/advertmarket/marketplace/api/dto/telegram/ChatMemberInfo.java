@@ -1,5 +1,6 @@
-package com.advertmarket.communication.api.channel;
+package com.advertmarket.marketplace.api.dto.telegram;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -12,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * @param canDeleteMessages can delete messages of other users
  * @param canManageChat     can manage the chat (change info, pin messages, etc.)
  */
+@Schema(description = "Telegram chat member information used for channel verification.")
 public record ChatMemberInfo(
         long userId,
         @NonNull ChatMemberStatus status,

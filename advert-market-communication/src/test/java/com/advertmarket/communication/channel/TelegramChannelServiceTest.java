@@ -8,9 +8,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.communication.api.channel.ChatInfo;
-import com.advertmarket.communication.api.channel.ChatMemberInfo;
-import com.advertmarket.communication.api.channel.ChatMemberStatus;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.communication.channel.internal.ChannelCachePort;
 import com.advertmarket.communication.channel.internal.ChannelRateLimiterPort;

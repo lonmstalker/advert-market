@@ -2,6 +2,7 @@ package com.advertmarket.marketplace.api.port;
 
 import com.advertmarket.marketplace.api.dto.CategoryDto;
 import java.util.List;
+import java.util.Map;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -16,4 +17,9 @@ public interface CategoryRepository {
     /** Returns category slugs for a given channel. */
     @NonNull
     List<String> findCategorySlugsForChannel(long channelId);
+
+    /** Returns category slugs grouped by channel ID for the given channels. */
+    @NonNull
+    Map<Long, List<String>> findCategorySlugsForChannels(
+            @NonNull List<Long> channelIds);
 }

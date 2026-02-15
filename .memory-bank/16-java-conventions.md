@@ -79,7 +79,9 @@ Default executor via `spring.threads.virtual.enabled: true`.
 
 ### Pagination
 
-ONLY keyset cursor pagination. OFFSET is FORBIDDEN. Base64-encoded JSON cursor.
+ONLY keyset cursor pagination. OFFSET is FORBIDDEN, except for `sort=RELEVANCE` + full-text `query` with ParadeDB score,
+where correct keyset pagination is not possible yet (temporary workaround documented in
+`14-implementation-specs/29-channel-search-impl.md`).
 
 ### Redis
 

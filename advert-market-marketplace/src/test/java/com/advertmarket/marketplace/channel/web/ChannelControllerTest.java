@@ -2,6 +2,7 @@ package com.advertmarket.marketplace.channel.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -116,6 +117,21 @@ class ChannelControllerTest {
         assertThat(criteria.maxSubscribers()).isEqualTo(5000);
         assertThat(criteria.sort()).isEqualTo(ChannelSort.PRICE_DESC);
         assertThat(criteria.limit()).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("Should throw INVALID_PARAMETER for unsupported sort")
+    void shouldRejectUnsupportedSort() {
+        Throwable thrown = catchThrowable(() ->
+                mockMvc.perform(get("/api/v1/channels")
+                        .param("sort", "no_such_sort")
+                        .param("limit", "10")));
+
+        assertThat(thrown)
+                .hasCauseInstanceOf(DomainException.class);
+        var domain = (DomainException) thrown.getCause();
+        assertThat(domain.getErrorCode())
+                .isEqualTo(ErrorCodes.INVALID_PARAMETER);
     }
 
     @Test

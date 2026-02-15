@@ -1,11 +1,11 @@
 # Marketplace API — Agent Instructions
 
-Pure API module: DTOs, port interfaces, enums for channels, pricing, teams, and categories.
+Pure API module: DTOs, port interfaces, enums for channels, pricing, teams, categories, and Telegram channel verification.
 
 ## Contents
 
-- **Ports** (7): `ChannelRepository`, `ChannelSearchPort`, `ChannelAuthorizationPort`, `ChannelLifecyclePort`, `PricingRuleRepository`, `TeamMembershipRepository`, `CategoryRepository`
-- **DTOs** (19): channel CRUD, search criteria, pricing rules, team management
+- **Ports** (8): `ChannelRepository`, `ChannelSearchPort`, `ChannelAuthorizationPort`, `ChannelLifecyclePort`, `PricingRuleRepository`, `TeamMembershipRepository`, `CategoryRepository`, `TelegramChannelPort`
+- **DTOs** (22): channel CRUD, search criteria, pricing rules, team management, plus Telegram query DTOs (`dto/telegram/*`)
 - **Enums** (3): `PostType`, `ChannelMembershipRole`, `ChannelRight`
 
 ## Rules

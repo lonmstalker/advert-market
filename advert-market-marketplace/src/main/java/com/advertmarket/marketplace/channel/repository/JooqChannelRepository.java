@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implements {@link ChannelRepository} using jOOQ.
@@ -48,7 +47,6 @@ public class JooqChannelRepository implements ChannelRepository {
     }
 
     @Override
-    @Transactional
     @NonNull
     public ChannelResponse insert(@NonNull NewChannel ch) {
         var record = dsl.insertInto(CHANNELS)
@@ -105,7 +103,6 @@ public class JooqChannelRepository implements ChannelRepository {
     }
 
     @Override
-    @Transactional
     @NonNull
     public Optional<ChannelResponse> update(long channelId,
                                             @NonNull ChannelUpdateRequest req) {
@@ -147,7 +144,6 @@ public class JooqChannelRepository implements ChannelRepository {
     }
 
     @Override
-    @Transactional
     public boolean deactivate(long channelId) {
         int rows = dsl.update(CHANNELS)
                 .set(CHANNELS.IS_ACTIVE, false)

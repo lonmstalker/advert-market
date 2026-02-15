@@ -18,15 +18,20 @@ This file tracks what is implemented now versus remaining work.
 - Batch fetch: `findPendingBatch(batchSize)`
 - Empty batch short-circuit
 
-### Repository Query Semantics
+### Repository Query + Claiming Semantics
 
-`JooqOutboxRepository.findPendingBatch()` currently applies:
+`JooqOutboxRepository.findPendingBatch()` currently:
 
-- `status = PENDING`
-- `created_at < now() - 1 second`
-- `ORDER BY created_at ASC`
-- `LIMIT batchSize`
-- `FOR UPDATE SKIP LOCKED`
+- selects rows where `status = PENDING`
+- filters `created_at < now() - 1 second`
+- orders by `created_at ASC`
+- limits to `batchSize`
+- uses `FOR UPDATE SKIP LOCKED`
+- claims the selected rows by transitioning `status: PENDING -> PROCESSING` in the same transaction
+
+Rationale:
+- avoids duplicate publications when multiple poller instances are running
+- keeps "claim" atomic together with row selection
 
 ### Delivery and Retry Behavior
 
@@ -36,12 +41,12 @@ For each entry:
 2. On success: `markDelivered(id)` and metric `outbox.published`
 3. On failure:
    - if retries exhausted: `markFailed(id)` + metric `outbox.records.failed`
-   - otherwise: `incrementRetry(id)`
+   - otherwise: `incrementRetry(id)` (also transitions `status: PROCESSING -> PENDING`)
 
 Status values in enum:
 
 - `PENDING`
-- `PROCESSING` (defined, not explicitly used by poller transitions yet)
+- `PROCESSING` (used for claiming)
 - `DELIVERED`
 - `FAILED`
 
@@ -70,7 +75,7 @@ Defaults:
 
 | Gap | Beads ID | Notes |
 |---|---|---|
-| Explicit `PENDING -> PROCESSING` transition before publish | `advert-market-6wx.4` | Enum exists, transition not applied in repository updates |
+| PROCESSING TTL recovery (stuck claims after crash) | `advert-market-6wx.4` | Optional but recommended. Example: "PROCESSING older than X" -> revert to PENDING |
 | Exponential backoff timing (`initialBackoff`, `2x`, `4x`) | `advert-market-6wx.4` | Current logic retries on next poll cycle without delay schedule |
 | Delivered-record cleanup job (7-day retention) | `advert-market-6wx.4` | No scheduled cleanup found in `HEAD` |
 | Poll duration metric (`outbox.poll.duration`) | `advert-market-6wx.4` | Not emitted currently |

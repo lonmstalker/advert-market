@@ -1,7 +1,7 @@
 package com.advertmarket.communication.channel.internal;
 
-import com.advertmarket.communication.api.channel.ChatInfo;
-import com.advertmarket.communication.api.channel.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
 import com.advertmarket.shared.json.JsonException;
 import com.advertmarket.shared.json.JsonFacade;
 import java.util.List;

@@ -37,6 +37,8 @@ public class SecurityExceptionHandler
 
     private static final String PROBLEM_JSON =
             "application/problem+json";
+    private static final String INTERNAL_PATH_PREFIX =
+            "/internal/";
 
     private final ObjectMapper objectMapper;
     private final LocalizationService localization;
@@ -49,8 +51,11 @@ public class SecurityExceptionHandler
             throws IOException {
         log.debug("Authentication failed: {}",
                 authException.getMessage());
+        ErrorCode errorCode = isInternal(request)
+                ? ErrorCode.INTERNAL_API_KEY_INVALID
+                : ErrorCode.AUTH_INVALID_TOKEN;
         writeProblem(response, HttpStatus.UNAUTHORIZED,
-                ErrorCode.AUTH_INVALID_TOKEN);
+                errorCode);
     }
 
     @Override
@@ -61,8 +66,17 @@ public class SecurityExceptionHandler
             throws IOException {
         log.debug("Access denied: {}",
                 accessDeniedException.getMessage());
+        ErrorCode errorCode = isInternal(request)
+                ? ErrorCode.INTERNAL_IP_DENIED
+                : ErrorCode.AUTH_INSUFFICIENT_PERMISSIONS;
         writeProblem(response, HttpStatus.FORBIDDEN,
-                ErrorCode.AUTH_INSUFFICIENT_PERMISSIONS);
+                errorCode);
+    }
+
+    private static boolean isInternal(
+            HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri != null && uri.startsWith(INTERNAL_PATH_PREFIX);
     }
 
     private void writeProblem(
