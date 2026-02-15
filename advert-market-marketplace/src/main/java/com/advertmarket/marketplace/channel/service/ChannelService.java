@@ -5,6 +5,7 @@ import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
+import java.util.List;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.ChannelSearchPort;
@@ -47,6 +48,17 @@ public class ChannelService {
      */
     public long count(@NonNull ChannelSearchCriteria criteria) {
         return searchPort.count(normalizeCriteria(criteria));
+    }
+
+    /**
+     * Returns all active channels owned by the given user.
+     *
+     * @param ownerId user ID
+     * @return list of owned channels
+     */
+    @NonNull
+    public List<ChannelResponse> findByOwnerId(long ownerId) {
+        return channelRepository.findByOwnerId(ownerId);
     }
 
     /**

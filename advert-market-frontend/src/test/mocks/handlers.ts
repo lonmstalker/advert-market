@@ -20,6 +20,7 @@ const API_BASE = '/api/v1';
 const STORAGE_KEYS = {
   profile: 'msw_profile_state',
   deals: 'msw_deals_state',
+  registeredChannels: 'msw_registered_channels',
 } as const;
 
 function hasSessionStorage(): boolean {
@@ -47,17 +48,24 @@ let deals = loadState<typeof mockDeals>(
   STORAGE_KEYS.deals,
   mockDeals.map((d) => ({ ...d })),
 );
+let registeredChannels = loadState<typeof mockChannels>(STORAGE_KEYS.registeredChannels, []);
 
 const depositChecks = new Map<string, number>();
+
+function getAllChannels() {
+  return [...mockChannels, ...registeredChannels];
+}
 
 export function resetMockState(): void {
   profile = { ...mockProfile };
   deals = mockDeals.map((d) => ({ ...d }));
+  registeredChannels = [];
   depositChecks.clear();
 
   if (!hasSessionStorage()) return;
   sessionStorage.removeItem(STORAGE_KEYS.profile);
   sessionStorage.removeItem(STORAGE_KEYS.deals);
+  sessionStorage.removeItem(STORAGE_KEYS.registeredChannels);
 }
 
 function hasPendingDepositIntent(dealId: string): boolean {
@@ -255,6 +263,114 @@ export const handlers = [
     return HttpResponse.json(updated);
   }),
 
+  // --- Channel registration handlers ---
+
+  // POST /channels/verify — verify a channel for registration
+  http.post(`${API_BASE}/channels/verify`, async ({ request }) => {
+    const body = (await request.json()) as { channelUsername: string };
+    const username = body.channelUsername.replace(/^@/, '');
+
+    if (username === 'nonexistent_channel') {
+      return HttpResponse.json(
+        { type: 'about:blank', title: 'Not Found', status: 404, error_code: 'CHANNEL_NOT_FOUND' },
+        { status: 404 },
+      );
+    }
+
+    const existing = getAllChannels().find((ch) => ch.username === username);
+    if (existing) {
+      return HttpResponse.json(
+        { type: 'about:blank', title: 'Conflict', status: 409, error_code: 'CHANNEL_ALREADY_REGISTERED' },
+        { status: 409 },
+      );
+    }
+
+    const isAdmin = username !== 'no_bot_channel';
+    return HttpResponse.json({
+      channelId: -(Date.now() % 1_000_000),
+      title: `Channel @${username}`,
+      username,
+      subscriberCount: 500,
+      botStatus: {
+        isAdmin,
+        canPostMessages: isAdmin,
+        canDeleteMessages: isAdmin,
+        canEditMessages: isAdmin,
+        missingPermissions: isAdmin ? [] : ['can_post_messages'],
+      },
+      userStatus: { isMember: true, role: 'CREATOR' },
+    });
+  }),
+
+  // POST /channels — register a channel
+  http.post(`${API_BASE}/channels`, async ({ request }) => {
+    const body = (await request.json()) as {
+      channelId: number;
+      categories?: string[];
+      pricePerPostNano?: number;
+    };
+
+    const alreadyRegistered = getAllChannels().find((ch) => ch.id === body.channelId);
+    if (alreadyRegistered) {
+      return HttpResponse.json(
+        { type: 'about:blank', title: 'Conflict', status: 409, error_code: 'CHANNEL_ALREADY_REGISTERED' },
+        { status: 409 },
+      );
+    }
+
+    const newChannel = {
+      id: body.channelId,
+      title: `Channel ${body.channelId}`,
+      username: `channel_${Math.abs(body.channelId)}`,
+      subscriberCount: 500,
+      categories: body.categories ?? [],
+      ...(body.pricePerPostNano != null && { pricePerPostNano: body.pricePerPostNano }),
+      avgViews: 150,
+      engagementRate: 3.0,
+      isActive: true,
+      isVerified: false,
+      language: 'ru',
+      ownerId: mockProfile.id,
+    };
+
+    registeredChannels = [...registeredChannels, newChannel];
+    saveState(STORAGE_KEYS.registeredChannels, registeredChannels);
+
+    return HttpResponse.json(
+      {
+        id: newChannel.id,
+        title: newChannel.title,
+        username: newChannel.username,
+        subscriberCount: newChannel.subscriberCount,
+        categories: newChannel.categories,
+        ...(newChannel.pricePerPostNano != null && { pricePerPostNano: newChannel.pricePerPostNano }),
+        isActive: true,
+        ownerId: mockProfile.id,
+        createdAt: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  // GET /channels/my — channels owned by current user
+  http.get(`${API_BASE}/channels/my`, () => {
+    const myChannels = getAllChannels()
+      .filter((ch) => 'ownerId' in ch && ch.ownerId === mockProfile.id)
+      .map((ch) => ({
+        id: ch.id,
+        title: ch.title,
+        username: ch.username ?? null,
+        description: null,
+        subscriberCount: ch.subscriberCount,
+        categories: ch.categories,
+        pricePerPostNano: ch.pricePerPostNano,
+        isActive: ch.isActive,
+        ownerId: mockProfile.id,
+        createdAt: '2026-01-01T00:00:00Z',
+      }));
+    return HttpResponse.json(myChannels);
+  }),
+
   // --- Channel handlers ---
 
   // GET /categories — category list (matches backend ReferenceDataController)
@@ -299,7 +415,7 @@ export const handlers = [
   // GET /channels/:channelId — channel detail
   http.get(`${API_BASE}/channels/:channelId`, ({ params }) => {
     const channelId = Number(params.channelId);
-    const channel = mockChannels.find((ch) => ch.id === channelId);
+    const channel = getAllChannels().find((ch) => ch.id === channelId);
 
     if (!channel) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
@@ -513,7 +629,7 @@ export const handlers = [
 // --- Helper: filter channels by search params ---
 
 function filterChannels(params: URLSearchParams) {
-  let result = [...mockChannels];
+  let result = [...getAllChannels()];
 
   const q = params.get('q')?.toLowerCase();
   if (q) {

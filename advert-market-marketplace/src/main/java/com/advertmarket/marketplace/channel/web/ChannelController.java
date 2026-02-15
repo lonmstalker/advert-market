@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -107,6 +108,20 @@ public class ChannelController {
                 ChannelSort.SUBSCRIBERS_DESC.name(), null,
                 ChannelSearchCriteria.DEFAULT_LIMIT);
         return channelService.count(criteria);
+    }
+
+    /**
+     * Returns channels owned by the current user.
+     */
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "My channels",
+            description = "Returns channels owned by the authenticated user")
+    @ApiResponse(responseCode = "200", description = "User's channels")
+    public List<ChannelResponse> myChannels() {
+        long userId = SecurityContextUtil.currentUserId().value();
+        return channelService.findByOwnerId(userId);
     }
 
     /**

@@ -1,9 +1,12 @@
+import { useQuery } from '@tanstack/react-query';
 import { Group, GroupItem, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import type { ComponentType, SVGProps } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { fetchMyChannels } from '@/features/channels';
+import { channelKeys } from '@/shared/api/query-keys';
 import { useAuth } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { EmptyState } from '@/shared/ui';
@@ -69,6 +72,11 @@ export default function ProfilePage() {
   const { profile } = useAuth();
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
 
+  const { data: myChannels } = useQuery({
+    queryKey: channelKeys.my(),
+    queryFn: fetchMyChannels,
+  });
+
   const displayName = profile?.displayName ?? '';
   const username = profile?.username ? `@${profile.username}` : '';
   const langCode = profile?.languageCode ?? 'en';
@@ -101,13 +109,57 @@ export default function ProfilePage() {
       >
         <motion.div {...fadeIn}>
           <Group header={t('profile.channels')}>
-            <EmptyState
-              icon={<SatelliteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
-              title={t('profile.channels.empty.title')}
-              description={t('profile.channels.empty.description')}
-              actionLabel={t('profile.channels.empty.cta')}
-              onAction={() => navigate('/profile/channels/new')}
-            />
+            {myChannels && myChannels.length > 0 ? (
+              <>
+                {myChannels.map((ch) => (
+                  <motion.div key={ch.id} {...pressScale}>
+                    <GroupItem
+                      text={ch.title}
+                      description={ch.username ? `@${ch.username}` : undefined}
+                      after={
+                        <Text type="caption1" color="secondary">
+                          {t('catalog.channel.subscribers', { count: ch.subscriberCount })}
+                        </Text>
+                      }
+                      chevron
+                      onClick={() => navigate(`/catalog/channels/${ch.id}`)}
+                    />
+                  </motion.div>
+                ))}
+                <motion.div {...pressScale}>
+                  <GroupItem
+                    text={t('profile.channels.empty.cta')}
+                    before={
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 18,
+                          color: 'var(--color-accent-primary)',
+                        }}
+                      >
+                        +
+                      </div>
+                    }
+                    chevron
+                    onClick={() => navigate('/profile/channels/new')}
+                  />
+                </motion.div>
+              </>
+            ) : (
+              <EmptyState
+                icon={<SatelliteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+                title={t('profile.channels.empty.title')}
+                description={t('profile.channels.empty.description')}
+                actionLabel={t('profile.channels.empty.cta')}
+                onAction={() => navigate('/profile/channels/new')}
+              />
+            )}
           </Group>
         </motion.div>
 

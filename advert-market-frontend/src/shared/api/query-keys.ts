@@ -25,6 +25,7 @@ export const channelKeys = {
   team: (id: number) => [...channelKeys.detail(id), 'team'] as const,
   categories: () => [...channelKeys.all, 'categories'] as const,
   count: (params?: Record<string, string | number | undefined>) => [...channelKeys.all, 'count', params] as const,
+  my: () => [...channelKeys.all, 'my'] as const,
 };
 
 export const creativeKeys = {

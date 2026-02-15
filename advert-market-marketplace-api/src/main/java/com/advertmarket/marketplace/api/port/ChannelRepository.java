@@ -4,6 +4,7 @@ import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.dto.NewChannel;
+import java.util.List;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -42,6 +43,10 @@ public interface ChannelRepository {
     @NonNull
     Optional<ChannelResponse> update(long channelId,
                                      @NonNull ChannelUpdateRequest request);
+
+    /** Finds all active channels owned by the given user. */
+    @NonNull
+    List<ChannelResponse> findByOwnerId(long ownerId);
 
     /** Deactivates a channel (sets is_active = false). */
     boolean deactivate(long channelId);
