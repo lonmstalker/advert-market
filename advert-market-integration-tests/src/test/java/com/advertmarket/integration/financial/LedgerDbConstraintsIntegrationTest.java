@@ -159,5 +159,67 @@ class LedgerDbConstraintsIntegrationTest {
         }
     }
 
+    @Nested
+    @DisplayName("Length constraints")
+    class LengthConstraints {
+
+        @Test
+        @DisplayName("Should reject idempotency_key longer than 200 chars")
+        void idempotencyKeyTooLong() {
+            String key = "X".repeat(201);
+
+            assertThatThrownBy(() ->
+                    dsl.insertInto(LEDGER_IDEMPOTENCY_KEYS)
+                            .set(LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY, key)
+                            .execute())
+                    .isInstanceOf(DataAccessException.class);
+        }
+
+        @Test
+        @DisplayName("Should reject account_id longer than 100 chars")
+        void accountIdTooLong() {
+            String key = "test:" + UUID.randomUUID();
+            dsl.insertInto(LEDGER_IDEMPOTENCY_KEYS)
+                    .set(LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY, key)
+                    .execute();
+
+            String accountId = "ESCROW:" + "X".repeat(200);
+
+            assertThatThrownBy(() ->
+                    dsl.insertInto(LEDGER_ENTRIES)
+                            .set(LEDGER_ENTRIES.TX_REF, UUID.randomUUID())
+                            .set(LEDGER_ENTRIES.IDEMPOTENCY_KEY, key)
+                            .set(LEDGER_ENTRIES.ACCOUNT_ID, accountId)
+                            .set(LEDGER_ENTRIES.ENTRY_TYPE, "ESCROW_DEPOSIT")
+                            .set(LEDGER_ENTRIES.DEBIT_NANO, ONE_TON)
+                            .set(LEDGER_ENTRIES.CREDIT_NANO, 0L)
+                            .execute())
+                    .isInstanceOf(DataAccessException.class);
+        }
+
+        @Test
+        @DisplayName("Should reject description longer than 500 chars")
+        void descriptionTooLong() {
+            String key = "test:" + UUID.randomUUID();
+            dsl.insertInto(LEDGER_IDEMPOTENCY_KEYS)
+                    .set(LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY, key)
+                    .execute();
+
+            String description = "x".repeat(501);
+
+            assertThatThrownBy(() ->
+                    dsl.insertInto(LEDGER_ENTRIES)
+                            .set(LEDGER_ENTRIES.TX_REF, UUID.randomUUID())
+                            .set(LEDGER_ENTRIES.IDEMPOTENCY_KEY, key)
+                            .set(LEDGER_ENTRIES.ACCOUNT_ID, "TEST_ACCOUNT")
+                            .set(LEDGER_ENTRIES.ENTRY_TYPE, "ESCROW_DEPOSIT")
+                            .set(LEDGER_ENTRIES.DEBIT_NANO, ONE_TON)
+                            .set(LEDGER_ENTRIES.CREDIT_NANO, 0L)
+                            .set(LEDGER_ENTRIES.DESCRIPTION, description)
+                            .execute())
+                    .isInstanceOf(DataAccessException.class);
+        }
+    }
+
     private static final long ONE_TON = 1_000_000_000L;
 }

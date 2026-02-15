@@ -2,6 +2,7 @@ package com.advertmarket.integration.financial;
 
 import static com.advertmarket.db.generated.tables.AccountBalances.ACCOUNT_BALANCES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.advertmarket.financial.ledger.repository.JooqAccountBalanceRepository;
 import com.advertmarket.integration.support.DatabaseSupport;
@@ -10,6 +11,7 @@ import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.UserId;
 import java.util.OptionalLong;
 import org.jooq.DSLContext;
+import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -117,6 +119,31 @@ class JooqAccountBalanceRepositoryIntegrationTest {
                     account, Long.MAX_VALUE);
 
             assertThat(result).isEqualTo(Long.MAX_VALUE);
+        }
+
+        @Test
+        @DisplayName("Should throw on BIGINT overflow and not corrupt existing row")
+        void overflowShouldNotCorruptRow() {
+            AccountId account = AccountId.externalTon();
+
+            repository.upsertBalanceUnchecked(account, Long.MAX_VALUE);
+            Integer v1 = dsl.select(ACCOUNT_BALANCES.VERSION)
+                    .from(ACCOUNT_BALANCES)
+                    .where(ACCOUNT_BALANCES.ACCOUNT_ID.eq(account.value()))
+                    .fetchOne(ACCOUNT_BALANCES.VERSION);
+            assertThat(v1).isEqualTo(1);
+
+            assertThatThrownBy(() ->
+                    repository.upsertBalanceUnchecked(account, 1L))
+                    .isInstanceOf(DataAccessException.class);
+
+            assertThat(repository.getBalance(account))
+                    .isEqualTo(Long.MAX_VALUE);
+            Integer versionAfter = dsl.select(ACCOUNT_BALANCES.VERSION)
+                    .from(ACCOUNT_BALANCES)
+                    .where(ACCOUNT_BALANCES.ACCOUNT_ID.eq(account.value()))
+                    .fetchOne(ACCOUNT_BALANCES.VERSION);
+            assertThat(versionAfter).isEqualTo(1);
         }
     }
 

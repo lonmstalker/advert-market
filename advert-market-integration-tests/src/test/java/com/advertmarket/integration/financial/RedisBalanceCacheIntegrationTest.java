@@ -1,6 +1,7 @@
 package com.advertmarket.integration.financial;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.advertmarket.financial.ledger.cache.RedisBalanceCache;
 import com.advertmarket.integration.support.RedisSupport;
@@ -217,6 +218,17 @@ class RedisBalanceCacheIntegrationTest {
             OptionalLong result = cache.get(account);
 
             assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should swallow DataAccessException on put when Redis key has wrong type")
+        void putSwallowsDataAccessExceptionOnWrongType() {
+            AccountId account = AccountId.escrow(DealId.generate());
+            redisTemplate.opsForHash().put(
+                    "balance:" + account.value(), "field", "value");
+
+            assertThatCode(() -> cache.put(account, 123L))
+                    .doesNotThrowAnyException();
         }
     }
 

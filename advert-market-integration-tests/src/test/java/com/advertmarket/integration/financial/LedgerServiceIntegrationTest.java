@@ -2,6 +2,7 @@ package com.advertmarket.integration.financial;
 
 import static com.advertmarket.db.generated.tables.AccountBalances.ACCOUNT_BALANCES;
 import static com.advertmarket.db.generated.tables.LedgerEntries.LEDGER_ENTRIES;
+import static com.advertmarket.db.generated.tables.LedgerIdempotencyKeys.LEDGER_IDEMPOTENCY_KEYS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.jooq.impl.DSL.sum;
@@ -26,6 +27,7 @@ import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
 import com.advertmarket.shared.util.IdempotencyKey;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -38,18 +40,22 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -89,6 +95,26 @@ class LedgerServiceIntegrationTest {
     void cleanUp() {
         DatabaseSupport.cleanFinancialTables(DatabaseSupport.dsl());
         balanceCache.clear();
+    }
+
+    @AfterEach
+    void doubleEntryInvariant() {
+        var totalDebit = sum(LEDGER_ENTRIES.DEBIT_NANO);
+        var totalCredit = sum(LEDGER_ENTRIES.CREDIT_NANO);
+        var totals = dsl.select(totalDebit, totalCredit)
+                .from(LEDGER_ENTRIES)
+                .fetchOne();
+
+        BigDecimal debit = totals != null && totals.get(totalDebit) != null
+                ? totals.get(totalDebit)
+                : BigDecimal.ZERO;
+        BigDecimal credit = totals != null && totals.get(totalCredit) != null
+                ? totals.get(totalCredit)
+                : BigDecimal.ZERO;
+
+        assertThat(debit)
+                .as("Global ledger invariant: SUM(debit_nano) must equal SUM(credit_nano)")
+                .isEqualTo(credit);
     }
 
     @Nested
@@ -208,6 +234,172 @@ class LedgerServiceIntegrationTest {
     }
 
     @Nested
+    @DisplayName("Transfer validation")
+    class TransferValidation {
+
+        @Test
+        @DisplayName("Should throw LEDGER_INCONSISTENCY for unbalanced transfer and roll back")
+        void unbalancedTransfer_shouldThrowLedgerInconsistency_andRollback() {
+            DealId dealId = DealId.generate();
+            AccountId externalTon = AccountId.externalTon();
+            AccountId escrow = AccountId.escrow(dealId);
+            IdempotencyKey key = IdempotencyKey.deposit("tx-unbalanced");
+
+            TransferRequest request = new TransferRequest(
+                    dealId,
+                    key,
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(1_000L), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(999L), Leg.Side.CREDIT)),
+                    null);
+
+            assertThatThrownBy(() -> ledgerService.transfer(request))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(
+                            ((DomainException) ex).getErrorCode())
+                            .isEqualTo("LEDGER_INCONSISTENCY"));
+
+            assertThat(dsl.fetchCount(LEDGER_IDEMPOTENCY_KEYS,
+                    LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY.eq(key.value())))
+                    .isZero();
+            assertThat(dsl.fetchCount(LEDGER_ENTRIES)).isZero();
+            assertThat(dsl.fetchCount(ACCOUNT_BALANCES)).isZero();
+        }
+
+        @Test
+        @DisplayName("Should throw LEDGER_INCONSISTENCY on overflow and roll back")
+        void overflowInValidation_shouldThrowLedgerInconsistency_andRollback() {
+            DealId dealId = DealId.generate();
+            AccountId externalTon = AccountId.externalTon();
+            AccountId escrow = AccountId.escrow(dealId);
+            IdempotencyKey key = IdempotencyKey.deposit("tx-overflow-validation");
+
+            TransferRequest request = new TransferRequest(
+                    dealId,
+                    key,
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(Long.MAX_VALUE), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(Long.MAX_VALUE), Leg.Side.DEBIT),
+                            new Leg(AccountId.platformTreasury(),
+                                    EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(1L), Leg.Side.CREDIT)),
+                    null);
+
+            assertThatThrownBy(() -> ledgerService.transfer(request))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(
+                            ((DomainException) ex).getErrorCode())
+                            .isEqualTo("LEDGER_INCONSISTENCY"));
+
+            assertThat(dsl.fetchCount(LEDGER_IDEMPOTENCY_KEYS,
+                    LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY.eq(key.value())))
+                    .isZero();
+            assertThat(dsl.fetchCount(LEDGER_ENTRIES)).isZero();
+            assertThat(dsl.fetchCount(ACCOUNT_BALANCES)).isZero();
+        }
+    }
+
+    @Nested
+    @DisplayName("Transactional atomicity")
+    class TransactionalAtomicity {
+
+        @Test
+        @DisplayName("Should roll back when entries insert fails (description too long)")
+        void descriptionTooLong_shouldRollbackBalancesAndNotInsertEntries() {
+            DealId dealId = DealId.generate();
+            AccountId externalTon = AccountId.externalTon();
+            AccountId escrow = AccountId.escrow(dealId);
+            IdempotencyKey key = IdempotencyKey.deposit("tx-desc-too-long");
+            String description = "x".repeat(501);
+
+            TransferRequest request = TransferRequest.balanced(
+                    dealId,
+                    key,
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(ONE_TON), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(ONE_TON), Leg.Side.CREDIT)),
+                    description);
+
+            assertThatThrownBy(() -> ledgerService.transfer(request))
+                    .isInstanceOf(DataAccessException.class);
+
+            assertThat(dsl.fetchCount(LEDGER_IDEMPOTENCY_KEYS,
+                    LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY.eq(key.value())))
+                    .isZero();
+            assertThat(dsl.fetchCount(LEDGER_ENTRIES)).isZero();
+            assertThat(dsl.fetchCount(ACCOUNT_BALANCES)).isZero();
+        }
+
+        @Test
+        @DisplayName("Should roll back when balance upsert fails (account_id too long)")
+        void accountIdTooLong_shouldRollbackAndNotInsertEntries() {
+            DealId dealId = DealId.generate();
+            AccountId externalTon = AccountId.externalTon();
+            AccountId escrow = AccountId.escrow(dealId);
+            AccountId tooLongAccount = new AccountId(
+                    "OVERPAYMENT:" + "X".repeat(200));
+            IdempotencyKey key = IdempotencyKey.deposit("tx-account-too-long");
+
+            TransferRequest request = TransferRequest.balanced(
+                    dealId,
+                    key,
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(ONE_TON), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(ONE_TON / 2),
+                                    Leg.Side.CREDIT),
+                            new Leg(tooLongAccount, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(ONE_TON / 2),
+                                    Leg.Side.CREDIT)),
+                    null);
+
+            assertThatThrownBy(() -> ledgerService.transfer(request))
+                    .isInstanceOf(DataAccessException.class);
+
+            assertThat(dsl.fetchCount(LEDGER_IDEMPOTENCY_KEYS,
+                    LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY.eq(key.value())))
+                    .isZero();
+            assertThat(dsl.fetchCount(LEDGER_ENTRIES)).isZero();
+            assertThat(dsl.fetchCount(ACCOUNT_BALANCES)).isZero();
+        }
+
+        @Test
+        @DisplayName("Should leave no state when idempotency key violates DB length constraint")
+        void idempotencyKeyTooLong_shouldFailAndLeaveNoState() {
+            DealId dealId = DealId.generate();
+            AccountId externalTon = AccountId.externalTon();
+            AccountId escrow = AccountId.escrow(dealId);
+            IdempotencyKey key = new IdempotencyKey("X".repeat(201));
+
+            TransferRequest request = TransferRequest.balanced(
+                    dealId,
+                    key,
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(ONE_TON), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(ONE_TON), Leg.Side.CREDIT)),
+                    null);
+
+            assertThatThrownBy(() -> ledgerService.transfer(request))
+                    .isInstanceOf(DataAccessException.class);
+
+            assertThat(dsl.fetchCount(LEDGER_IDEMPOTENCY_KEYS,
+                    LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY.eq(key.value())))
+                    .isZero();
+            assertThat(dsl.fetchCount(LEDGER_ENTRIES)).isZero();
+            assertThat(dsl.fetchCount(ACCOUNT_BALANCES)).isZero();
+        }
+    }
+
+    @Nested
     @DisplayName("Idempotency")
     class Idempotency {
 
@@ -237,6 +429,7 @@ class LedgerServiceIntegrationTest {
 
         @Test
         @DisplayName("Should reject concurrent double-spend via idempotency")
+        @Timeout(value = 10, unit = TimeUnit.SECONDS)
         void concurrentDoubleSpend() throws Exception {
             DealId dealId = DealId.generate();
             IdempotencyKey key = IdempotencyKey.deposit("tx-concurrent");
@@ -263,11 +456,14 @@ class LedgerServiceIntegrationTest {
                     futures.add(executor.submit(() -> {
                         try {
                             latch.await();
-                            UUID ref = ledgerService.transfer(request);
-                            txRefs.put(ref, true);
-                            successCount.incrementAndGet();
-                        } catch (Exception ignored) {
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                            throw new IllegalStateException(
+                                    "Interrupted while awaiting latch", ex);
                         }
+                        UUID ref = ledgerService.transfer(request);
+                        txRefs.put(ref, true);
+                        successCount.incrementAndGet();
                     }));
                 }
                 latch.countDown();
@@ -283,6 +479,7 @@ class LedgerServiceIntegrationTest {
 
         @Test
         @DisplayName("Should not deadlock with overlapping accounts across concurrent transfers")
+        @Timeout(value = 10, unit = TimeUnit.SECONDS)
         void concurrentOverlappingTransfers() throws Exception {
             DealId dealIdA = DealId.generate();
             DealId dealIdB = DealId.generate();
@@ -999,8 +1196,8 @@ class LedgerServiceIntegrationTest {
         }
 
         @Test
-        @DisplayName("Should allow negative balance for DUST_WRITEOFF")
-        void dustWriteoffNegative() {
+        @DisplayName("Should allow balance updates for DUST_WRITEOFF (allow-negative account type)")
+        void dustWriteoffBalanceUpdates() {
             DealId dealId = DealId.generate();
             AccountId escrow = AccountId.escrow(dealId);
 
@@ -1028,6 +1225,25 @@ class LedgerServiceIntegrationTest {
 
             assertThat(ledgerService.getBalance(AccountId.dustWriteoff()))
                     .isEqualTo(100L);
+        }
+
+        @Test
+        @DisplayName("Should allow negative balance for DUST_WRITEOFF when debited")
+        void dustWriteoffDebitAllowsNegative() {
+            ledgerService.transfer(TransferRequest.balanced(
+                    null,
+                    new IdempotencyKey("dust-debit"),
+                    List.of(
+                            new Leg(AccountId.dustWriteoff(),
+                                    EntryType.DUST_WRITEOFF,
+                                    Money.ofNano(5L), Leg.Side.DEBIT),
+                            new Leg(AccountId.externalTon(),
+                                    EntryType.DUST_WRITEOFF,
+                                    Money.ofNano(5L), Leg.Side.CREDIT)),
+                    null));
+
+            assertThat(ledgerService.getBalance(AccountId.dustWriteoff()))
+                    .isEqualTo(-5L);
         }
 
         @Test
@@ -1129,8 +1345,8 @@ class LedgerServiceIntegrationTest {
         }
 
         @Test
-        @DisplayName("Should require non-negative for PARTIAL_DEPOSIT and LATE_DEPOSIT")
-        void partialAndLateDepositNonNeg() {
+        @DisplayName("Should require non-negative for PARTIAL_DEPOSIT")
+        void partialDepositNonNeg() {
             DealId dealId = DealId.generate();
             AccountId partialDeposit = AccountId.partialDeposit(dealId);
 
@@ -1151,6 +1367,41 @@ class LedgerServiceIntegrationTest {
                     .satisfies(ex -> assertThat(
                             ((DomainException) ex).getErrorCode())
                             .isEqualTo("INSUFFICIENT_BALANCE"));
+        }
+
+        @Test
+        @DisplayName("Should require non-negative for LATE_DEPOSIT")
+        void lateDepositNonNeg() {
+            DealId dealId = DealId.generate();
+            AccountId lateDeposit = AccountId.lateDeposit(dealId);
+            IdempotencyKey key = IdempotencyKey.lateDepositRefund(
+                    dealId, "tx-late-empty");
+
+            TransferRequest request = TransferRequest.balanced(
+                    dealId,
+                    key,
+                    List.of(
+                            new Leg(lateDeposit,
+                                    EntryType.LATE_DEPOSIT_REFUND,
+                                    Money.ofNano(ONE_TON),
+                                    Leg.Side.DEBIT),
+                            new Leg(AccountId.externalTon(),
+                                    EntryType.LATE_DEPOSIT_REFUND,
+                                    Money.ofNano(ONE_TON),
+                                    Leg.Side.CREDIT)),
+                    null);
+
+            assertThatThrownBy(() -> ledgerService.transfer(request))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(
+                            ((DomainException) ex).getErrorCode())
+                            .isEqualTo("INSUFFICIENT_BALANCE"));
+
+            assertThat(dsl.fetchCount(LEDGER_IDEMPOTENCY_KEYS,
+                    LEDGER_IDEMPOTENCY_KEYS.IDEMPOTENCY_KEY.eq(key.value())))
+                    .isZero();
+            assertThat(dsl.fetchCount(LEDGER_ENTRIES)).isZero();
+            assertThat(dsl.fetchCount(ACCOUNT_BALANCES)).isZero();
         }
     }
 
@@ -1233,6 +1484,109 @@ class LedgerServiceIntegrationTest {
 
             assertThat(ledgerService.getBalance(escrow)).isZero();
             assertThat(ledgerService.getBalance(externalTon)).isZero();
+        }
+
+        @Test
+        @DisplayName("Partial refund: escrow -> (external + owner + commission)")
+        void partialRefund() {
+            DealId dealId = DealId.generate();
+            AccountId externalTon = AccountId.externalTon();
+            AccountId escrow = AccountId.escrow(dealId);
+            AccountId ownerPending = AccountId.ownerPending(new UserId(777L));
+            AccountId commission = AccountId.commission(dealId);
+
+            long amount = 10 * ONE_TON;
+            ledgerService.transfer(TransferRequest.balanced(dealId,
+                    IdempotencyKey.deposit("tx-pr-dep"),
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(amount), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(amount), Leg.Side.CREDIT)),
+                    null));
+
+            long refundAmount = 4 * ONE_TON;
+            long ownerAmount = 5 * ONE_TON;
+            long commissionAmount = ONE_TON;
+
+            UUID txRef = ledgerService.transfer(TransferRequest.balanced(
+                    dealId,
+                    IdempotencyKey.partialRefund(dealId),
+                    List.of(
+                            new Leg(escrow, EntryType.PARTIAL_REFUND,
+                                    Money.ofNano(amount), Leg.Side.DEBIT),
+                            new Leg(externalTon, EntryType.PARTIAL_REFUND,
+                                    Money.ofNano(refundAmount), Leg.Side.CREDIT),
+                            new Leg(ownerPending, EntryType.PARTIAL_REFUND,
+                                    Money.ofNano(ownerAmount), Leg.Side.CREDIT),
+                            new Leg(commission, EntryType.PARTIAL_REFUND,
+                                    Money.ofNano(commissionAmount), Leg.Side.CREDIT)),
+                    "Partial refund split"));
+
+            assertThat(txRef).isNotNull();
+            assertThat(ledgerService.getBalance(escrow)).isZero();
+            assertThat(ledgerService.getBalance(externalTon))
+                    .isEqualTo(-(amount - refundAmount));
+            assertThat(ledgerService.getBalance(ownerPending))
+                    .isEqualTo(ownerAmount);
+            assertThat(ledgerService.getBalance(commission))
+                    .isEqualTo(commissionAmount);
+
+            assertThat(dsl.fetchCount(
+                    LEDGER_ENTRIES,
+                    LEDGER_ENTRIES.TX_REF.eq(txRef)
+                            .and(LEDGER_ENTRIES.ENTRY_TYPE.eq(
+                                    EntryType.PARTIAL_REFUND.name()))))
+                    .isEqualTo(4);
+        }
+
+        @Test
+        @DisplayName("Refund with fee: escrow_refund + network_fee_refund tagging")
+        void refundWithFee() {
+            DealId dealId = DealId.generate();
+            AccountId externalTon = AccountId.externalTon();
+            AccountId escrow = AccountId.escrow(dealId);
+            AccountId networkFees = AccountId.networkFees();
+
+            long amount = 5 * ONE_TON;
+            ledgerService.transfer(TransferRequest.balanced(dealId,
+                    IdempotencyKey.deposit("tx-fee-refund-dep"),
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(amount), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(amount), Leg.Side.CREDIT)),
+                    null));
+
+            long fee = 50_000L;
+            long netRefund = amount - fee;
+
+            UUID txRef = ledgerService.transfer(TransferRequest.balanced(
+                    dealId,
+                    IdempotencyKey.refund(dealId),
+                    List.of(
+                            new Leg(escrow, EntryType.ESCROW_REFUND,
+                                    Money.ofNano(amount), Leg.Side.DEBIT),
+                            new Leg(externalTon, EntryType.ESCROW_REFUND,
+                                    Money.ofNano(netRefund), Leg.Side.CREDIT),
+                            new Leg(networkFees,
+                                    EntryType.NETWORK_FEE_REFUND,
+                                    Money.ofNano(fee), Leg.Side.CREDIT)),
+                    "Refund with fee"));
+
+            assertThat(txRef).isNotNull();
+            assertThat(ledgerService.getBalance(escrow)).isZero();
+            assertThat(ledgerService.getBalance(externalTon))
+                    .isEqualTo(-fee);
+            assertThat(ledgerService.getBalance(networkFees))
+                    .isEqualTo(fee);
+
+            assertThat(dsl.fetchCount(
+                    LEDGER_ENTRIES,
+                    LEDGER_ENTRIES.TX_REF.eq(txRef)
+                            .and(LEDGER_ENTRIES.ENTRY_TYPE.eq(
+                                    EntryType.NETWORK_FEE_REFUND.name()))))
+                    .isEqualTo(1);
         }
 
         @Test
@@ -1577,18 +1931,33 @@ class LedgerServiceIntegrationTest {
         }
 
         @Test
-        @DisplayName("Should use default page size for negative limit")
-        void negativeLimit() {
+        @DisplayName("Should throw INVALID_CURSOR for numeric cursor overflow")
+        void cursorOverflow() {
+            assertThatThrownBy(() ->
+                    ledgerService.getEntriesByAccount(
+                            AccountId.externalTon(),
+                            "9223372036854775808",
+                            10))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(
+                            ((DomainException) ex).getErrorCode())
+                            .isEqualTo("INVALID_CURSOR"));
+        }
+
+        @Test
+        @DisplayName("Should use default page size (50) for negative limit")
+        void negativeLimitUsesDefaultPageSize() {
             AccountId account = AccountId.externalTon();
-            for (int i = 0; i < 3; i++) {
-                DealId dealId = DealId.generate();
+            DealId dealId = DealId.generate();
+            AccountId escrow = AccountId.escrow(dealId);
+            for (int i = 0; i < 60; i++) {
                 ledgerService.transfer(TransferRequest.balanced(dealId,
                         IdempotencyKey.deposit("tx-neg-lim-" + i),
                         List.of(
                                 new Leg(account, EntryType.ESCROW_DEPOSIT,
                                         Money.ofNano(ONE_TON),
                                         Leg.Side.DEBIT),
-                                new Leg(AccountId.escrow(dealId),
+                                new Leg(escrow,
                                         EntryType.ESCROW_DEPOSIT,
                                         Money.ofNano(ONE_TON),
                                         Leg.Side.CREDIT)),
@@ -1598,7 +1967,65 @@ class LedgerServiceIntegrationTest {
             CursorPage<LedgerEntry> page = ledgerService
                     .getEntriesByAccount(account, null, -1);
 
-            assertThat(page.items()).hasSize(3);
+            assertThat(page.items()).hasSize(50);
+            assertThat(page.hasMore()).isTrue();
+            assertThat(page.nextCursor()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("Should use default page size (50) when limit is 0")
+        void limitZeroUsesDefaultPageSize() {
+            AccountId account = AccountId.externalTon();
+            DealId dealId = DealId.generate();
+            AccountId escrow = AccountId.escrow(dealId);
+            for (int i = 0; i < 60; i++) {
+                ledgerService.transfer(TransferRequest.balanced(dealId,
+                        IdempotencyKey.deposit("tx-zero-lim-" + i),
+                        List.of(
+                                new Leg(account, EntryType.ESCROW_DEPOSIT,
+                                        Money.ofNano(ONE_TON),
+                                        Leg.Side.DEBIT),
+                                new Leg(escrow,
+                                        EntryType.ESCROW_DEPOSIT,
+                                        Money.ofNano(ONE_TON),
+                                        Leg.Side.CREDIT)),
+                        null));
+            }
+
+            CursorPage<LedgerEntry> page = ledgerService
+                    .getEntriesByAccount(account, null, 0);
+
+            assertThat(page.items()).hasSize(50);
+            assertThat(page.hasMore()).isTrue();
+            assertThat(page.nextCursor()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("Should cap limit at MAX_PAGE_SIZE (200)")
+        void hugeLimitIsCappedAtMaxPageSize() {
+            AccountId account = AccountId.externalTon();
+            DealId dealId = DealId.generate();
+            AccountId escrow = AccountId.escrow(dealId);
+            for (int i = 0; i < 205; i++) {
+                ledgerService.transfer(TransferRequest.balanced(dealId,
+                        IdempotencyKey.deposit("tx-huge-lim-" + i),
+                        List.of(
+                                new Leg(account, EntryType.ESCROW_DEPOSIT,
+                                        Money.ofNano(ONE_TON),
+                                        Leg.Side.DEBIT),
+                                new Leg(escrow,
+                                        EntryType.ESCROW_DEPOSIT,
+                                        Money.ofNano(ONE_TON),
+                                        Leg.Side.CREDIT)),
+                        null));
+            }
+
+            CursorPage<LedgerEntry> page = ledgerService
+                    .getEntriesByAccount(account, null, 1_000_000);
+
+            assertThat(page.items()).hasSize(200);
+            assertThat(page.hasMore()).isTrue();
+            assertThat(page.nextCursor()).isNotNull();
         }
 
         @Test
@@ -1851,6 +2278,7 @@ class LedgerServiceIntegrationTest {
 
         @Test
         @DisplayName("Concurrent reads during writes should not throw")
+        @Timeout(value = 10, unit = TimeUnit.SECONDS)
         void concurrentReadsAndWrites() throws Exception {
             DealId dealId = DealId.generate();
             AccountId escrow = AccountId.escrow(dealId);
@@ -1926,6 +2354,7 @@ class LedgerServiceIntegrationTest {
 
         @Test
         @DisplayName("Double-spend race: exactly one of two debits succeeds")
+        @Timeout(value = 10, unit = TimeUnit.SECONDS)
         void doubleSpendRace() throws Exception {
             DealId dealId = DealId.generate();
             AccountId escrow = AccountId.escrow(dealId);
