@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,8 +35,7 @@ public class UpdateProcessor {
     private final @NonNull BotErrorHandler errorHandler;
     private final @NonNull MetricsFacade metrics;
 
-    @Qualifier("botUpdateExecutor")
-    private final @NonNull ExecutorService executor;
+    private final @NonNull ExecutorService botUpdateExecutor;
 
     /**
      * Submit update for async processing. Returns immediately.
@@ -45,7 +43,7 @@ public class UpdateProcessor {
      * @param update the Telegram update
      */
     public void processAsync(Update update) {
-        executor.submit(() -> processUpdate(update));
+        botUpdateExecutor.submit(() -> processUpdate(update));
     }
 
     private void processUpdate(Update update) {
