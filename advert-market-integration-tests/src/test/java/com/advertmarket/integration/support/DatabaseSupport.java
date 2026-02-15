@@ -7,10 +7,14 @@ import static com.advertmarket.db.generated.tables.ChannelPricingRules.CHANNEL_P
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static com.advertmarket.db.generated.tables.DealEvents.DEAL_EVENTS;
 import static com.advertmarket.db.generated.tables.Deals.DEALS;
+import static com.advertmarket.db.generated.tables.DisputeEvidence.DISPUTE_EVIDENCE;
+import static com.advertmarket.db.generated.tables.Disputes.DISPUTES;
 import static com.advertmarket.db.generated.tables.LedgerEntries.LEDGER_ENTRIES;
 import static com.advertmarket.db.generated.tables.LedgerIdempotencyKeys.LEDGER_IDEMPOTENCY_KEYS;
 import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATION_OUTBOX;
+import static com.advertmarket.db.generated.tables.PostingChecks.POSTING_CHECKS;
 import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_RULE_POST_TYPES;
+import static com.advertmarket.db.generated.tables.TonTransactions.TON_TRANSACTIONS;
 import static com.advertmarket.db.generated.tables.Users.USERS;
 
 import liquibase.Liquibase;
@@ -105,10 +109,16 @@ public final class DatabaseSupport {
     }
 
     /**
-     * Deletes deal tables (deal_events, deals) in FK-dependency order.
+     * Cleans deal-related tables in FK-dependency order.
+     * Uses TRUNCATE for tables with immutability triggers
+     * (deal_events, dispute_evidence, posting_checks).
      */
     public static void cleanDealTables(DSLContext dsl) {
-        dsl.deleteFrom(DEAL_EVENTS).execute();
+        dsl.truncate(POSTING_CHECKS).cascade().execute();
+        dsl.truncate(DISPUTE_EVIDENCE).cascade().execute();
+        dsl.deleteFrom(DISPUTES).execute();
+        dsl.deleteFrom(TON_TRANSACTIONS).execute();
+        dsl.truncate(DEAL_EVENTS).cascade().execute();
         dsl.deleteFrom(DEALS).execute();
     }
 

@@ -40,6 +40,10 @@ public final class ErrorCodes {
             "DEAL_DEADLINE_EXPIRED";
     public static final @Fenum(FenumGroup.ERROR_CODE) String DEAL_CANCELLED =
             "DEAL_CANCELLED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String DEAL_NOT_PARTICIPANT =
+            "DEAL_NOT_PARTICIPANT";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String DEAL_ACTOR_NOT_ALLOWED =
+            "DEAL_ACTOR_NOT_ALLOWED";
 
     // --- Financial ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String INSUFFICIENT_BALANCE =
@@ -58,6 +62,8 @@ public final class ErrorCodes {
             "LEDGER_INCONSISTENCY";
     public static final @Fenum(FenumGroup.ERROR_CODE) String COMMISSION_CALCULATION_ERROR =
             "COMMISSION_CALCULATION_ERROR";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String INVALID_CURSOR =
+            "INVALID_CURSOR";
 
     // --- Channel ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_NOT_FOUND =
