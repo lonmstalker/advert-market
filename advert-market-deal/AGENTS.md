@@ -22,4 +22,5 @@ Deal state machine, CAS-based transitions, deadline management, and lifecycle or
 - CAS via `version` column — optimistic locking on transitions
 - Cursor pagination uses `CursorCodec` with composite `{ts, id}` cursor
 - `@PathVariable("name")` / `@RequestParam(value = "name")` explicit — no reliance on `-parameters` flag
+- If an endpoint has >2 query params, use a request params object (single controller parameter) instead of multiple `@RequestParam`
 - Outbox events published via `OutboxRepository` in same transaction as state change

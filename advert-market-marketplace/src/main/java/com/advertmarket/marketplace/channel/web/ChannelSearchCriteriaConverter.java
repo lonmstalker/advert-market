@@ -19,8 +19,49 @@ public class ChannelSearchCriteriaConverter {
     /**
      * Converts controller query params into {@link ChannelSearchCriteria}.
      */
-    @SuppressWarnings("checkstyle:ParameterNumber")
     public ChannelSearchCriteria fromRequestParams(
+            ChannelSearchRequestParams params) {
+        return fromRequestParams(
+                params.query(),
+                params.q(),
+                params.category(),
+                params.minSubscribers(),
+                params.minSubs(),
+                params.maxSubscribers(),
+                params.maxSubs(),
+                params.minPrice(),
+                params.maxPrice(),
+                params.minEngagement(),
+                params.language(),
+                params.sort(),
+                params.cursor(),
+                params.limitOrDefault());
+    }
+
+    /**
+     * Converts controller query params into {@link ChannelSearchCriteria}.
+     */
+    public ChannelSearchCriteria fromRequestParams(
+            ChannelCountRequestParams params) {
+        return fromRequestParams(
+                params.query(),
+                params.q(),
+                params.category(),
+                params.minSubscribers(),
+                params.minSubs(),
+                params.maxSubscribers(),
+                params.maxSubs(),
+                params.minPrice(),
+                params.maxPrice(),
+                params.minEngagement(),
+                params.language(),
+                null,
+                null,
+                ChannelSearchCriteria.DEFAULT_LIMIT);
+    }
+
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    private ChannelSearchCriteria fromRequestParams(
             @Nullable String query,
             @Nullable String q,
             @Nullable String category,

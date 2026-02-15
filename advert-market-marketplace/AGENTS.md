@@ -22,3 +22,4 @@ Channel management, pricing, team membership, and full-text search implementatio
 - `@Fenum` for error codes and metric names
 - ParadeDB `rank_bm25()` for search scoring — ALWAYS include `LIMIT`
 - MapStruct mappers for record ↔ DTO conversion
+- If an endpoint has >2 query params, use a request params object (single controller parameter) instead of multiple `@RequestParam`

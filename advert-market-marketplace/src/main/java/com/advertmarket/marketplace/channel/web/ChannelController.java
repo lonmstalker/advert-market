@@ -4,7 +4,6 @@ import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
-import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
@@ -19,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,28 +51,9 @@ public class ChannelController {
     @Operation(summary = "Search channels",
             description = "Public channel catalog with filters and BM25 search")
     @ApiResponse(responseCode = "200", description = "Search results")
-    @SuppressWarnings("checkstyle:ParameterNumber")
     public CursorPage<ChannelListItem> search(
-            @RequestParam(name = "query", required = false) String query,
-            @RequestParam(name = "q", required = false) String q,
-            @RequestParam(name = "category", required = false) String category,
-            @RequestParam(name = "minSubscribers", required = false) Integer minSubscribers,
-            @RequestParam(name = "minSubs", required = false) Integer minSubs,
-            @RequestParam(name = "maxSubscribers", required = false) Integer maxSubscribers,
-            @RequestParam(name = "maxSubs", required = false) Integer maxSubs,
-            @RequestParam(name = "minPrice", required = false) Long minPrice,
-            @RequestParam(name = "maxPrice", required = false) Long maxPrice,
-            @RequestParam(name = "minEngagement", required = false) Double minEngagement,
-            @RequestParam(name = "language", required = false) String language,
-            @RequestParam(name = "sort", defaultValue = "SUBSCRIBERS_DESC") String sort,
-            @RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "limit", defaultValue = "20") int limit) {
-        var criteria = criteriaConverter.fromRequestParams(
-                query, q, category,
-                minSubscribers, minSubs,
-                maxSubscribers, maxSubs,
-                minPrice, maxPrice, minEngagement, language,
-                sort, cursor, limit);
+            @ParameterObject ChannelSearchRequestParams params) {
+        var criteria = criteriaConverter.fromRequestParams(params);
         return channelService.search(criteria);
     }
 
@@ -84,26 +64,9 @@ public class ChannelController {
     @Operation(summary = "Count channels",
             description = "Returns channel count for given search filters")
     @ApiResponse(responseCode = "200", description = "Channel count")
-    @SuppressWarnings("checkstyle:ParameterNumber")
     public long count(
-            @RequestParam(name = "query", required = false) String query,
-            @RequestParam(name = "q", required = false) String q,
-            @RequestParam(name = "category", required = false) String category,
-            @RequestParam(name = "minSubscribers", required = false) Integer minSubscribers,
-            @RequestParam(name = "minSubs", required = false) Integer minSubs,
-            @RequestParam(name = "maxSubscribers", required = false) Integer maxSubscribers,
-            @RequestParam(name = "maxSubs", required = false) Integer maxSubs,
-            @RequestParam(name = "minPrice", required = false) Long minPrice,
-            @RequestParam(name = "maxPrice", required = false) Long maxPrice,
-            @RequestParam(name = "minEngagement", required = false) Double minEngagement,
-            @RequestParam(name = "language", required = false) String language) {
-        var criteria = criteriaConverter.fromRequestParams(
-                query, q, category,
-                minSubscribers, minSubs,
-                maxSubscribers, maxSubs,
-                minPrice, maxPrice, minEngagement, language,
-                "SUBSCRIBERS_DESC", null,
-                ChannelSearchCriteria.DEFAULT_LIMIT);
+            @ParameterObject ChannelCountRequestParams params) {
+        var criteria = criteriaConverter.fromRequestParams(params);
         return channelService.count(criteria);
     }
 

@@ -50,7 +50,7 @@ assertThat(sumDebits()).isEqualTo(sumCredits());
 
 Single `IntegrationTestBase` with `static` containers. `@BeforeEach` truncates tables — never restart containers.
 
-### ArchUnit Rules (7 Mandatory)
+### ArchUnit Rules (8 Mandatory)
 
 | ID | Rule |
 |---|---|
@@ -61,6 +61,7 @@ Single `IntegrationTestBase` with `static` containers. `@BeforeEach` truncates t
 | ARCH-05 | Cross-context communication only through port interfaces |
 | ARCH-06 | `@Transactional` must NOT be on controllers |
 | ARCH-07 | Kafka listeners must NOT call `KafkaTemplate.send()` synchronously |
+| ARCH-08 | Request handler methods must NOT have more than 2 `@RequestParam` parameters (use request params object) |
 
 ## 2. Performance
 

@@ -17,6 +17,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.kafka:spring-kafka'
 
+    compileOnly 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.assertj:assertj-core'
     testRuntimeOnly 'com.fasterxml.jackson.core:jackson-databind'

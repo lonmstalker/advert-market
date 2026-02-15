@@ -8,13 +8,13 @@ import com.advertmarket.shared.pagination.CursorPage;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,11 +40,11 @@ class DealController {
     }
 
     @GetMapping
-    CursorPage<DealDto> list(
-            @RequestParam(value = "status", required = false) DealStatus status,
-            @RequestParam(value = "cursor", required = false) String cursor,
-            @RequestParam(value = "limit", defaultValue = "20") int limit) {
-        return dealUseCase.list(status, cursor, limit);
+    CursorPage<DealDto> list(@ParameterObject DealListRequestParams params) {
+        return dealUseCase.list(
+                params.status(),
+                params.cursor(),
+                params.limitOrDefault());
     }
 
     @PostMapping("/{id}/transition")

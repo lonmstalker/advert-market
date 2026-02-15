@@ -20,6 +20,8 @@ import com.advertmarket.marketplace.api.port.ChannelSearchPort;
 import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
 import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
+import com.advertmarket.marketplace.channel.mapper.CategoryDtoMapper;
+import com.advertmarket.marketplace.channel.mapper.ChannelListItemMapper;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
 import com.advertmarket.marketplace.channel.search.ParadeDbChannelSearch;
@@ -28,6 +30,7 @@ import com.advertmarket.marketplace.channel.service.ChannelRegistrationTxService
 import com.advertmarket.marketplace.channel.service.ChannelService;
 import com.advertmarket.marketplace.channel.service.ChannelVerificationService;
 import com.advertmarket.marketplace.channel.web.ChannelController;
+import com.advertmarket.marketplace.channel.web.ChannelSearchCriteriaConverter;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
@@ -343,11 +346,13 @@ class ChannelRegistrationFlowIntegrationTest {
                     BOT_USER_ID, Duration.ofSeconds(3));
         }
 
-        @Bean
-        CategoryRepository categoryRepository(
-                DSLContext dsl, JsonFacade jsonFacade) {
-            return new JooqCategoryRepository(dsl, jsonFacade);
-        }
+	        @Bean
+	        CategoryRepository categoryRepository(
+	                DSLContext dsl,
+	                JsonFacade jsonFacade,
+	                CategoryDtoMapper mapper) {
+	            return new JooqCategoryRepository(dsl, jsonFacade, mapper);
+	        }
 
         @Bean
         JooqPricingRuleRepository jooqPricingRuleRepository(
@@ -371,12 +376,14 @@ class ChannelRegistrationFlowIntegrationTest {
                     categoryRepo, pricingRuleRepo);
         }
 
-        @Bean
-        ChannelSearchPort channelSearchPort(
-                DSLContext dsl,
-                CategoryRepository categoryRepo) {
-            return new ParadeDbChannelSearch(dsl, categoryRepo);
-        }
+	        @Bean
+	        ChannelSearchPort channelSearchPort(
+	                DSLContext dsl,
+	                CategoryRepository categoryRepo,
+	                ChannelListItemMapper channelListItemMapper) {
+	            return new ParadeDbChannelSearch(
+	                    dsl, categoryRepo, channelListItemMapper);
+	        }
 
         @Bean
         ChannelVerificationService channelVerificationService(
@@ -415,11 +422,18 @@ class ChannelRegistrationFlowIntegrationTest {
                     searchPort, channelRepo, authAdapter);
         }
 
-        @Bean
-        ChannelController channelController(
-                ChannelRegistrationService regSvc,
-                ChannelService channelService) {
-            return new ChannelController(regSvc, channelService);
-        }
-    }
-}
+	        @Bean
+	        ChannelSearchCriteriaConverter channelSearchCriteriaConverter() {
+	            return new ChannelSearchCriteriaConverter();
+	        }
+
+	        @Bean
+	        ChannelController channelController(
+	                ChannelRegistrationService regSvc,
+	                ChannelService channelService,
+	                ChannelSearchCriteriaConverter criteriaConverter) {
+	            return new ChannelController(
+	                    regSvc, channelService, criteriaConverter);
+	        }
+	    }
+	}
