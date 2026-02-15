@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -286,6 +287,60 @@ class LedgerServiceTest {
                     sortedSecond, 500L);
             order.verify(balanceRepository).upsertBalanceUnchecked(
                     creditAccount, 1000L);
+        }
+
+        @Test
+        @DisplayName("Should succeed even when metric increment throws")
+        void shouldNotRollbackOnMetricFailure() {
+            when(ledgerRepository.tryInsertIdempotencyKey(any()))
+                    .thenReturn(true);
+            when(balanceRepository.upsertBalanceUnchecked(any(), anyLong()))
+                    .thenReturn(0L);
+            doThrow(new RuntimeException("Registry closed"))
+                    .when(metricsFacade)
+                    .incrementCounter(MetricNames.LEDGER_ENTRY_CREATED);
+
+            TransferRequest request = TransferRequest.balanced(
+                    dealId,
+                    IdempotencyKey.deposit("metric-fail"),
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(1000), Leg.Side.DEBIT),
+                            new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(1000), Leg.Side.CREDIT)),
+                    null);
+
+            UUID txRef = ledgerService.transfer(request);
+
+            assertThat(txRef).isNotNull();
+            verify(ledgerRepository).insertEntries(
+                    eq(txRef), any(), eq(dealId), any(), any());
+        }
+
+        @Test
+        @DisplayName("Should throw LEDGER_INCONSISTENCY on arithmetic overflow")
+        void overflowInValidation() {
+            when(ledgerRepository.tryInsertIdempotencyKey(any()))
+                    .thenReturn(true);
+
+            AccountId treasury = AccountId.platformTreasury();
+            var legs = List.of(
+                    new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                            Money.ofNano(Long.MAX_VALUE), Leg.Side.DEBIT),
+                    new Leg(escrow, EntryType.ESCROW_DEPOSIT,
+                            Money.ofNano(Long.MAX_VALUE), Leg.Side.DEBIT),
+                    new Leg(treasury, EntryType.ESCROW_DEPOSIT,
+                            Money.ofNano(1), Leg.Side.CREDIT));
+
+            TransferRequest request = new TransferRequest(
+                    dealId, IdempotencyKey.deposit("overflow"),
+                    legs, null);
+
+            assertThatThrownBy(() -> ledgerService.transfer(request))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(
+                            ((DomainException) ex).getErrorCode())
+                            .isEqualTo("LEDGER_INCONSISTENCY"));
         }
 
         @Test
