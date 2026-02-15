@@ -3,23 +3,22 @@ package com.advertmarket.financial.ledger.repository;
 import static com.advertmarket.db.generated.tables.LedgerEntries.LEDGER_ENTRIES;
 import static com.advertmarket.db.generated.tables.LedgerIdempotencyKeys.LEDGER_IDEMPOTENCY_KEYS;
 
+import com.advertmarket.db.generated.tables.records.LedgerEntriesRecord;
 import com.advertmarket.financial.api.model.LedgerEntry;
 import com.advertmarket.financial.api.model.Leg;
+import com.advertmarket.financial.ledger.mapper.LedgerEntryMapper;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.Record;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -30,6 +29,7 @@ import org.springframework.stereotype.Repository;
 public class JooqLedgerRepository {
 
     private final DSLContext dsl;
+    private final LedgerEntryMapper ledgerEntryMapper;
 
     /**
      * Atomically inserts an idempotency key. Returns {@code true} if this was the first insert
@@ -97,7 +97,10 @@ public class JooqLedgerRepository {
         return dsl.selectFrom(LEDGER_ENTRIES)
                 .where(LEDGER_ENTRIES.DEAL_ID.eq(dealId.value()))
                 .orderBy(LEDGER_ENTRIES.CREATED_AT.desc(), LEDGER_ENTRIES.ID.desc())
-                .fetch(this::mapEntry);
+                .fetchInto(LedgerEntriesRecord.class)
+                .stream()
+                .map(ledgerEntryMapper::toEntry)
+                .toList();
     }
 
     /**
@@ -120,7 +123,10 @@ public class JooqLedgerRepository {
         List<LedgerEntry> items = query
                 .orderBy(LEDGER_ENTRIES.ID.desc())
                 .limit(limit + 1)
-                .fetch(this::mapEntry);
+                .fetchInto(LedgerEntriesRecord.class)
+                .stream()
+                .map(ledgerEntryMapper::toEntry)
+                .toList();
 
         if (items.size() > limit) {
             List<LedgerEntry> page = items.subList(0, limit);
@@ -128,23 +134,5 @@ public class JooqLedgerRepository {
             return new CursorPage<>(new ArrayList<>(page), nextCursor);
         }
         return new CursorPage<>(items, null);
-    }
-
-    private LedgerEntry mapEntry(Record r) {
-        UUID dealUuid = r.get(LEDGER_ENTRIES.DEAL_ID);
-        OffsetDateTime createdAt = r.get(LEDGER_ENTRIES.CREATED_AT);
-        return new LedgerEntry(
-                r.get(LEDGER_ENTRIES.ID),
-                dealUuid != null ? DealId.of(dealUuid) : null,
-                new AccountId(r.get(LEDGER_ENTRIES.ACCOUNT_ID)),
-                EntryType.valueOf(r.get(LEDGER_ENTRIES.ENTRY_TYPE)),
-                r.get(LEDGER_ENTRIES.DEBIT_NANO),
-                r.get(LEDGER_ENTRIES.CREDIT_NANO),
-                r.get(LEDGER_ENTRIES.IDEMPOTENCY_KEY),
-                r.get(LEDGER_ENTRIES.TX_REF),
-                r.get(LEDGER_ENTRIES.DESCRIPTION),
-                Objects.requireNonNull(createdAt,
-                        "created_at must not be null for ledger entry "
-                                + r.get(LEDGER_ENTRIES.ID)).toInstant());
     }
 }

@@ -7,6 +7,7 @@ import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.InitDataValidatorPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.identity.mapper.LoginResponseMapper;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
@@ -28,6 +29,7 @@ public class AuthServiceImpl implements AuthPort {
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistPort tokenBlacklistPort;
     private final MetricsFacade metricsFacade;
+    private final LoginResponseMapper loginResponseMapper;
 
     @Override
     public @NonNull LoginResponse login(@NonNull LoginRequest request) {
@@ -40,17 +42,12 @@ public class AuthServiceImpl implements AuthPort {
         String token = jwtTokenProvider.generateToken(
                 userId, isOperator);
 
-        String un = userData.username();
-        String username = un != null ? un : "";
-
         metricsFacade.incrementCounter(MetricNames.AUTH_LOGIN_SUCCESS);
 
-        return new LoginResponse(
+        return loginResponseMapper.toResponse(
+                userData,
                 token,
-                jwtTokenProvider.getExpirationSeconds(),
-                new LoginResponse.UserSummary(
-                        userData.id(), username,
-                        userData.displayName()));
+                jwtTokenProvider.getExpirationSeconds());
     }
 
     @Override

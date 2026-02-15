@@ -14,6 +14,8 @@ import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
+import com.advertmarket.marketplace.channel.mapper.CategoryDtoMapper;
+import com.advertmarket.marketplace.channel.mapper.ChannelListItemMapper;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.search.ParadeDbChannelSearch;
 import com.advertmarket.shared.json.JsonFacade;
@@ -23,15 +25,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.jooq.DSLContext;
 import org.jooq.ExecuteContext;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultExecuteListener;
 import org.jooq.impl.DefaultExecuteListenerProvider;
-import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 /**
  * Integration test for ParadeDbChannelSearch filter-based search.
@@ -56,8 +59,14 @@ class ChannelSearchIntegrationTest {
     @BeforeEach
     void setUp() {
         var jsonFacade = new JsonFacade(new ObjectMapper());
-        var categoryRepo = new JooqCategoryRepository(dsl, jsonFacade);
-        search = new ParadeDbChannelSearch(dsl, categoryRepo);
+        var categoryRepo = new JooqCategoryRepository(
+                dsl,
+                jsonFacade,
+                Mappers.getMapper(CategoryDtoMapper.class));
+        search = new ParadeDbChannelSearch(
+                dsl,
+                categoryRepo,
+                Mappers.getMapper(ChannelListItemMapper.class));
         DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, USER_ID);
     }
@@ -231,7 +240,7 @@ class ChannelSearchIntegrationTest {
 
     @Test
     @DisplayName("Search should not execute N+1 queries for category mapping")
-    void search_shouldNotExecuteNPlusOneQueriesForCategories() throws Exception {
+    void search_shouldNotExecuteNplusOneQueriesForCategories() throws Exception {
         for (int i = 1; i <= 5; i++) {
             insertChannel(-i, "Chan " + i, "tech", i * 1000, null, true);
         }
@@ -254,9 +263,13 @@ class ChannelSearchIntegrationTest {
 
             var jsonFacade = new JsonFacade(new ObjectMapper());
             var categoryRepo = new JooqCategoryRepository(
-                    dslWithListener, jsonFacade);
+                    dslWithListener,
+                    jsonFacade,
+                    Mappers.getMapper(CategoryDtoMapper.class));
             var searchWithListener = new ParadeDbChannelSearch(
-                    dslWithListener, categoryRepo);
+                    dslWithListener,
+                    categoryRepo,
+                    Mappers.getMapper(ChannelListItemMapper.class));
 
             statements.set(0);
             CursorPage<ChannelListItem> page = searchWithListener.search(criteria(

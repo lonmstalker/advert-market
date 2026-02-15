@@ -16,6 +16,7 @@ import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealRepository;
+import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.shared.exception.DomainException;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -61,7 +63,8 @@ class DealServiceTest {
         service = new DealService(
                 dealRepository, dealEventRepository,
                 dealAuthorizationPort, dealTransitionService,
-                channelRepository);
+                channelRepository,
+                Mappers.getMapper(DealDtoMapper.class));
     }
 
     private ChannelDetailResponse channelDetail(long channelId, long ownerId) {

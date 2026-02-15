@@ -12,6 +12,7 @@ import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.BalanceCachePort;
 import com.advertmarket.financial.api.port.LedgerPort;
+import com.advertmarket.financial.ledger.mapper.LedgerEntryMapper;
 import com.advertmarket.financial.ledger.repository.JooqAccountBalanceRepository;
 import com.advertmarket.financial.ledger.repository.JooqLedgerRepository;
 import com.advertmarket.financial.ledger.service.LedgerService;
@@ -56,6 +57,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -456,14 +458,14 @@ class LedgerServiceIntegrationTest {
                     futures.add(executor.submit(() -> {
                         try {
                             latch.await();
-                        } catch (InterruptedException ex) {
+                            UUID ref = ledgerService.transfer(request);
+                            txRefs.put(ref, true);
+                            successCount.incrementAndGet();
+                        } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             throw new IllegalStateException(
-                                    "Interrupted while awaiting latch", ex);
+                                    "Interrupted while awaiting latch", e);
                         }
-                        UUID ref = ledgerService.transfer(request);
-                        txRefs.put(ref, true);
-                        successCount.incrementAndGet();
                     }));
                 }
                 latch.countDown();
@@ -2457,7 +2459,9 @@ class LedgerServiceIntegrationTest {
 
         @Bean
         JooqLedgerRepository ledgerRepository(DSLContext dsl) {
-            return new JooqLedgerRepository(dsl);
+            return new JooqLedgerRepository(
+                    dsl,
+                    Mappers.getMapper(LedgerEntryMapper.class));
         }
 
         @Bean

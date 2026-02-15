@@ -21,6 +21,7 @@ import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
 import com.advertmarket.marketplace.team.config.TeamProperties;
+import com.advertmarket.marketplace.team.mapper.TeamMemberDtoMapper;
 import com.advertmarket.marketplace.team.repository.JooqTeamMembershipRepository;
 import com.advertmarket.marketplace.team.service.TeamService;
 import com.advertmarket.marketplace.team.web.TeamController;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -373,7 +375,10 @@ class TeamHttpIntegrationTest {
         @Bean
         TeamMembershipRepository teamMembershipRepository(
                 DSLContext dsl, JsonFacade jsonFacade) {
-            return new JooqTeamMembershipRepository(dsl, jsonFacade);
+            return new JooqTeamMembershipRepository(
+                    dsl,
+                    jsonFacade,
+                    Mappers.getMapper(TeamMemberDtoMapper.class));
         }
 
         @Bean

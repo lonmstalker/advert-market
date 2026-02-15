@@ -50,10 +50,14 @@ class WorkerCallbackControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new WorkerCallbackController(
-                eventTypeRegistry, json,
-                financialEventPort, deliveryEventPort,
-                reconciliationResultPort, metrics);
+        var handler = new WorkerCallbackHandler(
+                eventTypeRegistry,
+                json,
+                financialEventPort,
+                deliveryEventPort,
+                reconciliationResultPort,
+                metrics);
+        controller = new WorkerCallbackController(handler);
     }
 
     @Test

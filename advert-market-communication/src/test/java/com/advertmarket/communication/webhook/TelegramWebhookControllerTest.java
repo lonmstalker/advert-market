@@ -30,9 +30,12 @@ class TelegramWebhookControllerTest {
         var botProps = mock(TelegramBotProperties.class);
         var webhook = new Webhook("", "my-secret");
         when(botProps.webhook()).thenReturn(webhook);
-        controller = new TelegramWebhookController(
-                botProps, deduplicator, processor,
+        var handler = new TelegramWebhookHandler(
+                botProps,
+                deduplicator,
+                processor,
                 new MetricsFacade(new SimpleMeterRegistry()));
+        controller = new TelegramWebhookController(handler);
     }
 
     @Test

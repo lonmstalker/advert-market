@@ -7,6 +7,7 @@ import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.BalanceCachePort;
 import com.advertmarket.financial.api.port.LedgerPort;
+import com.advertmarket.financial.ledger.mapper.LedgerEntryMapper;
 import com.advertmarket.financial.ledger.repository.JooqAccountBalanceRepository;
 import com.advertmarket.financial.ledger.repository.JooqLedgerRepository;
 import com.advertmarket.financial.ledger.service.LedgerService;
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -134,7 +136,9 @@ class LedgerServiceMetricsFailureIntegrationTest {
 
         @Bean
         JooqLedgerRepository ledgerRepository(DSLContext dsl) {
-            return new JooqLedgerRepository(dsl);
+            return new JooqLedgerRepository(
+                    dsl,
+                    Mappers.getMapper(LedgerEntryMapper.class));
         }
 
         @Bean
@@ -206,4 +210,3 @@ class LedgerServiceMetricsFailureIntegrationTest {
         }
     }
 }
-

@@ -35,7 +35,8 @@ class GeneralGovernanceArchTest {
         SlicesRuleDefinition.slices()
                 .matching(BASE + ".(*)..")
                 .should().beFreeOfCycles()
-                .because("Top-level packages represent bounded contexts/modules and must not form dependency cycles")
+                .because("Top-level packages represent bounded contexts/modules "
+                        + "and must not form dependency cycles")
                 .check(classes);
     }
 
@@ -46,7 +47,8 @@ class GeneralGovernanceArchTest {
                 .that().haveSimpleNameEndingWith("Controller")
                 .should().accessClassesThat()
                 .resideInAPackage("..repository..")
-                .because("Web layer must depend on services/use-cases, not on persistence implementations")
+                .because("Web layer must depend on services/use-cases, "
+                        + "not on persistence implementations")
                 .check(classes);
     }
 
@@ -56,26 +58,29 @@ class GeneralGovernanceArchTest {
         noClasses()
                 .that().resideInAPackage("..repository..")
                 .should().beAnnotatedWith(Transactional.class)
-                .because("@Transactional belongs to service/use-case boundaries; repository transactions hide business atomicity")
+                .because("@Transactional belongs to service/use-case boundaries; "
+                        + "repository transactions hide business atomicity")
                 .check(classes);
 
         noMethods()
                 .that().areDeclaredInClassesThat()
                 .resideInAPackage("..repository..")
                 .should().beAnnotatedWith(Transactional.class)
-                .because("@Transactional belongs to service/use-case boundaries; repository transactions hide business atomicity")
+                .because("@Transactional belongs to service/use-case boundaries; "
+                        + "repository transactions hide business atomicity")
                 .check(classes);
     }
 
     @Test
-    @DisplayName("Controllers must not use ResponseStatusException (use DomainException + ProblemDetail)")
+    @DisplayName("Controllers must not use ResponseStatusException "
+            + "(use DomainException + ProblemDetail)")
     void controllersMustNotUseResponseStatusException() {
         noClasses()
                 .that().haveSimpleNameEndingWith("Controller")
                 .should().dependOnClassesThat()
                 .haveFullyQualifiedName("org.springframework.web.server.ResponseStatusException")
-                .because("Controllers must preserve the unified error contract (ProblemDetail + error_code)")
+                .because("Controllers must preserve the unified error contract "
+                        + "(ProblemDetail + error_code)")
                 .check(classes);
     }
 }
-

@@ -12,6 +12,8 @@ import com.advertmarket.identity.adapter.RedisTokenBlacklist;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.config.AuthProperties;
+import com.advertmarket.identity.mapper.LoginResponseMapper;
+import com.advertmarket.identity.mapper.UserProfileMapper;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.identity.security.TelegramAuthentication;
@@ -33,6 +35,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -88,14 +91,19 @@ class IdentityWorkflowIntegrationTest {
                 new UserBlockProperties("tg:block:"));
         userBlockCheckPort = blockService;
         metricsFacade = new MetricsFacade(new SimpleMeterRegistry());
+
+        var jsonFacade = new JsonFacade(new ObjectMapper()
+                .findAndRegisterModules());
+
         userRepository = new JooqUserRepository(
                 dsl,
-                new JsonFacade(new ObjectMapper()
-                        .findAndRegisterModules()));
+                jsonFacade,
+                Mappers.getMapper(UserProfileMapper.class));
         authService = new AuthServiceImpl(
                 null, userRepository,
                 jwtTokenProvider, tokenBlacklistPort,
-                metricsFacade);
+                metricsFacade,
+                Mappers.getMapper(LoginResponseMapper.class));
         userService = new UserServiceImpl(
                 userRepository, metricsFacade);
         filter = new JwtAuthenticationFilter(

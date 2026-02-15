@@ -6,17 +6,14 @@ import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBE
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
 
+import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
 import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
 import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
 import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.advertmarket.marketplace.api.port.TelegramChannelPort;
-import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
-import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse.BotStatus;
-import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse.UserStatus;
 import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
+import com.advertmarket.marketplace.channel.mapper.ChannelVerifyResponseFactory;
 import com.advertmarket.shared.exception.DomainException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -25,8 +22,8 @@ import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 /**
@@ -120,19 +117,14 @@ public class ChannelVerificationService {
         var userMember = userMemberFuture.join();
         int memberCount = memberCountFuture.join();
 
-        var botStatus = buildBotStatus(botMember);
-        var userStatus = buildUserStatus(userMember);
-
         validateBot(botMember);
         validateUser(userMember);
 
-        return new ChannelVerifyResponse(
-                channelId,
-                chatInfo.title(),
-                chatInfo.username(),
+        return ChannelVerifyResponseFactory.toResponse(
+                chatInfo,
                 memberCount,
-                botStatus,
-                userStatus);
+                botMember,
+                userMember);
     }
 
     private static DomainException unwrapAsyncFailure(
@@ -160,29 +152,6 @@ public class ChannelVerificationService {
                 "Telegram API error while verifying channel "
                         + channelId,
                 cause);
-    }
-
-    private static BotStatus buildBotStatus(
-            @NonNull ChatMemberInfo bot) {
-        boolean isAdmin = bot.status() == ChatMemberStatus.CREATOR
-                || bot.status() == ChatMemberStatus.ADMINISTRATOR;
-        List<String> missing = new ArrayList<>();
-        if (!bot.canPostMessages()) {
-            missing.add("can_post_messages");
-        }
-        if (!bot.canEditMessages()) {
-            missing.add("can_edit_messages");
-        }
-        return new BotStatus(
-                isAdmin, bot.canPostMessages(),
-                bot.canEditMessages(), List.copyOf(missing));
-    }
-
-    private static UserStatus buildUserStatus(
-            @NonNull ChatMemberInfo user) {
-        boolean isMember = user.status() != ChatMemberStatus.LEFT
-                && user.status() != ChatMemberStatus.KICKED;
-        return new UserStatus(isMember, user.status().name());
     }
 
     private static void validateBot(@NonNull ChatMemberInfo bot) {

@@ -5,6 +5,8 @@ import static com.advertmarket.db.generated.tables.Deals.DEALS;
 import com.advertmarket.deal.api.dto.DealListCriteria;
 import com.advertmarket.deal.api.dto.DealRecord;
 import com.advertmarket.deal.api.port.DealRepository;
+import com.advertmarket.deal.mapper.DealRecordMapper;
+import com.advertmarket.deal.mapper.DealRow;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.DealId;
@@ -21,8 +23,6 @@ import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
 import org.jooq.JSON;
-import org.jooq.Record;
-import org.jooq.SelectConditionStep;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -33,6 +33,7 @@ import org.springframework.stereotype.Repository;
 public class JooqDealRepository implements DealRepository {
 
     private final DSLContext dsl;
+    private final DealRecordMapper dealRecordMapper;
 
     @Override
     public void insert(@NonNull DealRecord record) {
@@ -57,21 +58,36 @@ public class JooqDealRepository implements DealRepository {
     @NonNull
     public Optional<DealRecord> findById(@NonNull DealId dealId) {
         return dsl.select(
-                        DEALS.ID, DEALS.CHANNEL_ID, DEALS.ADVERTISER_ID,
-                        DEALS.OWNER_ID, DEALS.PRICING_RULE_ID, DEALS.STATUS,
-                        DEALS.AMOUNT_NANO, DEALS.COMMISSION_RATE_BP,
-                        DEALS.COMMISSION_NANO, DEALS.DEPOSIT_ADDRESS,
-                        DEALS.SUBWALLET_ID, DEALS.CREATIVE_BRIEF,
-                        DEALS.CREATIVE_DRAFT, DEALS.MESSAGE_ID,
-                        DEALS.CONTENT_HASH, DEALS.DEADLINE_AT,
-                        DEALS.PUBLISHED_AT, DEALS.COMPLETED_AT,
-                        DEALS.FUNDED_AT, DEALS.CANCELLATION_REASON,
-                        DEALS.DEPOSIT_TX_HASH, DEALS.PAYOUT_TX_HASH,
-                        DEALS.REFUNDED_TX_HASH, DEALS.VERSION,
-                        DEALS.CREATED_AT, DEALS.UPDATED_AT)
+                        DEALS.ID.as("id"),
+                        DEALS.CHANNEL_ID.as("channelId"),
+                        DEALS.ADVERTISER_ID.as("advertiserId"),
+                        DEALS.OWNER_ID.as("ownerId"),
+                        DEALS.PRICING_RULE_ID.as("pricingRuleId"),
+                        DEALS.STATUS.as("status"),
+                        DEALS.AMOUNT_NANO.as("amountNano"),
+                        DEALS.COMMISSION_RATE_BP.as("commissionRateBp"),
+                        DEALS.COMMISSION_NANO.as("commissionNano"),
+                        DEALS.DEPOSIT_ADDRESS.as("depositAddress"),
+                        DEALS.SUBWALLET_ID.as("subwalletId"),
+                        DEALS.CREATIVE_BRIEF.as("creativeBrief"),
+                        DEALS.CREATIVE_DRAFT.as("creativeDraft"),
+                        DEALS.MESSAGE_ID.as("messageId"),
+                        DEALS.CONTENT_HASH.as("contentHash"),
+                        DEALS.DEADLINE_AT.as("deadlineAt"),
+                        DEALS.PUBLISHED_AT.as("publishedAt"),
+                        DEALS.COMPLETED_AT.as("completedAt"),
+                        DEALS.FUNDED_AT.as("fundedAt"),
+                        DEALS.CANCELLATION_REASON.as("cancellationReason"),
+                        DEALS.DEPOSIT_TX_HASH.as("depositTxHash"),
+                        DEALS.PAYOUT_TX_HASH.as("payoutTxHash"),
+                        DEALS.REFUNDED_TX_HASH.as("refundedTxHash"),
+                        DEALS.VERSION.as("version"),
+                        DEALS.CREATED_AT.as("createdAt"),
+                        DEALS.UPDATED_AT.as("updatedAt"))
                 .from(DEALS)
                 .where(DEALS.ID.eq(dealId.value()))
-                .fetchOptional(this::toDealRecord);
+                .fetchOptionalInto(DealRow.class)
+                .map(dealRecordMapper::toRecord);
     }
 
     @Override
@@ -104,18 +120,32 @@ public class JooqDealRepository implements DealRepository {
     public List<DealRecord> listByUser(long userId,
                                         @NonNull DealListCriteria criteria) {
         var query = dsl.select(
-                        DEALS.ID, DEALS.CHANNEL_ID, DEALS.ADVERTISER_ID,
-                        DEALS.OWNER_ID, DEALS.PRICING_RULE_ID, DEALS.STATUS,
-                        DEALS.AMOUNT_NANO, DEALS.COMMISSION_RATE_BP,
-                        DEALS.COMMISSION_NANO, DEALS.DEPOSIT_ADDRESS,
-                        DEALS.SUBWALLET_ID, DEALS.CREATIVE_BRIEF,
-                        DEALS.CREATIVE_DRAFT, DEALS.MESSAGE_ID,
-                        DEALS.CONTENT_HASH, DEALS.DEADLINE_AT,
-                        DEALS.PUBLISHED_AT, DEALS.COMPLETED_AT,
-                        DEALS.FUNDED_AT, DEALS.CANCELLATION_REASON,
-                        DEALS.DEPOSIT_TX_HASH, DEALS.PAYOUT_TX_HASH,
-                        DEALS.REFUNDED_TX_HASH, DEALS.VERSION,
-                        DEALS.CREATED_AT, DEALS.UPDATED_AT)
+                        DEALS.ID.as("id"),
+                        DEALS.CHANNEL_ID.as("channelId"),
+                        DEALS.ADVERTISER_ID.as("advertiserId"),
+                        DEALS.OWNER_ID.as("ownerId"),
+                        DEALS.PRICING_RULE_ID.as("pricingRuleId"),
+                        DEALS.STATUS.as("status"),
+                        DEALS.AMOUNT_NANO.as("amountNano"),
+                        DEALS.COMMISSION_RATE_BP.as("commissionRateBp"),
+                        DEALS.COMMISSION_NANO.as("commissionNano"),
+                        DEALS.DEPOSIT_ADDRESS.as("depositAddress"),
+                        DEALS.SUBWALLET_ID.as("subwalletId"),
+                        DEALS.CREATIVE_BRIEF.as("creativeBrief"),
+                        DEALS.CREATIVE_DRAFT.as("creativeDraft"),
+                        DEALS.MESSAGE_ID.as("messageId"),
+                        DEALS.CONTENT_HASH.as("contentHash"),
+                        DEALS.DEADLINE_AT.as("deadlineAt"),
+                        DEALS.PUBLISHED_AT.as("publishedAt"),
+                        DEALS.COMPLETED_AT.as("completedAt"),
+                        DEALS.FUNDED_AT.as("fundedAt"),
+                        DEALS.CANCELLATION_REASON.as("cancellationReason"),
+                        DEALS.DEPOSIT_TX_HASH.as("depositTxHash"),
+                        DEALS.PAYOUT_TX_HASH.as("payoutTxHash"),
+                        DEALS.REFUNDED_TX_HASH.as("refundedTxHash"),
+                        DEALS.VERSION.as("version"),
+                        DEALS.CREATED_AT.as("createdAt"),
+                        DEALS.UPDATED_AT.as("updatedAt"))
                 .from(DEALS)
                 .where(DEALS.ADVERTISER_ID.eq(userId)
                         .or(DEALS.OWNER_ID.eq(userId)));
@@ -138,10 +168,13 @@ public class JooqDealRepository implements DealRepository {
                                     .and(DEALS.ID.lessThan(cursorId))));
         }
 
-        return query
+        var rows = query
                 .orderBy(DEALS.CREATED_AT.desc(), DEALS.ID.desc())
                 .limit(criteria.limit())
-                .fetch(this::toDealRecord);
+                .fetchInto(DealRow.class);
+        return rows.stream()
+                .map(dealRecordMapper::toRecord)
+                .toList();
     }
 
     /**
@@ -160,47 +193,5 @@ public class JooqDealRepository implements DealRepository {
                     "Invalid cursor format");
         }
         return fields;
-    }
-
-    private DealRecord toDealRecord(Record r) {
-        return new DealRecord(
-                r.get(DEALS.ID),
-                r.get(DEALS.CHANNEL_ID),
-                r.get(DEALS.ADVERTISER_ID),
-                r.get(DEALS.OWNER_ID),
-                r.get(DEALS.PRICING_RULE_ID),
-                DealStatus.valueOf(r.get(DEALS.STATUS)),
-                r.get(DEALS.AMOUNT_NANO),
-                r.get(DEALS.COMMISSION_RATE_BP),
-                r.get(DEALS.COMMISSION_NANO),
-                r.get(DEALS.DEPOSIT_ADDRESS),
-                r.get(DEALS.SUBWALLET_ID),
-                r.get(DEALS.CREATIVE_BRIEF) != null
-                        ? r.get(DEALS.CREATIVE_BRIEF).data()
-                        : null,
-                r.get(DEALS.CREATIVE_DRAFT) != null
-                        ? r.get(DEALS.CREATIVE_DRAFT).data()
-                        : null,
-                r.get(DEALS.MESSAGE_ID),
-                r.get(DEALS.CONTENT_HASH),
-                r.get(DEALS.DEADLINE_AT) != null
-                        ? r.get(DEALS.DEADLINE_AT).toInstant()
-                        : null,
-                r.get(DEALS.PUBLISHED_AT) != null
-                        ? r.get(DEALS.PUBLISHED_AT).toInstant()
-                        : null,
-                r.get(DEALS.COMPLETED_AT) != null
-                        ? r.get(DEALS.COMPLETED_AT).toInstant()
-                        : null,
-                r.get(DEALS.FUNDED_AT) != null
-                        ? r.get(DEALS.FUNDED_AT).toInstant()
-                        : null,
-                r.get(DEALS.CANCELLATION_REASON),
-                r.get(DEALS.DEPOSIT_TX_HASH),
-                r.get(DEALS.PAYOUT_TX_HASH),
-                r.get(DEALS.REFUNDED_TX_HASH),
-                r.get(DEALS.VERSION),
-                r.get(DEALS.CREATED_AT).toInstant(),
-                r.get(DEALS.UPDATED_AT).toInstant());
     }
 }

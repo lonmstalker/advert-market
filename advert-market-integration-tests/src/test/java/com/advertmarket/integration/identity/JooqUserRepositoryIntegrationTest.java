@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.identity.adapter.JooqUserRepository;
 import com.advertmarket.identity.api.dto.TelegramUserData;
+import com.advertmarket.identity.mapper.UserProfileMapper;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.UserId;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 /**
  * Integration test for JooqUserRepository with real PostgreSQL.
@@ -35,8 +37,9 @@ class JooqUserRepositoryIntegrationTest {
         repository = new JooqUserRepository(
                 dsl,
                 new JsonFacade(new ObjectMapper()
-                        .findAndRegisterModules()));
-        DatabaseSupport.cleanUserTables(dsl);
+                        .findAndRegisterModules()),
+                Mappers.getMapper(UserProfileMapper.class));
+        DatabaseSupport.cleanAllTables(dsl);
     }
 
     @Test

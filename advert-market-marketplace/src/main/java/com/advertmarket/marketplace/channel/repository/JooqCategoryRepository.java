@@ -3,15 +3,16 @@ package com.advertmarket.marketplace.channel.repository;
 import static com.advertmarket.db.generated.tables.Categories.CATEGORIES;
 import static com.advertmarket.db.generated.tables.ChannelCategories.CHANNEL_CATEGORIES;
 
+import com.advertmarket.db.generated.tables.records.CategoriesRecord;
 import com.advertmarket.marketplace.api.dto.CategoryDto;
 import com.advertmarket.marketplace.api.port.CategoryRepository;
+import com.advertmarket.marketplace.channel.mapper.CategoryDtoMapper;
 import com.advertmarket.shared.json.JsonFacade;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
-import org.jooq.JSON;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -23,18 +24,23 @@ public class JooqCategoryRepository implements CategoryRepository {
 
     private final DSLContext dsl;
     private final JsonFacade jsonFacade;
+    private final CategoryDtoMapper mapper;
 
     @Override
     @NonNull
     public List<CategoryDto> findAllActive() {
-        return dsl.selectFrom(CATEGORIES)
+        var records = dsl.select(
+                        CATEGORIES.ID,
+                        CATEGORIES.SLUG,
+                        CATEGORIES.LOCALIZED_NAME,
+                        CATEGORIES.SORT_ORDER)
+                .from(CATEGORIES)
                 .where(CATEGORIES.IS_ACTIVE.isTrue())
                 .orderBy(CATEGORIES.SORT_ORDER.asc())
-                .fetch(r -> new CategoryDto(
-                        r.getId(),
-                        r.getSlug(),
-                        parseLocalizedName(r.getLocalizedName()),
-                        r.getSortOrder()));
+                .fetchInto(CategoriesRecord.class);
+        return records.stream()
+                .map(r -> mapper.toDto(r, jsonFacade))
+                .toList();
     }
 
     @Override
@@ -66,13 +72,5 @@ public class JooqCategoryRepository implements CategoryRepository {
                 .orderBy(CHANNEL_CATEGORIES.CHANNEL_ID.asc(),
                         CATEGORIES.SORT_ORDER.asc())
                 .fetchGroups(CHANNEL_CATEGORIES.CHANNEL_ID, CATEGORIES.SLUG);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, String> parseLocalizedName(JSON json) {
-        if (json == null || json.data() == null) {
-            return Map.of();
-        }
-        return jsonFacade.fromJson(json.data(), Map.class);
     }
 }

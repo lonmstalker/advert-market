@@ -8,9 +8,9 @@
     <suppress checks="IllegalCatch"
               files="GlobalExceptionHandler\.java"/>
 
-    <!-- TelegramWebhookController: Telegram update parsing safety net -->
+    <!-- TelegramWebhookHandler: Telegram update parsing safety net -->
     <suppress checks="IllegalCatch"
-              files="TelegramWebhookController\.java"/>
+              files="TelegramWebhookHandler\.java"/>
 
     <!-- UpdateProcessor: executor thread safety net (2 broad catches) -->
     <suppress checks="IllegalCatch"

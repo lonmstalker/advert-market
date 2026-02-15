@@ -9,14 +9,15 @@ import static com.advertmarket.shared.metric.MetricNames.CHANNEL_CACHE_HIT;
 import static com.advertmarket.shared.metric.MetricNames.CHANNEL_CACHE_MISS;
 import static com.advertmarket.shared.metric.MetricNames.CHANNEL_CACHE_STALE;
 
-import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
-import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
-import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
-import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.communication.channel.internal.ChannelCachePort;
 import com.advertmarket.communication.channel.internal.ChannelCacheProperties;
 import com.advertmarket.communication.channel.internal.ChannelRateLimiterPort;
+import com.advertmarket.communication.channel.mapper.TelegramChannelConverters;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
+import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.model.ChatFullInfo;
@@ -51,6 +52,7 @@ public class TelegramChannelService implements TelegramChannelPort {
     private final ChannelCachePort cache;
     private final ChannelRateLimiterPort rateLimiter;
     private final MetricsFacade metrics;
+    private final TelegramChannelConverters converters;
 
     @Override
     @NonNull
@@ -69,7 +71,7 @@ public class TelegramChannelService implements TelegramChannelPort {
         try {
             var response = sender.execute(new GetChat(channelId));
             checkResponse(response, channelId);
-            var chatInfo = mapChatFullInfo(response.chat());
+            var chatInfo = converters.toChatInfo(response.chat());
             cache.putChatInfo(channelId, chatInfo);
             metrics.incrementCounter(CHANNEL_API_CALL,
                     "method", "getChat", "ok", "true");
@@ -89,7 +91,7 @@ public class TelegramChannelService implements TelegramChannelPort {
                 mapTelegramError(response.errorCode(),
                         response.description(), 0);
             }
-            var chatInfo = mapChatFullInfo(response.chat());
+            var chatInfo = converters.toChatInfo(response.chat());
             cache.putChatInfo(chatInfo.id(), chatInfo);
             metrics.incrementCounter(CHANNEL_API_CALL,
                     "method", "getChatByUsername", "ok", "true");
@@ -113,7 +115,7 @@ public class TelegramChannelService implements TelegramChannelPort {
             checkResponse(response, channelId);
             metrics.incrementCounter(CHANNEL_API_CALL,
                     "method", "getChatMember", "ok", "true");
-            return mapChatMember(response.chatMember());
+            return converters.toChatMemberInfo(response.chatMember());
         } catch (CallNotPermittedException e) {
             throw new DomainException(SERVICE_UNAVAILABLE,
                     "Telegram API circuit breaker open for channel "
@@ -141,7 +143,7 @@ public class TelegramChannelService implements TelegramChannelPort {
                     new GetChatAdministrators(channelId));
             checkResponse(response, channelId);
             var admins = response.administrators().stream()
-                    .map(TelegramChannelService::mapChatMember)
+                    .map(converters::toChatMemberInfo)
                     .toList();
             cache.putAdministrators(channelId, admins);
             metrics.incrementCounter(CHANNEL_API_CALL,
@@ -204,44 +206,6 @@ public class TelegramChannelService implements TelegramChannelPort {
                 "Telegram API error " + errorCode
                         + " for channel " + channelId
                         + ": " + description);
-    }
-
-    static ChatInfo mapChatFullInfo(
-            @NonNull ChatFullInfo chat) {
-        return new ChatInfo(
-                chat.id(),
-                chat.title() != null ? chat.title() : "",
-                chat.username(),
-                chat.type() != null ? chat.type().name() : "unknown",
-                chat.description());
-    }
-
-    static ChatMemberInfo mapChatMember(
-            @NonNull ChatMember cm) {
-        long userId = cm.user().id();
-        return switch (cm.status()) {
-            case creator -> new ChatMemberInfo(userId,
-                    ChatMemberStatus.CREATOR,
-                    true, true, true, true);
-            case administrator -> new ChatMemberInfo(userId,
-                    ChatMemberStatus.ADMINISTRATOR,
-                    cm.canPostMessages(),
-                    cm.canEditMessages(),
-                    cm.canDeleteMessages(),
-                    cm.canManageChat());
-            case member -> new ChatMemberInfo(userId,
-                    ChatMemberStatus.MEMBER,
-                    false, false, false, false);
-            case restricted -> new ChatMemberInfo(userId,
-                    ChatMemberStatus.RESTRICTED,
-                    false, false, false, false);
-            case left -> new ChatMemberInfo(userId,
-                    ChatMemberStatus.LEFT,
-                    false, false, false, false);
-            case kicked -> new ChatMemberInfo(userId,
-                    ChatMemberStatus.KICKED,
-                    false, false, false, false);
-        };
     }
 
     private ChatInfo fallbackChatInfo(long channelId) {

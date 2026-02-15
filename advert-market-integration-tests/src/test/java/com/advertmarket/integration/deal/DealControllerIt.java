@@ -37,13 +37,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -55,17 +56,19 @@ import org.springframework.test.web.reactive.server.WebTestClient;
  * validation, and authorization.
  */
 @SpringBootTest(
-        classes = DealControllerIT.TestConfig.class,
+        classes = DealControllerIt.TestConfig.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "spring.main.allow-bean-definition-overriding=true"
 )
 @DisplayName("Deal HTTP — end-to-end integration")
-class DealControllerIT {
+class DealControllerIt {
 
     private static final long ADVERTISER_ID = 100L;
     private static final long OWNER_ID = 200L;
     private static final long NON_PARTICIPANT_ID = 300L;
     private static final long CHANNEL_ID = -1001234567890L;
+    private static final long UNKNOWN_CHANNEL_ID = 999_999L;
+    private static final long ONE_TON_NANO = 1_000_000_000L;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -110,7 +113,7 @@ class DealControllerIT {
         var body = webClient.post().uri("/api/v1/deals")
                 .headers(h -> h.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(createRequest(CHANNEL_ID, 1_000_000_000L))
+                .bodyValue(createRequest(CHANNEL_ID, ONE_TON_NANO))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(DealDto.class)
@@ -123,7 +126,7 @@ class DealControllerIT {
         assertThat(body.advertiserId()).isEqualTo(ADVERTISER_ID);
         assertThat(body.ownerId()).isEqualTo(OWNER_ID);
         assertThat(body.status().name()).isEqualTo("DRAFT");
-        assertThat(body.amountNano()).isEqualTo(1_000_000_000L);
+        assertThat(body.amountNano()).isEqualTo(ONE_TON_NANO);
     }
 
     @Test
@@ -134,7 +137,7 @@ class DealControllerIT {
         webClient.post().uri("/api/v1/deals")
                 .headers(h -> h.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(createRequest(999999L, 1_000_000_000L))
+                .bodyValue(createRequest(UNKNOWN_CHANNEL_ID, ONE_TON_NANO))
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody()
@@ -271,7 +274,7 @@ class DealControllerIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(transitionRequest("FUNDED"))
                 .exchange()
-                .expectStatus().isEqualTo(409)
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody()
                 .jsonPath("$.error_code")
                 .isEqualTo("INVALID_STATE_TRANSITION");
@@ -305,7 +308,7 @@ class DealControllerIT {
         var body = webClient.post().uri("/api/v1/deals")
                 .headers(h -> h.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(createRequest(CHANNEL_ID, 1_000_000_000L))
+                .bodyValue(createRequest(CHANNEL_ID, ONE_TON_NANO))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(DealDto.class)

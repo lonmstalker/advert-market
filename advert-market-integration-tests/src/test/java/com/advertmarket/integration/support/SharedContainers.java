@@ -18,14 +18,18 @@ public final class SharedContainers {
     public static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>(DockerImageName
                     // Pinned by digest to keep CI reproducible (avoid :latest flakiness).
-                    .parse("paradedb/paradedb@sha256:6279f4c4540507f8c96d53ac0c1e202d21f9f47f3c14fed24a02a7cc2da0730c")
+                    .parse("paradedb/paradedb@sha256:"
+                            + "6279f4c4540507f8c96d53ac0c1e202d"
+                            + "21f9f47f3c14fed24a02a7cc2da0730c")
                     .asCompatibleSubstituteFor("postgres"));
 
     @SuppressWarnings("resource")
     public static final GenericContainer<?> REDIS =
             new GenericContainer<>(DockerImageName.parse(
                     // Pinned by digest to keep CI reproducible.
-                    "redis:8.4-alpine@sha256:e55195a3afbb812a14306909caad6583a1ab6c79f393f53490e42cb2111084a9"))
+                    "redis:8.4-alpine@sha256:"
+                            + "e55195a3afbb812a14306909caad6583"
+                            + "a1ab6c79f393f53490e42cb2111084a9"))
                     .withExposedPorts(REDIS_PORT);
 
     static {

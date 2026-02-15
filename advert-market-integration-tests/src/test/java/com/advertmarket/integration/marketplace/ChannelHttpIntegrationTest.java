@@ -6,10 +6,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
-import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
-import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
-import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
 import com.advertmarket.integration.support.ContainerProperties;
@@ -19,9 +15,14 @@ import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.advertmarket.marketplace.api.port.CategoryRepository;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
+import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
+import com.advertmarket.marketplace.channel.mapper.CategoryDtoMapper;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
@@ -29,6 +30,7 @@ import com.advertmarket.marketplace.channel.service.ChannelRegistrationTxService
 import com.advertmarket.marketplace.channel.service.ChannelService;
 import com.advertmarket.marketplace.channel.service.ChannelVerificationService;
 import com.advertmarket.marketplace.channel.web.ChannelController;
+import com.advertmarket.marketplace.channel.web.ChannelSearchCriteriaConverter;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.shared.json.JsonFacade;
 import java.time.Duration;
@@ -320,8 +322,11 @@ class ChannelHttpIntegrationTest {
 
         @Bean
         CategoryRepository categoryRepository(
-                DSLContext dsl, JsonFacade jsonFacade) {
-            return new JooqCategoryRepository(dsl, jsonFacade);
+                DSLContext dsl,
+                JsonFacade jsonFacade,
+                CategoryDtoMapper categoryDtoMapper) {
+            return new JooqCategoryRepository(
+                    dsl, jsonFacade, categoryDtoMapper);
         }
 
         @Bean
@@ -376,10 +381,16 @@ class ChannelHttpIntegrationTest {
         }
 
         @Bean
+        ChannelSearchCriteriaConverter channelSearchCriteriaConverter() {
+            return new ChannelSearchCriteriaConverter();
+        }
+
+        @Bean
         ChannelController channelController(
                 ChannelRegistrationService svc,
-                ChannelService channelService) {
-            return new ChannelController(svc, channelService);
+                ChannelService channelService,
+                ChannelSearchCriteriaConverter converter) {
+            return new ChannelController(svc, channelService, converter);
         }
     }
 }

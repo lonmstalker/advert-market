@@ -6,11 +6,11 @@ import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.identity.mapper.UserProfileMapper;
+import com.advertmarket.identity.mapper.UserProfileRow;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.UserId;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +29,7 @@ public class JooqUserRepository implements UserRepository {
 
     private final DSLContext dsl;
     private final JsonFacade jsonFacade;
+    private final UserProfileMapper userProfileMapper;
 
     @Override
     public boolean upsert(@NonNull TelegramUserData data) {
@@ -65,22 +66,22 @@ public class JooqUserRepository implements UserRepository {
     @Override
     public @NonNull Optional<UserProfile> findById(@NonNull UserId userId) {
         return dsl.select(
-                        USERS.ID,
-                        USERS.USERNAME,
-                        USERS.FIRST_NAME,
-                        USERS.LAST_NAME,
-                        USERS.LANGUAGE_CODE,
-                        USERS.DISPLAY_CURRENCY,
-                        USERS.NOTIFICATION_SETTINGS,
-                        USERS.ONBOARDING_COMPLETED,
-                        USERS.INTERESTS,
-                        USERS.CREATED_AT)
+                        USERS.ID.as("id"),
+                        USERS.USERNAME.as("username"),
+                        USERS.FIRST_NAME.as("firstName"),
+                        USERS.LAST_NAME.as("lastName"),
+                        USERS.LANGUAGE_CODE.as("languageCode"),
+                        USERS.DISPLAY_CURRENCY.as("displayCurrency"),
+                        USERS.NOTIFICATION_SETTINGS.as("notificationSettings"),
+                        USERS.ONBOARDING_COMPLETED.as("onboardingCompleted"),
+                        USERS.INTERESTS.as("interests"),
+                        USERS.CREATED_AT.as("createdAt"))
                 .from(USERS)
                 .where(USERS.ID.eq(userId.value()))
                 .and(USERS.IS_DELETED.isFalse()
                         .or(USERS.IS_DELETED.isNull()))
-                .fetchOptional()
-                .map(this::mapToProfile);
+                .fetchOptionalInto(UserProfileRow.class)
+                .map(row -> userProfileMapper.toProfile(row, jsonFacade));
     }
 
     @Override
@@ -140,58 +141,7 @@ public class JooqUserRepository implements UserRepository {
                 .execute();
     }
 
-    private UserProfile mapToProfile(Record record) {
-        long id = record.get(USERS.ID);
-        String firstName = record.get(USERS.FIRST_NAME);
-        String lastName = record.get(USERS.LAST_NAME);
-        return new UserProfile(
-                id,
-                orEmpty(record.get(USERS.USERNAME)),
-                displayName(firstName, lastName),
-                defaultLanguage(record.get(USERS.LANGUAGE_CODE)),
-                defaultCurrency(record.get(USERS.DISPLAY_CURRENCY)),
-                notificationSettings(record.get(USERS.NOTIFICATION_SETTINGS)),
-                Boolean.TRUE.equals(record.get(USERS.ONBOARDING_COMPLETED)),
-                interests(record.get(USERS.INTERESTS)),
-                createdAt(record.get(USERS.CREATED_AT)));
-    }
-
     private static String defaultCurrencyForLanguage(String languageCode) {
         return "ru".equals(languageCode) ? "RUB" : "USD";
-    }
-
-    private static String orEmpty(String value) {
-        return value != null ? value : "";
-    }
-
-    private static String defaultLanguage(String languageCode) {
-        return languageCode != null ? languageCode : "ru";
-    }
-
-    private static String defaultCurrency(String currency) {
-        return currency != null ? currency : "USD";
-    }
-
-    private static String displayName(String firstName, String lastName) {
-        if (lastName != null && !lastName.isBlank()) {
-            return (firstName != null ? firstName : "") + " " + lastName;
-        }
-        return firstName != null ? firstName : "";
-    }
-
-    private NotificationSettings notificationSettings(JSON notifJson) {
-        if (notifJson != null && notifJson.data() != null) {
-            return jsonFacade.fromJson(notifJson.data(),
-                    NotificationSettings.class);
-        }
-        return NotificationSettings.defaults();
-    }
-
-    private static List<String> interests(String[] interests) {
-        return interests != null ? Arrays.asList(interests) : List.of();
-    }
-
-    private static Instant createdAt(OffsetDateTime createdAt) {
-        return createdAt != null ? createdAt.toInstant() : Instant.now();
     }
 }

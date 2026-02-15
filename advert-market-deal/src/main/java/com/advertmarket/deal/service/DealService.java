@@ -13,6 +13,7 @@ import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealPort;
 import com.advertmarket.deal.api.port.DealRepository;
+import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.deal.repository.JooqDealRepository;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.shared.exception.DomainException;
@@ -45,6 +46,7 @@ public class DealService implements DealPort {
     private final DealAuthorizationPort dealAuthorizationPort;
     private final DealTransitionService dealTransitionService;
     private final ChannelRepository channelRepository;
+    private final DealDtoMapper dealDtoMapper;
 
     @Override
     @Transactional
@@ -85,7 +87,7 @@ public class DealService implements DealPort {
                 0, now, now);
 
         dealRepository.insert(record);
-        return toDto(record);
+        return dealDtoMapper.toDto(record);
     }
 
     @Override
@@ -102,7 +104,10 @@ public class DealService implements DealPort {
                         dealId.value().toString()));
 
         var events = dealEventRepository.findByDealId(dealId);
-        return toDetailDto(deal, events);
+        var timeline = events.stream()
+                .map(dealDtoMapper::toEventDto)
+                .toList();
+        return dealDtoMapper.toDetailDto(deal, timeline);
     }
 
     @Override
@@ -128,7 +133,9 @@ public class DealService implements DealPort {
                 ? records.subList(0, criteria.limit())
                 : records;
 
-        var items = page.stream().map(this::toDto).toList();
+        var items = page.stream()
+                .map(dealDtoMapper::toDto)
+                .toList();
         String nextCursor = hasMore
                 ? JooqDealRepository.buildCursor(page.getLast())
                 : null;
@@ -141,57 +148,5 @@ public class DealService implements DealPort {
     public @NonNull DealTransitionResult transition(
             @NonNull DealTransitionCommand command) {
         return dealTransitionService.transition(command);
-    }
-
-    private DealDto toDto(DealRecord r) {
-        return new DealDto(
-                DealId.of(r.id()),
-                r.channelId(),
-                r.advertiserId(),
-                r.ownerId(),
-                r.status(),
-                r.amountNano(),
-                r.deadlineAt(),
-                r.createdAt(),
-                r.version());
-    }
-
-    private DealDetailDto toDetailDto(DealRecord r,
-                                       List<DealEventRecord> events) {
-        var timeline = events.stream().map(this::toEventDto).toList();
-        return new DealDetailDto(
-                DealId.of(r.id()),
-                r.channelId(),
-                r.advertiserId(),
-                r.ownerId(),
-                r.status(),
-                r.amountNano(),
-                r.commissionRateBp(),
-                r.commissionNano(),
-                r.deadlineAt(),
-                r.createdAt(),
-                r.version(),
-                timeline);
-    }
-
-    private DealEventDto toEventDto(DealEventRecord e) {
-        return new DealEventDto(
-                e.id() != null ? e.id() : 0L,
-                e.eventType(),
-                parseStatus(e.fromStatus()),
-                parseStatus(e.toStatus()),
-                e.actorId(),
-                e.createdAt());
-    }
-
-    private static DealStatus parseStatus(String value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            return DealStatus.valueOf(value);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
     }
 }

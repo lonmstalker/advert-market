@@ -3,8 +3,7 @@ package com.advertmarket.integration.architecture;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.marketplace.api.model.PostType;
-import com.advertmarket.marketplace.channel.web.ReferenceDataController;
-import java.lang.reflect.Field;
+import com.advertmarket.marketplace.channel.mapper.PostTypeDtoFactory;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
@@ -22,13 +21,9 @@ class LocaleCompletenessTest {
 
     @Test
     @DisplayName("Every PostType must have labels for all required locales")
-    @SuppressWarnings("unchecked")
-    void postTypeLabelsShouldCoverAllEnumValues() throws Exception {
-        Field field = ReferenceDataController.class
-                .getDeclaredField("POST_TYPE_LABELS");
-        field.setAccessible(true);
-        var labels = (Map<PostType, Map<String, String>>)
-                field.get(null);
+    void postTypeLabelsShouldCoverAllEnumValues() {
+        Map<PostType, Map<String, String>> labels =
+                PostTypeDtoFactory.labels();
 
         for (PostType postType : PostType.values()) {
             assertThat(labels)

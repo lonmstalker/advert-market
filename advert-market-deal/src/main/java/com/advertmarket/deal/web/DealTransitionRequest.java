@@ -7,7 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * REST request body for transitioning a deal status.
  */
-record DealTransitionRequest(
+public record DealTransitionRequest(
         @NotNull DealStatus targetStatus,
         @Nullable String reason) {
 }

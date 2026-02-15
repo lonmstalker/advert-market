@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Provides a dedicated executor for blocking I/O operations.
  *
- * <p>Used by services that fan-out to external APIs via {@link java.util.concurrent.CompletableFuture}.
+ * <p>Used by services that fan-out to external APIs via
+ * {@link java.util.concurrent.CompletableFuture}.
  */
 @Configuration
 public class BlockingIoExecutorConfig {
@@ -24,4 +25,3 @@ public class BlockingIoExecutorConfig {
         return Executors.newVirtualThreadPerTaskExecutor();
     }
 }
-

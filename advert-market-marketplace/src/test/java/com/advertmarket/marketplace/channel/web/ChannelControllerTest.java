@@ -70,7 +70,9 @@ class ChannelControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new ChannelController(
-                        registrationService, channelService))
+                        registrationService,
+                        channelService,
+                        new ChannelSearchCriteriaConverter()))
                 .build();
 
         SecurityContextHolder.getContext()

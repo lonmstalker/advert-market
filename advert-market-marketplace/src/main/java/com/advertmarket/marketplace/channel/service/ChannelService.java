@@ -9,6 +9,7 @@ import java.util.List;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.ChannelSearchPort;
+import com.advertmarket.marketplace.channel.mapper.ChannelSearchCriteriaNormalizer;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.pagination.CursorPage;
@@ -37,7 +38,8 @@ public class ChannelService {
     @NonNull
     public CursorPage<ChannelListItem> search(
             @NonNull ChannelSearchCriteria criteria) {
-        return searchPort.search(normalizeCriteria(criteria));
+        return searchPort.search(
+                ChannelSearchCriteriaNormalizer.normalize(criteria));
     }
 
     /**
@@ -47,7 +49,8 @@ public class ChannelService {
      * @return count of matching channels
      */
     public long count(@NonNull ChannelSearchCriteria criteria) {
-        return searchPort.count(normalizeCriteria(criteria));
+        return searchPort.count(
+                ChannelSearchCriteriaNormalizer.normalize(criteria));
     }
 
     /**
@@ -122,24 +125,4 @@ public class ChannelService {
         }
     }
 
-    private static ChannelSearchCriteria normalizeCriteria(
-            ChannelSearchCriteria criteria) {
-        int limit = Math.clamp(criteria.limit(), 1,
-                ChannelSearchCriteria.MAX_LIMIT);
-        if (limit == criteria.limit()) {
-            return criteria;
-        }
-        return new ChannelSearchCriteria(
-                criteria.category(),
-                criteria.minSubscribers(),
-                criteria.maxSubscribers(),
-                criteria.minPrice(),
-                criteria.maxPrice(),
-                criteria.minEngagement(),
-                criteria.language(),
-                criteria.query(),
-                criteria.sort(),
-                criteria.cursor(),
-                limit);
-    }
 }

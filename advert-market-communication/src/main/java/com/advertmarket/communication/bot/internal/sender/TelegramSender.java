@@ -43,6 +43,11 @@ public class TelegramSender {
     private static final String CANT_PARSE_ENTITIES =
             "can't parse entities";
     private static final int MAX_LOG_TEXT_LEN = 200;
+    private static final int SHA256_LOG_HEX_CHARS = 12;
+    private static final int HEX_BYTE_MASK = 0xFF;
+    private static final int HEX_NIBBLE_SHIFT = 4;
+    private static final int HEX_NIBBLE_MASK = 0x0F;
+    private static final int STRING_BUILDER_EXTRA_CAPACITY = 32;
     private static final char[] HEX =
             "0123456789abcdef".toCharArray();
 
@@ -313,16 +318,16 @@ public class TelegramSender {
             return "<sha256-unavailable>";
         }
         byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
-        return toHex(hash, 12);
+        return toHex(hash, SHA256_LOG_HEX_CHARS);
     }
 
     private static String toHex(byte[] bytes, int maxChars) {
         int n = Math.min(bytes.length * 2, maxChars);
         var out = new char[n];
         for (int i = 0; i < n / 2; i++) {
-            int v = bytes[i] & 0xFF;
-            out[i * 2] = HEX[v >>> 4];
-            out[i * 2 + 1] = HEX[v & 0x0F];
+            int v = bytes[i] & HEX_BYTE_MASK;
+            out[i * 2] = HEX[v >>> HEX_NIBBLE_SHIFT];
+            out[i * 2 + 1] = HEX[v & HEX_NIBBLE_MASK];
         }
         return new String(out);
     }
@@ -349,7 +354,7 @@ public class TelegramSender {
                 .replace("\r", "\\\\r")
                 .replace("\n", "\\\\n");
         int limit = Math.min(normalized.length(), MAX_LOG_TEXT_LEN);
-        var out = new StringBuilder(limit + 32);
+        var out = new StringBuilder(limit + STRING_BUILDER_EXTRA_CAPACITY);
         for (int i = 0; i < limit; i++) {
             char c = normalized.charAt(i);
             if (Character.isLetterOrDigit(c)) {

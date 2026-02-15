@@ -11,6 +11,7 @@ import com.advertmarket.identity.api.port.LoginRateLimiterPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.config.AuthProperties;
+import com.advertmarket.identity.mapper.LoginResponseMapper;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.identity.service.AuthServiceImpl;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -274,7 +276,8 @@ class AuthHttpIntegrationTest {
             return new AuthServiceImpl(
                     validator, userRepository,
                     jwtTokenProvider, tokenBlacklistPort,
-                    metricsFacade);
+                    metricsFacade,
+                    Mappers.getMapper(LoginResponseMapper.class));
         }
 
         @Bean

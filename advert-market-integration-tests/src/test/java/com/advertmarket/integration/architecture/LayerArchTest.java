@@ -36,6 +36,18 @@ class LayerArchTest {
     }
 
     @Test
+    @DisplayName("Controllers must not depend on repository ports")
+    void controllersShouldNotDependOnRepositoryPorts() {
+        noClasses()
+                .that().haveSimpleNameEndingWith("Controller")
+                .should().dependOnClassesThat()
+                .haveNameMatching(".*\\.api\\.port\\..*Repository")
+                .because("controllers should delegate to services/use-cases, "
+                        + "not depend on persistence ports directly")
+                .check(classes);
+    }
+
+    @Test
     @DisplayName("API modules must not depend on Spring framework internals")
     void apiModulesShouldNotDependOnSpringInternals() {
         noClasses()
