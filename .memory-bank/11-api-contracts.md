@@ -48,6 +48,7 @@ Rules:
 | `GET` | `/api/v1/categories` | `advert-market-marketplace` | Active categories |
 | `GET` | `/api/v1/post-types` | `advert-market-marketplace` | Localized post types |
 | `GET` | `/api/v1/channels` | `advert-market-marketplace` | Search/list channels |
+| `GET` | `/api/v1/channels/my` | `advert-market-marketplace` | Channels owned by authenticated user |
 | `GET` | `/api/v1/channels/count` | `advert-market-marketplace` | Count channels by filters |
 | `GET` | `/api/v1/channels/{id}` | `advert-market-marketplace` | Channel detail |
 | `POST` | `/api/v1/channels/verify` | `advert-market-marketplace` | Verify ownership/bot rights |

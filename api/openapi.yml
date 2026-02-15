@@ -652,6 +652,24 @@ paths:
                 $ref: "#/components/schemas/ChannelResponse"
       security:
       - bearerAuth: []
+  /api/v1/channels/my:
+    get:
+      tags:
+      - Channels
+      summary: My channels
+      description: Returns channels owned by the authenticated user
+      operationId: myChannels
+      responses:
+        "200":
+          description: User's channels
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChannelResponse"
+      security:
+      - bearerAuth: []
   /api/v1/channels/{channelId}/team:
     get:
       tags:
