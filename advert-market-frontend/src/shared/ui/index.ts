@@ -9,6 +9,7 @@ export { DeviceFrame } from './components/device-frame/DeviceFrame';
 export { EmptyState } from './components/empty-state';
 export { EndOfList } from './components/end-of-list';
 export { ErrorBoundary } from './components/error-boundary';
+export { FilterButton } from './components/filter-button';
 export { FixedBottomBar } from './components/fixed-bottom-bar';
 export { FormattedPrice } from './components/formatted-price';
 export { LanguageBadge } from './components/language-badge';

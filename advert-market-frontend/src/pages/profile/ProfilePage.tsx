@@ -8,7 +8,7 @@ import { useAuth } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
-import { ArrowRightIcon, BellIcon, CoinIcon, GlobeIcon, PaletteIcon, SatelliteIcon } from '@/shared/ui/icons';
+import { BellIcon, CoinIcon, GlobeIcon, PaletteIcon, SatelliteIcon } from '@/shared/ui/icons';
 import { ProfileHero } from './components/ProfileHero';
 
 const CURRENCY_LABELS: Record<string, string> = {
@@ -118,7 +118,7 @@ export default function ProfilePage() {
                 before={<SettingsIcon icon={PaletteIcon} />}
                 text={t('creatives.title')}
                 description={t('profile.creatives.description')}
-                after={<ArrowRightIcon style={{ width: 16, height: 16, color: 'var(--color-foreground-tertiary)' }} />}
+                chevron
                 onClick={() => navigate('/profile/creatives')}
               />
             </motion.div>

@@ -1,7 +1,7 @@
 import { Button, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
-import { fadeIn, pressScale } from '../animations';
+import { pressScale, scaleIn } from '../animations';
 
 type EmptyStateProps = {
   icon?: ReactNode;
@@ -14,7 +14,7 @@ type EmptyStateProps = {
 export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
     <motion.div
-      {...fadeIn}
+      {...scaleIn}
       style={{
         display: 'flex',
         flexDirection: 'column',

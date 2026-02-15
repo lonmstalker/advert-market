@@ -85,9 +85,9 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                     aria-hidden="true"
                     animate={{
                       boxShadow: [
-                        '0 0 0 0px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.3)',
-                        '0 0 0 6px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0)',
-                        '0 0 0 0px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.3)',
+                        '0 0 0 0px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
+                        '0 0 0 6px color-mix(in srgb, var(--color-accent-primary) 0%, transparent)',
+                        '0 0 0 0px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
                       ],
                     }}
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
@@ -98,7 +98,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                       border: '2.5px solid var(--color-accent-primary)',
                       backgroundColor: 'var(--color-background-base)',
                       marginTop: 0,
-                      filter: 'drop-shadow(0 0 3px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.2))',
+                      filter: 'drop-shadow(0 0 3px color-mix(in srgb, var(--color-accent-primary) 20%, transparent))',
                     }}
                   />
                 ) : (
@@ -136,7 +136,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                     width: '100%',
                     padding: isActive ? '4px 8px' : '0 0 0 8px',
                     cursor: step.description ? 'pointer' : 'default',
-                    background: isActive ? 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.08)' : 'none',
+                    background: isActive ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)' : 'none',
                     border: 'none',
                     borderRadius: isActive ? 8 : 0,
                     textAlign: 'left',

@@ -46,8 +46,13 @@ export default function DealDetailPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { showError } = useToast();
 
-  const { deal, timeline, isLoading, isError } = useDealDetail(dealId as string);
-  const { transition, negotiate, isPending } = useDealTransition(dealId as string);
+  useEffect(() => {
+    if (!dealId) navigate('/deals', { replace: true });
+  }, [dealId, navigate]);
+
+  const safeDealId = dealId ?? '';
+  const { deal, timeline, isLoading, isError } = useDealDetail(safeDealId);
+  const { transition, negotiate, isPending } = useDealTransition(safeDealId);
   const countdown = useCountdown(deal?.deadlineAt ?? null, t);
 
   const actions = useMemo(() => {
@@ -166,7 +171,7 @@ export default function DealDetailPage() {
 
       {actions.length > 0 && <DealActions actions={actions} onAction={handleAction} isPending={isPending} />}
 
-      <PaymentProvider dealId={dealId as string} onClose={() => setSheetOpen(false)}>
+      <PaymentProvider dealId={safeDealId} onClose={() => setSheetOpen(false)}>
         <NegotiateProvider
           currentPriceNano={deal?.priceNano ?? 0}
           onSubmit={(priceNano, message) => {

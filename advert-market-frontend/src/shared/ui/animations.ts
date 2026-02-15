@@ -52,7 +52,12 @@ export const slideFromBottom = {
 } as const;
 
 export const staggerChildren = {
-  animate: { transition: { staggerChildren: 0.05 } },
+  variants: {
+    initial: {},
+    animate: { transition: { staggerChildren: 0.05 } },
+  },
+  initial: 'initial',
+  animate: 'animate',
 } as const;
 
 export const listItem = {

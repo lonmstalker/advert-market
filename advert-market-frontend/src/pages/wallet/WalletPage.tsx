@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router';
 import { SummaryHero } from '@/features/wallet/components/SummaryHero';
 import { SummaryStats } from '@/features/wallet/components/SummaryStats';
 import { TransactionGroupList } from '@/features/wallet/components/TransactionGroupList';
+import { WalletSkeleton } from '@/features/wallet/components/WalletSkeleton';
 import { useTransactions } from '@/features/wallet/hooks/useTransactions';
 import { useWalletSummary } from '@/features/wallet/hooks/useWalletSummary';
 import { EmptyState } from '@/shared/ui';
@@ -28,11 +29,7 @@ export default function WalletPage() {
     summary && (summary.earnedTotalNano !== '0' || summary.spentTotalNano !== '0' || transactions.length > 0);
 
   if (isLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
-        <Spinner size="32px" color="accent" />
-      </div>
-    );
+    return <WalletSkeleton />;
   }
 
   if (!hasData) {
@@ -105,23 +102,11 @@ export default function WalletPage() {
             <Text type="title3" weight="bold">
               {t('wallet.recentTransactions')}
             </Text>
-            <motion.a
-              {...pressScale}
-              href="/wallet/history"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/wallet/history');
-              }}
-              style={{
-                color: 'var(--color-accent-primary)',
-                fontSize: 14,
-                fontWeight: 500,
-                textDecoration: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              {t('wallet.viewAll')}
-            </motion.a>
+            <motion.div {...pressScale} onClick={() => navigate('/wallet/history')} style={{ cursor: 'pointer' }}>
+              <Text type="subheadline2" weight="medium" color="accent">
+                {t('wallet.viewAll')}
+              </Text>
+            </motion.div>
           </div>
           <TransactionGroupList
             transactions={transactions}

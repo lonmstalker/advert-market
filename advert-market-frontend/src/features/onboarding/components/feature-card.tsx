@@ -33,7 +33,7 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
             width: '48px',
             height: '48px',
             borderRadius: '12px',
-            backgroundColor: 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.1)',
+            backgroundColor: 'color-mix(in srgb, var(--color-accent-primary) 10%, transparent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
