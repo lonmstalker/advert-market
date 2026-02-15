@@ -22,7 +22,6 @@ import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +41,6 @@ public class ChannelVerificationService {
     private final TelegramChannelPort telegramChannel;
     private final ChannelBotProperties botProperties;
 
-    @Qualifier("blockingIoExecutor")
     private final @NonNull Executor blockingIoExecutor;
 
     /**
