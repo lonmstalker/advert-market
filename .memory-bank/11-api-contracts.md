@@ -37,6 +37,8 @@ Rules:
 | `POST` | `/api/v1/auth/logout` | `advert-market-identity` | Session invalidation |
 | `GET` | `/api/v1/profile` | `advert-market-identity` | User profile |
 | `PUT` | `/api/v1/profile/onboarding` | `advert-market-identity` | Complete onboarding |
+| `PUT` | `/api/v1/profile/language` | `advert-market-identity` | Update language |
+| `PUT` | `/api/v1/profile/settings` | `advert-market-identity` | Update settings (currency, notifications) |
 | `DELETE` | `/api/v1/profile` | `advert-market-identity` | Delete account |
 
 ### Marketplace Catalog
@@ -70,6 +72,12 @@ Rules:
 | `POST` | `/api/v1/channels/{channelId}/pricing` | `advert-market-marketplace` | Create pricing rule |
 | `PUT` | `/api/v1/channels/{channelId}/pricing/{ruleId}` | `advert-market-marketplace` | Update pricing rule |
 | `DELETE` | `/api/v1/channels/{channelId}/pricing/{ruleId}` | `advert-market-marketplace` | Delete pricing rule |
+
+### Communication
+
+| Method | Path | Module | Notes |
+|---|---|---|---|
+| `POST` | `/api/v1/bot/webhook` | `advert-market-communication` | Telegram webhook |
 
 ### Internal
 

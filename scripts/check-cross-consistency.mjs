@@ -247,8 +247,47 @@ function parseMemoryContracts() {
   };
 }
 
+function resolveBeadsRootAbs() {
+  const beadsRootAbs = path.resolve(repoRoot, '.beads');
+  const redirectAbs = path.resolve(beadsRootAbs, 'redirect');
+  if (!fs.existsSync(redirectAbs)) {
+    return beadsRootAbs;
+  }
+  const target = readText(redirectAbs).trim();
+  if (!target) {
+    return beadsRootAbs;
+  }
+  return path.isAbsolute(target)
+    ? target
+    : path.resolve(path.dirname(redirectAbs), target);
+}
+
 function loadBeadsStatuses() {
   const statusMap = new Map();
+  const beadsRootAbs = resolveBeadsRootAbs();
+  const issuesJsonlAbs = path.resolve(beadsRootAbs, 'issues.jsonl');
+
+  if (fs.existsSync(issuesJsonlAbs)) {
+    const lines = readText(issuesJsonlAbs).split(/\r?\n/u);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]?.trim();
+      if (!line) {
+        continue;
+      }
+      let issue;
+      try {
+        issue = JSON.parse(line);
+      } catch {
+        addFinding('Beads', `Failed to parse ${rel(issuesJsonlAbs)}:${i + 1} as JSON`);
+        continue;
+      }
+      if (issue?.id && issue?.status) {
+        statusMap.set(issue.id, issue.status);
+      }
+    }
+    return statusMap;
+  }
+
   try {
     const raw = execSync('bd list --limit 0 --json', {
       cwd: repoRoot,
@@ -263,6 +302,115 @@ function loadBeadsStatuses() {
     addFinding('Beads', `Failed to load Beads issues: ${String(error.message ?? error)}`);
   }
   return statusMap;
+}
+
+function stripQuotes(value) {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function parseOpenApiEndpoints() {
+  const openApiRel = config.openApiSpecFile ?? 'api/openapi.yml';
+  const openApiAbs = path.resolve(repoRoot, openApiRel);
+  if (!fs.existsSync(openApiAbs)) {
+    addFinding('Setup', `OpenAPI spec not found: ${openApiRel}`);
+    return {
+      openApiRel,
+      endpoints: new Map(),
+      paths: new Set(),
+    };
+  }
+
+  const endpoints = new Map();
+  const paths = new Set();
+  const lines = readText(openApiAbs).split(/\r?\n/u);
+  let inPaths = false;
+  let currentPath = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!inPaths) {
+      if (/^paths:\s*$/u.test(line)) {
+        inPaths = true;
+      }
+      continue;
+    }
+
+    if (!line.trim()) {
+      continue;
+    }
+    if (/^\S/u.test(line)) {
+      break; // leaving top-level `paths:`
+    }
+
+    const pathMatch = line.match(/^ {2}(['"]?\/[^'"]+['"]?):\s*$/u);
+    if (pathMatch) {
+      currentPath = stripQuotes(pathMatch[1]);
+      paths.add(normalizePath(currentPath));
+      continue;
+    }
+
+    if (!currentPath) {
+      continue;
+    }
+
+    const methodMatch = line.match(/^ {4}(get|post|put|delete|patch):\s*$/u);
+    if (methodMatch) {
+      const method = methodMatch[1].toUpperCase();
+      const key = endpointKey(method, currentPath);
+      endpoints.set(key, {
+        method,
+        path: normalizePath(currentPath),
+        file: openApiAbs,
+        line: i + 1,
+      });
+    }
+  }
+
+  if (!inPaths) {
+    addFinding('OpenAPI', `${openApiRel} is missing top-level "paths:" section`);
+  }
+
+  return {
+    openApiRel,
+    endpoints,
+    paths,
+  };
+}
+
+function parseFrontendSchemaPaths() {
+  const schemaRel = config.frontendSchemaFile ?? 'advert-market-frontend/src/shared/api/schema.gen.ts';
+  const schemaAbs = path.resolve(repoRoot, schemaRel);
+  if (!fs.existsSync(schemaAbs)) {
+    addFinding('Setup', `Frontend schema not found: ${schemaRel}`);
+    return {
+      schemaRel,
+      schemaPaths: new Set(),
+    };
+  }
+
+  const schemaPaths = new Set();
+  const content = readText(schemaAbs);
+  const regex = /^\s+['"](\/(?:api|internal)\/v1\/[^'"]+)['"]:\s*\{/gmu;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    schemaPaths.add(normalizePath(match[1]));
+  }
+
+  if (schemaPaths.size === 0) {
+    addFinding('FrontendSchema', `${schemaRel} does not contain any /api/v1 or /internal/v1 path keys`);
+  }
+
+  return {
+    schemaRel,
+    schemaPaths,
+  };
 }
 
 function parseAllowlist() {
@@ -294,6 +442,8 @@ function parseAllowlist() {
 const backendEndpoints = parseBackendEndpoints();
 const frontendEndpoints = parseFrontendEndpoints();
 const { implementedRows, plannedRows, contractsRel } = parseMemoryContracts();
+const { openApiRel, endpoints: openApiEndpoints, paths: openApiPaths } = parseOpenApiEndpoints();
+const { schemaRel, schemaPaths } = parseFrontendSchemaPaths();
 const beadsStatuses = loadBeadsStatuses();
 const allowlist = parseAllowlist();
 const allowedBeadsStatuses = new Set(config.beadsValidStatuses ?? ['open', 'in_progress', 'blocked']);
@@ -302,12 +452,66 @@ const plannedMap = new Map(
   plannedRows.map((row) => [endpointKey(row.method, row.path), row]),
 );
 
+const implementedMap = new Map(
+  implementedRows.map((row) => [endpointKey(row.method, row.path), row]),
+);
+
 for (const row of implementedRows) {
   const key = endpointKey(row.method, row.path);
   if (!backendEndpoints.has(key)) {
     addFinding(
       'MemoryBank->Backend',
       `${key} listed as implemented in ${contractsRel}, but backend endpoint is missing`,
+    );
+  }
+}
+
+for (const [key, endpoint] of backendEndpoints.entries()) {
+  if (!implementedMap.has(key)) {
+    const location = `${rel(endpoint.file)}:${endpoint.line}`;
+    addFinding(
+      'Backend->MemoryBank',
+      `${key} exists in backend at ${location}, but is missing from implemented API section of ${contractsRel}`,
+    );
+  }
+}
+
+for (const [key, endpoint] of backendEndpoints.entries()) {
+  if (openApiEndpoints.has(key)) {
+    continue;
+  }
+  const location = `${rel(endpoint.file)}:${endpoint.line}`;
+  addFinding(
+    'Backend->OpenAPI',
+    `${key} exists in backend at ${location}, but is missing from ${openApiRel}`,
+  );
+}
+
+for (const [key, endpoint] of openApiEndpoints.entries()) {
+  if (backendEndpoints.has(key)) {
+    continue;
+  }
+  const location = `${rel(endpoint.file)}:${endpoint.line}`;
+  addFinding(
+    'OpenAPI->Backend',
+    `${key} exists in ${location}, but is missing in backend controllers`,
+  );
+}
+
+for (const openApiPath of openApiPaths) {
+  if (!schemaPaths.has(openApiPath)) {
+    addFinding(
+      'OpenAPI->FrontendSchema',
+      `${openApiPath} exists in ${openApiRel}, but is missing from ${schemaRel}`,
+    );
+  }
+}
+
+for (const schemaPath of schemaPaths) {
+  if (!openApiPaths.has(schemaPath)) {
+    addFinding(
+      'FrontendSchema->OpenAPI',
+      `${schemaPath} exists in ${schemaRel}, but is missing from ${openApiRel}`,
     );
   }
 }
@@ -397,3 +601,6 @@ console.log(`- frontend endpoints: ${frontendEndpoints.size}`);
 console.log(`- memory implemented endpoints: ${implementedRows.length}`);
 console.log(`- memory planned endpoints: ${plannedRows.length}`);
 console.log(`- allowlist entries: ${allowlist.size}`);
+console.log(`- openapi endpoints: ${openApiEndpoints.size}`);
+console.log(`- openapi paths: ${openApiPaths.size}`);
+console.log(`- frontend schema paths: ${schemaPaths.size}`);

@@ -22,6 +22,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/profile/settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update user settings */
+    put: operations['updateSettings'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/profile/onboarding': {
     parameters: {
       query?: never;
@@ -32,6 +49,23 @@ export interface paths {
     get?: never;
     /** Complete user onboarding */
     put: operations['completeOnboarding'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/profile/language': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update user language */
+    put: operations['updateLanguage'];
     post?: never;
     delete?: never;
     options?: never;
@@ -367,16 +401,41 @@ export interface components {
       /** Format: date-time */
       timestamp?: string;
     };
-    /** @description User onboarding completion request */
-    OnboardingRequest: {
+    /** @description Deal notification settings */
+    DealNotifications: {
+      newOffers?: boolean;
+      acceptReject?: boolean;
+      deliveryStatus?: boolean;
+    };
+    /** @description Dispute notification settings */
+    DisputeNotifications: {
+      opened?: boolean;
+      resolved?: boolean;
+    };
+    /** @description Financial notification settings */
+    FinancialNotifications: {
+      deposits?: boolean;
+      payouts?: boolean;
+      escrow?: boolean;
+    };
+    /** @description Notification settings */
+    NotificationSettings: {
+      /** @description Deal notifications */
+      deals?: components['schemas']['DealNotifications'];
+      /** @description Financial notifications */
+      financial?: components['schemas']['FinancialNotifications'];
+      /** @description Dispute notifications */
+      disputes?: components['schemas']['DisputeNotifications'];
+    };
+    /** @description Update user settings request */
+    UpdateSettingsRequest: {
       /**
-       * @description Selected interest tags
-       * @example [
-       *       "tech",
-       *       "gaming"
-       *     ]
+       * @description Fiat display currency code
+       * @example RUB
        */
-      interests: string[];
+      displayCurrency?: string;
+      /** @description Notification preferences */
+      notificationSettings?: components['schemas']['NotificationSettings'];
     };
     /** @description Full user profile */
     UserProfile: {
@@ -401,6 +460,13 @@ export interface components {
        * @example en
        */
       languageCode?: string;
+      /**
+       * @description Fiat display currency
+       * @example USD
+       */
+      displayCurrency?: string;
+      /** @description Notification preferences */
+      notificationSettings?: components['schemas']['NotificationSettings'];
       /** @description Whether onboarding is completed */
       onboardingCompleted?: boolean;
       /** @description Selected interest tags */
@@ -410,6 +476,25 @@ export interface components {
        * @description Registration timestamp
        */
       createdAt?: string;
+    };
+    /** @description User onboarding completion request */
+    OnboardingRequest: {
+      /**
+       * @description Selected interest tags
+       * @example [
+       *       "tech",
+       *       "gaming"
+       *     ]
+       */
+      interests: string[];
+    };
+    /** @description Update user language request */
+    UpdateLanguageRequest: {
+      /**
+       * @description IETF language tag
+       * @example ru
+       */
+      languageCode: string;
     };
     /** @description Channel update request */
     ChannelUpdateRequest: {
@@ -680,6 +765,7 @@ export interface components {
     CursorPageChannelListItem: {
       items?: components['schemas']['ChannelListItem'][];
       nextCursor?: string;
+      hasNext?: boolean;
     };
     /** @description Full channel detail with pricing rules */
     ChannelDetailResponse: {
@@ -774,6 +860,48 @@ export interface operations {
       };
     };
   };
+  updateSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateSettingsRequest'];
+      };
+    };
+    responses: {
+      /** @description Settings updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Invalid settings */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Not authenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+    };
+  };
   completeOnboarding: {
     parameters: {
       query?: never;
@@ -797,6 +925,48 @@ export interface operations {
         };
       };
       /** @description Invalid interests */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Not authenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+    };
+  };
+  updateLanguage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateLanguageRequest'];
+      };
+    };
+    responses: {
+      /** @description Language updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Invalid language code */
       400: {
         headers: {
           [name: string]: unknown;

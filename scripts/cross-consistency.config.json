@@ -6,7 +6,8 @@
   "backendControllerRoots": [
     "advert-market-identity/src/main/java",
     "advert-market-marketplace/src/main/java",
-    "advert-market-app/src/main/java"
+    "advert-market-app/src/main/java",
+    "advert-market-communication/src/main/java"
   ],
   "beadsValidStatuses": [
     "open",
@@ -61,6 +62,14 @@
       "beads_id": "advert-market-6wx.2",
       "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
       "reason": "Deal negotiate API is planned and tracked in Beads"
+    },
+    {
+      "scope": "frontend-backend",
+      "method": "GET",
+      "path": "/api/v1/deals/{param}/deposit",
+      "beads_id": "advert-market-6wx.2",
+      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
+      "reason": "Deposit info API is planned and tracked in Beads"
     },
     {
       "scope": "frontend-backend",

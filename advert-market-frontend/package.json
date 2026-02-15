@@ -20,7 +20,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "api:sync": "cd .. && ./gradlew :advert-market-app:generateOpenApiDocs",
-    "api:types": "openapi-typescript ../api/openapi.yml -o src/shared/api/schema.gen.ts",
+    "api:types": "openapi-typescript ../api/openapi.yml -o src/shared/api/schema.gen.ts && biome format --write src/shared/api/schema.gen.ts",
     "api:types:sync": "npm run api:sync && npm run api:types",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

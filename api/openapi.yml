@@ -63,6 +63,39 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/CanaryStatus"
+  /api/v1/profile/settings:
+    put:
+      tags:
+      - Profile
+      summary: Update user settings
+      operationId: updateSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSettingsRequest"
+        required: true
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid settings
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+      security:
+      - bearerAuth: []
   /api/v1/profile/onboarding:
     put:
       tags:
@@ -84,6 +117,39 @@ paths:
                 $ref: "#/components/schemas/UserProfile"
         "400":
           description: Invalid interests
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+      security:
+      - bearerAuth: []
+  /api/v1/profile/language:
+    put:
+      tags:
+      - Profile
+      summary: Update user language
+      operationId: updateLanguage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLanguageRequest"
+        required: true
+      responses:
+        "200":
+          description: Language updated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid language code
           content:
             '*/*':
               schema:
@@ -886,24 +952,60 @@ components:
         timestamp:
           type: string
           format: date-time
-    OnboardingRequest:
+    DealNotifications:
       type: object
-      description: User onboarding completion request
+      description: Deal notification settings
       properties:
-        interests:
-          type: array
-          description: Selected interest tags
-          example:
-          - tech
-          - gaming
-          items:
-            type: string
-            maxLength: 100
-            minLength: 0
-          maxItems: 50
-          minItems: 0
-      required:
-      - interests
+        newOffers:
+          type: boolean
+        acceptReject:
+          type: boolean
+        deliveryStatus:
+          type: boolean
+    DisputeNotifications:
+      type: object
+      description: Dispute notification settings
+      properties:
+        opened:
+          type: boolean
+        resolved:
+          type: boolean
+    FinancialNotifications:
+      type: object
+      description: Financial notification settings
+      properties:
+        deposits:
+          type: boolean
+        payouts:
+          type: boolean
+        escrow:
+          type: boolean
+    NotificationSettings:
+      type: object
+      description: Notification settings
+      properties:
+        deals:
+          $ref: "#/components/schemas/DealNotifications"
+          description: Deal notifications
+        financial:
+          $ref: "#/components/schemas/FinancialNotifications"
+          description: Financial notifications
+        disputes:
+          $ref: "#/components/schemas/DisputeNotifications"
+          description: Dispute notifications
+    UpdateSettingsRequest:
+      type: object
+      description: Update user settings request
+      properties:
+        displayCurrency:
+          type: string
+          description: Fiat display currency code
+          example: RUB
+          maxLength: 3
+          minLength: 3
+        notificationSettings:
+          $ref: "#/components/schemas/NotificationSettings"
+          description: Notification preferences
     UserProfile:
       type: object
       description: Full user profile
@@ -925,6 +1027,13 @@ components:
           type: string
           description: IETF language tag
           example: en
+        displayCurrency:
+          type: string
+          description: Fiat display currency
+          example: USD
+        notificationSettings:
+          $ref: "#/components/schemas/NotificationSettings"
+          description: Notification preferences
         onboardingCompleted:
           type: boolean
           description: Whether onboarding is completed
@@ -937,6 +1046,36 @@ components:
           type: string
           format: date-time
           description: Registration timestamp
+    OnboardingRequest:
+      type: object
+      description: User onboarding completion request
+      properties:
+        interests:
+          type: array
+          description: Selected interest tags
+          example:
+          - tech
+          - gaming
+          items:
+            type: string
+            maxLength: 100
+            minLength: 0
+          maxItems: 50
+          minItems: 0
+      required:
+      - interests
+    UpdateLanguageRequest:
+      type: object
+      description: Update user language request
+      properties:
+        languageCode:
+          type: string
+          description: IETF language tag
+          example: ru
+          maxLength: 5
+          minLength: 0
+      required:
+      - languageCode
     ChannelUpdateRequest:
       type: object
       description: Channel update request
@@ -1364,6 +1503,8 @@ components:
             $ref: "#/components/schemas/ChannelListItem"
         nextCursor:
           type: string
+        hasNext:
+          type: boolean
     ChannelDetailResponse:
       type: object
       description: Full channel detail with pricing rules
