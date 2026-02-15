@@ -1,14 +1,18 @@
 import { Button, Text } from '@telegram-tools/ui-kit';
+import { Globe } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { FeatureCard } from '@/features/onboarding/components/feature-card';
 import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo';
-import { DocumentIcon, pressScale, SearchIcon, staggerChildren, WalletIcon } from '@/shared/ui';
+import { OnboardingSettingsSheet } from '@/features/onboarding/components/onboarding-settings-sheet';
+import { DocumentIcon, pressScale, SearchIcon, staggerChildren, Tappable, WalletIcon } from '@/shared/ui';
 
 export default function OnboardingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div
@@ -17,8 +21,32 @@ export default function OnboardingPage() {
         flexDirection: 'column',
         minHeight: 'calc(100vh - 40px)',
         padding: '0 24px',
+        position: 'relative',
       }}
     >
+      <Tappable
+        onClick={() => setShowSettings(true)}
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: 0,
+          width: 40,
+          height: 40,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 10,
+          border: 'none',
+          background: 'transparent',
+          color: 'var(--color-foreground-secondary)',
+          cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+        aria-label={t('profile.settings')}
+      >
+        <Globe size={20} />
+      </Tappable>
+
       <div
         style={{
           flex: 1,
@@ -60,30 +88,30 @@ export default function OnboardingPage() {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            gap: '12px',
             marginTop: '24px',
             width: '100%',
           }}
         >
           <FeatureCard
-            icon={<SearchIcon width={20} height={20} />}
+            icon={<SearchIcon size={24} />}
             title={t('onboarding.welcome.featureCard1.title')}
             hint={t('onboarding.welcome.featureCard1.hint')}
           />
           <FeatureCard
-            icon={<WalletIcon width={20} height={20} />}
+            icon={<WalletIcon size={24} />}
             title={t('onboarding.welcome.featureCard2.title')}
             hint={t('onboarding.welcome.featureCard2.hint')}
           />
           <FeatureCard
-            icon={<DocumentIcon width={20} height={20} />}
+            icon={<DocumentIcon size={24} />}
             title={t('onboarding.welcome.featureCard3.title')}
             hint={t('onboarding.welcome.featureCard3.hint')}
           />
         </motion.div>
       </div>
 
-      <div style={{ flexShrink: 0, paddingBottom: '32px', paddingTop: '16px' }}>
+      <div style={{ flexShrink: 0, paddingBottom: 'calc(16px + var(--am-safe-area-bottom))', paddingTop: '16px' }}>
         <motion.div {...pressScale}>
           <Button
             text={t('onboarding.welcome.start')}
@@ -102,6 +130,8 @@ export default function OnboardingPage() {
           </Text>
         </motion.div>
       </div>
+
+      <OnboardingSettingsSheet open={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 }

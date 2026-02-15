@@ -6,14 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { updateLanguage } from '@/features/profile/api/profile-api';
 import { profileKeys } from '@/shared/api';
 import { useAuth, useToast } from '@/shared/hooks';
+import { LANGUAGES } from '@/shared/lib/constants/languages';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { BackButtonHandler } from '@/shared/ui';
 import { pressScale, slideFromRight, staggerChildren } from '@/shared/ui/animations';
-
-const LANGUAGES = [
-  { code: 'ru', label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', abbr: 'RU' },
-  { code: 'en', label: 'English', abbr: 'EN' },
-] as const;
 
 export default function LanguagePage() {
   const { t, i18n } = useTranslation();

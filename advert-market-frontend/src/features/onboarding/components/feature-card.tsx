@@ -22,7 +22,7 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
-          padding: '16px',
+          padding: '20px',
           borderRadius: '12px',
           backgroundColor: 'var(--color-background-secondary)',
           cursor: 'default',
@@ -30,9 +30,9 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
       >
         <div
           style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
+            width: '48px',
+            height: '48px',
+            borderRadius: '12px',
             backgroundColor: 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.1)',
             display: 'flex',
             alignItems: 'center',
@@ -44,7 +44,7 @@ export function FeatureCard({ icon, title, hint }: FeatureCardProps) {
           {icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Text type="subheadline1" weight="medium">
+          <Text type="body" weight="medium">
             {title}
           </Text>
           <Text type="caption1" color="secondary">
