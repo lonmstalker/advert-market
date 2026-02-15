@@ -1,7 +1,6 @@
+import type { Resource } from 'i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import en from './locales/en.json';
-import ru from './locales/ru.json';
 
 export function detectLanguage(): string {
   // 0. Forced locale for E2E tests
@@ -26,13 +25,27 @@ export function detectLanguage(): string {
   return 'ru';
 }
 
+const localeLoaders = {
+  ru: () => import('./locales/ru.json'),
+  en: () => import('./locales/en.json'),
+} as const;
+
 export async function initI18n() {
+  const lng = detectLanguage() as keyof typeof localeLoaders;
+
+  const resources: Resource = {};
+
+  const primary = await localeLoaders[lng]();
+  resources[lng] = { translation: primary.default };
+
+  if (lng !== 'ru') {
+    const fallback = await localeLoaders.ru();
+    resources.ru = { translation: fallback.default };
+  }
+
   await i18n.use(initReactI18next).init({
-    resources: {
-      ru: { translation: ru },
-      en: { translation: en },
-    },
-    lng: detectLanguage(),
+    resources,
+    lng,
     fallbackLng: 'ru',
     interpolation: {
       escapeValue: false,

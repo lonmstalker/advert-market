@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { themeParams, useSignal } from '@telegram-apps/sdk-react';
 import { Spinner, ThemeProvider, ToastProvider } from '@telegram-tools/ui-kit';
-import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { MotionConfig } from 'motion/react';
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router';
@@ -52,6 +51,10 @@ const RegisterChannelPage = lazyRetry(() => import('@/pages/profile/RegisterChan
 const CreativesPage = lazyRetry(() => import('@/pages/creatives/CreativesPage'));
 const CreativeEditorPage = lazyRetry(() => import('@/pages/creatives/CreativeEditorPage'));
 
+const TonConnectLayout = lazyRetry(() =>
+  import('@/shared/ton/TonConnectProvider').then((m) => ({ default: m.TonConnectProvider })),
+);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -60,8 +63,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const TON_MANIFEST_URL = import.meta.env.VITE_TON_MANIFEST_URL ?? `${window.location.origin}/tonconnect-manifest.json`;
 
 function useTelegramTheme(): 'light' | 'dark' {
   // Telegram-native theme sync (signal updates on theme change).
@@ -105,14 +106,15 @@ function AppRoutes() {
           >
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/deals" element={<DealsPage />} />
-            <Route path="/wallet" element={<WalletPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            {/* Wallet tab — lazy TonConnect provider keeps TON chunk out of initial load */}
+            <Route element={<TonConnectLayout />}>
+              <Route path="/wallet" element={<WalletPage />} />
+            </Route>
           </Route>
 
           <Route element={<ErrorBoundaryLayout />}>
             <Route path="/catalog/channels/:channelId" element={<ChannelDetailPage />} />
-            <Route path="/deals/:dealId" element={<DealDetailPage />} />
-            <Route path="/deals/new" element={<CreateDealPage />} />
             <Route path="/wallet/history" element={<HistoryPage />} />
             <Route path="/wallet/history/:txId" element={<TransactionDetailPage />} />
             <Route path="/profile/language" element={<LanguagePage />} />
@@ -122,6 +124,14 @@ function AppRoutes() {
             <Route path="/profile/creatives" element={<CreativesPage />} />
             <Route path="/profile/creatives/new" element={<CreativeEditorPage />} />
             <Route path="/profile/creatives/:creativeId/edit" element={<CreativeEditorPage />} />
+          </Route>
+
+          {/* Deal detail/create — lazy TonConnect for PaymentSheet */}
+          <Route element={<TonConnectLayout />}>
+            <Route element={<ErrorBoundaryLayout />}>
+              <Route path="/deals/:dealId" element={<DealDetailPage />} />
+              <Route path="/deals/new" element={<CreateDealPage />} />
+            </Route>
           </Route>
         </Route>
 
@@ -136,25 +146,18 @@ export function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <TonConnectUIProvider
-        manifestUrl={TON_MANIFEST_URL}
-        actionsConfiguration={{
-          twaReturnUrl: 'https://t.me/AdvertMarketBot/app',
-        }}
-      >
-        <ThemeProvider theme={theme}>
-          <ToastProvider>
-            <QueryClientProvider client={queryClient}>
-              <ErrorBoundary>
-                <BrowserRouter>
-                  <DeepLinkHandler />
-                  <AppRoutes />
-                </BrowserRouter>
-              </ErrorBoundary>
-            </QueryClientProvider>
-          </ToastProvider>
-        </ThemeProvider>
-      </TonConnectUIProvider>
+      <ThemeProvider theme={theme}>
+        <ToastProvider>
+          <QueryClientProvider client={queryClient}>
+            <ErrorBoundary>
+              <BrowserRouter>
+                <DeepLinkHandler />
+                <AppRoutes />
+              </BrowserRouter>
+            </ErrorBoundary>
+          </QueryClientProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </MotionConfig>
   );
 }
