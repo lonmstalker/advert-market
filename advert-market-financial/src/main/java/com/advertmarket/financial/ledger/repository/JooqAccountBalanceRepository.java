@@ -62,20 +62,19 @@ public class JooqAccountBalanceRepository {
     public @NonNull OptionalLong upsertBalanceNonNegative(
             @NonNull AccountId accountId, long debitAmount) {
 
-        int affected = dsl.update(ACCOUNT_BALANCES)
+        Long newBalance = dsl.update(ACCOUNT_BALANCES)
                 .set(ACCOUNT_BALANCES.BALANCE_NANO,
                         ACCOUNT_BALANCES.BALANCE_NANO.minus(val(debitAmount)))
                 .set(ACCOUNT_BALANCES.VERSION,
                         ACCOUNT_BALANCES.VERSION.plus(1))
                 .where(ACCOUNT_BALANCES.ACCOUNT_ID.eq(accountId.value()))
                 .and(ACCOUNT_BALANCES.BALANCE_NANO.ge(debitAmount))
-                .execute();
+                .returning(ACCOUNT_BALANCES.BALANCE_NANO)
+                .fetchOne(ACCOUNT_BALANCES.BALANCE_NANO);
 
-        if (affected == 0) {
-            return OptionalLong.empty();
-        }
-
-        return OptionalLong.of(getBalance(accountId));
+        return newBalance != null
+                ? OptionalLong.of(newBalance)
+                : OptionalLong.empty();
     }
 
     /**

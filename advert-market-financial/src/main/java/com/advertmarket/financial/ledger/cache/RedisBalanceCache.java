@@ -39,8 +39,11 @@ public class RedisBalanceCache implements BalanceCachePort {
             }
             metricsFacade.incrementCounter(MetricNames.BALANCE_CACHE_MISS);
             return OptionalLong.empty();
-        } catch (DataAccessException ex) {
+        } catch (DataAccessException | NumberFormatException ex) {
             log.warn("Redis balance cache get failed for {}", accountId, ex);
+            if (ex instanceof NumberFormatException) {
+                evict(accountId);
+            }
             metricsFacade.incrementCounter(MetricNames.BALANCE_CACHE_MISS);
             return OptionalLong.empty();
         }

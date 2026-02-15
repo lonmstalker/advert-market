@@ -39,6 +39,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class LedgerService implements LedgerPort {
 
     private static final int DEFAULT_PAGE_SIZE = 50;
+    private static final int MAX_PAGE_SIZE = 200;
 
     private final JooqLedgerRepository ledgerRepository;
     private final JooqAccountBalanceRepository balanceRepository;
@@ -63,42 +64,36 @@ public class LedgerService implements LedgerPort {
         // 2. Validate balance: SUM(debit) == SUM(credit)
         validateBalance(legs);
 
-        // 3. Sort DEBIT legs by accountId for deadlock prevention
-        List<Leg> debitLegs = legs.stream()
-                .filter(Leg::isDebit)
+        // 3. Sort ALL legs by accountId for deadlock prevention
+        List<Leg> sortedLegs = legs.stream()
                 .sorted(Comparator.comparing(l -> l.accountId().value()))
                 .toList();
 
-        List<Leg> creditLegs = legs.stream()
-                .filter(Leg::isCredit)
-                .toList();
-
-        // 4. Process DEBIT legs first (with balance check for non-negative accounts)
+        // 4. Process legs in sorted order (debit checks, credit upserts)
         Set<AccountId> touchedAccounts = new HashSet<>();
-        for (Leg leg : debitLegs) {
+        for (Leg leg : sortedLegs) {
             AccountId accountId = leg.accountId();
-            if (accountId.type().requiresNonNegativeBalance()) {
-                var result = balanceRepository.upsertBalanceNonNegative(
-                        accountId, leg.amount().nanoTon());
-                if (result.isEmpty()) {
-                    throw new DomainException(
-                            ErrorCodes.INSUFFICIENT_BALANCE,
-                            "Insufficient balance on account: " + accountId,
-                            Map.of("accountId", accountId.value(),
-                                    "required", leg.amount().nanoTon()));
+            if (leg.isDebit()) {
+                if (accountId.type().requiresNonNegativeBalance()) {
+                    var result = balanceRepository.upsertBalanceNonNegative(
+                            accountId, leg.amount().nanoTon());
+                    if (result.isEmpty()) {
+                        throw new DomainException(
+                                ErrorCodes.INSUFFICIENT_BALANCE,
+                                "Insufficient balance on account: "
+                                        + accountId,
+                                Map.of("accountId", accountId.value(),
+                                        "required", leg.amount().nanoTon()));
+                    }
+                } else {
+                    balanceRepository.upsertBalanceUnchecked(
+                            accountId, -leg.amount().nanoTon());
                 }
             } else {
                 balanceRepository.upsertBalanceUnchecked(
-                        accountId, -leg.amount().nanoTon());
+                        accountId, leg.amount().nanoTon());
             }
             touchedAccounts.add(accountId);
-        }
-
-        // 5. Process CREDIT legs
-        for (Leg leg : creditLegs) {
-            balanceRepository.upsertBalanceUnchecked(
-                    leg.accountId(), leg.amount().nanoTon());
-            touchedAccounts.add(leg.accountId());
         }
 
         // 6. Generate txRef and insert entries
@@ -108,7 +103,7 @@ public class LedgerService implements LedgerPort {
                 request.description(), legs);
 
         // 7. Post-commit: update Redis cache for touched accounts
-        registerPostCommitCacheUpdate(touchedAccounts);
+        registerPostCommitCacheEviction(touchedAccounts);
 
         // 8. Metrics
         metricsFacade.incrementCounter(MetricNames.LEDGER_ENTRY_CREATED);
@@ -117,6 +112,7 @@ public class LedgerService implements LedgerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long getBalance(@NonNull AccountId accountId) {
         var cached = balanceCache.get(accountId);
         if (cached.isPresent()) {
@@ -128,16 +124,28 @@ public class LedgerService implements LedgerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public @NonNull List<LedgerEntry> getEntriesByDeal(@NonNull DealId dealId) {
         return ledgerRepository.findByDealId(dealId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public @NonNull CursorPage<LedgerEntry> getEntriesByAccount(
             @NonNull AccountId accountId,
             @Nullable String cursor,
             int limit) {
-        int effectiveLimit = limit > 0 ? limit : DEFAULT_PAGE_SIZE;
+        if (cursor != null) {
+            try {
+                Long.parseLong(cursor);
+            } catch (NumberFormatException ex) {
+                throw new DomainException(ErrorCodes.INVALID_CURSOR,
+                        "Invalid cursor format: " + cursor);
+            }
+        }
+        int effectiveLimit = limit > 0
+                ? Math.min(limit, MAX_PAGE_SIZE)
+                : DEFAULT_PAGE_SIZE;
         return ledgerRepository.findByAccountId(
                 accountId, cursor, effectiveLimit);
     }
@@ -162,7 +170,7 @@ public class LedgerService implements LedgerPort {
         }
     }
 
-    private void registerPostCommitCacheUpdate(Set<AccountId> accounts) {
+    private void registerPostCommitCacheEviction(Set<AccountId> accounts) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             return;
         }
@@ -171,13 +179,7 @@ public class LedgerService implements LedgerPort {
                     @Override
                     public void afterCommit() {
                         for (AccountId accountId : accounts) {
-                            try {
-                                long balance = balanceRepository
-                                        .getBalance(accountId);
-                                balanceCache.put(accountId, balance);
-                            } catch (Exception ex) {
-                                balanceCache.evict(accountId);
-                            }
+                            balanceCache.evict(accountId);
                         }
                     }
                 });

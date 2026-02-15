@@ -9,11 +9,10 @@ import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -144,6 +143,8 @@ public class JooqLedgerRepository {
                 r.get(LEDGER_ENTRIES.IDEMPOTENCY_KEY),
                 r.get(LEDGER_ENTRIES.TX_REF),
                 r.get(LEDGER_ENTRIES.DESCRIPTION),
-                createdAt != null ? createdAt.toInstant() : Instant.now());
+                Objects.requireNonNull(createdAt,
+                        "created_at must not be null for ledger entry "
+                                + r.get(LEDGER_ENTRIES.ID)).toInstant());
     }
 }

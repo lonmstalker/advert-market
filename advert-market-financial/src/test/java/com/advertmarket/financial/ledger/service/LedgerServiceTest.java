@@ -235,8 +235,8 @@ class LedgerServiceTest {
         }
 
         @Test
-        @DisplayName("Should sort DEBIT legs by accountId for deadlock prevention")
-        void debitLegsSorted() {
+        @DisplayName("Should sort ALL legs by accountId for deadlock prevention")
+        void allLegsSorted() {
             when(ledgerRepository.tryInsertIdempotencyKey(any()))
                     .thenReturn(true);
             AccountId accountA = AccountId.escrow(DealId.generate());
@@ -368,6 +368,39 @@ class LedgerServiceTest {
 
             assertThat(result.items()).isEmpty();
             assertThat(result.hasMore()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should throw INVALID_CURSOR on non-numeric cursor")
+        void shouldThrowOnInvalidCursor() {
+            assertThatThrownBy(() -> ledgerService.getEntriesByAccount(
+                    escrow, "not-a-number", 10))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(
+                            ((DomainException) ex).getErrorCode())
+                            .isEqualTo("INVALID_CURSOR"));
+        }
+
+        @Test
+        @DisplayName("Should cap limit at MAX_PAGE_SIZE (200)")
+        void shouldCapLimitAtMaxPageSize() {
+            when(ledgerRepository.findByAccountId(escrow, null, 200))
+                    .thenReturn(CursorPage.empty());
+
+            ledgerService.getEntriesByAccount(escrow, null, 1_000_000);
+
+            verify(ledgerRepository).findByAccountId(escrow, null, 200);
+        }
+
+        @Test
+        @DisplayName("Should use DEFAULT_PAGE_SIZE when limit is 0")
+        void shouldUseDefaultPageSizeWhenZero() {
+            when(ledgerRepository.findByAccountId(escrow, null, 50))
+                    .thenReturn(CursorPage.empty());
+
+            ledgerService.getEntriesByAccount(escrow, null, 0);
+
+            verify(ledgerRepository).findByAccountId(escrow, null, 50);
         }
     }
 }

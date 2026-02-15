@@ -273,7 +273,94 @@ class LedgerServiceIntegrationTest {
             }
 
             assertThat(txRefs).hasSize(1);
+            assertThat(successCount.get()).isEqualTo(threads);
             assertThat(ledgerService.getBalance(escrow)).isEqualTo(ONE_TON);
+        }
+
+        @Test
+        @DisplayName("Should not deadlock with overlapping accounts across concurrent transfers")
+        void concurrentOverlappingTransfers() throws Exception {
+            DealId dealIdA = DealId.generate();
+            DealId dealIdB = DealId.generate();
+            AccountId escrowA = AccountId.escrow(dealIdA);
+            AccountId escrowB = AccountId.escrow(dealIdB);
+            AccountId externalTon = AccountId.externalTon();
+
+            ledgerService.transfer(TransferRequest.balanced(
+                    dealIdA,
+                    IdempotencyKey.deposit("tx-overlap-seed-a"),
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(10 * ONE_TON), Leg.Side.DEBIT),
+                            new Leg(escrowA, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(10 * ONE_TON), Leg.Side.CREDIT)),
+                    null));
+            ledgerService.transfer(TransferRequest.balanced(
+                    dealIdB,
+                    IdempotencyKey.deposit("tx-overlap-seed-b"),
+                    List.of(
+                            new Leg(externalTon, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(10 * ONE_TON), Leg.Side.DEBIT),
+                            new Leg(escrowB, EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(10 * ONE_TON), Leg.Side.CREDIT)),
+                    null));
+
+            int threads = 10;
+            CountDownLatch latch = new CountDownLatch(1);
+            AtomicInteger successCount = new AtomicInteger();
+            AtomicInteger failCount = new AtomicInteger();
+
+            try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
+                List<Future<?>> futures = new java.util.ArrayList<>();
+                for (int i = 0; i < threads; i++) {
+                    int idx = i;
+                    futures.add(executor.submit(() -> {
+                        try {
+                            latch.await();
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
+                        AccountId fromEscrow = idx % 2 == 0
+                                ? escrowA : escrowB;
+                        AccountId toEscrow = idx % 2 == 0
+                                ? escrowB : escrowA;
+                        DealId fromDeal = idx % 2 == 0
+                                ? dealIdA : dealIdB;
+                        try {
+                            ledgerService.transfer(TransferRequest.balanced(
+                                    fromDeal,
+                                    IdempotencyKey.release(
+                                            DealId.of(UUID.randomUUID())),
+                                    List.of(
+                                            new Leg(fromEscrow,
+                                                    EntryType.ESCROW_RELEASE,
+                                                    Money.ofNano(ONE_TON),
+                                                    Leg.Side.DEBIT),
+                                            new Leg(toEscrow,
+                                                    EntryType.ESCROW_DEPOSIT,
+                                                    Money.ofNano(ONE_TON),
+                                                    Leg.Side.CREDIT)),
+                                    null));
+                            successCount.incrementAndGet();
+                        } catch (DomainException ex) {
+                            failCount.incrementAndGet();
+                        }
+                    }));
+                }
+                latch.countDown();
+                for (Future<?> f : futures) {
+                    f.get();
+                }
+            }
+
+            long balanceA = ledgerService.getBalance(escrowA);
+            long balanceB = ledgerService.getBalance(escrowB);
+            assertThat(balanceA + balanceB)
+                    .as("Total across escrows must be conserved")
+                    .isEqualTo(20 * ONE_TON);
+            assertThat(successCount.get() + failCount.get())
+                    .isEqualTo(threads);
         }
     }
 
@@ -598,12 +685,13 @@ class LedgerServiceIntegrationTest {
     class CacheBehavior {
 
         @Test
-        @DisplayName("Should update balance cache after successful transfer")
-        void cacheUpdatedAfterTransfer() {
+        @DisplayName("Should evict balance cache after successful transfer")
+        void cacheEvictedAfterTransfer() {
             DealId dealId = DealId.generate();
             AccountId escrow = AccountId.escrow(dealId);
 
-            assertThat(balanceCache.get(escrow)).isEmpty();
+            balanceCache.put(escrow, 0L);
+            assertThat(balanceCache.get(escrow)).hasValue(0L);
 
             ledgerService.transfer(TransferRequest.balanced(
                     dealId,
@@ -617,6 +705,13 @@ class LedgerServiceIntegrationTest {
                     null));
 
             assertThat(balanceCache.get(escrow))
+                    .as("Cache should be evicted after transfer")
+                    .isEmpty();
+
+            assertThat(ledgerService.getBalance(escrow))
+                    .isEqualTo(ONE_TON);
+            assertThat(balanceCache.get(escrow))
+                    .as("Cache should be populated after getBalance")
                     .hasValue(ONE_TON);
         }
 
