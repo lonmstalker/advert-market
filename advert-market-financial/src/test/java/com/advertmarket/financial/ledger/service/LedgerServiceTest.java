@@ -241,6 +241,7 @@ class LedgerServiceTest {
                     .thenReturn(true);
             AccountId accountA = AccountId.escrow(DealId.generate());
             AccountId accountB = AccountId.escrow(DealId.generate());
+            AccountId creditAccount = AccountId.externalTon();
 
             String first = accountA.value().compareTo(accountB.value()) < 0
                     ? accountA.value() : accountB.value();
@@ -249,6 +250,10 @@ class LedgerServiceTest {
 
             AccountId sortedFirst = new AccountId(first);
             AccountId sortedSecond = new AccountId(second);
+
+            // ESCROW:xxx < EXTERNAL_TON alphabetically
+            assertThat(sortedSecond.value())
+                    .isLessThan(creditAccount.value());
 
             when(balanceRepository.upsertBalanceNonNegative(
                     eq(sortedFirst), eq(500L)))
@@ -263,13 +268,13 @@ class LedgerServiceTest {
                     null,
                     IdempotencyKey.deposit("sort-test"),
                     List.of(
+                            new Leg(creditAccount,
+                                    EntryType.ESCROW_DEPOSIT,
+                                    Money.ofNano(1000), Leg.Side.CREDIT),
                             new Leg(sortedSecond, EntryType.ESCROW_RELEASE,
                                     Money.ofNano(500), Leg.Side.DEBIT),
                             new Leg(sortedFirst, EntryType.ESCROW_RELEASE,
-                                    Money.ofNano(500), Leg.Side.DEBIT),
-                            new Leg(AccountId.externalTon(),
-                                    EntryType.ESCROW_DEPOSIT,
-                                    Money.ofNano(1000), Leg.Side.CREDIT)),
+                                    Money.ofNano(500), Leg.Side.DEBIT)),
                     null);
 
             ledgerService.transfer(request);
@@ -279,6 +284,8 @@ class LedgerServiceTest {
                     sortedFirst, 500L);
             order.verify(balanceRepository).upsertBalanceNonNegative(
                     sortedSecond, 500L);
+            order.verify(balanceRepository).upsertBalanceUnchecked(
+                    creditAccount, 1000L);
         }
 
         @Test
