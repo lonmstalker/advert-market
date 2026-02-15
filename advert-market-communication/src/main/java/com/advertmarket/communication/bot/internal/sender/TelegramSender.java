@@ -26,9 +26,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +38,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TelegramSender {
 
     private static final String CANT_PARSE_ENTITIES =
@@ -53,29 +54,11 @@ public class TelegramSender {
 
     private final TelegramBot bot;
     private final RateLimiterPort rateLimiter;
-    private final CircuitBreaker circuitBreaker;
-    private final Bulkhead bulkhead;
+    private final CircuitBreaker telegramCircuitBreaker;
+    private final Bulkhead telegramBulkhead;
     private final MetricsFacade metrics;
     private final TelegramRetryProperties retryProperties;
-    private final Executor executor;
-
-    /** Creates the sender with all required dependencies. */
-    public TelegramSender(TelegramBot bot,
-            RateLimiterPort rateLimiter,
-            CircuitBreaker circuitBreaker,
-            Bulkhead bulkhead,
-            MetricsFacade metrics,
-            TelegramRetryProperties retryProperties,
-            @Qualifier("botUpdateExecutor")
-            Executor executor) {
-        this.bot = bot;
-        this.rateLimiter = rateLimiter;
-        this.circuitBreaker = circuitBreaker;
-        this.bulkhead = bulkhead;
-        this.metrics = metrics;
-        this.retryProperties = retryProperties;
-        this.executor = executor;
-    }
+    private final Executor botUpdateExecutor;
 
     /** Sends a MarkdownV2 text message to the given chat. */
     public void send(long chatId, @NonNull String text) {
@@ -148,7 +131,7 @@ public class TelegramSender {
         return CompletableFuture
                 .runAsync(
                         () -> rateLimiter.acquire(chatId),
-                        executor)
+                        botUpdateExecutor)
                 .thenCompose(_ ->
                         executeWithResilienceAsync(request)
                                 .toCompletableFuture());
@@ -157,8 +140,8 @@ public class TelegramSender {
     private <T extends BaseRequest<T, R>, R extends BaseResponse>
             CompletionStage<R> executeWithResilienceAsync(
                     T request) {
-        return circuitBreaker.executeCompletionStage(
-                () -> bulkhead.executeCompletionStage(
+        return telegramCircuitBreaker.executeCompletionStage(
+                () -> telegramBulkhead.executeCompletionStage(
                         () -> executeWithRetryAsync(request, 0)));
     }
 
@@ -386,7 +369,7 @@ public class TelegramSender {
                     long delayMs,
                     CompletableFuture<R> future) {
         Executor delayed = CompletableFuture.delayedExecutor(
-                delayMs, TimeUnit.MILLISECONDS, executor);
+                delayMs, TimeUnit.MILLISECONDS, botUpdateExecutor);
         CompletableFuture.runAsync(() -> { /* delay */ }, delayed)
                 .thenCompose(_ ->
                         executeWithRetryAsync(request,
