@@ -19,7 +19,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { loadPendingIntent } from '@/shared/ton';
 import { BackButtonHandler, EmptyState, PageLoader } from '@/shared/ui';
 import { fadeIn } from '@/shared/ui/animations';
-import { SadFaceIcon } from '@/shared/ui/icons';
+import { DocumentIcon, SadFaceIcon } from '@/shared/ui/icons';
 import { DealHeroSection } from './components/DealHeroSection';
 
 const TERMINAL_STATUSES = new Set([
@@ -129,6 +129,29 @@ export default function DealDetailPage() {
         }}
       >
         <DealHeroSection deal={deal} statusConfig={statusConfig} isTerminal={isTerminal} countdown={countdown} />
+
+        {/* Creative placeholder for creative-related statuses */}
+        {deal.status.includes('CREATIVE') && (
+          <div style={{ padding: '0 16px 12px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8,
+                padding: '20px 16px',
+                borderRadius: 12,
+                background: 'var(--color-background-secondary)',
+                textAlign: 'center',
+              }}
+            >
+              <DocumentIcon size={28} style={{ color: 'var(--color-foreground-tertiary)' }} />
+              <Text type="caption1" color="secondary">
+                {t('deals.detail.creativePlaceholder')}
+              </Text>
+            </div>
+          </div>
+        )}
 
         {/* Timeline */}
         <div

@@ -40,7 +40,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
       </div>
       <ul
         aria-label={t('deals.detail.timeline')}
-        style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: 0, listStyle: 'none', margin: 0 }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 0, listStyle: 'none', margin: 0 }}
       >
         {visibleSteps.map((step, i) => {
           const globalIndex = steps.indexOf(step);
@@ -126,7 +126,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
               </div>
 
               {/* Content column */}
-              <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 4 }}>
+              <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 8 }}>
                 <Tappable
                   onClick={step.description ? () => setExpandedIndex(isExpanded ? null : globalIndex) : undefined}
                   style={{

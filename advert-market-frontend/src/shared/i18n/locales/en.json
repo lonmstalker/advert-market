@@ -415,7 +415,8 @@
       "moreSteps_other": "{{count}} more steps",
       "duration": "Post duration",
       "durationValue": "{{hours}}h",
-      "postFrequency": "Top position ~{{hours}}h"
+      "postFrequency": "Top position ~{{hours}}h",
+      "creativePlaceholder": "Creative preview will be available after backend integration"
     },
     "negotiate": {
       "title": "Counter-offer",
@@ -651,6 +652,7 @@
       "addButton": "Add button",
       "buttonText": "Button text",
       "buttonUrl": "Link URL",
+      "selectTextHint": "Select text to format",
       "disablePreview": "Disable link previews",
       "linkPrompt": "Enter link URL:",
       "linkInvalid": "Enter a valid URL starting with http:// or https://",
