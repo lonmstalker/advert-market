@@ -88,12 +88,12 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
               <span
                 key={topic.slug}
                 style={{
-                  padding: '3px 10px',
+                  padding: '4px 12px',
                   borderRadius: 10,
                   background: 'var(--color-background-secondary)',
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: 500,
-                  color: 'var(--color-foreground-secondary)',
+                  color: 'var(--color-foreground-primary)',
                 }}
               >
                 {topic.name}
