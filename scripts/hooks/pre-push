@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -e -u -o pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+echo "=== pre-push: running backend unit tests ==="
+"$REPO_ROOT/gradlew" -p "$REPO_ROOT" test -x :advert-market-integration-tests:test --no-daemon -q
+
+echo "=== pre-push: running frontend tests ==="
+cd "$REPO_ROOT/advert-market-frontend"
+npm test -- --run
+npm run test:arch
+
+echo "=== pre-push: all checks passed ==="

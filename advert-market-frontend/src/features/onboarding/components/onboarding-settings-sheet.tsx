@@ -1,7 +1,10 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Group, GroupItem, Icon, Sheet, Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
-import { CURRENCIES } from '@/shared/lib/constants/currencies';
-import { LANGUAGES } from '@/shared/lib/constants/languages';
+import { profileKeys } from '@/shared/api';
+import { updateLanguage } from '@/shared/api/profile';
+import { useToast } from '@/shared/hooks';
+import { CURRENCIES, LANGUAGES } from '@/shared/lib/constants';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 
 type OnboardingSettingsSheetProps = {
@@ -11,14 +14,32 @@ type OnboardingSettingsSheetProps = {
 
 function SettingsContent(_props: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const { showError } = useToast();
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
   const setDisplayCurrency = useSettingsStore((s) => s.setDisplayCurrency);
+  const setFromProfile = useSettingsStore((s) => s.setFromProfile);
 
   const currentLang = i18n.language;
 
+  const languageMutation = useMutation({
+    mutationFn: updateLanguage,
+    onSuccess: (updatedProfile) => {
+      setFromProfile(updatedProfile);
+      queryClient.setQueryData(profileKeys.me, updatedProfile);
+    },
+  });
+
   function handleLanguageSelect(code: string) {
     if (code === currentLang) return;
+    const prev = currentLang;
     i18n.changeLanguage(code);
+    languageMutation.mutate(code, {
+      onError: () => {
+        i18n.changeLanguage(prev);
+        showError(t('common.toast.saveFailed'));
+      },
+    });
   }
 
   function handleCurrencySelect(code: string) {
@@ -28,7 +49,7 @@ function SettingsContent(_props: { onClose: () => void }) {
 
   return (
     <div style={{ padding: '0 0 16px' }}>
-      <Group header={t('profile.language')}>
+      <Group header={t('profile.language')} footer={t('profile.language.hint')}>
         {LANGUAGES.map(({ code, label, abbr }) => (
           <GroupItem
             key={code}

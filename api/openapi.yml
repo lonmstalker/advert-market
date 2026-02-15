@@ -63,6 +63,111 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/CanaryStatus"
+  /api/v1/deals:
+    get:
+      tags:
+      - Deal
+      summary: List deals for current user
+      operationId: listDeals
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CursorPageDealDto"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Deal
+      summary: Create a new deal
+      operationId: createDeal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDealRequest"
+        required: true
+      responses:
+        "201":
+          description: Deal created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DealDto"
+      security:
+      - bearerAuth: []
+  /api/v1/deals/{id}:
+    get:
+      tags:
+      - Deal
+      summary: Get deal detail
+      operationId: getDealDetail
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DealDetailDto"
+        "404":
+          description: Deal not found
+      security:
+      - bearerAuth: []
+  /api/v1/deals/{id}/transition:
+    post:
+      tags:
+      - Deal
+      summary: Transition deal state
+      operationId: transitionDeal
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealTransitionRequest"
+        required: true
+      responses:
+        "200":
+          description: Transition result
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DealTransitionResponse"
+      security:
+      - bearerAuth: []
   /api/v1/profile/settings:
     put:
       tags:

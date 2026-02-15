@@ -87,18 +87,23 @@ Rules:
 | `GET` | `/internal/v1/canary` | `advert-market-app` | Canary read config |
 | `PUT` | `/internal/v1/canary` | `advert-market-app` | Canary update config |
 
+### Deals
+
+| Method | Path | Module | Notes |
+|---|---|---|---|
+| `GET` | `/api/v1/deals` | `advert-market-deal` | Deal list (role-filtered, cursor pagination) |
+| `POST` | `/api/v1/deals` | `advert-market-deal` | Deal creation |
+| `GET` | `/api/v1/deals/{id}` | `advert-market-deal` | Deal detail |
+| `POST` | `/api/v1/deals/{id}/transition` | `advert-market-deal` | State transitions |
+
 ## Planned API
 
 | Method | Path | Purpose | Beads ID | Target module |
 |---|---|---|---|---|
-| `GET` | `/api/v1/deals` | Deal list (role-filtered) | `advert-market-6wx.2` | `advert-market-deal` |
-| `POST` | `/api/v1/deals` | Deal creation | `advert-market-6wx.2` | `advert-market-deal` |
-| `GET` | `/api/v1/deals/{id}` | Deal detail | `advert-market-6wx.2` | `advert-market-deal` |
-| `POST` | `/api/v1/deals/{id}/transition` | State transitions | `advert-market-6wx.2` | `advert-market-deal` |
-| `GET` | `/api/v1/deals/{id}/timeline` | Deal event timeline | `advert-market-6wx.2` | `advert-market-deal` |
-| `POST` | `/api/v1/deals/{id}/negotiate` | Counter-offer flow | `advert-market-6wx.2` | `advert-market-deal` |
-| `GET` | `/api/v1/deals/{id}/deposit` | Deposit info | `advert-market-6wx.2` | `advert-market-deal` |
-| `GET` | `/api/v1/deals/{id}/escrow` | Escrow status | `advert-market-6wx.2` | `advert-market-deal` |
+| `GET` | `/api/v1/deals/{id}/timeline` | Deal event timeline | `advert-market-av4.5` | `advert-market-deal` |
+| `POST` | `/api/v1/deals/{id}/negotiate` | Counter-offer flow | `advert-market-av4.5` | `advert-market-deal` |
+| `GET` | `/api/v1/deals/{id}/deposit` | Deposit info | `advert-market-av4.3` | `advert-market-deal` |
+| `GET` | `/api/v1/deals/{id}/escrow` | Escrow status | `advert-market-av4.3` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/brief` | Submit brief | `advert-market-6wx.3` | `advert-market-deal` |
 | `GET` | `/api/v1/deals/{id}/brief` | Read brief | `advert-market-6wx.3` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/creative` | Submit creative draft | `advert-market-6wx.3` | `advert-market-deal` |

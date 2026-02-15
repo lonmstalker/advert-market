@@ -1,6 +1,34 @@
 import { useOnboardingStore } from '@/features/onboarding';
-import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
+import { act, fireEvent, renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { TourSlideDeal } from './tour-slide-deal';
+
+// Mock motion/react so animations don't keep "exiting" nodes in the DOM indefinitely in jsdom.
+vi.mock('motion/react', () => {
+  const React = require('react');
+
+  function createMotionComponent(tag: string) {
+    return React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
+      const { animate, initial, transition, whileHover, whileTap, variants, ...rest } = props;
+      const animateStyles = typeof animate === 'object' && animate !== null ? animate : {};
+      const mergedStyle = { ...(rest.style as object), ...animateStyles };
+      return React.createElement(tag, { ...rest, style: mergedStyle, ref });
+    });
+  }
+
+  const motionProxy = new Proxy(
+    {},
+    {
+      get(_target: object, prop: string) {
+        return createMotionComponent(prop);
+      },
+    },
+  );
+
+  return {
+    motion: motionProxy,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
 
 vi.mock('@telegram-apps/sdk-react', () => ({
   retrieveRawInitData: vi.fn(() => 'mock-init-data'),
@@ -43,6 +71,26 @@ describe('TourSlideDeal', () => {
     await waitFor(() => {
       expect(screen.getByText(/Creative approved! Moving to publication/)).toBeInTheDocument();
     });
+  });
+
+  it('does not auto-reset approved state after a delay', async () => {
+    vi.useFakeTimers();
+    try {
+      renderWithProviders(<TourSlideDeal />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+
+      expect(screen.getByText(/Creative approved! Moving to publication/)).toBeInTheDocument();
+
+      // Previously the demo auto-reset after 2.5s; keep approved state until user leaves or replays.
+      act(() => {
+        vi.advanceTimersByTime(3_000);
+      });
+
+      expect(screen.getByText(/Creative approved! Moving to publication/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('switches to allStates view', async () => {
