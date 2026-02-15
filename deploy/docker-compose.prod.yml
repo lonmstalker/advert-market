@@ -86,7 +86,7 @@ services:
       APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
       INSTANCE_ID: blue
       DEPLOY_COLOR: blue
-    mem_limit: 700m
+    mem_limit: 1200m
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,7 +131,7 @@ services:
       APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
       INSTANCE_ID: green
       DEPLOY_COLOR: green
-    mem_limit: 700m
+    mem_limit: 1200m
     depends_on:
       postgres:
         condition: service_healthy
