@@ -1,4 +1,4 @@
-import { Text } from '@telegram-tools/ui-kit';
+import { Image, Text } from '@telegram-tools/ui-kit';
 import { ChannelAvatar } from '@/shared/ui';
 
 type ProfileHeroProps = {
@@ -39,7 +39,7 @@ export function ProfileHero({ displayName, username, roleBadge, memberSince, ava
           }}
         >
           {avatarUrl ? (
-            <img src={avatarUrl} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <Image src={avatarUrl} alt={displayName} width="100%" height="100%" borderRadius="50%" objectFit="cover" />
           ) : (
             <ChannelAvatar title={displayName || 'U'} size="lg" />
           )}

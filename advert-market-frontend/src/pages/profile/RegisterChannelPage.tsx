@@ -1,4 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  offBackButtonClick,
+  onBackButtonClick,
+  openLink,
+  openTelegramLink,
+  showBackButton,
+} from '@telegram-apps/sdk-react';
 import { Button, Input, Select, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
@@ -106,14 +113,16 @@ export default function RegisterChannelPage() {
   const handleOpenBot = () => {
     const url = `https://t.me/${BOT_USERNAME.slice(1)}`;
     try {
-      // Telegram WebApp typings don't always include all methods.
-      const webApp = window.Telegram?.WebApp as
-        | { openTelegramLink?: (u: string) => void; openLink?: (u: string) => void }
-        | undefined;
-      webApp?.openTelegramLink?.(url) ?? webApp?.openLink?.(url) ?? window.open(url, '_blank');
+      const [openedInTelegram] = openTelegramLink.ifAvailable(url);
+      if (openedInTelegram) return;
+
+      const [openedExternally] = openLink.ifAvailable(url);
+      if (openedExternally) return;
     } catch {
-      window.open(url, '_blank');
+      // ignore and fall back
     }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleRegister = () => {
@@ -145,17 +154,11 @@ export default function RegisterChannelPage() {
   }, [step, navigate]);
 
   useEffect(() => {
-    try {
-      const tg = window.Telegram?.WebApp;
-      if (!tg?.BackButton) return;
-      tg.BackButton.show();
-      tg.BackButton.onClick(handleBack);
-      return () => {
-        tg.BackButton?.offClick(handleBack);
-      };
-    } catch {
-      // outside Telegram
-    }
+    showBackButton.ifAvailable();
+    onBackButtonClick.ifAvailable(handleBack);
+    return () => {
+      offBackButtonClick.ifAvailable(handleBack);
+    };
   }, [handleBack]);
 
   const categoryOptions = [

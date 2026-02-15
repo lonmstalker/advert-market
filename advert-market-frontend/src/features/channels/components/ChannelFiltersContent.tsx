@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button, Input, Text } from '@telegram-tools/ui-kit';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
-import { parseTonToNano } from '@/shared/lib/ton-format';
-import { ToggleChip } from '@/shared/ui';
+import { Chip } from '@/shared/ui';
 import { fetchCategories, fetchChannelCount } from '../api/channels';
-import type { CatalogFilters, ChannelSort } from '../types/channel';
+import { useFiltersDraft } from '../hooks/use-filters-draft';
 import { channelSortValues } from '../types/channel';
 import { useChannelFiltersContext } from './ChannelFiltersContext';
 
@@ -17,6 +16,8 @@ const AVAILABLE_LANGUAGES = [
   { code: 'uz', label: 'UZ' },
   { code: 'kz', label: 'KZ' },
 ];
+
+const fieldsetReset = { border: 'none', margin: 0, padding: 0 } as const;
 
 function FilterSection({ children }: { children: React.ReactNode }) {
   return (
@@ -32,26 +33,11 @@ function FilterSection({ children }: { children: React.ReactNode }) {
 }
 
 export function ChannelFiltersContent() {
-  const filtersContext = useChannelFiltersContext();
-
+  const { currentFilters, onApply, onReset } = useChannelFiltersContext();
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
-  const { currentFilters, onApply, onReset } = filtersContext;
-
-  const initialCategories = currentFilters.categories ?? (currentFilters.category ? [currentFilters.category] : []);
-
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(currentFilters.languages ?? []);
-  const [minSubs, setMinSubs] = useState(currentFilters.minSubs?.toString() ?? '');
-  const [maxSubs, setMaxSubs] = useState(currentFilters.maxSubs?.toString() ?? '');
-  const [minPrice, setMinPrice] = useState(
-    currentFilters.minPrice ? (currentFilters.minPrice / 1_000_000_000).toString() : '',
-  );
-  const [maxPrice, setMaxPrice] = useState(
-    currentFilters.maxPrice ? (currentFilters.maxPrice / 1_000_000_000).toString() : '',
-  );
-  const [sort, setSort] = useState<string | null>(currentFilters.sort ?? null);
+  const draft = useFiltersDraft(currentFilters);
 
   const { data: categories = [] } = useQuery({
     queryKey: channelKeys.categories(),
@@ -59,76 +45,34 @@ export function ChannelFiltersContent() {
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-  const draftFilters: CatalogFilters = useMemo(() => {
-    const next: CatalogFilters = {};
-
-    if (currentFilters.q) next.q = currentFilters.q;
-
-    if (selectedCategories.length > 0) {
-      // Backend currently supports a single category filter.
-      next.category = selectedCategories[0];
-      next.categories = selectedCategories;
-    }
-
-    if (selectedLanguages.length > 0) {
-      next.languages = selectedLanguages;
-    }
-
-    if (minSubs) next.minSubs = Number(minSubs);
-    if (maxSubs) next.maxSubs = Number(maxSubs);
-    if (minPrice) next.minPrice = Number(parseTonToNano(minPrice));
-    if (maxPrice) next.maxPrice = Number(parseTonToNano(maxPrice));
-
-    if (sort) next.sort = sort as ChannelSort;
-
-    return next;
-  }, [selectedCategories, selectedLanguages, minSubs, maxSubs, minPrice, maxPrice, sort, currentFilters.q]);
-
   const countParams = useMemo(
     () => ({
-      q: draftFilters.q,
-      category: draftFilters.category,
-      minSubs: draftFilters.minSubs,
-      maxSubs: draftFilters.maxSubs,
-      minPrice: draftFilters.minPrice,
-      maxPrice: draftFilters.maxPrice,
-      categories: draftFilters.categories?.join(','),
-      languages: draftFilters.languages?.join(','),
+      q: draft.draftFilters.q,
+      category: draft.draftFilters.category,
+      minSubs: draft.draftFilters.minSubs,
+      maxSubs: draft.draftFilters.maxSubs,
+      minPrice: draft.draftFilters.minPrice,
+      maxPrice: draft.draftFilters.maxPrice,
+      categories: draft.draftFilters.categories?.join(','),
+      languages: draft.draftFilters.languages?.join(','),
     }),
     [
-      draftFilters.q,
-      draftFilters.category,
-      draftFilters.minSubs,
-      draftFilters.maxSubs,
-      draftFilters.minPrice,
-      draftFilters.maxPrice,
-      draftFilters.categories,
-      draftFilters.languages,
+      draft.draftFilters.q,
+      draft.draftFilters.category,
+      draft.draftFilters.minSubs,
+      draft.draftFilters.maxSubs,
+      draft.draftFilters.minPrice,
+      draft.draftFilters.maxPrice,
+      draft.draftFilters.categories,
+      draft.draftFilters.languages,
     ],
   );
 
   const { data: count } = useQuery({
     queryKey: channelKeys.count(countParams),
-    queryFn: () => fetchChannelCount(draftFilters),
+    queryFn: () => fetchChannelCount(draft.draftFilters),
     placeholderData: (prev) => prev,
   });
-
-  const hasActiveFilters =
-    selectedCategories.length > 0 ||
-    selectedLanguages.length > 0 ||
-    minSubs !== '' ||
-    maxSubs !== '' ||
-    minPrice !== '' ||
-    maxPrice !== '' ||
-    sort != null;
-
-  const toggleCategory = (slug: string) => {
-    setSelectedCategories((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
-  };
-
-  const toggleLanguage = (code: string) => {
-    setSelectedLanguages((prev) => (prev.includes(code) ? prev.filter((s) => s !== code) : [...prev, code]));
-  };
 
   const sortOptions = [
     { label: t('catalog.filters.sortDefault'), value: null },
@@ -139,17 +83,11 @@ export function ChannelFiltersContent() {
   ];
 
   const handleApply = () => {
-    onApply(draftFilters);
+    onApply(draft.draftFilters);
   };
 
   const handleReset = () => {
-    setSelectedCategories([]);
-    setSelectedLanguages([]);
-    setMinSubs('');
-    setMaxSubs('');
-    setMinPrice('');
-    setMaxPrice('');
-    setSort(null);
+    draft.handleReset();
     onReset();
   };
 
@@ -168,42 +106,48 @@ export function ChannelFiltersContent() {
         {t('catalog.filters.title')}
       </Text>
 
-      {/* Categories multi-select */}
       <FilterSection>
         <div style={{ marginBottom: 8 }}>
           <Text type="body" weight="medium">
             {t('catalog.filters.topic')}
           </Text>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <fieldset
+          aria-label={t('catalog.filters.topic')}
+          style={{ ...fieldsetReset, display: 'flex', flexWrap: 'wrap', gap: 6 }}
+        >
           {sortedCategories.map((cat) => (
-            <ToggleChip
+            <Chip
               key={cat.slug}
+              variant="rounded"
               label={cat.localizedName[lang] ?? cat.localizedName.ru ?? cat.slug}
-              active={selectedCategories.includes(cat.slug)}
-              onClick={() => toggleCategory(cat.slug)}
+              active={draft.selectedCategories.includes(cat.slug)}
+              onClick={() => draft.toggleCategory(cat.slug)}
             />
           ))}
-        </div>
+        </fieldset>
       </FilterSection>
 
-      {/* Languages multi-select */}
       <FilterSection>
         <div style={{ marginBottom: 8 }}>
           <Text type="body" weight="medium">
             {t('catalog.filters.language')}
           </Text>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <fieldset
+          aria-label={t('catalog.filters.language')}
+          style={{ ...fieldsetReset, display: 'flex', flexWrap: 'wrap', gap: 6 }}
+        >
           {AVAILABLE_LANGUAGES.map((l) => (
-            <ToggleChip
+            <Chip
               key={l.code}
+              variant="rounded"
               label={t(`catalog.languages.full.${l.code}`, { defaultValue: l.label })}
-              active={selectedLanguages.includes(l.code)}
-              onClick={() => toggleLanguage(l.code)}
+              active={draft.selectedLanguages.includes(l.code)}
+              onClick={() => draft.toggleLanguage(l.code)}
             />
           ))}
-        </div>
+        </fieldset>
       </FilterSection>
 
       <FilterSection>
@@ -213,8 +157,8 @@ export function ChannelFiltersContent() {
           </Text>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <Input value={minSubs} onChange={setMinSubs} numeric placeholder={t('catalog.filters.from')} />
-          <Input value={maxSubs} onChange={setMaxSubs} numeric placeholder={t('catalog.filters.to')} />
+          <Input value={draft.minSubs} onChange={draft.setMinSubs} numeric placeholder={t('catalog.filters.from')} />
+          <Input value={draft.maxSubs} onChange={draft.setMaxSubs} numeric placeholder={t('catalog.filters.to')} />
         </div>
       </FilterSection>
 
@@ -225,8 +169,8 @@ export function ChannelFiltersContent() {
           </Text>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <Input value={minPrice} onChange={setMinPrice} placeholder={`${t('catalog.filters.from')} TON`} />
-          <Input value={maxPrice} onChange={setMaxPrice} placeholder={`${t('catalog.filters.to')} TON`} />
+          <Input value={draft.minPrice} onChange={draft.setMinPrice} placeholder={`${t('catalog.filters.from')} TON`} />
+          <Input value={draft.maxPrice} onChange={draft.setMaxPrice} placeholder={`${t('catalog.filters.to')} TON`} />
         </div>
       </FilterSection>
 
@@ -236,20 +180,24 @@ export function ChannelFiltersContent() {
             {t('catalog.filters.sortLabel')}
           </Text>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <fieldset
+          aria-label={t('catalog.filters.sortLabel')}
+          style={{ ...fieldsetReset, display: 'flex', flexWrap: 'wrap', gap: 6 }}
+        >
           {sortOptions.map((opt) => (
-            <ToggleChip
+            <Chip
               key={opt.value ?? '__default'}
+              variant="rounded"
               label={opt.label}
-              active={sort === opt.value}
-              onClick={() => setSort(opt.value)}
+              active={draft.sort === opt.value}
+              onClick={() => draft.setSort(opt.value)}
             />
           ))}
-        </div>
+        </fieldset>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
-        {hasActiveFilters && (
+        {draft.hasActiveFilters && (
           <div style={{ flex: 1 }}>
             <Button text={t('catalog.filters.reset')} type="secondary" onClick={handleReset} />
           </div>

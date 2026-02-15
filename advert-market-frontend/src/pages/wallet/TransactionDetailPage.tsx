@@ -10,18 +10,20 @@ import {
   getTransactionTypeConfig,
   getTransactionTypeTint,
 } from '@/features/wallet/lib/transaction-type';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { copyToClipboard } from '@/shared/lib/clipboard';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
 import { formatTon } from '@/shared/lib/ton-format';
 import { BackButtonHandler, EmptyState, PageLoader } from '@/shared/ui';
-import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { fadeIn } from '@/shared/ui/animations';
 import { SadFaceIcon, TonDiamondIcon } from '@/shared/ui/icons';
 
 export default function TransactionDetailPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { txId } = useParams<{ txId: string }>();
+  const haptic = useHaptic();
 
   const { data: tx, isLoading, isError } = useTransactionDetail(txId as string);
 
@@ -71,9 +73,7 @@ export default function TransactionDetailPage() {
               right: 0,
               height: 140,
               background:
-                tx.direction === 'income'
-                  ? 'linear-gradient(180deg, rgba(52, 199, 89, 0.08) 0%, transparent 100%)'
-                  : 'linear-gradient(180deg, rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.06) 0%, transparent 100%)',
+                tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)',
               pointerEvents: 'none',
             }}
           />
@@ -82,8 +82,8 @@ export default function TransactionDetailPage() {
             {/* Type icon in container */}
             <div
               style={{
-                width: 56,
-                height: 56,
+                width: 50,
+                height: 50,
                 borderRadius: '50%',
                 background: getTransactionTypeTint(tx.type),
                 display: 'flex',
@@ -196,30 +196,37 @@ export default function TransactionDetailPage() {
 
           {/* Explorer link */}
           {tx.txHash && (
-            <motion.a
-              {...pressScale}
-              href={`https://tonviewer.com/transaction/${tx.txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                padding: '12px 16px',
-                borderRadius: 12,
-                background: 'var(--color-background-secondary)',
-                border: '1px solid var(--color-border-separator)',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                marginBottom: 24,
-              }}
-            >
-              <TonDiamondIcon style={{ width: 16, height: 16, color: 'var(--color-accent-primary)' }} />
-              <Text type="body" weight="medium" color="accent">
-                {t('wallet.detail.viewInExplorer')}
-              </Text>
-            </motion.a>
+            <div style={{ marginBottom: 24 }}>
+              <Group>
+                <GroupItem
+                  before={
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: 'var(--am-soft-accent-bg)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <TonDiamondIcon style={{ width: 16, height: 16, color: 'var(--color-accent-primary)' }} />
+                    </div>
+                  }
+                  text={
+                    <Text type="body" weight="medium" color="accent">
+                      {t('wallet.detail.viewInExplorer')}
+                    </Text>
+                  }
+                  chevron
+                  onClick={() => {
+                    haptic.impactOccurred('light');
+                    window.open(`https://tonviewer.com/transaction/${tx.txHash}`, '_blank', 'noopener,noreferrer');
+                  }}
+                />
+              </Group>
+            </div>
           )}
         </div>
       </motion.div>

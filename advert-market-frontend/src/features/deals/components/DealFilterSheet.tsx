@@ -1,7 +1,7 @@
 import { Button, Sheet, Text } from '@telegram-tools/ui-kit';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ToggleChip } from '@/shared/ui';
+import { Chip } from '@/shared/ui';
 
 type DealFilterSheetProps = {
   open: boolean;
@@ -75,8 +75,9 @@ export function DealFilterSheet({ open, onClose, activeStatuses, onApply, onRese
         {STATUS_GROUPS.map((group) => {
           const allActive = group.statuses.every((s) => draft.has(s));
           return (
-            <ToggleChip
+            <Chip
               key={group.i18nKey}
+              variant="rounded"
               label={t(group.i18nKey)}
               active={allActive}
               onClick={() => toggleGroup(group.statuses)}

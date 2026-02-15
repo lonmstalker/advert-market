@@ -152,18 +152,20 @@ export function getPollingInterval(status: DealStatus): number | false {
 
 const COLOR_VAR_MAP: Record<StatusColor, string> = {
   accent: 'var(--color-accent-primary)',
-  warning: 'var(--color-warning)',
-  success: 'var(--color-success)',
-  destructive: 'var(--color-destructive)',
+  warning: 'var(--color-state-warning)',
+  success: 'var(--color-state-success)',
+  destructive: 'var(--color-state-destructive)',
   secondary: 'var(--color-foreground-secondary)',
 };
 
 const COLOR_BG_MAP: Record<StatusColor, string> = {
-  accent: 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.1)',
-  warning: 'rgba(255, 159, 10, 0.1)',
-  success: 'rgba(52, 199, 89, 0.1)',
-  destructive: 'rgba(255, 59, 48, 0.1)',
-  secondary: 'rgba(142, 142, 147, 0.1)',
+  // "Soft badge" backgrounds are defined centrally in global.css using color-mix.
+  // Returning CSS vars here keeps unit tests stable (jsdom doesn't need to parse color-mix).
+  accent: 'var(--am-soft-accent-bg)',
+  warning: 'var(--am-soft-warning-bg)',
+  success: 'var(--am-soft-success-bg)',
+  destructive: 'var(--am-soft-destructive-bg)',
+  secondary: 'var(--am-soft-secondary-bg)',
 };
 
 export function statusColorVar(color: StatusColor): string {

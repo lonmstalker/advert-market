@@ -27,8 +27,8 @@ const TYPE_CONFIG: Record<TransactionType, TransactionTypeConfig> = {
 };
 
 const DIRECTION_COLORS: Record<TransactionDirection, string> = {
-  income: 'var(--color-success)',
-  expense: 'var(--color-destructive)',
+  income: 'var(--color-state-success)',
+  expense: 'var(--color-state-destructive)',
 };
 
 export function getTransactionTypeConfig(type: TransactionType): TransactionTypeConfig {
@@ -36,10 +36,10 @@ export function getTransactionTypeConfig(type: TransactionType): TransactionType
 }
 
 const TYPE_TINT_COLORS: Record<TransactionType, string> = {
-  escrow_deposit: 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.1)',
-  payout: 'rgba(52, 199, 89, 0.1)',
-  refund: 'rgba(255, 159, 10, 0.1)',
-  commission: 'rgba(142, 142, 147, 0.1)',
+  escrow_deposit: 'var(--am-soft-accent-bg)',
+  payout: 'var(--am-soft-success-bg)',
+  refund: 'var(--am-soft-warning-bg)',
+  commission: 'var(--am-soft-secondary-bg)',
 };
 
 export function getTransactionTypeTint(type: TransactionType): string {

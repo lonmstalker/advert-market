@@ -11,7 +11,7 @@ import { TourSlideCatalog } from '@/features/onboarding/components/tour-slide-ca
 import { TourSlideDeal } from '@/features/onboarding/components/tour-slide-deal';
 import { TourSlideWallet } from '@/features/onboarding/components/tour-slide-wallet';
 import { profileKeys } from '@/shared/api';
-import { pressScale } from '@/shared/ui';
+import { pressScale, Tappable } from '@/shared/ui';
 
 const SLIDE_COUNT = 3;
 
@@ -203,8 +203,7 @@ export default function OnboardingTourPage() {
         </AnimatePresence>
 
         {!isLastSlide && (
-          <button
-            type="button"
+          <Tappable
             className="focusable"
             onClick={handleSkip}
             disabled={mutation.isPending}
@@ -220,7 +219,7 @@ export default function OnboardingTourPage() {
             <Text type="subheadline1" color="secondary" align="center">
               {t('onboarding.tour.skip')}
             </Text>
-          </button>
+          </Tappable>
         )}
       </div>
     </div>

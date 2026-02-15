@@ -20,21 +20,21 @@ describe('getTransactionTypeConfig', () => {
 });
 
 describe('getAmountColor', () => {
-  it('returns var(--color-success) for income', () => {
+  it('returns var(--color-state-success) for income', () => {
     const color = getAmountColor('payout', 'income');
-    expect(color).toBe('var(--color-success)');
+    expect(color).toBe('var(--color-state-success)');
   });
 
-  it('returns var(--color-destructive) for expense', () => {
+  it('returns var(--color-state-destructive) for expense', () => {
     const color = getAmountColor('escrow_deposit', 'expense');
-    expect(color).toBe('var(--color-destructive)');
+    expect(color).toBe('var(--color-state-destructive)');
   });
 
   it('ignores transaction type — uses only direction', () => {
     const types: TransactionType[] = ['escrow_deposit', 'payout', 'refund', 'commission'];
     for (const type of types) {
-      expect(getAmountColor(type, 'income')).toBe('var(--color-success)');
-      expect(getAmountColor(type, 'expense')).toBe('var(--color-destructive)');
+      expect(getAmountColor(type, 'income')).toBe('var(--color-state-success)');
+      expect(getAmountColor(type, 'expense')).toBe('var(--color-state-destructive)');
     }
   });
 });

@@ -28,7 +28,7 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
       style={{
         background: 'var(--color-background-base)',
         border: '1px solid var(--color-border-separator)',
-        borderRadius: 16,
+        borderRadius: 14,
         padding: '14px 16px',
         cursor: 'pointer',
         WebkitTapHighlightColor: 'transparent',

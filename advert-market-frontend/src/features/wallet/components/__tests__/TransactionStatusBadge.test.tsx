@@ -16,9 +16,9 @@ describe('TransactionStatusBadge', () => {
 
   it('applies correct background color per status', () => {
     const expectedBg: Record<TransactionStatus, string> = {
-      pending: 'rgba(255, 159, 10, 0.1)',
-      confirmed: 'rgba(52, 199, 89, 0.1)',
-      failed: 'rgba(255, 59, 48, 0.1)',
+      pending: 'var(--am-soft-warning-bg)',
+      confirmed: 'var(--am-soft-success-bg)',
+      failed: 'var(--am-soft-destructive-bg)',
     };
 
     for (const status of TRANSACTION_STATUSES) {

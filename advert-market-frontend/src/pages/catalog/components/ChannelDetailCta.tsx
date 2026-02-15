@@ -1,9 +1,11 @@
-import { Text } from '@telegram-tools/ui-kit';
+import { Button, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { formatFiat } from '@/shared/lib/fiat-format';
 import { formatTon } from '@/shared/lib/ton-format';
+import { FixedBottomBar } from '@/shared/ui';
 import { pressScale } from '@/shared/ui/animations';
 
 type ChannelDetailCtaProps = {
@@ -14,23 +16,10 @@ type ChannelDetailCtaProps = {
 export function ChannelDetailCta({ channelId, minPrice }: ChannelDetailCtaProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const haptic = useHaptic();
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '10px 16px calc(10px + env(safe-area-inset-bottom))',
-        background: 'var(--color-background-base)',
-        borderTop: '1px solid var(--color-border-separator)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        zIndex: 10,
-      }}
-    >
+    <FixedBottomBar style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       {minPrice != null && (
         <div style={{ flexShrink: 0 }}>
           <Text type="callout" weight="bold">
@@ -44,26 +33,17 @@ export function ChannelDetailCta({ channelId, minPrice }: ChannelDetailCtaProps)
         </div>
       )}
       <div style={{ flex: 1 }}>
-        <motion.button
-          {...pressScale}
-          type="button"
-          onClick={() => navigate(`/deals/new?channelId=${channelId}`)}
-          style={{
-            width: '100%',
-            padding: '10px 16px',
-            background: 'var(--color-accent-primary)',
-            border: 'none',
-            borderRadius: 10,
-            cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 600,
-            color: 'var(--color-static-white)',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          {t('catalog.channel.createDeal')}
-        </motion.button>
+        <motion.div {...pressScale}>
+          <Button
+            text={t('catalog.channel.createDeal')}
+            type="primary"
+            onClick={() => {
+              haptic.impactOccurred('light');
+              navigate(`/deals/new?channelId=${channelId}`);
+            }}
+          />
+        </motion.div>
       </div>
-    </div>
+    </FixedBottomBar>
   );
 }

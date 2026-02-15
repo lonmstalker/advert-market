@@ -29,16 +29,7 @@ describe('Coding rules', () => {
 
   it('no native HTML elements in TSX outside shared/ui/', () => {
     const nativeElements = ['<button', '<input', '<select', '<textarea', '<img'];
-    // Pre-existing violations to be fixed incrementally (ratchet down to zero)
-    const GRANDFATHERED = new Set([
-      'features/channels/components/CategoryChipRow.tsx',
-      'features/channels/components/ChannelFiltersContent.tsx',
-      'features/deals/components/DealTimeline.tsx',
-      'features/onboarding/components/mini-timeline.tsx',
-      'features/onboarding/components/role-card.tsx',
-      'pages/catalog/CatalogPage.tsx',
-      'pages/onboarding/OnboardingTourPage.tsx',
-    ]);
+    const GRANDFATHERED = new Set<string>([]);
     const violations: string[] = [];
 
     for (const file of allFiles) {

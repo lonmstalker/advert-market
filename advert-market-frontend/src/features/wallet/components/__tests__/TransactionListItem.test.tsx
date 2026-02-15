@@ -48,13 +48,13 @@ describe('TransactionListItem', () => {
   it('applies success color for income direction', () => {
     renderWithProviders(<TransactionListItem transaction={makeTx({ direction: 'income' })} onClick={vi.fn()} />);
     const amountEl = screen.getByText(/\+5 TON/);
-    expect(amountEl).toHaveStyle({ color: 'var(--color-success)' });
+    expect(amountEl).toHaveStyle({ color: 'var(--color-state-success)' });
   });
 
   it('applies destructive color for expense direction', () => {
     renderWithProviders(<TransactionListItem transaction={makeTx({ direction: 'expense' })} onClick={vi.fn()} />);
     const amountEl = screen.getByText(/\u22125 TON/);
-    expect(amountEl).toHaveStyle({ color: 'var(--color-destructive)' });
+    expect(amountEl).toHaveStyle({ color: 'var(--color-state-destructive)' });
   });
 
   it('calls onClick when clicked', async () => {

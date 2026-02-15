@@ -11,12 +11,19 @@ type LinkInputSheetProps = {
   onSubmit: (url: string) => void;
 };
 
-const URL_REGEX = /^https?:\/\/.+/;
+function isValidUrl(str: string): boolean {
+  try {
+    const url = new URL(str);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 const overlayStyle = {
   position: 'fixed' as const,
   inset: 0,
-  background: 'rgba(0,0,0,0.4)',
+  background: 'var(--color-background-overlay)',
   zIndex: 100,
   display: 'flex',
   alignItems: 'flex-end',
@@ -26,7 +33,7 @@ const sheetStyle = {
   width: '100%',
   background: 'var(--color-background-base)',
   borderRadius: '16px 16px 0 0',
-  padding: '20px 16px calc(20px + env(safe-area-inset-bottom))',
+  padding: '20px 16px calc(20px + var(--am-safe-area-bottom))',
   display: 'flex',
   flexDirection: 'column' as const,
   gap: 16,
@@ -36,7 +43,7 @@ export function LinkInputSheet({ open, onClose, onSubmit }: LinkInputSheetProps)
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
 
-  const isValid = URL_REGEX.test(url);
+  const isValid = isValidUrl(url);
 
   const handleSubmit = useCallback(() => {
     if (!isValid) return;
@@ -79,7 +86,9 @@ export function LinkInputSheet({ open, onClose, onSubmit }: LinkInputSheetProps)
             </div>
 
             {url && !isValid && (
-              <span style={{ fontSize: 12, color: 'var(--color-destructive)' }}>{t('creatives.form.linkInvalid')}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-state-destructive)' }}>
+                {t('creatives.form.linkInvalid')}
+              </span>
             )}
 
             <div style={{ display: 'flex', gap: 12 }}>

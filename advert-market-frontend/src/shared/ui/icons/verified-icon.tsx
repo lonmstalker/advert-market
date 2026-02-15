@@ -19,7 +19,7 @@ export function VerifiedIcon(props: SVGProps<SVGSVGElement>) {
       />
       <path
         d="M5.5 8L7 9.5L10.5 6"
-        stroke="var(--color-static-white, #fff)"
+        stroke="var(--color-static-white)"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"

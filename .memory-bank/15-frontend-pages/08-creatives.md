@@ -166,7 +166,7 @@ type TextEntity = {
 
 ### Form state management
 
-Local state via `useState` (not Zustand — max 1 store rule):
+Local state via `useState` (form-local state, no need for a store):
 ```typescript
 {
   title: string;

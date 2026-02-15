@@ -46,7 +46,7 @@ export const TransactionListItem = memo(function TransactionListItem({
           style={{
             width: 36,
             height: 36,
-            borderRadius: 10,
+            borderRadius: '50%',
             background: getTransactionTypeTint(transaction.type),
             display: 'flex',
             alignItems: 'center',

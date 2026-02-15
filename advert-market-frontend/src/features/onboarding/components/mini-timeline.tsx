@@ -1,6 +1,7 @@
 import { Icon, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
+import { Tappable } from '@/shared/ui';
 
 type TimelineStep = {
   label: string;
@@ -117,8 +118,7 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
-              <button
-                type="button"
+              <Tappable
                 className="focusable"
                 aria-expanded={isExpanded}
                 aria-label={`${step.label} — ${statusLabels[step.status] ?? step.status}`}
@@ -143,7 +143,7 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
                 >
                   {step.label}
                 </Text>
-              </button>
+              </Tappable>
 
               <AnimatePresence>
                 {isExpanded && (

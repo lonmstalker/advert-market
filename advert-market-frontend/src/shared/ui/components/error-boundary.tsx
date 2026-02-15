@@ -73,7 +73,7 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryProps, ErrorBoundaryStat
             >
               <path
                 d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-                stroke="var(--color-warning)"
+                stroke="var(--color-state-warning)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -83,11 +83,11 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryProps, ErrorBoundaryStat
                 y1="9"
                 x2="12"
                 y2="13"
-                stroke="var(--color-warning)"
+                stroke="var(--color-state-warning)"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
-              <circle cx="12" cy="17" r="1" fill="var(--color-warning)" />
+              <circle cx="12" cy="17" r="1" fill="var(--color-state-warning)" />
             </svg>
           </div>
 

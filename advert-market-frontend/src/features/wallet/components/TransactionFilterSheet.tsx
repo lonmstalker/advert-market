@@ -1,6 +1,6 @@
 import { Button, Sheet, Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
-import { ToggleChip } from '@/shared/ui';
+import { Chip } from '@/shared/ui';
 import { TRANSACTION_TYPES, type TransactionFilters, type TransactionType } from '../types/wallet';
 
 type TransactionFilterSheetProps = {
@@ -36,8 +36,9 @@ export function TransactionFilterSheet({ open, onClose, filters, onApply, onRese
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {TRANSACTION_TYPES.map((type) => (
-            <ToggleChip
+            <Chip
               key={type}
+              variant="rounded"
               label={t(`wallet.txType.${typeToKey(type)}`)}
               active={filters.type === type}
               onClick={() => handleTypeSelect(type)}

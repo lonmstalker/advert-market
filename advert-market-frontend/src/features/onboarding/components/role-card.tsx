@@ -1,7 +1,7 @@
 import { Icon, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode } from 'react';
-import { pressScale } from '@/shared/ui';
+import { pressScale, Tappable } from '@/shared/ui';
 
 type RoleCardProps = {
   icon: ReactNode;
@@ -20,8 +20,7 @@ const previewContainer = {
 export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: RoleCardProps) {
   return (
     <motion.div {...pressScale}>
-      <button
-        type="button"
+      <Tappable
         className="focusable"
         onClick={onToggle}
         style={{
@@ -115,7 +114,7 @@ export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: 
             </motion.div>
           )}
         </AnimatePresence>
-      </button>
+      </Tappable>
     </motion.div>
   );
 }

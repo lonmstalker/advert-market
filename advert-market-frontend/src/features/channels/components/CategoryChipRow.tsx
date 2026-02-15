@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
+import { Chip } from '@/shared/ui';
 import { fetchCategories } from '../api/channels';
 import type { Category } from '../types/channel';
 
@@ -9,31 +10,6 @@ type CategoryChipRowProps = {
   selected: string[];
   onSelect: (slugs: string[]) => void;
 };
-
-function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        padding: '6px 14px',
-        borderRadius: 100,
-        border: active ? 'none' : '1px solid var(--color-border-separator)',
-        background: active ? 'var(--color-accent-primary)' : 'var(--color-background-base)',
-        color: active ? 'var(--color-static-white)' : 'var(--color-foreground-secondary)',
-        fontSize: 13,
-        fontWeight: 500,
-        whiteSpace: 'nowrap',
-        cursor: 'pointer',
-        WebkitTapHighlightColor: 'transparent',
-        flexShrink: 0,
-        lineHeight: 1.2,
-      }}
-    >
-      {label}
-    </button>
-  );
-}
 
 function getCategoryName(cat: Category, lang: string): string {
   return cat.localizedName[lang] ?? cat.localizedName.ru ?? cat.slug;
@@ -66,7 +42,8 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
   };
 
   return (
-    <div
+    <fieldset
+      aria-label={t('catalog.filters.topic')}
       style={{
         display: 'flex',
         gap: 8,
@@ -74,6 +51,8 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
         overflowX: 'auto',
         scrollbarWidth: 'none',
         WebkitOverflowScrolling: 'touch',
+        border: 'none',
+        margin: 0,
       }}
     >
       <Chip
@@ -92,6 +71,6 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
           onClick={() => handleToggle(cat.slug)}
         />
       ))}
-    </div>
+    </fieldset>
   );
 }
