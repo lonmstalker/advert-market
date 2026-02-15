@@ -9,6 +9,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.advertmarket.communication.bot.internal.builder.KeyboardBuilder;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.Callback;
@@ -30,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
 
 @DisplayName("TelegramSender send methods")
 class TelegramSenderSendTest {
@@ -126,6 +131,57 @@ class TelegramSenderSendTest {
         // 2nd: fallback without parse mode to avoid parse errors
         assertThat(sent.get(1).getParseMode()).isNull();
         assertThat(sent.get(1).getText()).isEqualTo("*Hello*.");
+    }
+
+    @Test
+    @DisplayName("MarkdownV2 parse error logs must not include message text")
+    void markdownV2ParseError_logsMustNotIncludeMessageText() {
+        Logger logger = (Logger) LoggerFactory.getLogger(TelegramSender.class);
+        Level oldLevel = logger.getLevel();
+        var appender = new ListAppender<ILoggingEvent>();
+        appender.start();
+
+        logger.addAppender(appender);
+        logger.setLevel(Level.WARN);
+
+        String sensitiveText = "SENSITIVE_TEXT_12345";
+        try {
+            reset(bot);
+            var calls = new AtomicInteger(0);
+            doAnswer(invocation -> {
+                Callback cb = invocation.getArgument(1);
+                int n = calls.incrementAndGet();
+
+                var response = mock(SendResponse.class);
+                if (n == 1) {
+                    when(response.isOk()).thenReturn(false);
+                    when(response.errorCode()).thenReturn(400);
+                    when(response.description()).thenReturn(
+                            "Bad Request: can't parse entities: "
+                                    + "Character '.' is reserved and must be "
+                                    + "escaped with the preceding '\\\\'");
+                } else {
+                    when(response.isOk()).thenReturn(true);
+                }
+
+                cb.onResponse(invocation.getArgument(0), response);
+                return null;
+            }).when(bot).execute(
+                    any(BaseRequest.class), any(Callback.class));
+
+            sender.send(42L, sensitiveText);
+
+            assertThat(appender.list)
+                    .extracting(ILoggingEvent::getFormattedMessage)
+                    .anyMatch(msg -> msg.contains("Telegram rejected MarkdownV2 message"));
+
+            assertThat(appender.list)
+                    .extracting(ILoggingEvent::getFormattedMessage)
+                    .noneMatch(msg -> msg.contains(sensitiveText));
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(oldLevel);
+        }
     }
 
     @Test

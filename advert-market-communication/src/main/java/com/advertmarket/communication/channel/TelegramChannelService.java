@@ -9,10 +9,10 @@ import static com.advertmarket.shared.metric.MetricNames.CHANNEL_CACHE_HIT;
 import static com.advertmarket.shared.metric.MetricNames.CHANNEL_CACHE_MISS;
 import static com.advertmarket.shared.metric.MetricNames.CHANNEL_CACHE_STALE;
 
-import com.advertmarket.communication.api.channel.ChatInfo;
-import com.advertmarket.communication.api.channel.ChatMemberInfo;
-import com.advertmarket.communication.api.channel.ChatMemberStatus;
-import com.advertmarket.communication.api.channel.TelegramChannelPort;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
+import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.communication.channel.internal.ChannelCachePort;
 import com.advertmarket.communication.channel.internal.ChannelCacheProperties;

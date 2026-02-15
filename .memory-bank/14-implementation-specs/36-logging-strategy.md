@@ -69,6 +69,7 @@ Structured JSON logging with sensitive data redaction, correlation IDs, and leve
 | Bot token | Never log (env variable only) |
 | JWT tokens | Masked: `eyJ***` |
 | initData | Log only `user_id` and `auth_date` |
+| Telegram message text (user content) | Never log body; log only `text_len` + `text_sha256` at WARN/INFO. If needed for debugging MarkdownV2 parse errors, log `redacted_text` at DEBUG (letters/digits masked). |
 
 Financial amounts: **always log in full** (audit requirement).
 

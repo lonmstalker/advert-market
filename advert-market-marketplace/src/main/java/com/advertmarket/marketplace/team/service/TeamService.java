@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Channel team management operations.
@@ -52,6 +53,7 @@ public class TeamService {
      * @return created team member
      */
     @NonNull
+    @Transactional
     public TeamMemberDto invite(long channelId,
                                 @NonNull TeamInviteRequest request) {
         requireOwner(channelId);
@@ -99,6 +101,7 @@ public class TeamService {
      * @return updated team member
      */
     @NonNull
+    @Transactional
     public TeamMemberDto updateRights(long channelId, long userId,
                                        @NonNull TeamUpdateRightsRequest request) {
         requireOwner(channelId);
@@ -118,6 +121,7 @@ public class TeamService {
      * @param channelId channel ID
      * @param userId    target user ID
      */
+    @Transactional
     public void removeMember(long channelId, long userId) {
         long currentUserId = SecurityContextUtil.currentUserId().value();
         boolean isSelfRemoval = currentUserId == userId;

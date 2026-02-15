@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implements {@link PricingRuleRepository} using jOOQ.
@@ -63,7 +62,6 @@ public class JooqPricingRuleRepository implements PricingRuleRepository {
     }
 
     @Override
-    @Transactional
     @NonNull
     public PricingRuleDto insert(long channelId,
                                  @NonNull PricingRuleCreateRequest req) {
@@ -82,7 +80,6 @@ public class JooqPricingRuleRepository implements PricingRuleRepository {
     }
 
     @Override
-    @Transactional
     @NonNull
     public Optional<PricingRuleDto> update(
             long ruleId, @NonNull PricingRuleUpdateRequest req) {
@@ -132,7 +129,6 @@ public class JooqPricingRuleRepository implements PricingRuleRepository {
     }
 
     @Override
-    @Transactional
     public boolean deactivate(long ruleId) {
         int rows = dsl.update(CHANNEL_PRICING_RULES)
                 .set(CHANNEL_PRICING_RULES.IS_ACTIVE, false)

@@ -5,16 +5,18 @@ import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.communication.api.channel.ChatInfo;
-import com.advertmarket.communication.api.channel.ChatMemberInfo;
-import com.advertmarket.communication.api.channel.ChatMemberStatus;
-import com.advertmarket.communication.api.channel.TelegramChannelPort;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
+import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
 import com.advertmarket.shared.exception.DomainException;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,8 +40,9 @@ class ChannelVerificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        var props = new ChannelBotProperties(BOT_ID);
-        service = new ChannelVerificationService(telegramChannel, props);
+        var props = new ChannelBotProperties(BOT_ID, Duration.ofSeconds(3));
+        service = new ChannelVerificationService(
+                telegramChannel, props, Runnable::run);
     }
 
     @Test
@@ -151,6 +154,24 @@ class ChannelVerificationServiceTest {
         assertThat(result.userStatus().isMember()).isTrue();
         assertThat(result.userStatus().role())
                 .isEqualTo("CREATOR");
+    }
+
+    @Test
+    @DisplayName("Should propagate DomainException from Telegram port (no CompletionException wrapping)")
+    void shouldPropagateDomainExceptionFromTelegramPort() {
+        when(telegramChannel.getChatByUsername(USERNAME))
+                .thenReturn(chatInfo("channel"));
+        when(telegramChannel.getChatMember(CHANNEL_ID, BOT_ID))
+                .thenThrow(new DomainException(SERVICE_UNAVAILABLE, "boom"));
+        when(telegramChannel.getChatMember(CHANNEL_ID, USER_ID))
+                .thenReturn(adminInfo(USER_ID));
+        when(telegramChannel.getChatMemberCount(CHANNEL_ID))
+                .thenReturn(1000);
+
+        assertThatThrownBy(() -> service.verify(USERNAME, USER_ID))
+                .isInstanceOf(DomainException.class)
+                .extracting(e -> ((DomainException) e).getErrorCode())
+                .isEqualTo(SERVICE_UNAVAILABLE);
     }
 
     private static ChatInfo chatInfo(String type) {

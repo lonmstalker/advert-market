@@ -49,6 +49,25 @@ public class JooqCategoryRepository implements CategoryRepository {
                 .fetch(CATEGORIES.SLUG);
     }
 
+    @Override
+    @NonNull
+    public Map<Long, List<String>> findCategorySlugsForChannels(
+            @NonNull List<Long> channelIds) {
+        if (channelIds.isEmpty()) {
+            return Map.of();
+        }
+        return dsl.select(
+                        CHANNEL_CATEGORIES.CHANNEL_ID,
+                        CATEGORIES.SLUG)
+                .from(CHANNEL_CATEGORIES)
+                .join(CATEGORIES)
+                .on(CHANNEL_CATEGORIES.CATEGORY_ID.eq(CATEGORIES.ID))
+                .where(CHANNEL_CATEGORIES.CHANNEL_ID.in(channelIds))
+                .orderBy(CHANNEL_CATEGORIES.CHANNEL_ID.asc(),
+                        CATEGORIES.SORT_ORDER.asc())
+                .fetchGroups(CHANNEL_CATEGORIES.CHANNEL_ID, CATEGORIES.SLUG);
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, String> parseLocalizedName(JSON json) {
         if (json == null || json.data() == null) {

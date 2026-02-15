@@ -6,10 +6,10 @@ import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBE
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
 
-import com.advertmarket.communication.api.channel.ChatInfo;
-import com.advertmarket.communication.api.channel.ChatMemberInfo;
-import com.advertmarket.communication.api.channel.ChatMemberStatus;
-import com.advertmarket.communication.api.channel.TelegramChannelPort;
+import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
+import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
+import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse.BotStatus;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse.UserStatus;
@@ -18,10 +18,15 @@ import com.advertmarket.shared.exception.DomainException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /**
@@ -39,6 +44,9 @@ public class ChannelVerificationService {
 
     private final TelegramChannelPort telegramChannel;
     private final ChannelBotProperties botProperties;
+
+    @Qualifier("blockingIoExecutor")
+    private final @NonNull Executor blockingIoExecutor;
 
     /**
      * Resolves a channel by username and verifies bot + user status.
@@ -86,16 +94,27 @@ public class ChannelVerificationService {
         long channelId = chatInfo.id();
         long botId = botProperties.botUserId();
 
+        long timeoutMs = botProperties.verificationTimeout().toMillis();
         var botMemberFuture = CompletableFuture.supplyAsync(
-                () -> telegramChannel.getChatMember(channelId, botId));
+                () -> telegramChannel.getChatMember(channelId, botId),
+                blockingIoExecutor).orTimeout(timeoutMs,
+                TimeUnit.MILLISECONDS);
         var userMemberFuture = CompletableFuture.supplyAsync(
-                () -> telegramChannel.getChatMember(channelId, userId));
+                () -> telegramChannel.getChatMember(channelId, userId),
+                blockingIoExecutor).orTimeout(timeoutMs,
+                TimeUnit.MILLISECONDS);
         var memberCountFuture = CompletableFuture.supplyAsync(
-                () -> telegramChannel.getChatMemberCount(channelId));
+                () -> telegramChannel.getChatMemberCount(channelId),
+                blockingIoExecutor).orTimeout(timeoutMs,
+                TimeUnit.MILLISECONDS);
 
-        CompletableFuture.allOf(
-                botMemberFuture, userMemberFuture, memberCountFuture
-        ).join();
+        try {
+            CompletableFuture.allOf(
+                    botMemberFuture, userMemberFuture, memberCountFuture
+            ).join();
+        } catch (CompletionException e) {
+            throw unwrapAsyncFailure(channelId, e);
+        }
 
         var botMember = botMemberFuture.join();
         var userMember = userMemberFuture.join();
@@ -114,6 +133,33 @@ public class ChannelVerificationService {
                 memberCount,
                 botStatus,
                 userStatus);
+    }
+
+    private static DomainException unwrapAsyncFailure(
+            long channelId, Throwable error) {
+        Throwable cause = error;
+        while (cause instanceof CompletionException) {
+            Throwable next = cause.getCause();
+            if (next == null) {
+                break;
+            }
+            cause = next;
+        }
+        if (cause instanceof DomainException domainException) {
+            return domainException;
+        }
+        if (cause instanceof TimeoutException) {
+            return new DomainException(
+                    com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE,
+                    "Telegram API timeout while verifying channel "
+                            + channelId,
+                    cause);
+        }
+        return new DomainException(
+                com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE,
+                "Telegram API error while verifying channel "
+                        + channelId,
+                cause);
     }
 
     private static BotStatus buildBotStatus(

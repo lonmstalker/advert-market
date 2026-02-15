@@ -14,7 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -48,8 +49,8 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
                     request.getRemoteAddr());
             metrics.incrementCounter(MetricNames.INTERNAL_AUTH_FAILED,
                     "reason", "invalid_key");
-            response.sendError(HttpStatus.UNAUTHORIZED.value());
-            return;
+            throw new BadCredentialsException(
+                    "Internal API key invalid");
         }
 
         if (!isIpAllowed(request.getRemoteAddr())) {
@@ -57,8 +58,8 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
                     request.getRemoteAddr());
             metrics.incrementCounter(MetricNames.INTERNAL_AUTH_FAILED,
                     "reason", "ip_denied");
-            response.sendError(HttpStatus.FORBIDDEN.value());
-            return;
+            throw new AccessDeniedException(
+                    "Internal API IP denied");
         }
 
         SecurityContextHolder.getContext().setAuthentication(

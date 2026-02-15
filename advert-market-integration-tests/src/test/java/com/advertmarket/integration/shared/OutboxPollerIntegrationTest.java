@@ -65,6 +65,21 @@ class OutboxPollerIntegrationTest {
     }
 
     @Test
+    @DisplayName("findPendingBatch claims entries to prevent duplicates across pollers")
+    void findPendingBatch_claimsEntries() {
+        repository.save(testEntry());
+        sleep(1200);
+
+        List<OutboxEntry> first =
+                repository.findPendingBatch(10);
+        List<OutboxEntry> second =
+                repository.findPendingBatch(10);
+
+        assertThat(first).hasSize(1);
+        assertThat(second).isEmpty();
+    }
+
+    @Test
     @DisplayName("Mark delivered updates status and processed_at")
     void markDelivered_updatesStatus() {
         repository.save(testEntry());

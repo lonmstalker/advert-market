@@ -1,6 +1,7 @@
 package com.advertmarket.app.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -18,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @DisplayName("InternalApiKeyFilter")
@@ -63,9 +66,9 @@ class InternalApiKeyFilterTest {
         request.setRemoteAddr("127.0.0.1");
         var response = new MockHttpServletResponse();
 
-        filter.doFilterInternal(request, response, filterChain);
-
-        assertThat(response.getStatus()).isEqualTo(401);
+        assertThatThrownBy(() -> filter.doFilterInternal(
+                request, response, filterChain))
+                .isInstanceOf(BadCredentialsException.class);
         verify(filterChain, never()).doFilter(any(), any());
         verify(metrics).incrementCounter(
                 eq(MetricNames.INTERNAL_AUTH_FAILED),
@@ -83,9 +86,9 @@ class InternalApiKeyFilterTest {
         request.setRemoteAddr("127.0.0.1");
         var response = new MockHttpServletResponse();
 
-        filter.doFilterInternal(request, response, filterChain);
-
-        assertThat(response.getStatus()).isEqualTo(401);
+        assertThatThrownBy(() -> filter.doFilterInternal(
+                request, response, filterChain))
+                .isInstanceOf(BadCredentialsException.class);
         verify(filterChain, never()).doFilter(any(), any());
     }
 
@@ -99,9 +102,9 @@ class InternalApiKeyFilterTest {
         request.setRemoteAddr("192.168.1.1");
         var response = new MockHttpServletResponse();
 
-        filter.doFilterInternal(request, response, filterChain);
-
-        assertThat(response.getStatus()).isEqualTo(403);
+        assertThatThrownBy(() -> filter.doFilterInternal(
+                request, response, filterChain))
+                .isInstanceOf(AccessDeniedException.class);
         verify(filterChain, never()).doFilter(any(), any());
         verify(metrics).incrementCounter(
                 eq(MetricNames.INTERNAL_AUTH_FAILED),

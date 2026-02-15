@@ -19,7 +19,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
 import org.jooq.JSON;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implements {@link TeamMembershipRepository} using jOOQ.
@@ -71,7 +70,6 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
     }
 
     @Override
-    @Transactional
     @NonNull
     public TeamMemberDto insert(long channelId, long userId,
                                  @NonNull Set<ChannelRight> rights,
@@ -107,7 +105,6 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
     }
 
     @Override
-    @Transactional
     @NonNull
     public Optional<TeamMemberDto> updateRights(long channelId, long userId,
                                                  @NonNull Set<ChannelRight> rights) {
@@ -147,7 +144,6 @@ public class JooqTeamMembershipRepository implements TeamMembershipRepository {
     }
 
     @Override
-    @Transactional
     public boolean delete(long channelId, long userId) {
         return dsl.deleteFrom(CHANNEL_MEMBERSHIPS)
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))

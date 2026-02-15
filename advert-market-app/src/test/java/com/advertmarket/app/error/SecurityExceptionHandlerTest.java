@@ -140,4 +140,42 @@ class SecurityExceptionHandlerTest {
         assertThat(body).containsEntry("title", "Localized Title");
         assertThat(body).containsEntry("detail", "Localized Detail");
     }
+
+    @Test
+    @DisplayName("Internal endpoints should use INTERNAL_API_KEY_INVALID for 401")
+    @SuppressWarnings("unchecked")
+    void internalEndpoints_shouldUseInternalApiKeyInvalid() throws Exception {
+        var request = new MockHttpServletRequest();
+        request.setRequestURI("/internal/v1/worker-events");
+        var response = new MockHttpServletResponse();
+
+        handler.commence(request, response,
+                new BadCredentialsException("Bad key"));
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        var body = objectMapper.readValue(
+                response.getContentAsString(), Map.class);
+        var props = (Map<String, Object>) body.get("properties");
+        assertThat(props).containsEntry(
+                "error_code", "INTERNAL_API_KEY_INVALID");
+    }
+
+    @Test
+    @DisplayName("Internal endpoints should use INTERNAL_IP_DENIED for 403")
+    @SuppressWarnings("unchecked")
+    void internalEndpoints_shouldUseInternalIpDenied() throws Exception {
+        var request = new MockHttpServletRequest();
+        request.setRequestURI("/internal/v1/worker-events");
+        var response = new MockHttpServletResponse();
+
+        handler.handle(request, response,
+                new AccessDeniedException("Denied"));
+
+        assertThat(response.getStatus()).isEqualTo(403);
+        var body = objectMapper.readValue(
+                response.getContentAsString(), Map.class);
+        var props = (Map<String, Object>) body.get("properties");
+        assertThat(props).containsEntry(
+                "error_code", "INTERNAL_IP_DENIED");
+    }
 }

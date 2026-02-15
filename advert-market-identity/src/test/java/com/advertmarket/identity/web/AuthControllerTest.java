@@ -24,12 +24,13 @@ class AuthControllerTest {
 
     private MockMvc mockMvc;
     private AuthPort authService;
+    private LoginRateLimiterPort rateLimiter;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
         authService = mock(AuthPort.class);
-        LoginRateLimiterPort rateLimiter = mock(LoginRateLimiterPort.class);
+        rateLimiter = mock(LoginRateLimiterPort.class);
         mockMvc = MockMvcBuilders
                 .standaloneSetup(
                         new AuthController(authService, rateLimiter))
@@ -78,5 +79,29 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Should use request remoteAddr for rate limiting (ignore X-Forwarded-For)")
+    void shouldUseRemoteAddrForRateLimiting() throws Exception {
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(new LoginResponse(
+                        "jwt-token", 3600,
+                        new LoginResponse.UserSummary(
+                                42L, "johndoe", "John Doe")));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .with(request -> {
+                            request.setRemoteAddr("1.2.3.4");
+                            return request;
+                        })
+                        .header("X-Forwarded-For", "9.9.9.9")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new LoginRequest("valid-init-data"))))
+                .andExpect(status().isOk());
+
+        org.mockito.Mockito.verify(rateLimiter)
+                .checkRate("1.2.3.4");
     }
 }
