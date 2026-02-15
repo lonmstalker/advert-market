@@ -2,11 +2,11 @@ package com.advertmarket.marketplace.channel.web;
 
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import java.util.Locale;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Converts REST query params into {@link ChannelSearchCriteria}.
@@ -82,8 +82,8 @@ public class ChannelSearchCriteriaConverter {
                     yield ChannelSort.valueOf(rawSort.trim().toUpperCase(
                             Locale.ROOT));
                 } catch (IllegalArgumentException ex) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
+                    throw new DomainException(
+                            ErrorCodes.INVALID_PARAMETER,
                             "Unsupported sort value: " + rawSort,
                             ex);
                 }
