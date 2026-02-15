@@ -109,9 +109,16 @@ app:
       key-prefix: "tg:state:"
     block:
       key-prefix: "tg:block:"
+  pii:
+    encryption:
+      key: ${PII_ENCRYPTION_KEY:}
   ton:
-    api-url: ${TON_API_URL:https://testnet.toncenter.com/api/v2}
-    api-key: ${TON_API_KEY:}
+    network: ${TON_NETWORK:testnet}
+    api:
+      key: ${TON_API_KEY:}
+      is-testnet: ${TON_IS_TESTNET:true}
+    wallet:
+      mnemonic: ${TON_WALLET_MNEMONIC:}
   canary:
     admin-token: ${CANARY_ADMIN_TOKEN:}
   internal-api:

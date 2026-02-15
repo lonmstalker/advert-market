@@ -8,8 +8,13 @@ import com.advertmarket.shared.outbox.OutboxPoller;
 import com.advertmarket.shared.outbox.OutboxProperties;
 import com.advertmarket.shared.outbox.OutboxPublisher;
 import com.advertmarket.shared.outbox.OutboxRepository;
+import com.advertmarket.shared.pii.AesPiiVault;
+import com.advertmarket.shared.pii.PiiEncryptionProperties;
+import com.advertmarket.shared.pii.PiiVaultPort;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.Base64;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +25,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * extracted from the shared kernel (C-7, H-14).
  */
 @Configuration
+@EnableConfigurationProperties(PiiEncryptionProperties.class)
 public class SharedInfrastructureConfig {
 
     /** Creates the Micrometer metrics facade. */
@@ -42,6 +48,12 @@ public class SharedInfrastructureConfig {
             StringRedisTemplate redisTemplate,
             MetricsFacade metrics) {
         return new RedisDistributedLock(redisTemplate, metrics);
+    }
+
+    /** Creates the PII encryption vault. */
+    @Bean
+    public PiiVaultPort piiVault(PiiEncryptionProperties props) {
+        return new AesPiiVault(Base64.getDecoder().decode(props.key()));
     }
 
     /** Creates the transactional outbox poller. */

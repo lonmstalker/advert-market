@@ -8,6 +8,7 @@ import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.financial.ton.service.TonWalletService;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
+import com.advertmarket.shared.pii.PiiVaultPort;
 import com.advertmarket.shared.sequence.SequenceAllocator;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -70,9 +71,15 @@ public class TonConfig {
             DistributedLockPort lockPort,
             SequenceAllocator subwalletSequenceAllocator,
             MetricsFacade metrics,
+            PiiVaultPort piiVault,
             TonProperties props) {
+        String decryptedMnemonic = piiVault.resolve(props.wallet().mnemonic());
+        var decryptedWallet = new TonProperties.Wallet(
+                decryptedMnemonic, props.wallet().allocationSize());
+        var decryptedProps = new TonProperties(
+                props.api(), decryptedWallet, props.deposit(), props.network());
         return new TonWalletService(tonBlockchainPort, txRepository, lockPort,
-                subwalletSequenceAllocator, metrics, props);
+                subwalletSequenceAllocator, metrics, decryptedProps);
     }
 
     /**
