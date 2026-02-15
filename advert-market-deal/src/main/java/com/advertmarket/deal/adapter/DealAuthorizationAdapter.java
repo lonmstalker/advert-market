@@ -3,6 +3,8 @@ package com.advertmarket.deal.adapter;
 import static com.advertmarket.db.generated.tables.Deals.DEALS;
 
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
+import com.advertmarket.shared.exception.EntityNotFoundException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.security.SecurityContextUtil;
 import lombok.RequiredArgsConstructor;
@@ -57,8 +59,9 @@ public class DealAuthorizationAdapter implements DealAuthorizationPort {
                 .where(DEALS.ID.eq(dealId.value()))
                 .fetchOne(DEALS.CHANNEL_ID);
         if (result == null) {
-            throw new IllegalStateException(
-                    "Deal not found: " + dealId.value());
+            throw new EntityNotFoundException(
+                    ErrorCodes.DEAL_NOT_FOUND, "Deal",
+                    dealId.value().toString());
         }
         return result;
     }

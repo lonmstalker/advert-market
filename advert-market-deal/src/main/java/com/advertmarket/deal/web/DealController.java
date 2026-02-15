@@ -8,6 +8,8 @@ import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.service.DealService;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
@@ -50,15 +52,15 @@ class DealController {
     }
 
     @GetMapping("/{id}")
-    DealDetailDto getDetail(@PathVariable UUID id) {
+    DealDetailDto getDetail(@PathVariable("id") UUID id) {
         return dealService.getDetail(DealId.of(id));
     }
 
     @GetMapping
     CursorPage<DealDto> list(
-            @RequestParam(required = false) DealStatus status,
-            @RequestParam(required = false) String cursor,
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(value = "status", required = false) DealStatus status,
+            @RequestParam(value = "cursor", required = false) String cursor,
+            @RequestParam(value = "limit", defaultValue = "20") int limit) {
         var userId = SecurityContextUtil.currentUserId().value();
         var criteria = new DealListCriteria(status, cursor, limit);
         return dealService.listForUser(criteria, userId);
@@ -66,7 +68,7 @@ class DealController {
 
     @PostMapping("/{id}/transition")
     DealTransitionResponse transition(
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @RequestBody @Valid DealTransitionRequest request) {
         var dealId = DealId.of(id);
         var actorType = resolveActorType(dealId);
@@ -83,6 +85,9 @@ class DealController {
     }
 
     private ActorType resolveActorType(DealId dealId) {
+        // Verify deal exists first (throws 404 if not found)
+        dealAuthorizationPort.getChannelId(dealId);
+
         if (SecurityContextUtil.isOperator()) {
             return ActorType.PLATFORM_OPERATOR;
         }
@@ -92,7 +97,8 @@ class DealController {
         if (dealAuthorizationPort.isOwner(dealId)) {
             return ActorType.CHANNEL_OWNER;
         }
-        return ActorType.ADVERTISER;
+        throw new DomainException(ErrorCodes.DEAL_NOT_PARTICIPANT,
+                "User is not a participant of deal " + dealId);
     }
 
     private DealTransitionResponse toResponse(DealTransitionResult result) {

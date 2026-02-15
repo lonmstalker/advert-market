@@ -82,11 +82,13 @@ public class DealTransitionService {
             return handleCasConflict(dealId, targetStatus, command);
         }
 
+        var now = Instant.now();
+
         // Append event
-        appendEvent(deal, targetStatus, command);
+        appendEvent(deal, targetStatus, command, now);
 
         // Outbox entry
-        publishOutboxEvent(deal, targetStatus, command);
+        publishOutboxEvent(deal, targetStatus, command, now);
 
         return new DealTransitionResult.Success(targetStatus);
     }
@@ -125,9 +127,10 @@ public class DealTransitionService {
         }
     }
 
+    // DealStatus.name() → String is intentional for event persistence
     @SuppressWarnings("fenum:argument")
     private void appendEvent(DealRecord deal, DealStatus targetStatus,
-                              DealTransitionCommand command) {
+                              DealTransitionCommand command, Instant now) {
         var event = new DealEventRecord(
                 null,
                 deal.id(),
@@ -137,13 +140,14 @@ public class DealTransitionService {
                 command.actorId(),
                 command.actorType().name(),
                 "{}",
-                Instant.now());
+                now);
         dealEventRepository.append(event);
     }
 
+    // DealStatus/ActorType.name() → String is intentional for outbox serialization
     @SuppressWarnings({"fenum:argument", "fenum:assignment"})
     private void publishOutboxEvent(DealRecord deal, DealStatus targetStatus,
-                                     DealTransitionCommand command) {
+                                     DealTransitionCommand command, Instant now) {
         var dealId = DealId.of(deal.id());
         var payload = new DealStateChangedEvent(
                 deal.status(), targetStatus,
@@ -161,7 +165,7 @@ public class DealTransitionService {
                 .status(OutboxStatus.PENDING)
                 .retryCount(0)
                 .version(0)
-                .createdAt(Instant.now())
+                .createdAt(now)
                 .build();
 
         outboxRepository.save(outbox);
