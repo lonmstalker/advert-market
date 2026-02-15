@@ -68,10 +68,7 @@ public record TransferRequest(
         if (nonZero.size() == legs.size()) {
             return this;
         }
-        var filtered = new TransferRequest(
-                dealId, idempotencyKey, nonZero, description);
-        validateBalance(filtered.legs());
-        return filtered;
+        return balanced(dealId, idempotencyKey, nonZero, description);
     }
 
     private static void validateBalance(List<Leg> legs) {
