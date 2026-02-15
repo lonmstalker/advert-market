@@ -12,6 +12,7 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
+    mem_limit: 1g
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d advertmarket"]
       interval: 5s
@@ -24,6 +25,7 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:6379:6379"
+    mem_limit: 256m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -49,6 +51,7 @@ services:
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     ports:
       - "127.0.0.1:9092:9092"
+    mem_limit: 768m
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
       interval: 10s
@@ -83,10 +86,7 @@ services:
       APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
       INSTANCE_ID: blue
       DEPLOY_COLOR: blue
-      JAVA_OPTS: >-
-        -XX:+UseZGC -XX:+ZGenerational
-        -Xmx512m -Xms512m
-        --enable-preview
+    mem_limit: 700m
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,10 +131,7 @@ services:
       APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
       INSTANCE_ID: green
       DEPLOY_COLOR: green
-      JAVA_OPTS: >-
-        -XX:+UseZGC -XX:+ZGenerational
-        -Xmx512m -Xms512m
-        --enable-preview
+    mem_limit: 700m
     depends_on:
       postgres:
         condition: service_healthy
@@ -166,6 +163,7 @@ services:
       - ./nginx/canary-api-split.conf:/etc/nginx/canary-api-split.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/html:/usr/share/nginx/html:ro
+    mem_limit: 128m
     depends_on:
       - app-blue
     healthcheck:

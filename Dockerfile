@@ -18,7 +18,9 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8080/actuator/health/readiness || exit 1
 
 ENTRYPOINT ["java", \
-    "-XX:+UseZGC", "-XX:+ZGenerational", \
+    "-XX:+UseZGC", \
+    "-XX:+ExitOnOutOfMemoryError", \
+    "-Djava.security.egd=file:/dev/./urandom", \
     "-Xmx512m", "-Xms512m", \
     "--enable-preview", \
     "-jar", "app.jar"]

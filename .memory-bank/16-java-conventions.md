@@ -100,7 +100,7 @@ Individual queries in loops are FORBIDDEN. Use JOINs or batch fetches.
 ### GC Configuration
 
 ```
--XX:+UseZGC -XX:+ZGenerational -Xmx512m -Xms512m
+-XX:+UseZGC -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom -Xmx512m -Xms512m
 ```
 
 ## 3. Code Quality
