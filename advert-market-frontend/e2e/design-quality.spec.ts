@@ -130,6 +130,46 @@ test.describe('Design quality (TG-native / iOS-like)', () => {
     await attachFullPage(page, testInfo);
   });
 
+  test('feature card icon box is 48px', async ({ page }, testInfo) => {
+    await page.goto('/onboarding', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Channel Catalog')).toBeVisible();
+
+    const iconBox = page.locator('div[style*="width: 48px"][style*="height: 48px"]').first();
+    await expect(iconBox).toBeVisible();
+    const box = await iconBox.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeCloseTo(48, 0);
+    expect(box!.height).toBeCloseTo(48, 0);
+
+    await attachFullPage(page, testInfo);
+  });
+
+  test('timeline items have minimum gap', async ({ page }, testInfo) => {
+    await page.goto('/deals/deal-1', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText(/^Timeline$/)).toBeVisible();
+
+    const timelineUl = page.locator('ul[aria-label]').first();
+    await expect(timelineUl).toBeVisible();
+    const gap = await timelineUl.evaluate((el) => getComputedStyle(el).gap);
+    expect(Number.parseInt(gap, 10)).toBeGreaterThanOrEqual(4);
+
+    await attachFullPage(page, testInfo);
+  });
+
+  test('creative preview has no DeviceFrame gradient border', async ({ page }, testInfo) => {
+    await page.goto('/profile/creatives/new', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
+
+    // Switch to preview tab
+    await page.getByText('Preview').click();
+
+    // Should not have DeviceFrame with gradient
+    const gradientBorder = page.locator('[class*="device-frame"]');
+    await expect(gradientBorder).toHaveCount(0);
+
+    await attachFullPage(page, testInfo);
+  });
+
   test('S10: formatting toolbar buttons are borderless and unframed (no "Windows 95" boxes)', async ({ page }, testInfo) => {
     await page.goto('/profile/creatives/new', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();

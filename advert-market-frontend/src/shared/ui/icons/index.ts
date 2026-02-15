@@ -1,34 +1,51 @@
-export { ArrowRightIcon } from './arrow-right-icon';
-export { BellIcon } from './bell-icon';
-export { ChartBarIcon } from './chart-bar-icon';
-export { CheckCircleIcon } from './check-circle-icon';
-export { ClipboardIcon } from './clipboard-icon';
-export { ClockIcon } from './clock-icon';
+// Lucide icons — tree-shakeable, consistent 24x24 stroke style
+export {
+  ArrowRight as ArrowRightIcon,
+  ArrowUpDown as SortIcon,
+  BadgeCheck as VerifiedIcon,
+  BarChart3 as ChartBarIcon,
+  Bell as BellIcon,
+  Bold as FormatBoldIcon,
+  CheckCircle as CheckCircleIcon,
+  Clipboard as ClipboardIcon,
+  Clock as ClockIcon,
+  Code as FormatCodeIcon,
+  Eye as EyeIcon,
+  EyeOff as FormatSpoilerIcon,
+  File as FileIcon,
+  FileText as DocumentIcon,
+  Frown as SadFaceIcon,
+  Globe as GlobeIcon,
+  Handshake as HandshakeIcon,
+  Image as ImageIcon,
+  Info as InfoIcon,
+  Italic as FormatItalicIcon,
+  Link as LinkIcon,
+  Lock as LockIcon,
+  Mailbox as MailboxIcon,
+  Megaphone as MegaphoneIcon,
+  Monitor as MonitorIcon,
+  Newspaper as NewspaperIcon,
+  Palette as PaletteIcon,
+  Pencil as EditIcon,
+  RefreshCcw as RefundIcon,
+  Satellite as SatelliteIcon,
+  ScrollText as ScrollIcon,
+  Search as SearchIcon,
+  SearchX as SearchOffIcon,
+  Share2 as ShareIcon,
+  SlidersHorizontal as FilterIcon,
+  Strikethrough as FormatStrikethroughIcon,
+  Underline as FormatUnderlineIcon,
+  User as PersonIcon,
+  Video as VideoIcon,
+  Volume2 as SpeakerIcon,
+  Wallet as WalletIcon,
+  X as CrossIcon,
+} from 'lucide-react';
+
+// Domain-specific custom SVG icons (no lucide equivalent)
 export { CoinIcon } from './coin-icon';
-export { CrossIcon } from './cross-icon';
-export { DocumentIcon } from './document-icon';
-export { EditIcon } from './edit-icon';
-export { EyeIcon } from './eye-icon';
-export { FileIcon } from './file-icon';
-export { FilterIcon } from './filter-icon';
-export { FormatBoldIcon } from './format-bold-icon';
-export { FormatCodeIcon } from './format-code-icon';
-export { FormatItalicIcon } from './format-italic-icon';
-export { FormatSpoilerIcon } from './format-spoiler-icon';
-export { FormatStrikethroughIcon } from './format-strikethrough-icon';
-export { FormatUnderlineIcon } from './format-underline-icon';
-export { GlobeIcon } from './globe-icon';
-export { HandshakeIcon } from './handshake-icon';
-export { ImageIcon } from './image-icon';
-export { InfoIcon } from './info-icon';
-export { LinkIcon } from './link-icon';
-export { LockIcon } from './lock-icon';
-export { MailboxIcon } from './mailbox-icon';
-export { MegaphoneIcon } from './megaphone-icon';
-export { MonitorIcon } from './monitor-icon';
-export { NewspaperIcon } from './newspaper-icon';
-export { PaletteIcon } from './palette-icon';
-export { PersonIcon } from './person-icon';
 export {
   DefaultPostIcon,
   ForwardIcon,
@@ -43,17 +60,5 @@ export {
   ReviewIcon,
   StoryIcon,
 } from './post-type-icons';
-export { RefundIcon } from './refund-icon';
-export { SadFaceIcon } from './sad-face-icon';
-export { SatelliteIcon } from './satellite-icon';
-export { ScrollIcon } from './scroll-icon';
-export { SearchIcon } from './search-icon';
-export { SearchOffIcon } from './search-off-icon';
-export { ShareIcon } from './share-icon';
-export { SortIcon } from './sort-icon';
-export { SpeakerIcon } from './speaker-icon';
 export { TelegramIcon } from './telegram-icon';
 export { TonDiamondIcon } from './ton-diamond-icon';
-export { VerifiedIcon } from './verified-icon';
-export { VideoIcon } from './video-icon';
-export { WalletIcon } from './wallet-icon';

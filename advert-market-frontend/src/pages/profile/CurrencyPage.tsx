@@ -5,15 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { updateSettings } from '@/features/profile/api/profile-api';
 import { profileKeys } from '@/shared/api';
 import { useToast } from '@/shared/hooks';
+import { CURRENCIES } from '@/shared/lib/constants/currencies';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { BackButtonHandler } from '@/shared/ui';
 import { pressScale, slideFromRight, staggerChildren } from '@/shared/ui/animations';
-
-const CURRENCIES = [
-  { code: 'USD', symbol: '$', labelKey: 'profile.currency.USD' },
-  { code: 'EUR', symbol: '\u20AC', labelKey: 'profile.currency.EUR' },
-  { code: 'RUB', symbol: '\u20BD', labelKey: 'profile.currency.RUB' },
-] as const;
 
 export default function CurrencyPage() {
   const { t } = useTranslation();

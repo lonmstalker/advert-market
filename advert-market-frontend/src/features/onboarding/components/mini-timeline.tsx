@@ -78,9 +78,9 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
                   aria-hidden="true"
                   animate={{
                     boxShadow: [
-                      '0 0 0 0px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.3)',
-                      '0 0 0 4px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0)',
-                      '0 0 0 0px rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.3)',
+                      '0 0 0 0px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
+                      '0 0 0 4px color-mix(in srgb, var(--color-accent-primary) 0%, transparent)',
+                      '0 0 0 0px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
                     ],
                   }}
                   transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
@@ -128,7 +128,7 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
                   width: '100%',
                   padding: isActive ? '2px 8px 2px 8px' : '0 0 0 8px',
                   cursor: isClickable ? 'pointer' : 'default',
-                  background: isActive ? 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.08)' : 'none',
+                  background: isActive ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)' : 'none',
                   border: 'none',
                   borderRadius: isActive ? '8px' : '0',
                   textAlign: 'left',

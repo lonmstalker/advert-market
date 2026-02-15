@@ -44,6 +44,14 @@ public interface DealRepository {
                      int expectedVersion);
 
     /**
+     * Sets the cancellation reason on a deal.
+     *
+     * @param dealId deal identifier
+     * @param reason cancellation reason text
+     */
+    void setCancellationReason(@NonNull DealId dealId, @NonNull String reason);
+
+    /**
      * Lists deals for a user (as advertiser or owner) with cursor-based pagination.
      *
      * @param userId user ID (advertiser_id or owner_id)

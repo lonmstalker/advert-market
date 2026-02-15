@@ -30,7 +30,7 @@ export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: 
           borderRadius: '12px',
           border: `1px solid ${isSelected ? 'var(--color-accent-primary)' : 'var(--color-border-separator)'}`,
           backgroundColor: isSelected
-            ? 'rgba(var(--color-accent-primary-rgb, 0, 122, 255), 0.08)'
+            ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)'
             : 'var(--color-background-base)',
           cursor: 'pointer',
           textAlign: 'left',

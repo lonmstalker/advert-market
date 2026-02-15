@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { SearchIcon } from '../icons';
 
 type SearchInputProps = {
@@ -12,6 +13,8 @@ type SearchInputProps = {
 };
 
 export function SearchInput({ value, onChange, onFocus, onBlur, placeholder, focused, style }: SearchInputProps) {
+  const haptic = useHaptic();
+
   return (
     <div
       style={{
@@ -39,8 +42,12 @@ export function SearchInput({ value, onChange, onFocus, onBlur, placeholder, foc
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
+        aria-label={placeholder}
+        onFocus={() => {
+          haptic.impactOccurred('light');
+          onFocus?.();
+        }}
+        onBlur={() => onBlur?.()}
         placeholder={placeholder}
         style={{
           flex: 1,

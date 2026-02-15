@@ -12,6 +12,7 @@
 The app must feel like a part of Telegram, not a separate website.
 
 - Colors and backgrounds **only** via UI Kit CSS variables (`--color-*`). No hardcoded hex/rgb
+- For semi-transparent tints use `color-mix(in srgb, var(--color-*) N%, transparent)` — **never** `rgba(var(--*-rgb), alpha)`. Pre-defined tints are available in `global.css` (`--am-soft-*-bg`)
 - `ThemeProvider` auto-syncs theme with Telegram — custom dark mode is forbidden
 - `body` uses `var(--color-background-secondary)` (see `global.css`)
 - Back navigation — via `backButton.show()` from TMA SDK, no custom back arrows
@@ -82,6 +83,10 @@ Tab -> List -> Detail -> Action Sheet/Dialog
 - `<GroupItem chevron />` — element navigates to another page
 - `<GroupItem />` without `chevron` — informational (value in `after`)
 - `<GroupItem after={<Toggle />} />` — toggle switch, no `chevron`
+
+### MainButton
+
+For single-action form pages (e.g., `CreateDealPage`, `RegisterChannelPage`), prefer the native Telegram `mainButton` over `<FixedBottomBar>`. Multi-action layouts (Accept/Decline) remain in `<FixedBottomBar>`.
 
 ### Filters
 
@@ -428,6 +433,10 @@ All presets are defined in `src/shared/ui/animations.ts`. Use via `motion/react`
 - **No animations** during scroll — only on mount/unmount
 - Sheet: `slideFromBottom`, Dialog: `scaleIn`, Toast: `toast`
 
+### Rules
+
+- `staggerChildren` containers **MUST** include `initial="initial" animate="animate"` (built into the preset via `variants`, but explicit props are acceptable for clarity)
+
 ### Example: Animated List
 
 ```tsx
@@ -458,6 +467,7 @@ All presets are defined in `src/shared/ui/animations.ts`. Use via `motion/react`
 
 ### Rules
 
+- **Never** use bare `<Spinner>` as the sole page-level loading indicator — use skeleton components that mirror the content shape
 - **Never** show a blank screen — always a placeholder matching the content shape
 - Skeleton must mirror the layout of future content (height, width, position)
 - Skeleton -> content transition via `<AnimatePresence mode="wait">`

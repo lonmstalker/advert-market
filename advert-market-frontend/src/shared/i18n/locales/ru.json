@@ -419,7 +419,8 @@
       "moreSteps_many": "Ещё {{count}} шагов",
       "duration": "Длительность поста",
       "durationValue": "{{hours}}ч",
-      "postFrequency": "На 1-м месте ~{{hours}}ч"
+      "postFrequency": "На 1-м месте ~{{hours}}ч",
+      "creativePlaceholder": "Превью креатива будет доступно после интеграции с бэкендом"
     },
     "negotiate": {
       "title": "Встречное предложение",
@@ -657,6 +658,7 @@
       "addButton": "Добавить кнопку",
       "buttonText": "Текст кнопки",
       "buttonUrl": "URL ссылки",
+      "selectTextHint": "Выделите текст для форматирования",
       "disablePreview": "Отключить превью ссылок",
       "linkPrompt": "Введите URL ссылки:",
       "linkInvalid": "Введите корректный URL, начинающийся с http:// или https://",

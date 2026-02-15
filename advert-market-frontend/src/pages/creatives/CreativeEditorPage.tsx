@@ -15,7 +15,7 @@ import {
   useUpdateCreative,
 } from '@/features/creatives';
 import { useHaptic } from '@/shared/hooks/use-haptic';
-import { BackButtonHandler, DeviceFrame, FixedBottomBar, Tappable, TelegramChatSimulator } from '@/shared/ui';
+import { BackButtonHandler, FixedBottomBar, Tappable, TelegramChatSimulator } from '@/shared/ui';
 import { fadeIn, pressScale, scaleIn, slideFromLeft, slideFromRight } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
@@ -103,9 +103,15 @@ export default function CreativeEditorPage() {
   const bottomInset = 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))';
 
   const previewContent = (
-    <DeviceFrame>
+    <div
+      style={{
+        borderRadius: 14,
+        overflow: 'hidden',
+        border: '1px solid var(--color-border-separator)',
+      }}
+    >
       <TelegramChatSimulator text={text} entities={entities} media={media} buttons={filteredButtons} />
-    </DeviceFrame>
+    </div>
   );
 
   return (

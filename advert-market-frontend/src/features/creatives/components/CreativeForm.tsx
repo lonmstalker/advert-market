@@ -145,6 +145,11 @@ export function CreativeForm({
           activeTypes={activeTypes}
           disabled={!hasSelection()}
         />
+        {!hasSelection() && isFocused && (
+          <Text type="caption2" color="tertiary" style={{ marginTop: 2, marginBottom: 4 }}>
+            {t('creatives.form.selectTextHint')}
+          </Text>
+        )}
         <Textarea
           ref={textareaRef}
           value={text}

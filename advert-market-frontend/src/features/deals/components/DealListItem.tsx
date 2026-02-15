@@ -4,8 +4,6 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { formatRelativeTime } from '@/shared/lib/date-format';
-import { formatFiat } from '@/shared/lib/fiat-format';
-import { buildOverlapLabel } from '@/shared/lib/overlap-label';
 import { formatTon } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
 import { ChannelAvatar } from '@/shared/ui/components/channel-avatar';
@@ -18,10 +16,8 @@ type DealListItemProps = {
 };
 
 export const DealListItem = memo(function DealListItem({ deal, onClick }: DealListItemProps) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const haptic = useHaptic();
-
-  const overlapLabel = buildOverlapLabel(deal.postFrequencyHours, deal.durationHours, t)?.label ?? null;
 
   return (
     <motion.div
@@ -53,18 +49,10 @@ export const DealListItem = memo(function DealListItem({ deal, onClick }: DealLi
                 {deal.channelTitle}
               </span>
             </Text>
-            {overlapLabel && (
-              <Text type="caption1" color="tertiary">
-                {overlapLabel}
-              </Text>
-            )}
           </div>
-          <div style={{ flexShrink: 0, textAlign: 'right' }}>
+          <div style={{ flexShrink: 0 }}>
             <Text type="callout" weight="bold">
               <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
-            </Text>
-            <Text type="caption1" color="tertiary">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
             </Text>
           </div>
         </div>

@@ -1,13 +1,25 @@
 # Deal — Agent Instructions
 
-Deal state machine, deadline management, and lifecycle orchestration — NOT YET IMPLEMENTED.
+Deal state machine, CAS-based transitions, deadline management, and lifecycle orchestration.
 
-## Status
+## Structure
 
-Module contains only `.gitkeep`. Implementation pending.
+| Area | Key Classes |
+|------|------------|
+| Services | `DealService`, `DealTransitionService` (non-@Component, wired via DealConfig) |
+| Repositories | `JooqDealRepository`, `JooqDealEventRepository` |
+| Controller | `DealController` (package-private) |
+| Adapters | `DealAuthorizationAdapter` (ABAC checks via jOOQ) |
+| Config | `DealConfig` (wires DealTransitionService) |
 
-## References
+## Rules
 
-- [Deal State Machine Spec](../.memory-bank/06-deal-state-machine.md)
-- [Deal Lifecycle Feature](../.memory-bank/03-feature-specs/02-deal-lifecycle.md)
-- [Deal API](../advert-market-deal-api/AGENTS.md)
+- Infrastructure behind port interfaces from `advert-market-deal-api`
+- Repositories use generated jOOQ classes (`DEALS`, `DEAL_EVENTS`)
+- `DealTransitionService` is NOT a `@Component` — wired via `DealConfig`
+- `@RequiredArgsConstructor` for all services and adapters
+- `@Fenum` for error codes and event types
+- CAS via `version` column — optimistic locking on transitions
+- Cursor pagination uses `CursorCodec` with composite `{ts, id}` cursor
+- `@PathVariable("name")` / `@RequestParam(value = "name")` explicit — no reliance on `-parameters` flag
+- Outbox events published via `OutboxRepository` in same transaction as state change

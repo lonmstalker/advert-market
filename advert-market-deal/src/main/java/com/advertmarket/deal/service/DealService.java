@@ -13,6 +13,7 @@ import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealPort;
 import com.advertmarket.deal.api.port.DealRepository;
+import com.advertmarket.deal.repository.JooqDealRepository;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
@@ -129,7 +130,7 @@ public class DealService implements DealPort {
 
         var items = page.stream().map(this::toDto).toList();
         String nextCursor = hasMore
-                ? page.getLast().id().toString()
+                ? JooqDealRepository.buildCursor(page.getLast())
                 : null;
 
         return new CursorPage<>(items, nextCursor);
@@ -177,9 +178,20 @@ public class DealService implements DealPort {
         return new DealEventDto(
                 e.id() != null ? e.id() : 0L,
                 e.eventType(),
-                e.fromStatus() != null ? DealStatus.valueOf(e.fromStatus()) : null,
-                e.toStatus() != null ? DealStatus.valueOf(e.toStatus()) : null,
+                parseStatus(e.fromStatus()),
+                parseStatus(e.toStatus()),
                 e.actorId(),
                 e.createdAt());
+    }
+
+    private static DealStatus parseStatus(String value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return DealStatus.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

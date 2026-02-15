@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * <p>Records balanced transfers with idempotency, deadlock prevention,
  * and post-commit cache updates.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LedgerService implements LedgerPort {
@@ -105,8 +107,12 @@ public class LedgerService implements LedgerPort {
         // 7. Post-commit: update Redis cache for touched accounts
         registerPostCommitCacheEviction(touchedAccounts);
 
-        // 8. Metrics
-        metricsFacade.incrementCounter(MetricNames.LEDGER_ENTRY_CREATED);
+        // 8. Metrics (fail-open: must not roll back financial TX)
+        try {
+            metricsFacade.incrementCounter(MetricNames.LEDGER_ENTRY_CREATED);
+        } catch (Exception ex) {
+            log.warn("Failed to increment ledger metric", ex);
+        }
 
         return txRef;
     }
@@ -153,14 +159,21 @@ public class LedgerService implements LedgerPort {
     private void validateBalance(List<Leg> legs) {
         long totalDebit = 0;
         long totalCredit = 0;
-        for (Leg leg : legs) {
-            if (leg.isDebit()) {
-                totalDebit = Math.addExact(totalDebit,
-                        leg.amount().nanoTon());
-            } else {
-                totalCredit = Math.addExact(totalCredit,
-                        leg.amount().nanoTon());
+        try {
+            for (Leg leg : legs) {
+                if (leg.isDebit()) {
+                    totalDebit = Math.addExact(totalDebit,
+                            leg.amount().nanoTon());
+                } else {
+                    totalCredit = Math.addExact(totalCredit,
+                            leg.amount().nanoTon());
+                }
             }
+        } catch (ArithmeticException ex) {
+            throw new DomainException(
+                    ErrorCodes.LEDGER_INCONSISTENCY,
+                    "Overflow in balance validation: legs exceed long range",
+                    ex);
         }
         if (totalDebit != totalCredit) {
             throw new DomainException(

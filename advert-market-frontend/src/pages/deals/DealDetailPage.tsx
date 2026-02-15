@@ -19,7 +19,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { loadPendingIntent } from '@/shared/ton';
 import { BackButtonHandler, EmptyState, PageLoader } from '@/shared/ui';
 import { fadeIn } from '@/shared/ui/animations';
-import { SadFaceIcon } from '@/shared/ui/icons';
+import { DocumentIcon, SadFaceIcon } from '@/shared/ui/icons';
 import { DealHeroSection } from './components/DealHeroSection';
 
 const TERMINAL_STATUSES = new Set([
@@ -46,8 +46,13 @@ export default function DealDetailPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { showError } = useToast();
 
-  const { deal, timeline, isLoading, isError } = useDealDetail(dealId as string);
-  const { transition, negotiate, isPending } = useDealTransition(dealId as string);
+  useEffect(() => {
+    if (!dealId) navigate('/deals', { replace: true });
+  }, [dealId, navigate]);
+
+  const safeDealId = dealId ?? '';
+  const { deal, timeline, isLoading, isError } = useDealDetail(safeDealId);
+  const { transition, negotiate, isPending } = useDealTransition(safeDealId);
   const countdown = useCountdown(deal?.deadlineAt ?? null, t);
 
   const actions = useMemo(() => {
@@ -130,6 +135,29 @@ export default function DealDetailPage() {
       >
         <DealHeroSection deal={deal} statusConfig={statusConfig} isTerminal={isTerminal} countdown={countdown} />
 
+        {/* Creative placeholder for creative-related statuses */}
+        {deal.status.includes('CREATIVE') && (
+          <div style={{ padding: '0 16px 12px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8,
+                padding: '20px 16px',
+                borderRadius: 12,
+                background: 'var(--color-background-secondary)',
+                textAlign: 'center',
+              }}
+            >
+              <DocumentIcon size={28} style={{ color: 'var(--color-foreground-tertiary)' }} />
+              <Text type="caption1" color="secondary">
+                {t('deals.detail.creativePlaceholder')}
+              </Text>
+            </div>
+          </div>
+        )}
+
         {/* Timeline */}
         <div
           style={{
@@ -143,7 +171,7 @@ export default function DealDetailPage() {
 
       {actions.length > 0 && <DealActions actions={actions} onAction={handleAction} isPending={isPending} />}
 
-      <PaymentProvider dealId={dealId as string} onClose={() => setSheetOpen(false)}>
+      <PaymentProvider dealId={safeDealId} onClose={() => setSheetOpen(false)}>
         <NegotiateProvider
           currentPriceNano={deal?.priceNano ?? 0}
           onSubmit={(priceNano, message) => {

@@ -151,7 +151,7 @@ export default function OnboardingTourPage() {
       <div
         style={{
           flexShrink: 0,
-          paddingBottom: '32px',
+          paddingBottom: 'calc(16px + var(--am-safe-area-bottom))',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',

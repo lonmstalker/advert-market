@@ -17,6 +17,7 @@ export function BottomTabs() {
 
   return (
     <nav
+      aria-label="Main navigation"
       style={{
         position: 'fixed',
         bottom: 0,
@@ -51,9 +52,7 @@ export function BottomTabs() {
           })}
         >
           <Icon width={24} height={24} />
-          <span style={{ color: 'inherit' }}>
-            <Text type="caption2">{t(labelKey)}</Text>
-          </span>
+          <Text type="caption2">{t(labelKey)}</Text>
         </NavLink>
       ))}
     </nav>

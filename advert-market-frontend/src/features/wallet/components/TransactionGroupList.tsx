@@ -18,7 +18,12 @@ export function TransactionGroupList({ transactions, onItemClick }: TransactionG
   const groups = useMemo(() => groupByDay(transactions, i18n.language, t), [transactions, i18n.language, t]);
 
   return (
-    <motion.div {...staggerChildren} style={{ display: 'flex', flexDirection: 'column' }}>
+    <motion.div
+      {...staggerChildren}
+      initial="initial"
+      animate="animate"
+      style={{ display: 'flex', flexDirection: 'column' }}
+    >
       {groups.map((group) => (
         <div key={group.date} style={{ marginBottom: 8 }}>
           <div style={{ padding: '8px 0 4px' }}>

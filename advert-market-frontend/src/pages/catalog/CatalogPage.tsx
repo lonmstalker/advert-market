@@ -169,7 +169,7 @@ export default function CatalogPage() {
             />
           </motion.div>
         ) : (
-          <motion.div key="list" {...staggerChildren}>
+          <motion.div key="list" {...staggerChildren} initial="initial" animate="animate">
             {summary && (
               <div style={{ padding: '8px 16px 4px' }}>
                 <Text type="footnote" color="secondary">

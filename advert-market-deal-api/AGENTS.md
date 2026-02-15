@@ -1,12 +1,14 @@
 # Deal API — Agent Instructions
 
-Pure API module: events and ports for the deal state machine and deadline management.
+Pure API module: DTOs, ports, and events for the deal state machine.
 
 ## Contents
 
-- **Events** (2): `DealStateChangedEvent`, `DeadlineSetEvent`
-- **Enums** (1): `DeadlineAction`
-- **Ports** (1): `DealAuthorizationPort`
+| Area | Classes |
+|------|---------|
+| DTOs | `CreateDealCommand`, `DealDto`, `DealDetailDto`, `DealEventDto`, `DealRecord`, `DealEventRecord`, `DealListCriteria`, `DealTransitionCommand`, `DealTransitionResult` (sealed) |
+| Events | `DealStateChangedEvent`, `DeadlineSetEvent`, `DeadlineAction` |
+| Ports | `DealPort`, `DealRepository`, `DealEventRepository`, `DealAuthorizationPort` |
 
 ## Rules
 
@@ -14,3 +16,4 @@ Pure API module: events and ports for the deal state machine and deadline manage
 - Port interfaces use `@NonNull`/`@Nullable` on all parameters and return types
 - No Spring/infrastructure dependencies (compileOnly only)
 - `@Fenum` for string constants
+- `DealTransitionResult` is a sealed interface with `Success` and `AlreadyInTargetState` permits
