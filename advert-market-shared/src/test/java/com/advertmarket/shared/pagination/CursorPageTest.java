@@ -3,6 +3,7 @@ package com.advertmarket.shared.pagination;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -58,5 +59,34 @@ class CursorPageTest {
     void emptyCursor_isTreatedAsHasMore() {
         var page = new CursorPage<>(List.of("a"), "");
         assertThat(page.hasMore()).isTrue();
+    }
+
+    @Test
+    @DisplayName("JSON includes nextCursor even when null (non_null override)")
+    void json_includesNextCursorWhenNull() throws Exception {
+        var mapper = new ObjectMapper();
+        mapper.setDefaultPropertyInclusion(
+                com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
+
+        var page = CursorPage.empty();
+        String json = mapper.writeValueAsString(page);
+
+        assertThat(json).contains("\"nextCursor\":null");
+        assertThat(json).contains("\"hasNext\":false");
+        assertThat(json).contains("\"items\":[]");
+    }
+
+    @Test
+    @DisplayName("JSON includes nextCursor when present")
+    void json_includesNextCursorWhenPresent() throws Exception {
+        var mapper = new ObjectMapper();
+        mapper.setDefaultPropertyInclusion(
+                com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
+
+        var page = new CursorPage<>(List.of("a"), "abc123");
+        String json = mapper.writeValueAsString(page);
+
+        assertThat(json).contains("\"nextCursor\":\"abc123\"");
+        assertThat(json).contains("\"hasNext\":true");
     }
 }

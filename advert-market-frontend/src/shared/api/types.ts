@@ -5,7 +5,7 @@ import { z } from 'zod/v4';
 export const paginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) =>
   z.object({
     items: z.array(itemSchema),
-    nextCursor: z.nullable(z.string()),
+    nextCursor: z.string().nullable().optional().default(null),
     hasNext: z.boolean(),
   });
 

@@ -1,5 +1,6 @@
 package com.advertmarket.shared.pagination;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @param <T> the item type
  */
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public record CursorPage<T>(
         @NonNull List<T> items,
         @Nullable String nextCursor) {
