@@ -1,10 +1,7 @@
 package com.advertmarket.integration.marketplace;
 
-import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 import static com.advertmarket.db.generated.tables.ChannelPricingRules.CHANNEL_PRICING_RULES;
-import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_RULE_POST_TYPES;
-import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -84,11 +81,7 @@ class PricingRuleHttpIntegrationTest {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
-        dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
-        dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
-        dsl.deleteFrom(CHANNEL_MEMBERSHIPS).execute();
-        dsl.deleteFrom(CHANNELS).execute();
-        dsl.deleteFrom(USERS).execute();
+        DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, OWNER_ID);
         TestDataFactory.upsertUser(dsl, OTHER_USER_ID);
         TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);

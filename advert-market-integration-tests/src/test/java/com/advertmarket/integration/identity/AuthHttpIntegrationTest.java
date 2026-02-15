@@ -1,6 +1,5 @@
 package com.advertmarket.integration.identity;
 
-import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.identity.api.dto.OnboardingRequest;
@@ -99,7 +98,7 @@ class AuthHttpIntegrationTest {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
-        dsl.deleteFrom(USERS).execute();
+        DatabaseSupport.cleanAllTables(dsl);
     }
 
     @Test

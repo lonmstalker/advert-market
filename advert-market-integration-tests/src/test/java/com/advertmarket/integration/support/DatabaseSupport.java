@@ -123,10 +123,15 @@ public final class DatabaseSupport {
     }
 
     /**
-     * Deletes only USERS table.
+     * Cleans tables required for user repository tests.
+     *
+     * <p>Historically this removed only {@code users}, but the schema has grown
+     * foreign keys referencing users (channels, deals, etc.). Since integration
+     * tests share a singleton Postgres, a partial cleanup can violate FK
+     * constraints when previous tests inserted related rows.
      */
     public static void cleanUserTables(DSLContext dsl) {
-        dsl.deleteFrom(USERS).execute();
+        cleanAllTables(dsl);
     }
 
     private static void runMigration() {
