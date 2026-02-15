@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 
 /**
  * JOOQ projection row for the {@code deal_events} table used to build {@code DealEventRecord}.
@@ -17,7 +17,7 @@ public record DealEventRow(
         @Nullable String toStatus,
         @Nullable Long actorId,
         @NonNull String actorType,
-        @Nullable JSON payload,
+        @Nullable JSONB payload,
         @NonNull OffsetDateTime createdAt
 ) {
 }

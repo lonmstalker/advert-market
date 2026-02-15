@@ -22,7 +22,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -49,7 +49,7 @@ public class JooqDealRepository implements DealRepository {
                 .set(DEALS.COMMISSION_NANO, record.commissionNano())
                 .set(DEALS.CREATIVE_BRIEF,
                         record.creativeBrief() != null
-                                ? JSON.valueOf(record.creativeBrief())
+                                ? JSONB.valueOf(record.creativeBrief())
                                 : null)
                 .execute();
     }

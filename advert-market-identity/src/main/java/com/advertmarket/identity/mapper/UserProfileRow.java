@@ -3,7 +3,7 @@ package com.advertmarket.identity.mapper;
 import java.time.OffsetDateTime;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 
 /**
  * JOOQ projection row for the {@code users} table used to build {@code UserProfile}.
@@ -15,7 +15,7 @@ public record UserProfileRow(
         @Nullable String lastName,
         @Nullable String languageCode,
         @Nullable String displayCurrency,
-        @Nullable JSON notificationSettings,
+        @Nullable JSONB notificationSettings,
         @Nullable Boolean onboardingCompleted,
         @Nullable String[] interests,
         @Nullable OffsetDateTime createdAt

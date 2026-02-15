@@ -5,7 +5,7 @@ import com.advertmarket.marketplace.api.model.ChannelMembershipRole;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.shared.json.JsonFacade;
 import java.util.Set;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -33,7 +33,7 @@ public interface TeamMemberDtoMapper {
      * Parses rights JSON into a set of {@link ChannelRight} values.
      */
     default Set<ChannelRight> toRights(
-            JSON rightsJson,
+            JSONB rightsJson,
             @Context JsonFacade json) {
         return ChannelRightsJsonConverter.parseRights(
                 rightsJson, json);

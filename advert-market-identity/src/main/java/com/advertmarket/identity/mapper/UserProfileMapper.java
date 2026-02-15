@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -70,7 +70,7 @@ public interface UserProfileMapper {
      * Parses notification settings JSON or returns defaults when missing.
      */
     default NotificationSettings notificationSettings(
-            JSON notifJson,
+            JSONB notifJson,
             @Context JsonFacade jsonFacade) {
         if (notifJson != null && notifJson.data() != null) {
             return jsonFacade.fromJson(notifJson.data(),

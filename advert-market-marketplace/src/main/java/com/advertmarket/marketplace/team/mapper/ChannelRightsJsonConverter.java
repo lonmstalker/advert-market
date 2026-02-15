@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 
 /**
  * Converts channel rights between JSON representation and domain enums.
@@ -24,7 +24,7 @@ public final class ChannelRightsJsonConverter {
     @SuppressWarnings("unchecked")
     @NonNull
     public static Set<ChannelRight> parseRights(
-            @Nullable JSON json,
+            @Nullable JSONB json,
             @NonNull JsonFacade jsonFacade) {
         if (json == null || json.data() == null
                 || json.data().isBlank()
@@ -48,13 +48,13 @@ public final class ChannelRightsJsonConverter {
      * Converts rights set to JSON representation (lowercase keys with {@code true} values).
      */
     @NonNull
-    public static JSON rightsToJson(
+    public static JSONB rightsToJson(
             @NonNull Set<ChannelRight> rights,
             @NonNull JsonFacade jsonFacade) {
         Map<String, Boolean> map = new LinkedHashMap<>();
         for (ChannelRight right : rights) {
             map.put(right.name().toLowerCase(), true);
         }
-        return JSON.json(jsonFacade.toJson(map));
+        return JSONB.jsonb(jsonFacade.toJson(map));
     }
 }

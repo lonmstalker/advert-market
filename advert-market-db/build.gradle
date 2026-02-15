@@ -1,6 +1,21 @@
+import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.utility.DockerImageName
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.testcontainers:testcontainers:2.0.3'
+        classpath 'org.testcontainers:testcontainers-postgresql:2.0.3'
+        classpath 'org.postgresql:postgresql:42.7.9'
+        classpath 'org.liquibase:liquibase-core:5.0.1'
+    }
+}
+
 plugins {
     id 'java-library'
-    id 'nu.studer.jooq'
+    id 'org.jooq.jooq-codegen-gradle'
 }
 
 dependencies {
@@ -10,69 +25,121 @@ dependencies {
     implementation 'org.liquibase:liquibase-core'
     implementation 'org.postgresql:postgresql'
 
-    jooqGenerator platform(project(':platform-bom'))
-    jooqGenerator 'org.jooq:jooq-meta-extensions'
-}
-
-jooq {
-    version = '3.20.11'
-    configurations {
-        main {
-            generationTool {
-                generator {
-                    name = 'org.jooq.codegen.JavaGenerator'
-                    database {
-                        name = 'org.jooq.meta.extensions.ddl.DDLDatabase'
-                        properties {
-                            property {
-                                key = 'scripts'
-                                value = "src/main/resources/db/jooq-codegen/schema.sql"
-                            }
-                            property {
-                                key = 'defaultNameCase'
-                                value = 'lower'
-                            }
-                            property {
-                                key = 'parseDialect'
-                                value = 'POSTGRES'
-                            }
-                        }
-                        excludes = '.*_p_\\d{4}_\\d{2}'
-                    }
-                    generate {
-                        records = true
-                        pojos = false
-                        daos = false
-                        fluentSetters = true
-                        javaTimeTypes = true
-                    }
-                    target {
-                        packageName = 'com.advertmarket.db.generated'
-                        directory = "$projectDir/src/main/generated"
-                    }
-                }
-            }
-        }
-    }
+    jooqCodegen platform(project(':platform-bom'))
+    jooqCodegen 'org.postgresql:postgresql'
 }
 
 sourceSets.main.java.srcDirs += "$projectDir/src/main/generated"
 
-// Generated sources are gitignored, so a clean checkout must generate them before compilation.
+// --- Testcontainers lifecycle for jOOQ codegen ---
+def useExternalDb = project.hasProperty('jooqJdbcUrl')
+ext.codegenJdbcUrl = null
+ext.codegenUsername = null
+ext.codegenPassword = null
+ext.codegenContainer = null
+
+tasks.register('prepareCodegenDb') {
+    doFirst {
+        if (useExternalDb) {
+            project.ext.codegenJdbcUrl = project.property('jooqJdbcUrl')
+            project.ext.codegenUsername = project.property('jooqUsername')
+            project.ext.codegenPassword = project.property('jooqPassword')
+        } else {
+            def pg = new PostgreSQLContainer(DockerImageName
+                    .parse('paradedb/paradedb@sha256:'
+                            + '6279f4c4540507f8c96d53ac0c1e202d'
+                            + '21f9f47f3c14fed24a02a7cc2da0730c')
+                    .asCompatibleSubstituteFor('postgres'))
+            pg.start()
+            project.ext.codegenContainer = pg
+            project.ext.codegenJdbcUrl = pg.jdbcUrl
+            project.ext.codegenUsername = pg.username
+            project.ext.codegenPassword = pg.password
+        }
+        runLiquibaseMigration(
+                project.ext.codegenJdbcUrl,
+                project.ext.codegenUsername,
+                project.ext.codegenPassword)
+    }
+}
+
+tasks.register('cleanupCodegenDb') {
+    doLast {
+        project.ext.codegenContainer?.stop()
+    }
+}
+
+void runLiquibaseMigration(String url, String user, String password) {
+    def props = new Properties()
+    props.setProperty('user', user)
+    props.setProperty('password', password)
+    def conn = new org.postgresql.Driver().connect(url, props)
+    try {
+        def database = liquibase.database.DatabaseFactory.instance
+                .findCorrectDatabaseImplementation(
+                        new liquibase.database.jvm.JdbcConnection(conn))
+        def accessor = new liquibase.resource.DirectoryResourceAccessor(
+                file('src/main/resources'))
+        new liquibase.Liquibase(
+                'db/changelog/db.changelog-master.yaml',
+                accessor,
+                database).update('')
+    } finally {
+        conn.close()
+    }
+}
+
+// --- jOOQ code generation ---
+jooq {
+    configuration {
+        generator {
+            name = 'org.jooq.codegen.JavaGenerator'
+            database {
+                name = 'org.jooq.meta.postgres.PostgresDatabase'
+                inputSchema = 'public'
+                outputSchemaToDefault = true
+                excludes = '.*_p_\\d{4}_\\d{2}|databasechangelog|databasechangeloglock|spatial_ref_sys|geometry_columns|geography_columns|postgis_srs.*|st_.*'
+            }
+            generate {
+                records = true
+                pojos = false
+                daos = false
+                fluentSetters = true
+                javaTimeTypes = true
+            }
+            target {
+                packageName = 'com.advertmarket.db.generated'
+                directory = "$projectDir/src/main/generated"
+            }
+        }
+    }
+    delayedConfiguration {
+        jdbc {
+            driver = 'org.postgresql.Driver'
+            url = project.ext.codegenJdbcUrl
+            user = project.ext.codegenUsername
+            password = project.ext.codegenPassword
+        }
+    }
+}
+
+tasks.named('jooqCodegen') {
+    dependsOn 'prepareCodegenDb'
+    finalizedBy 'cleanupCodegenDb'
+    inputs.dir('src/main/resources/db/changelog')
+    outputs.dir("$projectDir/src/main/generated")
+}
+
 tasks.named('compileJava') {
-    dependsOn tasks.named('generateJooq')
+    dependsOn 'jooqCodegen'
 }
 
 // Exclude generated jOOQ code from SpotBugs
 tasks.matching { it.name == 'spotbugsMain' }.configureEach {
-    classes = files(classes.files.findAll {
-        !it.path.contains('generated')
-    })
+    classes = files(classes.files.findAll { !it.path.contains('generated') })
 }
 
 // Exclude generated jOOQ code from forbidden-apis
 tasks.matching { it.name == 'forbiddenApisMain' }.configureEach {
-    classesDirs = files(classesDirs.files.findAll {
-        !it.path.contains('generated')
-    })
+    classesDirs = files(classesDirs.files.findAll { !it.path.contains('generated') })
 }

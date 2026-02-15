@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.jooq.Record;
 import org.springframework.stereotype.Repository;
 
@@ -44,7 +44,7 @@ public class JooqOutboxRepository implements OutboxRepository {
                 .set(NOTIFICATION_OUTBOX.PARTITION_KEY,
                         entry.partitionKey())
                 .set(NOTIFICATION_OUTBOX.PAYLOAD,
-                        JSON.json(entry.payload()))
+                        JSONB.jsonb(entry.payload()))
                 .set(NOTIFICATION_OUTBOX.STATUS,
                         entry.status().name())
                 .set(NOTIFICATION_OUTBOX.RETRY_COUNT,

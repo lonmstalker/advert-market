@@ -16,7 +16,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.jooq.Record;
 import org.springframework.stereotype.Repository;
 
@@ -135,7 +135,7 @@ public class JooqUserRepository implements UserRepository {
             @NonNull NotificationSettings settings) {
         dsl.update(USERS)
                 .set(USERS.NOTIFICATION_SETTINGS,
-                        JSON.json(jsonFacade.toJson(settings)))
+                        JSONB.jsonb(jsonFacade.toJson(settings)))
                 .set(USERS.UPDATED_AT, OffsetDateTime.now())
                 .where(USERS.ID.eq(userId.value()))
                 .execute();

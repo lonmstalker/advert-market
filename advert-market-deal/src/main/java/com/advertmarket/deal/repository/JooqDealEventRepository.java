@@ -11,7 +11,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -33,7 +33,7 @@ public class JooqDealEventRepository implements DealEventRepository {
                 .set(DEAL_EVENTS.TO_STATUS, record.toStatus())
                 .set(DEAL_EVENTS.ACTOR_ID, record.actorId())
                 .set(DEAL_EVENTS.ACTOR_TYPE, record.actorType())
-                .set(DEAL_EVENTS.PAYLOAD, JSON.valueOf(record.payload()))
+                .set(DEAL_EVENTS.PAYLOAD, JSONB.valueOf(record.payload()))
                 .execute();
     }
 

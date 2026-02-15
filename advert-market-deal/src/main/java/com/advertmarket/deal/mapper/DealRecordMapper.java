@@ -4,7 +4,7 @@ import com.advertmarket.deal.api.dto.DealRecord;
 import com.advertmarket.shared.model.DealStatus;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -31,7 +31,7 @@ public interface DealRecordMapper {
     /**
      * Extracts raw JSON string from jOOQ {@link JSON} wrapper.
      */
-    default String jsonData(JSON value) {
+    default String jsonData(JSONB value) {
         return value != null ? value.data() : null;
     }
 

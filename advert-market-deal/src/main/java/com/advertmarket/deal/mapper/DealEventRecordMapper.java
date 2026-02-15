@@ -4,7 +4,7 @@ import com.advertmarket.deal.api.dto.DealEventRecord;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -24,7 +24,7 @@ public interface DealEventRecordMapper {
      * Extracts JSON payload string from jOOQ {@link JSON} wrapper.
      * Defaults to {@code "{}"} when DB value is {@code null}.
      */
-    default String payload(JSON value) {
+    default String payload(JSONB value) {
         return value != null ? value.data() : "{}";
     }
 

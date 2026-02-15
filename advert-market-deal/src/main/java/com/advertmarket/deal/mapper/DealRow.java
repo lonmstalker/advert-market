@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 
 /**
  * JOOQ projection row for the {@code deals} table used to build {@code DealRecord}.
@@ -21,8 +21,8 @@ public record DealRow(
         long commissionNano,
         @Nullable String depositAddress,
         @Nullable Integer subwalletId,
-        @Nullable JSON creativeBrief,
-        @Nullable JSON creativeDraft,
+        @Nullable JSONB creativeBrief,
+        @Nullable JSONB creativeDraft,
         @Nullable Long messageId,
         @Nullable String contentHash,
         @Nullable OffsetDateTime deadlineAt,
