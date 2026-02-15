@@ -176,17 +176,22 @@ t.me/AdvertMarketBot/app?startapp={type}_{id}
 ### Login Processing
 
 ```typescript
-// In the root router, before rendering
-const startParam = Telegram.WebApp.initDataUnsafe.start_param;
+// Deep link handling should be a launch-time concern. Avoid overriding in-app navigation
+// or refreshes on nested routes (e.g. /profile/channels/new), since Telegram launch params
+// may still be available outside the initial landing page.
+useEffect(() => {
+  if (location.pathname !== '/' && location.pathname !== '/catalog') return;
 
-if (startParam) {
-  const [type, id] = startParam.split('_');
-  switch (type) {
-    case 'channel': navigate(`/catalog/channels/${id}`); break;
-    case 'deal':    navigate(`/deals/${id}`); break;
-    case 'dispute': navigate(`/deals/${id}/dispute`); break;
+  const lp = retrieveLaunchParams(true);
+  const startParam = lp.tgWebAppStartParam ?? lp.tgWebAppData?.startParam;
+  if (typeof startParam !== 'string' || startParam.length === 0) return;
+
+  if (startParam.startsWith('channel_')) {
+    navigate(`/catalog/channels/${startParam.replace('channel_', '')}`, { replace: true });
+  } else if (startParam.startsWith('deal_')) {
+    navigate(`/deals/${startParam.replace('deal_', '')}`, { replace: true });
   }
-}
+}, [location.pathname, navigate]);
 ```
 
 ### ShareButton Component

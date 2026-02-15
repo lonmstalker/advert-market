@@ -27,10 +27,22 @@ describe('DeepLinkHandler', () => {
     expect(await screen.findByText('channel-page')).toBeInTheDocument();
   });
 
+  it('navigates to /catalog/:id for channel_ start_param when initial route is /catalog', async () => {
+    vi.mocked(retrieveLaunchParams).mockReturnValue({ tgWebAppStartParam: 'channel_123' } as never);
+    renderWithProviders(<TestRoutes />, { initialEntries: ['/catalog'] });
+    expect(await screen.findByText('channel-page')).toBeInTheDocument();
+  });
+
   it('navigates to /deals/:id for deal_ start_param', async () => {
     vi.mocked(retrieveLaunchParams).mockReturnValue({ tgWebAppStartParam: 'deal_456' } as never);
     renderWithProviders(<TestRoutes />, { initialEntries: ['/'] });
     expect(await screen.findByText('deal-page')).toBeInTheDocument();
+  });
+
+  it('does not navigate away from non-root routes even with start_param', async () => {
+    vi.mocked(retrieveLaunchParams).mockReturnValue({ tgWebAppStartParam: 'channel_123' } as never);
+    renderWithProviders(<TestRoutes />, { initialEntries: ['/profile/channels/new'] });
+    await expect(screen.findByText('channel-page', undefined, { timeout: 200 })).rejects.toThrow();
   });
 
   it('does not navigate without start_param', () => {
