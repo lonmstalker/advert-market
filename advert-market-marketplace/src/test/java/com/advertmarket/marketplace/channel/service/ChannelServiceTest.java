@@ -14,6 +14,7 @@ import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
@@ -124,9 +125,11 @@ class ChannelServiceTest {
     @Test
     @DisplayName("Should update channel when owner")
     void shouldUpdateWhenOwner() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(true);
         var request = new ChannelUpdateRequest(
-                "new desc", null, null, null, null);
+                "new desc", null, null, null, null, null);
         when(channelRepository.update(eq(CHANNEL_ID), any()))
                 .thenReturn(Optional.of(channelResponse()));
 
@@ -139,9 +142,11 @@ class ChannelServiceTest {
     @Test
     @DisplayName("Should throw CHANNEL_NOT_OWNED on update when not owner")
     void shouldThrowWhenNotOwnerUpdate() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(false);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(false);
         var request = new ChannelUpdateRequest(
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         assertThatThrownBy(
                 () -> channelService.update(CHANNEL_ID, request))
@@ -154,7 +159,9 @@ class ChannelServiceTest {
     @Test
     @DisplayName("Should deactivate channel when owner")
     void shouldDeactivateWhenOwner() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(true);
         when(channelRepository.deactivate(CHANNEL_ID)).thenReturn(true);
 
         channelService.deactivate(CHANNEL_ID);
@@ -166,7 +173,9 @@ class ChannelServiceTest {
     @Test
     @DisplayName("Should throw CHANNEL_NOT_OWNED on deactivate when not owner")
     void shouldThrowWhenNotOwnerDeactivate() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(false);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(false);
 
         assertThatThrownBy(() -> channelService.deactivate(CHANNEL_ID))
                 .isInstanceOf(DomainException.class)
@@ -202,6 +211,7 @@ class ChannelServiceTest {
                 "Description", 5000, List.of("tech"),
                 100_000_000L, true, 222L,
                 BigDecimal.valueOf(3.5), 1000, "ru",
+                null,
                 List.of(), OffsetDateTime.now(), OffsetDateTime.now());
     }
 

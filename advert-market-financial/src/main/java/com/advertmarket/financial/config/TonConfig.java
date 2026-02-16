@@ -17,6 +17,7 @@ import org.jooq.DSLContext;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.ton.ton4j.toncenter.TonCenter;
 
 /**
@@ -48,6 +49,7 @@ public class TonConfig {
 
     /** Creates the resilient blockchain port with circuit breaker and bulkhead. */
     @Bean
+    @Primary
     public TonBlockchainPort tonBlockchainPort(
             TonCenterBlockchainAdapter raw,
             CircuitBreaker tonCenterCircuitBreaker,
@@ -67,6 +69,12 @@ public class TonConfig {
     @Bean
     public ConfirmationPolicyService confirmationPolicyService(TonProperties props) {
         return new ConfirmationPolicyService(props.confirmation());
+    }
+
+    /** Exposes TON deposit polling settings for scheduler wiring. */
+    @Bean
+    public TonProperties.Deposit tonDepositProperties(TonProperties props) {
+        return props.deposit();
     }
 
     /** Creates the wallet service for address generation and TX submission. */

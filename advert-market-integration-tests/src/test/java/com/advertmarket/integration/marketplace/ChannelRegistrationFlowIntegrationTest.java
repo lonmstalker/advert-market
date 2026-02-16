@@ -230,7 +230,7 @@ class ChannelRegistrationFlowIntegrationTest {
                 .headers(h -> h.setBearerAuth(oldOwnerToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelUpdateRequest(
-                        "old owner update", null, null, null, null))
+                        "old owner update", null, null, null, null, null))
                 .exchange()
                 .expectStatus().isForbidden()
                 .expectBody()
@@ -242,7 +242,7 @@ class ChannelRegistrationFlowIntegrationTest {
                 .headers(h -> h.setBearerAuth(newOwnerToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelUpdateRequest(
-                        "new owner update", null, null, null, null))
+                        "new owner update", null, null, null, null, null))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()

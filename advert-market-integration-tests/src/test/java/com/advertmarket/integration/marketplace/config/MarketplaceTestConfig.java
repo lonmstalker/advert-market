@@ -56,7 +56,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class MarketplaceTestConfig {
 
     static final String JWT_SIGN_KEY =
-            "integration-test-key-min-32-bytes!!!";
+            "integration-test-key-min-64-bytes-for-jwt-signing-000000000000000";
     private static final int JWT_EXPIRY_SECONDS = 3600;
     private static final int INIT_DATA_EXPIRY_SECONDS = 300;
     private static final int RATE_LIMIT_MAX_ATTEMPTS = 10;

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.marketplace.api.dto.PricingRuleCreateRequest;
 import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.dto.PricingRuleUpdateRequest;
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.model.PostType;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
@@ -59,7 +60,9 @@ class PricingRuleServiceTest {
     @Test
     @DisplayName("Should create pricing rule when owner")
     void shouldCreateWhenOwner() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(true);
         var request = new PricingRuleCreateRequest(
                 "Repost", null, Set.of(PostType.REPOST), 50_000_000L, 0);
         when(pricingRuleRepository.insert(eq(CHANNEL_ID), any()))
@@ -74,7 +77,9 @@ class PricingRuleServiceTest {
     @Test
     @DisplayName("Should throw CHANNEL_NOT_OWNED on create when not owner")
     void shouldThrowOnCreateWhenNotOwner() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(false);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(false);
         var request = new PricingRuleCreateRequest(
                 "Repost", null, Set.of(PostType.REPOST), 50_000_000L, 0);
 
@@ -89,7 +94,9 @@ class PricingRuleServiceTest {
     @Test
     @DisplayName("Should update pricing rule when owner")
     void shouldUpdateWhenOwner() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(true);
         var request = new PricingRuleUpdateRequest(
                 "Updated", null, null, null, null, null);
         when(pricingRuleRepository.update(eq(RULE_ID), any()))
@@ -105,7 +112,9 @@ class PricingRuleServiceTest {
     @Test
     @DisplayName("Should throw PRICING_RULE_NOT_FOUND on update when missing")
     void shouldThrowOnUpdateWhenMissing() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(true);
         var request = new PricingRuleUpdateRequest(
                 "Updated", null, null, null, null, null);
         when(pricingRuleRepository.update(eq(RULE_ID), any()))
@@ -122,7 +131,9 @@ class PricingRuleServiceTest {
     @Test
     @DisplayName("Should soft-delete pricing rule when owner")
     void shouldDeleteWhenOwner() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(true);
         when(pricingRuleRepository.deactivate(RULE_ID)).thenReturn(true);
 
         pricingRuleService.delete(CHANNEL_ID, RULE_ID);
@@ -134,7 +145,9 @@ class PricingRuleServiceTest {
     @Test
     @DisplayName("Should throw PRICING_RULE_NOT_FOUND on delete when missing")
     void shouldThrowOnDeleteWhenMissing() {
-        when(authorizationPort.isOwner(CHANNEL_ID)).thenReturn(true);
+        when(authorizationPort.hasRight(
+                CHANNEL_ID, ChannelRight.MANAGE_LISTINGS))
+                .thenReturn(true);
         when(pricingRuleRepository.deactivate(RULE_ID)).thenReturn(false);
 
         assertThatThrownBy(

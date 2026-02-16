@@ -124,6 +124,8 @@ Rules:
 | `PUT` | `/api/v1/creatives/{id}` | Update creative template | `advert-market-7lx` | `advert-market-marketplace` |
 | `DELETE` | `/api/v1/creatives/{id}` | Delete creative template (soft) | `advert-market-7lx` | `advert-market-marketplace` |
 | `GET` | `/api/v1/creatives/{id}/versions` | Creative template version history | `advert-market-7lx` | `advert-market-marketplace` |
+| `POST` | `/api/v1/creatives/media` | Upload creative media asset (`multipart/form-data`) | `advert-market-7lx` | `advert-market-marketplace` |
+| `DELETE` | `/api/v1/creatives/media/{mediaId}` | Delete creative media asset (soft) | `advert-market-7lx` | `advert-market-marketplace` |
 | `GET` | `/api/v1/wallet/summary` | Wallet aggregates | `advert-market-av4.6` | `advert-market-financial` |
 | `GET` | `/api/v1/wallet/transactions` | Wallet history | `advert-market-av4.6` | `advert-market-financial` |
 | `GET` | `/api/v1/wallet/transactions/{txId}` | Wallet transaction detail | `advert-market-av4.6` | `advert-market-financial` |
@@ -151,6 +153,31 @@ Backward-compatible aliases accepted by backend:
 
 Backend returns raw list (`List<TeamMemberDto>`) with uppercase enums (`OWNER`, `MANAGER`, `MANAGE_TEAM`, ...).
 Frontend normalizes both legacy `{members:[...]}` and list payload into a single internal shape.
+
+Current rights enum includes:
+
+- `MODERATE`
+- `PUBLISH`
+- `MANAGE_LISTINGS`
+- `MANAGE_TEAM`
+- `VIEW_STATS`
+
+### Channel Manage ABAC Contract
+
+- `PUT /api/v1/channels/{id}` and `DELETE /api/v1/channels/{id}` are protected by ABAC right `MANAGE_LISTINGS`.
+- Access is allowed when:
+  - membership role is `OWNER`, or
+  - membership role is `MANAGER` and `rights.manage_listings == true`.
+- The same ABAC gate is used for pricing write operations:
+  - `POST /api/v1/channels/{channelId}/pricing`
+  - `PUT /api/v1/channels/{channelId}/pricing/{ruleId}`
+  - `DELETE /api/v1/channels/{channelId}/pricing/{ruleId}`
+
+### Channel Owner Note Contract
+
+- `ChannelUpdateRequest` supports `customRules` (owner note/free-form listing rules).
+- `ChannelDetailResponse` returns `rules.customRules`.
+- Persistence source of truth is `channels.custom_rules` (`TEXT NULL`).
 
 ### Profile Payload Shape
 
@@ -185,6 +212,18 @@ Profile payload includes:
   - `SPRING_LIQUIBASE_ENABLED=false`
 - Frontend types are regenerated from `api/openapi.yml`:
   - `cd advert-market-frontend && npm run api:types`
+
+### Telegram Webhook Behavior Contract
+
+For `POST /api/v1/bot/webhook`:
+
+- Invalid webhook secret returns `401`.
+- Malformed JSON payload returns `400`.
+- Valid payload returns `200` and is processed asynchronously.
+- Duplicate `update_id` must be deduplicated (no repeated side effects).
+- `my_chat_member` transitions drive channel state sync:
+  - admin -> left: channel deactivation
+  - member -> admin: channel reactivation
 
 ## Related Docs
 

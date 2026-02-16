@@ -22,6 +22,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/profile/wallet': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update user TON wallet address */
+    put: operations['updateWallet'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/profile/settings': {
     parameters: {
       query?: never;
@@ -73,6 +90,25 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/creatives/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get creative template */
+    get: operations['get'];
+    /** Update creative template */
+    put: operations['update'];
+    post?: never;
+    /** Delete creative template */
+    delete: operations['delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/channels/{id}': {
     parameters: {
       query?: never;
@@ -89,7 +125,7 @@ export interface paths {
      * Update channel
      * @description Update channel details (owner only)
      */
-    put: operations['update'];
+    put: operations['update_1'];
     post?: never;
     /**
      * Deactivate channel
@@ -137,13 +173,13 @@ export interface paths {
      * Update pricing rule
      * @description Updates a pricing rule (owner only)
      */
-    put: operations['update_1'];
+    put: operations['update_2'];
     post?: never;
     /**
      * Delete pricing rule
      * @description Soft-deletes a pricing rule (owner only)
      */
-    delete: operations['delete'];
+    delete: operations['delete_1'];
     options?: never;
     head?: never;
     patch?: never;
@@ -159,6 +195,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['handleCallback'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/wallet/withdraw': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['withdraw'];
     delete?: never;
     options?: never;
     head?: never;
@@ -191,6 +243,41 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['transition'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/creatives': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List creatives */
+    get: operations['list_1'];
+    put?: never;
+    /** Create creative template */
+    post: operations['create_1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/creatives/media': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Upload creative media */
+    post: operations['uploadMedia'];
     delete?: never;
     options?: never;
     head?: never;
@@ -232,7 +319,7 @@ export interface paths {
      * List team members
      * @description Lists all team members (requires manage_team right)
      */
-    get: operations['list_1'];
+    get: operations['list_2'];
     put?: never;
     /**
      * Invite team member
@@ -256,13 +343,13 @@ export interface paths {
      * List pricing rules
      * @description Lists active pricing rules for a channel
      */
-    get: operations['list_2'];
+    get: operations['list_3'];
     put?: never;
     /**
      * Create pricing rule
      * @description Creates a pricing rule for a channel (owner only)
      */
-    post: operations['create_1'];
+    post: operations['create_2'];
     delete?: never;
     options?: never;
     head?: never;
@@ -345,6 +432,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/wallet/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getTransactions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/wallet/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getSummary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/profile': {
     parameters: {
       query?: never;
@@ -388,6 +507,23 @@ export interface paths {
       cookie?: never;
     };
     get: operations['getDetail_1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/creatives/{id}/versions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List creative versions */
+    get: operations['versions'];
     put?: never;
     post?: never;
     delete?: never;
@@ -453,6 +589,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/creatives/media/{mediaId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete creative media */
+    delete: operations['deleteMedia'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -468,6 +621,14 @@ export interface components {
       salt?: string;
       /** Format: date-time */
       timestamp?: string;
+    };
+    /** @description TON wallet address update request */
+    UpdateTonAddressRequest: {
+      /**
+       * @description TON wallet address
+       * @example UQBx7fEd1KyD5MHoDNFnVSXxw...
+       */
+      tonAddress: string;
     };
     /** @description Deal notification settings */
     DealNotifications: {
@@ -494,23 +655,6 @@ export interface components {
       financial?: components['schemas']['FinancialNotifications'];
       /** @description Dispute notifications */
       disputes?: components['schemas']['DisputeNotifications'];
-    };
-    /** @description Update user settings request */
-    UpdateSettingsRequest: {
-      /**
-       * @description Fiat display currency code
-       * @example RUB
-       */
-      displayCurrency?: string;
-      /**
-       * @description Currency selection mode
-       * @example AUTO
-       * @enum {string}
-       */
-      currencyMode?: 'AUTO' | 'MANUAL';
-      /** @description Notification preferences */
-      notificationSettings?: components['schemas']['NotificationSettings'];
-      manualModeValid?: boolean;
     };
     /** @description Full user profile */
     UserProfile: {
@@ -553,10 +697,32 @@ export interface components {
       /** @description Selected interest tags */
       interests?: string[];
       /**
+       * @description TON wallet address
+       * @example UQBx...
+       */
+      tonAddress?: string;
+      /**
        * Format: date-time
        * @description Registration timestamp
        */
       createdAt?: string;
+    };
+    /** @description Update user settings request */
+    UpdateSettingsRequest: {
+      /**
+       * @description Fiat display currency code
+       * @example RUB
+       */
+      displayCurrency?: string;
+      /**
+       * @description Currency selection mode
+       * @example AUTO
+       * @enum {string}
+       */
+      currencyMode?: 'AUTO' | 'MANUAL';
+      /** @description Notification preferences */
+      notificationSettings?: components['schemas']['NotificationSettings'];
+      manualModeValid?: boolean;
     };
     /** @description User onboarding completion request */
     OnboardingRequest: {
@@ -577,6 +743,60 @@ export interface components {
        */
       languageCode: string;
     };
+    CreativeEntityDto: {
+      /** @enum {string} */
+      type: 'BOLD' | 'ITALIC' | 'UNDERLINE' | 'STRIKETHROUGH' | 'SPOILER' | 'CODE' | 'PRE' | 'TEXT_LINK';
+      /** Format: int32 */
+      offset?: number;
+      /** Format: int32 */
+      length?: number;
+      url?: string;
+      language?: string;
+    };
+    CreativeInlineButtonDto: {
+      id: string;
+      text: string;
+      url?: string;
+    };
+    CreativeMediaAssetDto: {
+      id: string;
+      /** @enum {string} */
+      type: 'PHOTO' | 'GIF' | 'VIDEO' | 'DOCUMENT';
+      url: string;
+      thumbnailUrl?: string;
+      fileName?: string;
+      fileSize?: string;
+      mimeType?: string;
+      /** Format: int64 */
+      sizeBytes?: number;
+      caption?: string;
+    };
+    CreativeUpsertRequest: {
+      title: string;
+      text: string;
+      entities: components['schemas']['CreativeEntityDto'][];
+      media: components['schemas']['CreativeMediaAssetDto'][];
+      keyboardRows: components['schemas']['CreativeInlineButtonDto'][][];
+      disableWebPagePreview?: boolean;
+    };
+    CreativeDraftDto: {
+      text: string;
+      entities: components['schemas']['CreativeEntityDto'][];
+      media: components['schemas']['CreativeMediaAssetDto'][];
+      keyboardRows: components['schemas']['CreativeInlineButtonDto'][][];
+      disableWebPagePreview?: boolean;
+    };
+    CreativeTemplateDto: {
+      id?: string;
+      title?: string;
+      draft?: components['schemas']['CreativeDraftDto'];
+      /** Format: int32 */
+      version?: number;
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: date-time */
+      updatedAt?: string;
+    };
     /** @description Channel update request */
     ChannelUpdateRequest: {
       description?: string;
@@ -585,6 +805,7 @@ export interface components {
       pricePerPostNano?: number;
       language?: string;
       isActive?: boolean;
+      customRules?: string;
     };
     /** @description Registered channel */
     ChannelResponse: {
@@ -606,7 +827,7 @@ export interface components {
     };
     /** @description Team rights update request */
     TeamUpdateRightsRequest: {
-      rights: ('MODERATE' | 'PUBLISH' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
+      rights: ('MODERATE' | 'PUBLISH' | 'MANAGE_LISTINGS' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
     };
     /** @description Channel team member */
     TeamMemberDto: {
@@ -616,7 +837,7 @@ export interface components {
       firstName?: string;
       /** @enum {string} */
       role?: 'OWNER' | 'MANAGER';
-      rights?: ('MODERATE' | 'PUBLISH' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
+      rights?: ('MODERATE' | 'PUBLISH' | 'MANAGE_LISTINGS' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
       /** Format: int64 */
       invitedBy?: number;
       /** Format: date-time */
@@ -685,6 +906,32 @@ export interface components {
       /** Format: uuid */
       correlationId?: string;
       status?: string;
+    };
+    /** @description Wallet withdrawal request */
+    WithdrawalRequest: {
+      /**
+       * Format: int64
+       * @description Amount in nanoTON
+       * @example 1000000000
+       */
+      amountNano?: number;
+    };
+    /** @description Withdrawal response */
+    WithdrawalResponse: {
+      /** @description Withdrawal ID */
+      withdrawalId?: string;
+      /**
+       * @description Status
+       * @example PENDING
+       */
+      status?: string;
+      /**
+       * Format: int64
+       * @description Amount in nanoTON
+       */
+      amountNano?: number;
+      /** @description Destination TON address */
+      toAddress?: string;
     };
     CreateDealRequest: {
       /** Format: int64 */
@@ -820,7 +1067,7 @@ export interface components {
     TeamInviteRequest: {
       /** Format: int64 */
       userId?: number;
-      rights: ('MODERATE' | 'PUBLISH' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
+      rights: ('MODERATE' | 'PUBLISH' | 'MANAGE_LISTINGS' | 'MANAGE_TEAM' | 'VIEW_STATS')[];
     };
     /** @description Pricing rule creation request */
     PricingRuleCreateRequest: {
@@ -916,6 +1163,58 @@ export interface components {
        * @example John Doe
        */
       displayName?: string;
+    };
+    AccountId: {
+      value?: string;
+    };
+    CursorPageLedgerEntry: {
+      items?: components['schemas']['LedgerEntry'][];
+      nextCursor?: string;
+      hasNext?: boolean;
+    };
+    LedgerEntry: {
+      /** Format: int64 */
+      id?: number;
+      /** Format: uuid */
+      dealId?: string;
+      accountId?: components['schemas']['AccountId'];
+      /** @enum {string} */
+      entryType?:
+        | 'ESCROW_DEPOSIT'
+        | 'PARTIAL_DEPOSIT'
+        | 'PARTIAL_DEPOSIT_PROMOTE'
+        | 'ESCROW_RELEASE'
+        | 'OWNER_PAYOUT'
+        | 'PLATFORM_COMMISSION'
+        | 'ESCROW_REFUND'
+        | 'PARTIAL_REFUND'
+        | 'OVERPAYMENT_REFUND'
+        | 'LATE_DEPOSIT_REFUND'
+        | 'COMMISSION_SWEEP'
+        | 'OWNER_WITHDRAWAL'
+        | 'NETWORK_FEE'
+        | 'NETWORK_FEE_REFUND'
+        | 'REVERSAL'
+        | 'FEE_ADJUSTMENT'
+        | 'DUST_WRITEOFF';
+      /** Format: int64 */
+      debitNano?: number;
+      /** Format: int64 */
+      creditNano?: number;
+      idempotencyKey?: string;
+      /** Format: uuid */
+      txRef?: string;
+      description?: string;
+      /** Format: date-time */
+      createdAt?: string;
+    };
+    WalletSummary: {
+      /** Format: int64 */
+      pendingBalanceNano?: number;
+      /** Format: int64 */
+      availableBalanceNano?: number;
+      /** Format: int64 */
+      totalEarnedNano?: number;
     };
     /** @description Post type with localized labels */
     PostTypeDto: {
@@ -1031,6 +1330,18 @@ export interface components {
       /** Format: date-time */
       createdAt?: string;
     };
+    CursorPageCreativeTemplateDto: {
+      items?: components['schemas']['CreativeTemplateDto'][];
+      nextCursor?: string;
+      hasNext?: boolean;
+    };
+    CreativeVersionDto: {
+      /** Format: int32 */
+      version?: number;
+      draft?: components['schemas']['CreativeDraftDto'];
+      /** Format: date-time */
+      createdAt?: string;
+    };
     /** @description Channel search result item */
     ChannelListItem: {
       /** Format: int64 */
@@ -1073,11 +1384,16 @@ export interface components {
       /** Format: int32 */
       avgViews?: number;
       language?: string;
+      rules?: components['schemas']['ChannelRules'];
       pricingRules?: components['schemas']['PricingRuleDto'][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
+    };
+    /** @description Channel listing rules */
+    ChannelRules: {
+      customRules?: string;
     };
     /** @description Channel category with localized names */
     CategoryDto: {
@@ -1143,6 +1459,48 @@ export interface operations {
         };
         content: {
           '*/*': components['schemas']['CanaryStatus'];
+        };
+      };
+    };
+  };
+  updateWallet: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateTonAddressRequest'];
+      };
+    };
+    responses: {
+      /** @description Wallet address updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Invalid TON address format */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Not authenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['UserProfile'];
         };
       };
     };
@@ -1273,6 +1631,99 @@ export interface operations {
       };
     };
   };
+  get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Creative found */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeTemplateDto'];
+        };
+      };
+      /** @description Creative not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeTemplateDto'];
+        };
+      };
+    };
+  };
+  update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreativeUpsertRequest'];
+      };
+    };
+    responses: {
+      /** @description Creative updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeTemplateDto'];
+        };
+      };
+      /** @description Creative not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeTemplateDto'];
+        };
+      };
+    };
+  };
+  delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Creative deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Creative not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   getDetail: {
     parameters: {
       query?: never;
@@ -1304,7 +1755,7 @@ export interface operations {
       };
     };
   };
-  update: {
+  update_1: {
     parameters: {
       query?: never;
       header?: never;
@@ -1462,7 +1913,7 @@ export interface operations {
       };
     };
   };
-  update_1: {
+  update_2: {
     parameters: {
       query?: never;
       header?: never;
@@ -1507,7 +1958,7 @@ export interface operations {
       };
     };
   };
-  delete: {
+  delete_1: {
     parameters: {
       query?: never;
       header?: never;
@@ -1562,6 +2013,32 @@ export interface operations {
         };
         content: {
           '*/*': components['schemas']['WorkerCallbackResponse'];
+        };
+      };
+    };
+  };
+  withdraw: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WithdrawalRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['WithdrawalResponse'];
         };
       };
     };
@@ -1657,6 +2134,101 @@ export interface operations {
       };
     };
   };
+  list_1: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Creative page */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CursorPageCreativeTemplateDto'];
+        };
+      };
+    };
+  };
+  create_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreativeUpsertRequest'];
+      };
+    };
+    responses: {
+      /** @description Creative created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeTemplateDto'];
+        };
+      };
+    };
+  };
+  uploadMedia: {
+    parameters: {
+      query: {
+        mediaType: 'PHOTO' | 'GIF' | 'VIDEO' | 'DOCUMENT';
+        caption?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Media uploaded */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeMediaAssetDto'];
+        };
+      };
+      /** @description Media too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeMediaAssetDto'];
+        };
+      };
+      /** @description Invalid media format */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeMediaAssetDto'];
+        };
+      };
+    };
+  };
   search: {
     parameters: {
       query?: {
@@ -1734,7 +2306,7 @@ export interface operations {
       };
     };
   };
-  list_1: {
+  list_2: {
     parameters: {
       query?: never;
       header?: never;
@@ -1818,7 +2390,7 @@ export interface operations {
       };
     };
   };
-  list_2: {
+  list_3: {
     parameters: {
       query?: never;
       header?: never;
@@ -1840,7 +2412,7 @@ export interface operations {
       };
     };
   };
-  create_1: {
+  create_2: {
     parameters: {
       query?: never;
       header?: never;
@@ -2017,6 +2589,49 @@ export interface operations {
       };
     };
   };
+  getTransactions: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CursorPageLedgerEntry'];
+        };
+      };
+    };
+  };
+  getSummary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['WalletSummary'];
+        };
+      };
+    };
+  };
   getProfile: {
     parameters: {
       query?: never;
@@ -2113,6 +2728,37 @@ export interface operations {
       };
     };
   };
+  versions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Version history */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeVersionDto'][];
+        };
+      };
+      /** @description Creative not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CreativeVersionDto'][];
+        };
+      };
+    };
+  };
   myChannels: {
     parameters: {
       query?: never;
@@ -2182,6 +2828,33 @@ export interface operations {
         content: {
           '*/*': components['schemas']['CategoryDto'][];
         };
+      };
+    };
+  };
+  deleteMedia: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mediaId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Media deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Media not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

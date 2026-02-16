@@ -9,6 +9,7 @@ package com.advertmarket.marketplace.api.model;
 public enum ChannelRight {
     MODERATE,
     PUBLISH,
+    MANAGE_LISTINGS,
     MANAGE_TEAM,
     VIEW_STATS
 }

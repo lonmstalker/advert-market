@@ -22,6 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param engagementRate   engagement rate percentage
  * @param avgViews         average post views
  * @param language         channel language code
+ * @param rules            channel listing rules (owner note)
  * @param pricingRules     list of pricing rules
  * @param createdAt        creation timestamp
  * @param updatedAt        last update timestamp
@@ -40,6 +41,7 @@ public record ChannelDetailResponse(
         @Nullable BigDecimal engagementRate,
         int avgViews,
         @Nullable String language,
+        @Nullable ChannelRules rules,
         @NonNull List<PricingRuleDto> pricingRules,
         @NonNull OffsetDateTime createdAt,
         @NonNull OffsetDateTime updatedAt
@@ -49,5 +51,16 @@ public record ChannelDetailResponse(
     public ChannelDetailResponse {
         categories = List.copyOf(categories);
         pricingRules = List.copyOf(pricingRules);
+    }
+
+    /**
+     * Channel listing rules exposed for frontend compatibility.
+     *
+     * @param customRules owner note / free-form rule text
+     */
+    @Schema(description = "Channel listing rules")
+    public record ChannelRules(
+            @Nullable String customRules
+    ) {
     }
 }

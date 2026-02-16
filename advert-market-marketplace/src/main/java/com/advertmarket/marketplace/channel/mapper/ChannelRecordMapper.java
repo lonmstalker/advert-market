@@ -21,8 +21,19 @@ public interface ChannelRecordMapper {
 
     /** Maps record to detail DTO. */
     @Mapping(target = "categories", source = "categories")
+    @Mapping(target = "rules", source = "record.customRules")
     @Mapping(target = "pricingRules", source = "pricingRules")
     ChannelDetailResponse toDetail(ChannelsRecord record,
                                    List<String> categories,
                                    List<PricingRuleDto> pricingRules);
+
+    /**
+     * Maps nullable custom rules text to a nested rules DTO.
+     */
+    default ChannelDetailResponse.ChannelRules map(String customRules) {
+        if (customRules == null) {
+            return null;
+        }
+        return new ChannelDetailResponse.ChannelRules(customRules);
+    }
 }

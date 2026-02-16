@@ -60,6 +60,8 @@ class PricingRuleHttpIntegrationTest {
 
     private static final long OWNER_ID = 1L;
     private static final long OTHER_USER_ID = 2L;
+    private static final long MANAGER_WITH_RIGHTS_ID = 3L;
+    private static final long MANAGER_WITHOUT_RIGHTS_ID = 4L;
     private static final long CHANNEL_ID = -100L;
 
     @DynamicPropertySource
@@ -97,6 +99,8 @@ class PricingRuleHttpIntegrationTest {
         DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, OWNER_ID);
         TestDataFactory.upsertUser(dsl, OTHER_USER_ID);
+        TestDataFactory.upsertUser(dsl, MANAGER_WITH_RIGHTS_ID);
+        TestDataFactory.upsertUser(dsl, MANAGER_WITHOUT_RIGHTS_ID);
         TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
     }
 
@@ -133,6 +137,50 @@ class PricingRuleHttpIntegrationTest {
         assertThat(body.priceNano()).isEqualTo(1_000_000L);
         assertThat(body.channelId()).isEqualTo(CHANNEL_ID);
         assertThat(body.isActive()).isTrue();
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/channels/{id}/pricing by manager with manage_listings returns 201")
+    void createRuleByManagerWithManageListingsReturns201() {
+        TestDataFactory.insertManagerMembership(
+                dsl,
+                CHANNEL_ID,
+                MANAGER_WITH_RIGHTS_ID,
+                "{\"manage_listings\":true}");
+
+        webClient.post()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(MANAGER_WITH_RIGHTS_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleCreateRequest(
+                        "Manager Rule", "Managed listing rule",
+                        Set.of(PostType.NATIVE), 3_500_000L, 2))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Manager Rule")
+                .jsonPath("$.postTypes[0]").isEqualTo("NATIVE");
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/channels/{id}/pricing by manager without manage_listings returns 403")
+    void createRuleByManagerWithoutManageListingsReturns403() {
+        TestDataFactory.insertManagerMembership(
+                dsl,
+                CHANNEL_ID,
+                MANAGER_WITHOUT_RIGHTS_ID,
+                "{\"moderate\":true}");
+
+        webClient.post()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(MANAGER_WITHOUT_RIGHTS_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleCreateRequest(
+                        "Denied Rule", null, Set.of(PostType.REPOST), 1_000_000L, 1))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error_code").isEqualTo("CHANNEL_NOT_OWNED");
     }
 
     @Test
@@ -189,6 +237,30 @@ class PricingRuleHttpIntegrationTest {
     }
 
     @Test
+    @DisplayName("PUT /api/v1/channels/{id}/pricing/{ruleId} by manager with manage_listings returns 200")
+    void updateRuleByManagerWithManageListingsReturns200() {
+        TestDataFactory.insertManagerMembership(
+                dsl,
+                CHANNEL_ID,
+                MANAGER_WITH_RIGHTS_ID,
+                "{\"manage_listings\":true}");
+        long ruleId = createTestRule();
+
+        webClient.put()
+                .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
+                        CHANNEL_ID, ruleId)
+                .headers(h -> h.setBearerAuth(jwt(MANAGER_WITH_RIGHTS_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleUpdateRequest(
+                        "Manager Updated Rule", null, null, 2_500_000L, null, null))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Manager Updated Rule")
+                .jsonPath("$.priceNano").isEqualTo(2_500_000);
+    }
+
+    @Test
     @DisplayName("PUT /api/v1/channels/{id}/pricing/{ruleId} non-existent returns 404")
     void updateNonExistentRuleReturns404() {
         webClient.put()
@@ -214,6 +286,24 @@ class PricingRuleHttpIntegrationTest {
                 .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
                         CHANNEL_ID, ruleId)
                 .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .exchange()
+                .expectStatus().isNoContent();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/channels/{id}/pricing/{ruleId} by manager with manage_listings returns 204")
+    void deleteRuleByManagerWithManageListingsReturns204() {
+        TestDataFactory.insertManagerMembership(
+                dsl,
+                CHANNEL_ID,
+                MANAGER_WITH_RIGHTS_ID,
+                "{\"manage_listings\":true}");
+        long ruleId = createTestRule();
+
+        webClient.delete()
+                .uri("/api/v1/channels/{channelId}/pricing/{ruleId}",
+                        CHANNEL_ID, ruleId)
+                .headers(h -> h.setBearerAuth(jwt(MANAGER_WITH_RIGHTS_ID)))
                 .exchange()
                 .expectStatus().isNoContent();
     }

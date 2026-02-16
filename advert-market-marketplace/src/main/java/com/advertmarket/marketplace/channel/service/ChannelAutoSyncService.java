@@ -70,7 +70,7 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
         syncMemberships(channelId, newOwnerId, administrators);
 
         boolean ownerChanged = oldOwnerId != null
-                && oldOwnerId.longValue() != newOwnerId;
+                && oldOwnerId != newOwnerId;
         if (ownerChanged) {
             log.info("Channel={} owner transferred: {} -> {}",
                     channelId, oldOwnerId, newOwnerId);

@@ -6,6 +6,7 @@ import com.advertmarket.marketplace.api.model.ChannelMembershipRole;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.shared.security.SecurityContextUtil;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.DSLContext;
@@ -36,7 +37,7 @@ public class ChannelAuthorizationAdapter implements ChannelAuthorizationPort {
     @Override
     public boolean hasRight(long channelId, @NonNull ChannelRight right) {
         long userId = SecurityContextUtil.currentUserId().value();
-        String jsonKey = right.name().toLowerCase();
+        String jsonKey = right.name().toLowerCase(Locale.ROOT);
         return dsl.fetchExists(
                 dsl.selectOne()
                         .from(CHANNEL_MEMBERSHIPS)

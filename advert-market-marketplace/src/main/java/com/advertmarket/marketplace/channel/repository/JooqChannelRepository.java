@@ -120,6 +120,9 @@ public class JooqChannelRepository implements ChannelRepository {
         if (req.isActive() != null) {
             step = step.set(CHANNELS.IS_ACTIVE, req.isActive());
         }
+        if (req.customRules() != null) {
+            step = step.set(CHANNELS.CUSTOM_RULES, req.customRules());
+        }
 
         var result = step.where(CHANNELS.ID.eq(channelId))
                 .returning()

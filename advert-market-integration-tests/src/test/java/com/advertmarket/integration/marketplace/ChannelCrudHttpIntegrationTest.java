@@ -79,6 +79,8 @@ class ChannelCrudHttpIntegrationTest {
 
     private static final long OWNER_ID = 1L;
     private static final long OTHER_USER_ID = 2L;
+    private static final long MANAGER_WITH_RIGHTS_ID = 3L;
+    private static final long MANAGER_WITHOUT_RIGHTS_ID = 4L;
     private static final long CHANNEL_ID = -100L;
 
     @DynamicPropertySource
@@ -124,6 +126,8 @@ class ChannelCrudHttpIntegrationTest {
         dsl.deleteFrom(USERS).execute();
         TestDataFactory.upsertUser(dsl, OWNER_ID);
         TestDataFactory.upsertUser(dsl, OTHER_USER_ID);
+        TestDataFactory.upsertUser(dsl, MANAGER_WITH_RIGHTS_ID);
+        TestDataFactory.upsertUser(dsl, MANAGER_WITHOUT_RIGHTS_ID);
     }
 
     @Test
@@ -201,6 +205,33 @@ class ChannelCrudHttpIntegrationTest {
     }
 
     @Test
+    @DisplayName("PUT /api/v1/channels/{id} persists owner note and GET detail returns rules.customRules")
+    void putWithCustomRulesPersistsAndReturnsInDetail() {
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
+
+        webClient.put()
+                .uri("/api/v1/channels/{id}", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {
+                          "description": "Rules updated",
+                          "customRules": "No gambling ads"
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isOk();
+
+        webClient.get()
+                .uri("/api/v1/channels/{id}", CHANNEL_ID)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.rules.customRules")
+                .isEqualTo("No gambling ads");
+    }
+
+    @Test
     @DisplayName("GET /api/v1/channels/{id} returns 404 for non-existent")
     void getDetailReturns404() {
         webClient.get()
@@ -222,12 +253,58 @@ class ChannelCrudHttpIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelUpdateRequest(
                         "New description", List.of("crypto"),
-                        5_000_000L, null, null))
+                        5_000_000L, null, null, null))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.description").isEqualTo("New description")
                 .jsonPath("$.categories[0]").isEqualTo("crypto");
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/channels/{id} by manager with manage_listings returns 200")
+    void updateByManagerWithManageListingsReturns200() {
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertManagerMembership(
+                dsl,
+                CHANNEL_ID,
+                MANAGER_WITH_RIGHTS_ID,
+                "{\"manage_listings\":true}");
+
+        webClient.put()
+                .uri("/api/v1/channels/{id}", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(MANAGER_WITH_RIGHTS_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ChannelUpdateRequest(
+                        "Updated by manager", null,
+                        7_000_000L, null, null, null))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.description").isEqualTo("Updated by manager")
+                .jsonPath("$.pricePerPostNano").isEqualTo(7_000_000);
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/channels/{id} by manager without manage_listings returns 403")
+    void updateByManagerWithoutManageListingsReturns403() {
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertManagerMembership(
+                dsl,
+                CHANNEL_ID,
+                MANAGER_WITHOUT_RIGHTS_ID,
+                "{\"moderate\":true}");
+
+        webClient.put()
+                .uri("/api/v1/channels/{id}", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(MANAGER_WITHOUT_RIGHTS_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ChannelUpdateRequest(
+                        "Denied", null, null, null, null, null))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error_code").isEqualTo("CHANNEL_NOT_OWNED");
     }
 
     @Test
@@ -240,7 +317,7 @@ class ChannelCrudHttpIntegrationTest {
                 .headers(h -> h.setBearerAuth(jwt(OTHER_USER_ID)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelUpdateRequest(
-                        "Hacked", null, null, null, null))
+                        "Hacked", null, null, null, null, null))
                 .exchange()
                 .expectStatus().isForbidden()
                 .expectBody()
@@ -254,7 +331,7 @@ class ChannelCrudHttpIntegrationTest {
                 .uri("/api/v1/channels/{id}", CHANNEL_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelUpdateRequest(
-                        "desc", null, null, null, null))
+                        "desc", null, null, null, null, null))
                 .exchange()
                 .expectStatus().isForbidden();
     }
@@ -267,6 +344,29 @@ class ChannelCrudHttpIntegrationTest {
         webClient.delete()
                 .uri("/api/v1/channels/{id}", CHANNEL_ID)
                 .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .exchange()
+                .expectStatus().isNoContent();
+
+        var record = dsl.selectFrom(CHANNELS)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .fetchOne();
+        assertThat(record).isNotNull();
+        assertThat(record.getIsActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/channels/{id} by manager with manage_listings returns 204")
+    void deactivateByManagerWithManageListingsReturns204() {
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
+        TestDataFactory.insertManagerMembership(
+                dsl,
+                CHANNEL_ID,
+                MANAGER_WITH_RIGHTS_ID,
+                "{\"manage_listings\":true}");
+
+        webClient.delete()
+                .uri("/api/v1/channels/{id}", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(MANAGER_WITH_RIGHTS_ID)))
                 .exchange()
                 .expectStatus().isNoContent();
 
@@ -326,7 +426,7 @@ class ChannelCrudHttpIntegrationTest {
                 .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelUpdateRequest(
-                        "desc", null, null, null, null))
+                        "desc", null, null, null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(503)
                 .expectBody()

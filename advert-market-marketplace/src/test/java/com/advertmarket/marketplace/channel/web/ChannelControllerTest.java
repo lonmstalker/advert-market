@@ -202,7 +202,7 @@ class ChannelControllerTest {
                         .content(objectMapper.writeValueAsString(
                                 new ChannelUpdateRequest(
                                         "new desc", null,
-                                        null, null, null))))
+                                        null, null, null, null))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(CHANNEL_ID));
     }
@@ -222,7 +222,7 @@ class ChannelControllerTest {
                         .content(objectMapper.writeValueAsString(
                                 new ChannelUpdateRequest(
                                         null, null, null,
-                                        null, null)))))
+                                        null, null, null)))))
                 .rootCause()
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
@@ -361,6 +361,7 @@ class ChannelControllerTest {
                 "Description", 5000, List.of("tech"),
                 100_000_000L, true, USER_ID,
                 BigDecimal.valueOf(3.5), 1000, "ru",
+                null,
                 List.of(),
                 OffsetDateTime.parse("2026-01-01T00:00:00Z"),
                 OffsetDateTime.parse("2026-01-01T00:00:00Z"));

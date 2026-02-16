@@ -1,0 +1,35 @@
+{
+  "update_id": 710001,
+  "my_chat_member": {
+    "chat": {
+      "id": -1002001,
+      "title": "Webhook IT Channel",
+      "type": "channel"
+    },
+    "from": {
+      "id": 5001,
+      "is_bot": false,
+      "first_name": "Owner",
+      "language_code": "en"
+    },
+    "date": 1700000000,
+    "old_chat_member": {
+      "user": {
+        "id": 1002,
+        "is_bot": true,
+        "first_name": "Bot"
+      },
+      "status": "administrator",
+      "can_post_messages": true
+    },
+    "new_chat_member": {
+      "user": {
+        "id": 1002,
+        "is_bot": true,
+        "first_name": "Bot"
+      },
+      "status": "left"
+    }
+  }
+}
+

@@ -17,7 +17,7 @@ class ChannelUpdateRequestTest {
         var cats = new ArrayList<>(List.of("tech"));
 
         var request = new ChannelUpdateRequest(
-                null, cats, null, null, null);
+                null, cats, null, null, null, null);
 
         cats.add("crypto");
 
@@ -28,7 +28,7 @@ class ChannelUpdateRequestTest {
     @DisplayName("Categories list is immutable when present")
     void categories_isImmutable() {
         var request = new ChannelUpdateRequest(
-                null, List.of("tech"), null, null, null);
+                null, List.of("tech"), null, null, null, null);
 
         assertThatThrownBy(
                 () -> request.categories().add("crypto"))
@@ -40,8 +40,17 @@ class ChannelUpdateRequestTest {
     @DisplayName("Null categories is allowed")
     void nullCategories_isAllowed() {
         var request = new ChannelUpdateRequest(
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         assertThat(request.categories()).isNull();
+    }
+
+    @Test
+    @DisplayName("Custom rules is passed through unchanged")
+    void customRules_isStored() {
+        var request = new ChannelUpdateRequest(
+                null, null, null, null, null, "No casino ads");
+
+        assertThat(request.customRules()).isEqualTo("No casino ads");
     }
 }

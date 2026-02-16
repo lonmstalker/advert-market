@@ -13,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param pricePerPostNano new base price in nanoTON
  * @param language         new language code
  * @param isActive         new active status
+ * @param customRules      owner note / custom listing rules
  */
 @Schema(description = "Channel update request")
 public record ChannelUpdateRequest(
@@ -20,7 +21,8 @@ public record ChannelUpdateRequest(
         @Nullable List<String> categories,
         @Nullable Long pricePerPostNano,
         @Nullable @Size(max = 10) String language,
-        @Nullable Boolean isActive
+        @Nullable Boolean isActive,
+        @Nullable String customRules
 ) {
 
     /** Creates a request with a defensive copy of categories. */

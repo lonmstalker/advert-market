@@ -9,6 +9,7 @@ import static com.advertmarket.db.generated.tables.Users.USERS;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.shared.model.UserId;
 import org.jooq.DSLContext;
+import org.jooq.JSONB;
 
 /**
  * Factory for common test data insertion.
@@ -60,6 +61,22 @@ public final class TestDataFactory {
                 .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, channelId)
                 .set(CHANNEL_MEMBERSHIPS.USER_ID, ownerId)
                 .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
+                .execute();
+    }
+
+    /**
+     * Inserts a manager membership with JSON rights payload.
+     */
+    public static void insertManagerMembership(
+            DSLContext dsl,
+            long channelId,
+            long managerUserId,
+            String rightsJson) {
+        dsl.insertInto(CHANNEL_MEMBERSHIPS)
+                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, channelId)
+                .set(CHANNEL_MEMBERSHIPS.USER_ID, managerUserId)
+                .set(CHANNEL_MEMBERSHIPS.ROLE, "MANAGER")
+                .set(CHANNEL_MEMBERSHIPS.RIGHTS, JSONB.jsonb(rightsJson))
                 .execute();
     }
 

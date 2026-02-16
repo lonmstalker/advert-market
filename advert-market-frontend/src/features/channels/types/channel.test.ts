@@ -20,6 +20,18 @@ describe('channelDetailSchema', () => {
     const detail = channelDetailSchema.parse(buildDetailPayload());
     expect(detail.topics).toEqual([]);
   });
+
+  it('parses backend rules.customRules for owner note compatibility', () => {
+    const detail = channelDetailSchema.parse(
+      buildDetailPayload({
+        rules: {
+          customRules: 'No casino ads',
+        },
+      }),
+    );
+
+    expect(detail.rules?.customRules).toBe('No casino ads');
+  });
 });
 
 describe('channelTeamSchema', () => {

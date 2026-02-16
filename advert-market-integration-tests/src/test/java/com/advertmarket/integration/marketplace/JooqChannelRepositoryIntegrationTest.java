@@ -167,7 +167,7 @@ class JooqChannelRepositoryIntegrationTest {
         repository.insert(testChannel());
 
         var request = new ChannelUpdateRequest(
-                "Updated desc", List.of("crypto"), 5_000_000L, "ru", null);
+                "Updated desc", List.of("crypto"), 5_000_000L, "ru", null, null);
         Optional<ChannelResponse> updated =
                 repository.update(CHANNEL_ID, request);
 
@@ -182,7 +182,7 @@ class JooqChannelRepositoryIntegrationTest {
     @DisplayName("Should return empty update for non-existent channel")
     void shouldReturnEmptyUpdateForNonExistent() {
         var request = new ChannelUpdateRequest(
-                "desc", null, null, null, null);
+                "desc", null, null, null, null, null);
 
         assertThat(repository.update(999L, request)).isEmpty();
     }

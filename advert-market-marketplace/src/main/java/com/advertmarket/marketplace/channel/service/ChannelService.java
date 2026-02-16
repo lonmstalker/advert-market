@@ -5,6 +5,7 @@ import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
@@ -82,19 +83,19 @@ public class ChannelService {
     }
 
     /**
-     * Updates channel details. Only the owner can update.
+     * Updates channel details.
      *
      * @param channelId channel ID
      * @param request   fields to update
      * @return updated channel
-     * @throws DomainException CHANNEL_NOT_OWNED if not owner
+     * @throws DomainException CHANNEL_NOT_OWNED if right is missing
      * @throws DomainException CHANNEL_NOT_FOUND if not found
      */
     @NonNull
     @Transactional
     public ChannelResponse update(long channelId,
                                   @NonNull ChannelUpdateRequest request) {
-        requireOwner(channelId);
+        requireManageListings(channelId);
         channelAutoSyncPort.syncFromTelegram(channelId);
         return channelRepository.update(channelId, request)
                 .orElseThrow(() -> new DomainException(
@@ -103,15 +104,15 @@ public class ChannelService {
     }
 
     /**
-     * Deactivates a channel. Only the owner can deactivate.
+     * Deactivates a channel.
      *
      * @param channelId channel ID
-     * @throws DomainException CHANNEL_NOT_OWNED if not owner
+     * @throws DomainException CHANNEL_NOT_OWNED if right is missing
      * @throws DomainException CHANNEL_NOT_FOUND if not found
      */
     @Transactional
     public void deactivate(long channelId) {
-        requireOwner(channelId);
+        requireManageListings(channelId);
         channelAutoSyncPort.syncFromTelegram(channelId);
         boolean deactivated = channelRepository.deactivate(channelId);
         if (!deactivated) {
@@ -121,11 +122,12 @@ public class ChannelService {
         }
     }
 
-    private void requireOwner(long channelId) {
-        if (!authorizationPort.isOwner(channelId)) {
+    private void requireManageListings(long channelId) {
+        if (!authorizationPort.hasRight(
+                channelId, ChannelRight.MANAGE_LISTINGS)) {
             throw new DomainException(
                     ErrorCodes.CHANNEL_NOT_OWNED,
-                    "Not the owner of channel: " + channelId);
+                    "Insufficient rights to manage channel: " + channelId);
         }
     }
 
