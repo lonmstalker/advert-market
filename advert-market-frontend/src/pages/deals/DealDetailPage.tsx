@@ -126,23 +126,13 @@ export default function DealDetailPage() {
     <>
       <BackButtonHandler />
       <AppPageShell withTabsPadding={false} testId="deal-detail-page-shell">
-        <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 40px)' }}>
+        <motion.div {...fadeIn} className="flex flex-col min-h-[calc(100vh-40px)]">
           <DealHeroSection deal={deal} statusConfig={statusConfig} isTerminal={isTerminal} countdown={countdown} />
 
           {deal.status.includes('CREATIVE') && (
-            <div style={{ paddingBottom: 12 }}>
-              <div
-                className="am-surface-row"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '20px 16px',
-                  textAlign: 'center',
-                }}
-              >
-                <DocumentIcon size={28} style={{ color: 'var(--color-foreground-tertiary)' }} />
+            <div className="pb-3">
+              <div className="am-surface-row flex flex-col items-center gap-2 py-5 px-4 text-center">
+                <DocumentIcon size={28} className="text-fg-tertiary" />
                 <Text type="caption1" color="secondary">
                   {t('deals.detail.creativePlaceholder')}
                 </Text>
@@ -151,10 +141,7 @@ export default function DealDetailPage() {
           )}
 
           <div
-            style={{
-              paddingBottom:
-                actions.length > 0 ? 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))' : 16,
-            }}
+            className={actions.length > 0 ? 'pb-[calc(var(--am-fixed-bottom-bar-base,92px)+var(--am-safe-area-bottom))]' : 'pb-4'}
           >
             {timelineSteps.length > 0 && <DealTimeline steps={timelineSteps} />}
           </div>

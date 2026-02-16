@@ -47,7 +47,7 @@ export function DealHeroSection({ deal, statusConfig, isTerminal, countdown }: D
               size="xl"
               badge={
                 telegramLink ? (
-                  <div className="am-icon-circle am-icon-circle--sm" style={{ width: 18, height: 18, background: 'var(--color-link)', border: '2px solid var(--color-background-base)' }}>
+                  <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-bg-base bg-accent">
                     <TelegramIcon className="w-2.5 h-2.5 text-white" />
                   </div>
                 ) : undefined

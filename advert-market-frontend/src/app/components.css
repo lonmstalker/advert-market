@@ -380,6 +380,11 @@
     @apply px-3.5 py-2.5 rounded-[10px] flex items-center gap-2;
   }
 
+  /* Timeline node glow (active step) */
+  .am-timeline-glow {
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--color-accent-primary) 20%, transparent));
+  }
+
   /* Topic tag (channel detail) */
   .am-topic-tag {
     @apply px-2 py-1 rounded-[8px] text-[14px] font-medium;
