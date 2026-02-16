@@ -112,12 +112,12 @@ describe('ChannelDetailPage', () => {
 
     it('shows tab buttons including Pricing', async () => {
       renderPage(1);
-      expect(await screen.findByRole('button', { name: 'Pricing' })).toBeInTheDocument();
+      expect(await screen.findByRole('tab', { name: 'Pricing' })).toBeInTheDocument();
     });
 
     it('shows pricing rule cards with post type names after switching to Pricing tab', async () => {
       const { user } = renderPage(1);
-      const pricingTab = await screen.findByRole('button', { name: 'Pricing' });
+      const pricingTab = await screen.findByRole('tab', { name: 'Pricing' });
       await user.click(pricingTab);
       await waitFor(() => {
         expect(screen.getAllByText('Native post').length).toBeGreaterThanOrEqual(1);
@@ -128,7 +128,7 @@ describe('ChannelDetailPage', () => {
 
     it('shows pricing rule prices in TON after switching to Pricing tab', async () => {
       const { user } = renderPage(1);
-      const pricingTab = await screen.findByRole('button', { name: 'Pricing' });
+      const pricingTab = await screen.findByRole('tab', { name: 'Pricing' });
       await user.click(pricingTab);
       await waitFor(() => {
         expect(screen.getByText('5 TON')).toBeInTheDocument();
@@ -140,35 +140,35 @@ describe('ChannelDetailPage', () => {
 
     it('shows rules content after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       expect(await screen.findByText('Media')).toBeInTheDocument();
     });
 
     it('shows rules: media allowed after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       expect(await screen.findByText('Media allowed')).toBeInTheDocument();
     });
 
     it('shows rules: links allowed after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       expect(await screen.findByText('Links allowed')).toBeInTheDocument();
     });
 
     it('shows rules: text formatting allowed after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       expect(await screen.findByText('Text formatting allowed')).toBeInTheDocument();
     });
 
     it('shows prohibited topics after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       await waitFor(() => {
         expect(screen.getByText('Казино')).toBeInTheDocument();
@@ -179,7 +179,7 @@ describe('ChannelDetailPage', () => {
 
     it('shows owner note section after switching to Rules tab', async () => {
       const { user } = renderPage(1);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       expect(await screen.findByText("Owner's note")).toBeInTheDocument();
       expect(screen.getByText(/Пост должен быть на тему криптовалют или блокчейна/)).toBeInTheDocument();
@@ -239,7 +239,7 @@ describe('ChannelDetailPage', () => {
 
     it('shows hero CPM in pricing tab', async () => {
       const { user } = renderPage(1);
-      const pricingTab = await screen.findByRole('button', { name: 'Pricing' });
+      const pricingTab = await screen.findByRole('tab', { name: 'Pricing' });
       await user.click(pricingTab);
       await waitFor(() => {
         expect(screen.getByText(/per 1K views/)).toBeInTheDocument();
@@ -299,7 +299,7 @@ describe('ChannelDetailPage', () => {
 
     it('shows custom rules text after switching to Rules tab', async () => {
       const { user } = renderPage(5);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       expect(await screen.findByText(/Только маркетинговая тематика/)).toBeInTheDocument();
     });
@@ -379,7 +379,7 @@ describe('ChannelDetailPage', () => {
         }),
       );
       const { user } = renderPage(51);
-      const rulesTab = await screen.findByRole('button', { name: 'Rules' });
+      const rulesTab = await screen.findByRole('tab', { name: 'Rules' });
       await user.click(rulesTab);
       expect(await screen.findByText('No rules specified')).toBeInTheDocument();
     });

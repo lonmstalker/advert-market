@@ -39,7 +39,7 @@ export default function OnboardingPage() {
         testId="onboarding-locale-step"
         centerContent
         footer={null}
-        contentClassName="justify-center gap-4"
+        contentClassName="justify-center gap-5"
       >
         <div className="flex justify-center">
           <OnboardingLogo testId="onboarding-locale-logo" />
@@ -85,9 +85,9 @@ export default function OnboardingPage() {
           </motion.div>
         </>
       }
-      contentClassName="text-center gap-3"
+      contentClassName="text-center gap-5"
     >
-      <div className="flex flex-col items-center justify-center gap-3 min-h-0 overflow-y-auto pb-2 overflow-x-hidden">
+      <div className="w-full flex flex-col items-center justify-center gap-5 min-h-0 overflow-y-auto pb-3 overflow-x-hidden">
         <OnboardingLogo />
 
         <motion.div
@@ -104,20 +104,14 @@ export default function OnboardingPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.25 }}
-          className="max-w-80"
+          className="am-onboarding-welcome-subtitle"
         >
           <Text type="body" color="secondary" align="center">
             {t('onboarding.welcome.subtitle')}
           </Text>
         </motion.div>
 
-        <motion.div
-          {...staggerChildren}
-          initial="initial"
-          animate="animate"
-          className="flex flex-col gap-3 mt-4 w-full p-2.5 rounded-[24px]"
-          style={{ background: 'var(--am-hero-gradient-accent)' }}
-        >
+        <motion.div {...staggerChildren} initial="initial" animate="animate" className="am-onboarding-feature-stack">
           <FeatureCard
             icon={<SearchIcon size={24} />}
             title={t('onboarding.welcome.featureCard1.title')}

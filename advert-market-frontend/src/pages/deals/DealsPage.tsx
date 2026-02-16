@@ -11,8 +11,9 @@ import { DealListItem } from '@/features/deals/components/DealListItem';
 import { DealListSkeleton } from '@/features/deals/components/DealListSkeleton';
 import { mapDealDtoToViewModel } from '@/features/deals/lib/deal-mapper';
 import type { DealChannelMetadata, DealRole } from '@/features/deals/types/deal';
-import { channelKeys, dealKeys, profileKeys } from '@/shared/api/query-keys';
 import { fetchProfile } from '@/shared/api/auth';
+import { channelKeys, dealKeys, profileKeys } from '@/shared/api/query-keys';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
 import { AppPageShell, AppSectionHeader, EmptyState, EndOfList, FilterButton, SegmentControl } from '@/shared/ui';
 import { staggerChildren } from '@/shared/ui/animations';
@@ -40,13 +41,20 @@ export default function DealsPage() {
   const [activeRole, setActiveRole] = useState<DealRole>('ADVERTISER');
   const [filterStatuses, setFilterStatuses] = useState<Set<string>>(new Set());
   const [sheetOpen, setSheetOpen] = useState(false);
+  const haptic = useHaptic();
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: profileKeys.me,
     queryFn: fetchProfile,
   });
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading: isDealsLoading } = useInfiniteQuery({
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isDealsLoading,
+  } = useInfiniteQuery({
     queryKey: [...dealKeys.lists(), 'all'],
     queryFn: ({ pageParam }) =>
       fetchDeals({
@@ -59,10 +67,7 @@ export default function DealsPage() {
 
   const dealDtos = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
 
-  const channelIds = useMemo(
-    () => [...new Set(dealDtos.map((deal) => deal.channelId))],
-    [dealDtos],
-  );
+  const channelIds = useMemo(() => [...new Set(dealDtos.map((deal) => deal.channelId))], [dealDtos]);
 
   const channelQueries = useQueries({
     queries: channelIds.map((channelId) => ({
@@ -114,10 +119,18 @@ export default function DealsPage() {
       <AppPageShell testId="deals-page-shell">
         <AppSectionHeader
           title={t('deals.title')}
-          action={<FilterButton activeCount={activeFilterCount} onClick={() => setSheetOpen(true)} />}
+          action={
+            <FilterButton
+              activeCount={activeFilterCount}
+              onClick={() => {
+                haptic.impactOccurred('light');
+                setSheetOpen(true);
+              }}
+            />
+          }
         />
 
-        <div className="am-surface-row p-1.5">
+        <div className="am-surface-row p-2.5">
           <SegmentControl tabs={translatedTabs} active={activeRole} onChange={setActiveRole} />
         </div>
 
@@ -128,19 +141,14 @@ export default function DealsPage() {
             </motion.div>
           ) : deals.length === 0 ? (
             <EmptyState
-              icon={<MailboxIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+              icon={<MailboxIcon className="w-7 h-7 text-fg-tertiary" />}
               title={t('deals.empty.title')}
               description={activeFilterCount > 0 ? t('deals.empty.filteredDescription') : t('deals.empty.description')}
               actionLabel={activeFilterCount > 0 ? t('common.reset') : t('deals.empty.cta')}
               onAction={activeFilterCount > 0 ? () => setFilterStatuses(new Set()) : () => navigate('/catalog')}
             />
           ) : (
-            <motion.div
-              {...staggerChildren}
-              initial="initial"
-              animate="animate"
-              className="am-deal-grid"
-            >
+            <motion.div {...staggerChildren} initial="initial" animate="animate" className="am-deal-grid">
               {deals.map((deal) => (
                 <DealListItem key={deal.id} deal={deal} onClick={() => navigate(`/deals/${deal.id}`)} />
               ))}

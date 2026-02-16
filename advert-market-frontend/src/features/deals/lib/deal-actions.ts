@@ -131,9 +131,7 @@ export function getDealActions(
 ): DealAction[] {
   const creativeFlowEnabled = options?.creativeFlowEnabled ?? false;
 
-  const entry = creativeFlowEnabled
-    ? (MATRIX[status] ?? CREATIVE_MATRIX[status])
-    : MATRIX[status];
+  const entry = creativeFlowEnabled ? (MATRIX[status] ?? CREATIVE_MATRIX[status]) : MATRIX[status];
 
   if (!entry) return [];
 

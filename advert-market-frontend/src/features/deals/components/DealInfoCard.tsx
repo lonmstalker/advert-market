@@ -35,43 +35,27 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
   }
 
   return (
-    <div
-      style={{
-        background: 'var(--color-background-base)',
-        border: '1px solid var(--color-border-separator)',
-        borderRadius: 12,
-        padding: '20px 16px',
-        margin: '0 16px',
-      }}
-    >
+    <div className="bg-bg-base border border-separator rounded-control px-4 py-6 mx-4">
       {/* Centered price */}
-      <div style={{ textAlign: 'center' }}>
+      <div className="text-center">
         <Text type="title1" weight="bold">
           <span className="am-tabnum">{formatTon(deal.priceNano)}</span>
         </Text>
       </div>
-      <div style={{ textAlign: 'center', marginTop: 2 }}>
+      <div className="text-center mt-0.5">
         <Text type="caption1" color="secondary">
           <span className="am-tabnum">{formatFiat(deal.priceNano)}</span>
         </Text>
       </div>
 
       {/* Chips row */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          gap: 8,
-          marginTop: 14,
-        }}
-      >
+      <div className="flex justify-center flex-wrap gap-2 mt-4">
         {chips.map((chip) =>
           chip.tooltip ? (
             <Popover
               key={chip.key}
               content={
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div className="flex flex-col gap-0.5">
                   <Text type="caption1" color="secondary">
                     {t('catalog.channel.overlapTooltipLine1', { freq })}
                   </Text>
@@ -81,13 +65,13 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
                 </div>
               }
             >
-              <span style={chipStyle}>
+              <span className="am-deal-info-chip">
                 {chip.label}
-                <InfoIcon style={{ width: 12, height: 12, color: 'var(--color-foreground-tertiary)' }} />
+                <InfoIcon className="size-3 text-fg-tertiary" />
               </span>
             </Popover>
           ) : (
-            <span key={chip.key} style={chipStyle}>
+            <span key={chip.key} className="am-deal-info-chip">
               {chip.label}
             </span>
           ),
@@ -96,15 +80,8 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
 
       {/* Deal message */}
       {deal.message && (
-        <div
-          style={{
-            background: 'var(--color-background-secondary)',
-            borderRadius: 10,
-            padding: '10px 14px',
-            marginTop: 12,
-          }}
-        >
-          <div style={{ whiteSpace: 'pre-wrap', fontStyle: 'italic' }}>
+        <div className="bg-bg-secondary rounded-[10px] px-3.5 py-3 mt-4">
+          <div className="whitespace-pre-wrap italic">
             <Text type="caption1" color="secondary">
               {deal.message}
             </Text>
@@ -114,17 +91,3 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
     </div>
   );
 }
-
-const chipStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 4,
-  padding: '4px 10px',
-  borderRadius: 8,
-  background: 'var(--color-background-secondary)',
-  border: '1px solid var(--color-border-separator)',
-  fontSize: 13,
-  fontWeight: 500,
-  color: 'var(--color-foreground-primary)',
-  fontVariantNumeric: 'tabular-nums',
-};

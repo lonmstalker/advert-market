@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { LocaleCurrencyEditor } from '../components/locale-currency-editor';
 import { useSettingsStore } from '@/shared/stores/settings-store';
+import { LocaleCurrencyEditor } from '../components/locale-currency-editor';
 
 const baseSettings = {
   languageCode: 'ru',

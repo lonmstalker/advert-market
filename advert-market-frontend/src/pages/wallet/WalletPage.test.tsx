@@ -101,12 +101,12 @@ describe('WalletPage', () => {
     expect(await screen.findByText('detail-page')).toBeInTheDocument();
   });
 
-  it('renders wallet quick actions', async () => {
+  it('renders wallet quick actions without top up/withdraw for temporary wallets', async () => {
     renderPage();
     await screen.findByText('Total earned');
     expect(screen.getByRole('button', { name: 'Transfer' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Top up' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Withdraw' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Exchange' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Top up' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Withdraw' })).not.toBeInTheDocument();
   });
 });

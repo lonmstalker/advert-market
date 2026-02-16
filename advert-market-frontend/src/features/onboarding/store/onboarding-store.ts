@@ -67,10 +67,8 @@ export function resolveOnboardingPrimaryRole(interests: Iterable<Interest>): Onb
   return 'advertiser';
 }
 
-export function resolveOnboardingRoute(primaryRole: OnboardingPrimaryRole): '/catalog' | '/profile/channels/new' {
-  if (primaryRole === 'owner') {
-    return '/profile/channels/new';
-  }
+export function resolveOnboardingRoute(primaryRole: OnboardingPrimaryRole): '/catalog' {
+  void primaryRole;
   return '/catalog';
 }
 

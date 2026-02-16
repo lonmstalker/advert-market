@@ -10,7 +10,7 @@ export default function LocaleCurrencyPage() {
     <AppPageShell withTabsPadding={false} testId="profile-locale-currency-page">
       <BackButtonHandler />
 
-      <motion.div {...slideFromRight} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <motion.div {...slideFromRight} className="flex flex-col gap-5">
         <AppSectionHeader title={t('profile.localeCurrency.title')} subtitle={t('profile.localeCurrency.subtitle')} />
         <AppSurfaceCard>
           <LocaleCurrencyEditor mode="profile" />

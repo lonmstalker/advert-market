@@ -31,7 +31,7 @@ export function BalanceCard({ summary, isOwner, isConnectionRestored }: BalanceC
       />
 
       {/* Header row: label + TON Connect */}
-      <div className="relative flex items-center justify-between pt-4 px-4">
+      <div className="relative flex items-center justify-between pt-5 px-5">
         <Text type="subheadline2" weight="medium" color="secondary">
           {heroLabel}
         </Text>
@@ -45,16 +45,14 @@ export function BalanceCard({ summary, isOwner, isConnectionRestored }: BalanceC
       </div>
 
       {/* Balance centered */}
-      <div className="relative text-center py-5 px-4 pb-[22px]">
+      <div className="relative text-center pt-6 pb-7 px-5">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
         >
-          <Text type="largeTitle" weight="bold">
-            <span className="am-wallet-headerAmount am-tabnum">
-              {formatTon(heroAmount)}
-            </span>
+          <Text type="hero" weight="bold">
+            <span className="am-tabnum">{formatTon(heroAmount)}</span>
           </Text>
         </motion.div>
 
@@ -62,14 +60,14 @@ export function BalanceCard({ summary, isOwner, isConnectionRestored }: BalanceC
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25, duration: 0.3 }}
-          className="mt-1"
+          className="mt-1.5"
         >
           <Text type="subheadline2" color="tertiary">
             <span className="am-tabnum">{formatFiat(heroAmount)}</span>
           </Text>
         </motion.div>
 
-        <div className="mt-2.5">
+        <div className="mt-3.5">
           <div className="am-wallet-positiveChip">
             <Text type="caption1" weight="medium">
               {t('wallet.stats.inEscrow')}: {formatTon(contextAmount)}

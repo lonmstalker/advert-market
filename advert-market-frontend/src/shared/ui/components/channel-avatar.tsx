@@ -29,7 +29,7 @@ function AvatarContent({ title, size }: { title: string; size: ChannelAvatarSize
   return (
     <div
       className="am-avatar"
-      style={{ width: container, height: container, background: `hsl(${hue}, 55%, 55%)` }}
+      style={{ width: container, height: container, background: `hsl(${hue} 55% var(--am-avatar-lightness))` }}
     >
       <span className="am-avatar__letter" style={{ fontSize: font }}>
         {letter}

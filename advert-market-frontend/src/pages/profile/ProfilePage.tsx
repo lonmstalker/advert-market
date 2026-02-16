@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router';
 import { fetchMyChannels } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useAuth } from '@/shared/hooks';
+import { useHaptic } from '@/shared/hooks/use-haptic';
+import { useTelegram } from '@/shared/hooks/use-telegram';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { AppPageShell, EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
@@ -59,6 +61,8 @@ export default function ProfilePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { user: tgUser } = useTelegram();
+  const haptic = useHaptic();
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
   const currencyMode = useSettingsStore((s) => s.currencyMode);
 
@@ -84,20 +88,16 @@ export default function ProfilePage() {
 
   return (
     <AppPageShell testId="profile-page-shell">
-      <motion.div {...fadeIn} className="flex flex-col gap-2">
+      <motion.div {...fadeIn} className="flex flex-col gap-5">
         <ProfileHero
           displayName={displayName}
           username={username || undefined}
           roleBadge={roleBadge}
           memberSince={memberSince}
+          avatarUrl={tgUser?.photoUrl}
         />
 
-        <motion.div
-          {...staggerChildren}
-          initial="initial"
-          animate="animate"
-          className="flex flex-col gap-2"
-        >
+        <motion.div {...staggerChildren} initial="initial" animate="animate" className="flex flex-col gap-5">
           <motion.div {...fadeIn}>
             <Group header={t('profile.channels')}>
               {myChannels && myChannels.length > 0 ? (
@@ -113,20 +113,22 @@ export default function ProfilePage() {
                           </Text>
                         }
                         chevron
-                        onClick={() => navigate(`/catalog/channels/${ch.id}`)}
+                        onClick={() => {
+                          haptic.impactOccurred('light');
+                          navigate(`/catalog/channels/${ch.id}`);
+                        }}
                       />
                     </motion.div>
                   ))}
                   <motion.div {...pressScale}>
                     <GroupItem
                       text={t('profile.channels.empty.cta')}
-                      before={
-                        <div className="am-icon-bubble text-lg">
-                          +
-                        </div>
-                      }
+                      before={<div className="am-icon-bubble text-lg">+</div>}
                       chevron
-                      onClick={() => navigate('/profile/channels/new')}
+                      onClick={() => {
+                        haptic.impactOccurred('light');
+                        navigate('/profile/channels/new');
+                      }}
                     />
                   </motion.div>
                 </>
@@ -150,7 +152,10 @@ export default function ProfilePage() {
                   text={t('creatives.title')}
                   description={t('profile.creatives.description')}
                   chevron
-                  onClick={() => navigate('/profile/creatives')}
+                  onClick={() => {
+                    haptic.impactOccurred('light');
+                    navigate('/profile/creatives');
+                  }}
                 />
               </motion.div>
             </Group>
@@ -174,7 +179,10 @@ export default function ProfilePage() {
                       ) : undefined
                     }
                     chevron
-                    onClick={() => navigate(route)}
+                    onClick={() => {
+                      haptic.impactOccurred('light');
+                      navigate(route);
+                    }}
                   />
                 </motion.div>
               ))}

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { BadgeCheck } from 'lucide-react';
 import { Button, Text } from '@telegram-tools/ui-kit';
+import { BadgeCheck } from 'lucide-react';
 import { AppIcon } from '../components/app-icon';
 import { AppListRow } from '../components/app-list-row';
 import { AppSectionHeader } from '../components/app-section-header';

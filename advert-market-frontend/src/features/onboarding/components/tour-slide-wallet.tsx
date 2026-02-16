@@ -27,42 +27,14 @@ function EscrowFlowStep({
   showLine: boolean;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch' }}>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          width: '40px',
-          flexShrink: 0,
-        }}
-      >
-        <div
-          aria-hidden="true"
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--color-background-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+    <div className="am-onboarding-escrow-step">
+      <div className="am-onboarding-escrow-step__rail">
+        <div aria-hidden="true" className="am-onboarding-escrow-step__icon">
           {icon}
         </div>
-        {showLine && (
-          <div
-            style={{
-              width: '1.5px',
-              flex: 1,
-              minHeight: '8px',
-              backgroundColor: 'var(--color-accent-primary)',
-            }}
-          />
-        )}
+        {showLine && <div className="am-onboarding-escrow-step__line" />}
       </div>
-      <div style={{ flex: 1, padding: '4px 0 12px 8px' }}>
+      <div className="am-onboarding-escrow-step__copy">
         <Text type="subheadline2" weight="medium">
           {title}
         </Text>
@@ -73,8 +45,6 @@ function EscrowFlowStep({
     </div>
   );
 }
-
-const flowIconStyle = { width: 16, height: 16, color: 'var(--color-foreground-secondary)' };
 
 type TourSlideWalletProps = {
   primaryRole: OnboardingPrimaryRole;
@@ -98,7 +68,7 @@ export function TourSlideWallet({ primaryRole }: TourSlideWalletProps) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="am-onboarding-tour-slide">
       <Text type="title2" weight="bold" align="center">
         {isOwnerPrimary ? t('onboarding.tour.slide3.titleOwner') : t('onboarding.tour.slide3.titleAdvertiser')}
       </Text>
@@ -111,7 +81,7 @@ export function TourSlideWallet({ primaryRole }: TourSlideWalletProps) {
           {view === 'details' && (
             <motion.div key="details" exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
               <ChannelHeader
-                icon={<NewspaperIcon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />}
+                icon={<NewspaperIcon className="am-onboarding-icon-sm am-onboarding-icon-secondary" />}
                 name={t('onboarding.tour.mockup.channelName1')}
                 detail="5.00 TON"
               />
@@ -120,7 +90,7 @@ export function TourSlideWallet({ primaryRole }: TourSlideWalletProps) {
                 <GroupItem
                   text={t('onboarding.tour.mockup.escrow')}
                   description={t('onboarding.tour.mockup.fundsSecured')}
-                  before={<LockIcon style={{ width: 20, height: 20, color: 'var(--color-accent-primary)' }} />}
+                  before={<LockIcon className="am-onboarding-icon-md am-onboarding-icon-accent" />}
                   onClick={handleEscrowClick}
                   chevron
                 />
@@ -153,28 +123,28 @@ export function TourSlideWallet({ primaryRole }: TourSlideWalletProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <div style={{ padding: '8px 0' }}>
+              <div className="am-onboarding-escrow-flow">
                 <EscrowFlowStep
-                  icon={<CoinIcon style={flowIconStyle} />}
+                  icon={<CoinIcon className="am-onboarding-icon-sm am-onboarding-icon-secondary" />}
                   title={t('onboarding.tour.mockup.escrowFlow1Title')}
                   subtitle={t('onboarding.tour.mockup.escrowFlow1Desc')}
                   showLine
                 />
                 <EscrowFlowStep
-                  icon={<LockIcon style={flowIconStyle} />}
+                  icon={<LockIcon className="am-onboarding-icon-sm am-onboarding-icon-secondary" />}
                   title={t('onboarding.tour.mockup.escrowFlow2Title')}
                   subtitle={t('onboarding.tour.mockup.escrowFlow2Desc')}
                   showLine
                 />
                 <EscrowFlowStep
-                  icon={<CheckCircleIcon style={flowIconStyle} />}
+                  icon={<CheckCircleIcon className="am-onboarding-icon-sm am-onboarding-icon-secondary" />}
                   title={t('onboarding.tour.mockup.escrowFlow3Title')}
                   subtitle={t('onboarding.tour.mockup.escrowFlow3Desc')}
                   showLine={false}
                 />
               </div>
 
-              <output aria-live="polite" style={{ display: 'block', textAlign: 'center', marginTop: '4px' }}>
+              <output aria-live="polite" className="am-onboarding-tour-slide__status">
                 <Text type="caption1" color="accent">
                   {t('onboarding.tour.slide3.taskDone')}
                 </Text>
@@ -212,7 +182,7 @@ export function TourSlideWallet({ primaryRole }: TourSlideWalletProps) {
                 />
               </Group>
 
-              <div style={{ textAlign: 'center', padding: '4px 0' }}>
+              <div className="am-onboarding-tour-slide__policy-note">
                 <Text type="caption1" color="secondary">
                   {t('onboarding.tour.policy.configNote')}
                 </Text>

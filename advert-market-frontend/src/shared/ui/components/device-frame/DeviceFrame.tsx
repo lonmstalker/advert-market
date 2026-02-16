@@ -33,7 +33,7 @@ const frameContainer: CSSProperties = {
   borderRadius: 28,
   overflow: 'hidden',
   background: 'var(--color-background-base)',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+  boxShadow: 'var(--am-shadow-card)',
 };
 
 const gradientBorder: CSSProperties = {

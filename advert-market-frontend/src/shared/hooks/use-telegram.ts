@@ -6,6 +6,7 @@ type TelegramUser = {
   lastName?: string;
   username?: string;
   languageCode?: string;
+  photoUrl?: string;
 };
 
 type TelegramContext = {
@@ -37,6 +38,7 @@ export function useTelegram(): TelegramContext {
             lastName: tgUser.last_name,
             username: tgUser.username,
             languageCode: tgUser.language_code,
+            photoUrl: tgUser.photo_url,
           }
         : undefined;
 

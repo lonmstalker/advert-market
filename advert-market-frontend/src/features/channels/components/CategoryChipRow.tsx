@@ -42,7 +42,7 @@ export function CategoryChipRow({ selected, onSelect }: CategoryChipRowProps) {
   };
 
   return (
-    <fieldset aria-label={t('catalog.filters.topic')} className="am-chip-row" style={{ border: 'none', margin: 0 }}>
+    <fieldset aria-label={t('catalog.filters.topic')} className="am-chip-row border-none m-0">
       <Chip
         label={t('catalog.filters.topicAll')}
         active={isAllSelected}

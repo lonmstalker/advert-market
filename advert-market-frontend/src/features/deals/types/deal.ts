@@ -25,7 +25,11 @@ export type DealStatus = z.infer<typeof dealStatusSchema>;
 
 export type DealRole = 'ADVERTISER' | 'OWNER';
 
-const nullableIsoSchema = z.string().nullable().optional().transform((value) => value ?? null);
+const nullableIsoSchema = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((value) => value ?? null);
 
 // --- Backend DTOs ---
 
@@ -73,8 +77,14 @@ export type TransitionRequest = z.infer<typeof transitionRequestSchema>;
 
 export const dealTransitionResponseSchema = z.object({
   status: z.string(),
-  newStatus: dealStatusSchema.nullable().optional().transform((value) => value ?? null),
-  currentStatus: dealStatusSchema.nullable().optional().transform((value) => value ?? null),
+  newStatus: dealStatusSchema
+    .nullable()
+    .optional()
+    .transform((value) => value ?? null),
+  currentStatus: dealStatusSchema
+    .nullable()
+    .optional()
+    .transform((value) => value ?? null),
 });
 
 export type DealTransitionResponse = z.infer<typeof dealTransitionResponseSchema>;

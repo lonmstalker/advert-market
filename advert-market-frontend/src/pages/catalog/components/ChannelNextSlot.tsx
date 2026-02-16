@@ -13,33 +13,18 @@ export function ChannelNextSlot({ nextAvailableSlot }: ChannelNextSlotProps) {
   const { t } = useTranslation();
   const timeUntil = formatTimeUntil(nextAvailableSlot);
 
+  const isAvailable = !timeUntil;
+
   return (
-    <motion.div {...slideUp} style={{ padding: '12px 16px 0' }}>
+    <motion.div {...slideUp} className="px-4 pt-4">
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '10px 14px',
-          borderRadius: 10,
-          background: timeUntil
-            ? 'var(--color-background-section)'
-            : 'color-mix(in srgb, var(--color-state-success) 8%, transparent)',
-          border: timeUntil
-            ? '1px solid var(--color-border-separator)'
-            : '1px solid color-mix(in srgb, var(--color-state-success) 20%, transparent)',
-        }}
+        className={`flex items-center gap-2 py-2.5 px-3.5 rounded-[10px] border ${
+          isAvailable ? 'bg-soft-success border-success/20' : 'bg-bg-secondary border-separator'
+        }`}
       >
-        <ClockIcon
-          style={{
-            width: 16,
-            height: 16,
-            color: timeUntil ? 'var(--color-foreground-secondary)' : 'var(--color-state-success)',
-            flexShrink: 0,
-          }}
-        />
-        <Text type="caption1" color={timeUntil ? 'secondary' : undefined}>
-          <span style={{ color: timeUntil ? undefined : 'var(--color-state-success)', fontWeight: 500 }}>
+        <ClockIcon className={`w-4 h-4 shrink-0 ${isAvailable ? 'text-success' : 'text-fg-secondary'}`} />
+        <Text type="caption1" color={isAvailable ? undefined : 'secondary'}>
+          <span className={isAvailable ? 'text-success font-medium' : ''}>
             {timeUntil ? t('catalog.channel.nextSlot', { time: timeUntil }) : t('catalog.channel.nextSlotAvailable')}
           </span>
         </Text>

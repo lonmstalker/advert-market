@@ -66,12 +66,12 @@ export function DealFilterSheet({ open, onClose, activeStatuses, onApply, onRese
   };
 
   const FiltersSheet = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="flex flex-col gap-5 px-4 py-5">
       <Text type="title2" weight="bold">
         {t('deals.filter.title')}
       </Text>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <div className="flex flex-wrap gap-2.5">
         {STATUS_GROUPS.map((group) => {
           const allActive = group.statuses.every((s) => draft.has(s));
           return (
@@ -86,11 +86,11 @@ export function DealFilterSheet({ open, onClose, activeStatuses, onApply, onRese
         })}
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1 }}>
+      <div className="flex gap-2.5">
+        <div className="flex-1">
           <Button text={t('common.reset')} type="secondary" onClick={handleReset} />
         </div>
-        <div style={{ flex: 1 }}>
+        <div className="flex-1">
           <Button text={t('common.apply')} type="primary" onClick={handleApply} />
         </div>
       </div>

@@ -73,7 +73,7 @@ export default function OnboardingInterestPage() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col gap-3">
+        <div className="flex-1 flex flex-col gap-4">
           <RoleCard
             icon={<SpeakerIcon width={28} height={28} />}
             title={t('onboarding.interest.advertiser')}

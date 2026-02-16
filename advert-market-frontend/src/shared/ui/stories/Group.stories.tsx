@@ -61,16 +61,16 @@ export const WithFooter: Story = {
       <GroupItem
         text="Balance"
         after={
-          <Text type="body" color="accent">
-            50.00 TON
+          <Text type="callout" color="accent">
+            <span className="tabular-nums">50.00 TON</span>
           </Text>
         }
       />
       <GroupItem
         text="Pending"
         after={
-          <Text type="body" color="secondary">
-            10.00 TON
+          <Text type="callout" color="secondary">
+            <span className="tabular-nums">10.00 TON</span>
           </Text>
         }
       />
@@ -107,7 +107,7 @@ export const AnimatedList: Story = {
 
 export const MultipleGroups: Story = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div className="flex flex-col gap-4">
       <Group header="Active Deals">
         <GroupItem text="Crypto News — Banner" description="50 TON" chevron />
         <GroupItem text="Tech Daily — Post" description="30 TON" chevron />

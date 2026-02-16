@@ -72,7 +72,7 @@ export function ChannelDetailStats({ channel }: ChannelDetailStatsProps) {
   }
 
   return (
-    <motion.div {...slideUp} className="px-4 pt-4">
+    <motion.div {...slideUp} className="px-4 pt-4 pb-3">
       <div className="flex bg-bg-base border border-separator rounded-[14px] overflow-hidden">{items}</div>
     </motion.div>
   );

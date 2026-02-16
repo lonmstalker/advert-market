@@ -1,12 +1,11 @@
+import { disableVerticalSwipes, isSwipeBehaviorSupported, mountSwipeBehavior } from '@telegram-apps/sdk';
 import { init, miniApp, themeParams, viewport } from '@telegram-apps/sdk-react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from '@/app/App';
 
 import '@telegram-tools/ui-kit/dist/index.css';
-import '@/app/tailwind.css';
-import '@/app/components.css';
-import '@/app/global.css';
+import '@/app/app.css';
 
 // Apply forced theme early (before React renders) so CSS dark overrides take effect immediately.
 const forcedTheme = import.meta.env.VITE_FORCE_THEME;
@@ -104,6 +103,16 @@ async function initTelegramSdk() {
   try {
     if (viewport.expand.isAvailable()) {
       viewport.expand();
+    }
+  } catch {
+    /* no-op */
+  }
+
+  // Disable vertical swipes to prevent close-on-swipe conflicts with scrollable content.
+  try {
+    if (isSwipeBehaviorSupported()) {
+      mountSwipeBehavior();
+      disableVerticalSwipes();
     }
   } catch {
     /* no-op */

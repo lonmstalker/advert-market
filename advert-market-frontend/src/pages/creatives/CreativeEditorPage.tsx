@@ -7,20 +7,20 @@ import { useNavigate, useParams } from 'react-router';
 import {
   CreativeForm,
   CreativeHistorySheet,
+  ensureButtonId,
   type MediaItem,
   type MediaType,
   type TelegramKeyboardRow,
-  ensureButtonId,
   useCreateCreative,
-  useDeleteCreativeMedia,
   useCreativeDetail,
   useCreativeVersions,
+  useDeleteCreativeMedia,
   useEntities,
   useUpdateCreative,
   useUploadCreativeMedia,
 } from '@/features/creatives';
 import { useHaptic } from '@/shared/hooks/use-haptic';
-import { BackButtonHandler, FixedBottomBar, Tappable, TelegramChatSimulator } from '@/shared/ui';
+import { AppPageShell, BackButtonHandler, FixedBottomBar, Tappable, TelegramChatSimulator } from '@/shared/ui';
 import { fadeIn, pressScale, scaleIn, slideFromLeft, slideFromRight } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
@@ -154,7 +154,10 @@ export default function CreativeEditorPage() {
     [uploadMediaMutation],
   );
 
-  const handleDeleteMedia = useCallback((mediaId: string) => deleteMediaMutation.mutateAsync(mediaId), [deleteMediaMutation]);
+  const handleDeleteMedia = useCallback(
+    (mediaId: string) => deleteMediaMutation.mutateAsync(mediaId),
+    [deleteMediaMutation],
+  );
 
   if (isEditing && isLoading) {
     return (
@@ -172,121 +175,111 @@ export default function CreativeEditorPage() {
     { value: 'preview' as const, label: t('creatives.tabs.preview') },
   ];
 
-  const bottomInset = 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))';
-
   const previewContent = (
-    <div className="rounded-xl overflow-hidden bg-bg-secondary">
+    <div className="am-creative-editor__preview-surface">
       <TelegramChatSimulator text={text} entities={entities} media={media} buttons={validButtonRows} />
     </div>
   );
 
   return (
-    <motion.div
-      {...fadeIn}
-      className="min-h-[calc(100vh-40px)]"
-    >
+    <>
       <BackButtonHandler />
-
-      <div className="px-4 pt-4 flex justify-between items-center mb-4">
-        <Text type="title1" weight="bold">
-          {isEditing ? t('creatives.editTitle') : t('creatives.newTitle')}
-        </Text>
-        {isEditing && versions && versions.length > 0 && (
-          <Tappable
-            onClick={() => setShowHistory(true)}
-            className="border-none bg-transparent text-accent cursor-pointer text-sm"
-          >
-            {t('creatives.history.show')}
-          </Tappable>
-        )}
-      </div>
-
-      {/* Mobile: tab switcher */}
-      <div className="creative-editor-mobile px-4 mb-4">
-        <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
-      </div>
-
-      {/* Mobile: tabbed content */}
-      <div className="creative-editor-mobile px-4">
-        <AnimatePresence mode="wait">
-          {activeTab === 'editor' ? (
-            <motion.div key="editor" {...slideFromLeft}>
-              <CreativeForm
-                title={title}
-                onTitleChange={setTitle}
-                text={text}
-                onTextChange={setText}
-                media={media}
-                onMediaChange={setMedia}
-                buttons={buttons}
-                onButtonsChange={setButtons}
-                onUploadMedia={handleUploadMedia}
-                onDeleteMedia={handleDeleteMedia}
-                toggleEntity={toggleEntity}
-                isActive={isActive}
-                disableWebPagePreview={disableWebPagePreview}
-                onDisableWebPagePreviewChange={setDisableWebPagePreview}
-                textareaRef={textareaRefMobile}
-              />
-            </motion.div>
-          ) : (
-            <motion.div key="preview" {...slideFromRight}>
-              <motion.div {...scaleIn}>{previewContent}</motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Desktop: split view */}
-      <div className="creative-editor-desktop px-4">
-        <div className="flex gap-6">
-          <div className="flex-[1_1_60%] min-w-0">
-            <CreativeForm
-              title={title}
-              onTitleChange={setTitle}
-              text={text}
-              onTextChange={setText}
-              media={media}
-              onMediaChange={setMedia}
-              buttons={buttons}
-              onButtonsChange={setButtons}
-              onUploadMedia={handleUploadMedia}
-              onDeleteMedia={handleDeleteMedia}
-              toggleEntity={toggleEntity}
-              isActive={isActive}
-              disableWebPagePreview={disableWebPagePreview}
-              onDisableWebPagePreviewChange={setDisableWebPagePreview}
-              textareaRef={textareaRefDesktop}
-            />
+      <AppPageShell withTabsPadding={false} testId="creative-editor-page-shell">
+        <motion.div {...fadeIn} className="am-creative-editor-page">
+          <div className="am-creative-editor__header">
+            <Text type="title1" weight="bold">
+              {isEditing ? t('creatives.editTitle') : t('creatives.newTitle')}
+            </Text>
+            {isEditing && versions && versions.length > 0 && (
+              <Tappable
+                onClick={() => setShowHistory(true)}
+                className="border-none bg-transparent text-accent cursor-pointer text-sm"
+              >
+                {t('creatives.history.show')}
+              </Tappable>
+            )}
           </div>
-          <div className="flex-[1_1_40%] min-w-0 sticky top-4 self-start">
-            {previewContent}
+
+          <div className="creative-editor-mobile am-creative-editor__mobile-tabs">
+            <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
           </div>
-        </div>
-      </div>
+
+          <div className="creative-editor-mobile am-creative-editor__mobile-content">
+            <AnimatePresence mode="wait">
+              {activeTab === 'editor' ? (
+                <motion.div key="editor" {...slideFromLeft}>
+                  <CreativeForm
+                    title={title}
+                    onTitleChange={setTitle}
+                    text={text}
+                    onTextChange={setText}
+                    media={media}
+                    onMediaChange={setMedia}
+                    buttons={buttons}
+                    onButtonsChange={setButtons}
+                    onUploadMedia={handleUploadMedia}
+                    onDeleteMedia={handleDeleteMedia}
+                    toggleEntity={toggleEntity}
+                    isActive={isActive}
+                    disableWebPagePreview={disableWebPagePreview}
+                    onDisableWebPagePreviewChange={setDisableWebPagePreview}
+                    textareaRef={textareaRefMobile}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div key="preview" {...slideFromRight}>
+                  <motion.div {...scaleIn}>{previewContent}</motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="creative-editor-desktop am-creative-editor__desktop">
+            <div className="am-creative-editor__desktop-grid">
+              <div className="am-creative-editor__desktop-form">
+                <CreativeForm
+                  title={title}
+                  onTitleChange={setTitle}
+                  text={text}
+                  onTextChange={setText}
+                  media={media}
+                  onMediaChange={setMedia}
+                  buttons={buttons}
+                  onButtonsChange={setButtons}
+                  onUploadMedia={handleUploadMedia}
+                  onDeleteMedia={handleDeleteMedia}
+                  toggleEntity={toggleEntity}
+                  isActive={isActive}
+                  disableWebPagePreview={disableWebPagePreview}
+                  onDisableWebPagePreviewChange={setDisableWebPagePreview}
+                  textareaRef={textareaRefDesktop}
+                />
+              </div>
+              <div className="am-creative-editor__desktop-preview">{previewContent}</div>
+            </div>
+          </div>
+
+          {!supportsMainButton && <div aria-hidden="true" className="am-fixed-bottom-bar-spacer" />}
+        </motion.div>
+      </AppPageShell>
 
       {!supportsMainButton && (
-        <>
-          {/* Reserve space for the fixed Save bar so content can scroll above it even on short forms. */}
-          <div aria-hidden="true" style={{ height: bottomInset }} />
-
-          <FixedBottomBar>
-            <motion.div {...pressScale}>
-              <Button
-                text={t('common.save')}
-                type="primary"
-                loading={isPending}
-                disabled={isPending || !title.trim() || !text.trim()}
-                onClick={handleSubmit}
-              />
-            </motion.div>
-          </FixedBottomBar>
-        </>
+        <FixedBottomBar>
+          <motion.div {...pressScale}>
+            <Button
+              text={t('common.save')}
+              type="primary"
+              loading={isPending}
+              disabled={isPending || !title.trim() || !text.trim()}
+              onClick={handleSubmit}
+            />
+          </motion.div>
+        </FixedBottomBar>
       )}
 
       {versions && (
         <CreativeHistorySheet open={showHistory} onClose={() => setShowHistory(false)} versions={versions} />
       )}
-    </motion.div>
+    </>
   );
 }

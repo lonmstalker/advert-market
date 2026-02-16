@@ -16,7 +16,7 @@ export function MetricRow({ escrowAmount, completedDealsCount }: MetricRowProps)
         <Text type="title3" weight="bold">
           <span className="am-tabnum">{formatTon(escrowAmount)}</span>
         </Text>
-        <div className="mt-0.5">
+        <div className="mt-1.5">
           <Text type="caption1" color="secondary">
             {t('wallet.stats.inEscrow')}
           </Text>
@@ -29,7 +29,7 @@ export function MetricRow({ escrowAmount, completedDealsCount }: MetricRowProps)
         <Text type="title3" weight="bold">
           {completedDealsCount}
         </Text>
-        <div className="mt-0.5">
+        <div className="mt-1.5">
           <Text type="caption1" color="secondary">
             {t('wallet.stats.completedDeals')}
           </Text>

@@ -1,6 +1,10 @@
 import { motion } from 'motion/react';
 import type { CSSProperties, MouseEventHandler, PointerEventHandler, ReactNode } from 'react';
-import { tapScale } from '@/shared/ui/animations';
+import { pressScale } from '@/shared/ui/animations';
+
+function joinClasses(...classes: Array<string | false | null | undefined>): string {
+  return classes.filter(Boolean).join(' ');
+}
 
 type TappableProps = {
   children: ReactNode;
@@ -29,14 +33,14 @@ export function Tappable({
 }: TappableProps) {
   return (
     <motion.button
-      {...tapScale}
+      {...pressScale}
       type="button"
       onClick={onClick}
       onPointerDown={onPointerDown}
       onMouseDown={onMouseDown}
       disabled={disabled}
-      style={style}
-      className={className}
+      style={{ minWidth: 44, minHeight: 44, ...style }}
+      className={joinClasses('am-tappable', className, disabled && 'opacity-50 pointer-events-none')}
       {...ariaProps}
     >
       {children}

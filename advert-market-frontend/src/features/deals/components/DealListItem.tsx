@@ -32,7 +32,7 @@ export const DealListItem = memo(function DealListItem({ deal, onClick }: DealLi
       className="cursor-pointer [-webkit-tap-highlight-color:transparent]"
     >
       <AppSurfaceCard>
-        <div className="flex flex-col gap-2.5 px-4 py-4">
+        <div className="flex flex-col gap-3 px-4 py-[18px]">
           <div className="flex items-center gap-3">
             <ChannelAvatar title={deal.channelTitle} size="sm" />
             <div className="flex-1 min-w-0">

@@ -1,4 +1,4 @@
-import { type CSSProperties, forwardRef, useCallback } from 'react';
+import { type CSSProperties, forwardRef, useCallback, useLayoutEffect, useRef } from 'react';
 
 type TextareaProps = {
   value: string;
@@ -6,6 +6,8 @@ type TextareaProps = {
   placeholder?: string;
   maxLength?: number;
   rows?: number;
+  autosize?: boolean;
+  className?: string;
   style?: CSSProperties;
   onFocus?: () => void;
   onBlur?: () => void;
@@ -15,21 +17,6 @@ type TextareaProps = {
   onTouchEnd?: () => void;
 };
 
-const baseStyle: CSSProperties = {
-  width: '100%',
-  resize: 'vertical',
-  padding: 12,
-  borderRadius: 12,
-  border: '1px solid var(--color-border-separator)',
-  background: 'var(--color-background-base)',
-  color: 'var(--color-foreground-primary)',
-  fontSize: 15,
-  lineHeight: 1.4,
-  fontFamily: 'inherit',
-  boxSizing: 'border-box',
-  outline: 'none',
-};
-
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
   {
     value,
@@ -37,6 +24,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     placeholder,
     maxLength,
     rows = 4,
+    autosize = false,
+    className,
     style,
     onFocus,
     onBlur,
@@ -47,17 +36,44 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   },
   ref,
 ) {
+  const innerRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const bindRefs = useCallback(
+    (node: HTMLTextAreaElement | null) => {
+      innerRef.current = node;
+      if (typeof ref === 'function') {
+        ref(node);
+        return;
+      }
+      if (ref) {
+        ref.current = node;
+      }
+    },
+    [ref],
+  );
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value), [onChange]);
+
+  useLayoutEffect(() => {
+    if (!autosize || !innerRef.current) return;
+
+    const element = innerRef.current;
+    element.style.height = 'auto';
+    const minHeight = rows * 24;
+    element.style.height = `${Math.max(minHeight, element.scrollHeight)}px`;
+  }, [autosize, rows, value]);
 
   return (
     <textarea
-      ref={ref}
+      ref={bindRefs}
       value={value}
       onChange={handleChange}
       placeholder={placeholder}
       maxLength={maxLength}
       rows={rows}
-      style={{ ...baseStyle, ...style }}
+      className={className ? `am-textarea ${className}` : 'am-textarea'}
+      style={style}
+      data-autosize={autosize ? 'true' : 'false'}
       onFocus={onFocus}
       onBlur={onBlur}
       onSelect={onSelect}

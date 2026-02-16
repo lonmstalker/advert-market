@@ -1,7 +1,7 @@
 import { Group, GroupItem, Icon, Sheet, Text } from '@telegram-tools/ui-kit';
 import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
-import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { CreativeTemplate } from '@/features/creatives';
@@ -12,35 +12,6 @@ import { fadeIn, listItem, pressScale, scaleIn, staggerChildren } from '@/shared
 import { PaletteIcon, SearchOffIcon, SortIcon } from '@/shared/ui/icons';
 
 type SortMode = 'newest' | 'oldest' | 'byName';
-
-const addButtonStyle: CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: 10,
-  border: '1px solid var(--color-border-separator)',
-  background: 'var(--color-background-secondary)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  padding: 0,
-  fontSize: 20,
-  color: 'var(--color-accent-primary)',
-};
-
-const sortButtonStyle: CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: 10,
-  border: '1px solid var(--color-border-separator)',
-  background: 'var(--color-background-base)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  padding: 0,
-  flexShrink: 0,
-};
 
 function useDebounce(value: string, delay: number): string {
   const [debounced, setDebounced] = useState(value);
@@ -101,7 +72,7 @@ export default function CreativesPage() {
   );
 
   const SortSheetContent = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="am-creatives-sort-sheet">
       <Text type="title2" weight="bold">
         {t('creatives.sort.title')}
       </Text>
@@ -125,42 +96,32 @@ export default function CreativesPage() {
   const sheetMap = { sort: SortSheetContent };
 
   return (
-    <div style={{ paddingBottom: 24 }} onScroll={handleScroll}>
+    <div className="am-creatives-page" onScroll={handleScroll}>
       <BackButtonHandler />
 
-      <div
-        style={{
-          padding: '16px 16px 0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
+      <div className="am-creatives-page__header">
         <Text type="title1" weight="bold">
           {t('creatives.title')}
         </Text>
         <motion.div {...pressScale}>
-          <Tappable onClick={() => navigate('/profile/creatives/new')} style={addButtonStyle}>
+          <Tappable
+            onClick={() => {
+              haptic.impactOccurred('light');
+              navigate('/profile/creatives/new');
+            }}
+            className="am-creatives-page__add"
+          >
             +
           </Tappable>
         </motion.div>
       </div>
 
       {!isLoading && allCreatives.length > 0 && (
-        <div
-          style={{
-            padding: '0 16px 12px',
-            position: 'sticky',
-            top: 0,
-            zIndex: 5,
-            background: 'var(--color-background-secondary)',
-          }}
-        >
+        <div className="am-creatives-page__search-wrap">
           <motion.div
             animate={{ scale: searchFocused ? 1.01 : 1 }}
             transition={{ duration: 0.15, ease: easeOut }}
-            style={{ display: 'flex', gap: 8 }}
+            className="am-creatives-page__search-row"
           >
             <SearchInput
               value={searchQuery}
@@ -177,14 +138,12 @@ export default function CreativesPage() {
                   haptic.impactOccurred('light');
                   setSortSheetOpen(true);
                 }}
-                style={sortButtonStyle}
+                className="am-creatives-page__sort"
               >
                 <SortIcon
-                  style={{
-                    width: 20,
-                    height: 20,
-                    color: sortMode !== 'newest' ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
-                  }}
+                  className={
+                    sortMode !== 'newest' ? 'am-creatives-page__sort-icon--active' : 'am-creatives-page__sort-icon'
+                  }
                 />
               </Tappable>
             </motion.div>
@@ -196,15 +155,15 @@ export default function CreativesPage() {
         {isLoading ? (
           <motion.div key="skeleton" {...fadeIn}>
             <Group skeleton={{ show: true }}>
-              <div key="skeleton-a" style={{ height: 56 }} />
-              <div key="skeleton-b" style={{ height: 56 }} />
-              <div key="skeleton-c" style={{ height: 56 }} />
+              <div key="skeleton-a" className="am-creatives-page__skeleton-row" />
+              <div key="skeleton-b" className="am-creatives-page__skeleton-row" />
+              <div key="skeleton-c" className="am-creatives-page__skeleton-row" />
             </Group>
           </motion.div>
         ) : allCreatives.length === 0 ? (
           <motion.div key="empty" {...scaleIn}>
             <EmptyState
-              icon={<PaletteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+              icon={<PaletteIcon className="am-empty-state-icon" />}
               title={t('creatives.empty.title')}
               description={t('creatives.empty.description')}
               actionLabel={t('creatives.empty.cta')}
@@ -214,7 +173,7 @@ export default function CreativesPage() {
         ) : filteredAndSorted.length === 0 ? (
           <motion.div key="no-results" {...scaleIn}>
             <EmptyState
-              icon={<SearchOffIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+              icon={<SearchOffIcon className="am-empty-state-icon" />}
               title={t('catalog.empty.title')}
               description={t('catalog.empty.description')}
             />

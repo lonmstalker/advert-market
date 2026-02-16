@@ -7,11 +7,11 @@ import {
   type DealDto,
   type DealStatus,
   type DealTransitionResponse,
-  type TransitionRequest,
   dealDepositInfoSchema,
   dealDetailDtoSchema,
   dealDtoSchema,
   dealTransitionResponseSchema,
+  type TransitionRequest,
 } from '../types/deal';
 
 const DEAL_API_UNAVAILABLE_STATUSES = new Set([404, 405, 501]);

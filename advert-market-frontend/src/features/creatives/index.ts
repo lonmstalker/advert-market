@@ -24,5 +24,4 @@ export type {
   TelegramKeyboardRow,
   TextEntity,
 } from './types/creative';
-export { TextEntityType } from './types/creative';
-export { ensureButtonId } from './types/creative';
+export { ensureButtonId, TextEntityType } from './types/creative';

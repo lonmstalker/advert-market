@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button, Text } from '@telegram-tools/ui-kit';
+import { Text } from '@telegram-tools/ui-kit';
 import { useState } from 'react';
 import { Chip } from '../components/chip';
 import { FilterButton } from '../components/filter-button';
@@ -26,33 +26,21 @@ export const SearchAndFilters: Story = {
     const [selected, setSelected] = useState<string[]>(['crypto']);
 
     const toggleTopic = (topic: string) => {
-      setSelected((prev) =>
-        prev.includes(topic) ? prev.filter((value) => value !== topic) : [...prev, topic],
-      );
+      setSelected((prev) => (prev.includes(topic) ? prev.filter((value) => value !== topic) : [...prev, topic]));
     };
 
     return (
       <div style={{ display: 'grid', gap: 12 }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <div style={{ flex: 1 }}>
-            <SearchInput
-              value={query}
-              onChange={setQuery}
-              placeholder="Поиск каналов"
-              focused={query.length > 0}
-            />
+            <SearchInput value={query} onChange={setQuery} placeholder="Поиск каналов" focused={query.length > 0} />
           </div>
           <FilterButton activeCount={selected.length} onClick={() => {}} />
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {['crypto', 'tech', 'finance'].map((topic) => (
-            <Chip
-              key={topic}
-              label={topic}
-              active={selected.includes(topic)}
-              onClick={() => toggleTopic(topic)}
-            />
+            <Chip key={topic} label={topic} active={selected.includes(topic)} onClick={() => toggleTopic(topic)} />
           ))}
         </div>
       </div>

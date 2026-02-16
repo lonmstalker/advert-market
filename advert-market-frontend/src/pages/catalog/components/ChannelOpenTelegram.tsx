@@ -14,48 +14,26 @@ export function ChannelOpenTelegram({ link, username }: ChannelOpenTelegramProps
   const { t } = useTranslation();
 
   return (
-    <motion.div {...slideUp} style={{ padding: '0 16px 8px' }}>
+    <motion.div {...slideUp} className="px-4 pt-2 pb-4">
       <Tappable
         onClick={() => window.open(link, '_blank')}
         aria-label={username ? t('catalog.channel.openInTelegram') : t('catalog.channel.joinChannel')}
-        style={{
-          width: '100%',
-          background: 'var(--color-background-base)',
-          border: '1px solid var(--color-border-separator)',
-          borderRadius: 12,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '14px 16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
+        className="flex items-center gap-3 p-3.5 bg-bg-base border border-separator rounded-[14px]"
       >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: 'color-mix(in srgb, var(--color-link) 8%, transparent)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <TelegramIcon style={{ width: 18, height: 18, color: 'var(--color-link)' }} />
+        <div className="am-icon-circle am-icon-circle--md bg-[color-mix(in_srgb,var(--color-link)_8%,transparent)] shrink-0">
+          <TelegramIcon className="w-[18px] h-[18px] text-[var(--color-link)]" />
         </div>
-        <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+        <div className="flex-1 min-w-0 text-left">
           <Text type="subheadline1" color="accent" weight="medium">
             {username ? t('catalog.channel.openInTelegram') : t('catalog.channel.joinChannel')}
           </Text>
           {username && (
             <Text type="caption1" color="tertiary">
-              <span style={{ display: 'block', marginTop: 2 }}>@{username}</span>
+              <span className="block mt-0.5">@{username}</span>
             </Text>
           )}
         </div>
-        <ArrowRightIcon style={{ width: 16, height: 16, color: 'var(--color-link)', opacity: 0.5, flexShrink: 0 }} />
+        <ArrowRightIcon className="w-4 h-4 text-[var(--color-link)] opacity-50 shrink-0" />
       </Tappable>
     </motion.div>
   );

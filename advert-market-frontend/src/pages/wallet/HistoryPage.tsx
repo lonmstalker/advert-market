@@ -49,7 +49,7 @@ export default function HistoryPage() {
               <FilterButton activeCount={activeFilterCount} onClick={handleFilterClick} />
             </div>
             {activeFilterCount > 0 && (
-              <div className="mt-1">
+              <div className="mt-2">
                 <Text type="caption1" color="secondary">
                   {t('wallet.filters.title')}: {activeFilterCount}
                 </Text>
@@ -64,7 +64,7 @@ export default function HistoryPage() {
               </motion.div>
             ) : transactions.length === 0 ? (
               <EmptyState
-                icon={<ScrollIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+                icon={<ScrollIcon className="w-7 h-7 text-fg-tertiary" />}
                 title={t('wallet.history.empty')}
                 description={activeFilterCount > 0 ? t('wallet.history.emptyFiltered') : t('wallet.empty.description')}
                 actionLabel={activeFilterCount > 0 ? t('wallet.filters.reset') : undefined}

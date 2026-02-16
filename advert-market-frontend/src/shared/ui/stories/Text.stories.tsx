@@ -62,7 +62,7 @@ export const AllSizes: Story = {
       'caption2',
     ] as const;
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="flex flex-col gap-2">
         {types.map((t) => (
           <Text key={t} type={t}>
             {t}
@@ -77,7 +77,7 @@ export const Colors: Story = {
   render: () => {
     const colors = ['primary', 'secondary', 'tertiary', 'accent', 'danger'] as const;
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div className="flex flex-col gap-1">
         {colors.map((c) => (
           <Text key={c} type="body" color={c}>
             Color: {c}
@@ -88,6 +88,56 @@ export const Colors: Story = {
   },
 };
 
+export const FinancialTypography: Story = {
+  name: 'Financial Typography',
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <div>
+        <Text type="caption1" color="secondary">
+          hero bold — Main balance
+        </Text>
+        <Text type="hero" weight="bold">
+          <span className="tabular-nums">1 250.50 TON</span>
+        </Text>
+      </div>
+      <div>
+        <Text type="caption1" color="secondary">
+          largeTitle bold — Compact balance
+        </Text>
+        <Text type="largeTitle" weight="bold">
+          <span className="tabular-nums">250.00 TON</span>
+        </Text>
+      </div>
+      <div>
+        <Text type="caption1" color="secondary">
+          callout accent — Amount in list
+        </Text>
+        <Text type="callout" color="accent">
+          <span className="tabular-nums">50.00 TON</span>
+        </Text>
+      </div>
+      <div>
+        <Text type="caption1" color="secondary">
+          callout success — Income
+        </Text>
+        <Text type="callout" color="accent">
+          <span className="tabular-nums" style={{ color: 'var(--color-state-success)' }}>
+            +30.00 TON
+          </span>
+        </Text>
+      </div>
+      <div>
+        <Text type="caption1" color="secondary">
+          callout destructive — Expense
+        </Text>
+        <Text type="callout" color="danger">
+          <span className="tabular-nums">-50.00 TON</span>
+        </Text>
+      </div>
+    </div>
+  ),
+};
+
 export const AnimatedHeading: Story = {
   render: () => (
     <AnimatePresence>
@@ -96,7 +146,7 @@ export const AnimatedHeading: Story = {
           Animated Title
         </Text>
       </motion.div>
-      <motion.div {...fadeIn} style={{ marginTop: '8px' }}>
+      <motion.div {...fadeIn} className="mt-2">
         <Text type="body" color="secondary">
           Subtitle fades in after heading
         </Text>

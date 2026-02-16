@@ -85,7 +85,10 @@ type ApiDraft = z.infer<typeof apiDraftSchema>;
 type ApiTemplate = z.infer<typeof apiTemplateSchema>;
 type ApiVersion = z.infer<typeof apiVersionSchema>;
 
-export function fetchCreatives(params?: { cursor?: string; limit?: number }): Promise<PaginatedResponse<CreativeTemplate>> {
+export function fetchCreatives(params?: {
+  cursor?: string;
+  limit?: number;
+}): Promise<PaginatedResponse<CreativeTemplate>> {
   return api
     .get('/creatives', {
       schema: paginatedResponseSchema(apiTemplateSchema),

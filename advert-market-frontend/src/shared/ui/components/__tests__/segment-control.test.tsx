@@ -25,23 +25,23 @@ describe('SegmentControl', () => {
     expect(screen.getByText('Third')).toBeInTheDocument();
   });
 
-  it('renders the correct number of buttons', () => {
+  it('renders the correct number of tabs', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab1" onChange={vi.fn()} />);
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
   });
 
   it('applies active modifier class to the selected tab', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
-    const activeButton = screen.getByText('Second');
-    expect(activeButton).toHaveClass('am-segment__tab');
-    expect(activeButton).toHaveClass('am-segment__tab--active');
+    const activeTab = screen.getByRole('tab', { name: 'Second' });
+    expect(activeTab).toHaveClass('am-segment__tab');
+    expect(activeTab).toHaveClass('am-segment__tab--active');
   });
 
   it('does not apply active modifier to non-selected tabs', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
-    const inactiveButton = screen.getByText('First');
-    expect(inactiveButton).toHaveClass('am-segment__tab');
-    expect(inactiveButton).not.toHaveClass('am-segment__tab--active');
+    const inactiveTab = screen.getByRole('tab', { name: 'First' });
+    expect(inactiveTab).toHaveClass('am-segment__tab');
+    expect(inactiveTab).not.toHaveClass('am-segment__tab--active');
   });
 
   it('calls onChange with the tab value when a tab is clicked', async () => {
@@ -57,6 +57,6 @@ describe('SegmentControl', () => {
     const singleTab = [{ value: 'only', label: 'Only Tab' }];
     render(<SegmentControl tabs={singleTab} active="only" onChange={vi.fn()} />);
     expect(screen.getByText('Only Tab')).toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getAllByRole('tab')).toHaveLength(1);
   });
 });

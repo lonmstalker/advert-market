@@ -30,7 +30,10 @@ function resolveStatus(event: DealEventDto): DealStatus {
   return event.toStatus ?? event.fromStatus ?? 'DRAFT';
 }
 
-export function deriveDealRole(deal: Pick<DealDto, 'advertiserId' | 'ownerId'>, profileId: number | null | undefined): DealRole | null {
+export function deriveDealRole(
+  deal: Pick<DealDto, 'advertiserId' | 'ownerId'>,
+  profileId: number | null | undefined,
+): DealRole | null {
   if (profileId == null) return null;
   if (deal.advertiserId === profileId) return 'ADVERTISER';
   if (deal.ownerId === profileId) return 'OWNER';

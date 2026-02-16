@@ -1,5 +1,7 @@
-import { Button } from '@telegram-tools/ui-kit';
+import { Text } from '@telegram-tools/ui-kit';
+import { motion } from 'motion/react';
 import { useHaptic } from '@/shared/hooks/use-haptic';
+import { pressScale } from '@/shared/ui/animations';
 
 type Tab<T extends string> = {
   value: T;
@@ -15,22 +17,27 @@ type SegmentControlProps<T extends string> = {
 export function SegmentControl<T extends string>({ tabs, active, onChange }: SegmentControlProps<T>) {
   const haptic = useHaptic();
   return (
-    <div className="am-segment">
+    <div className="am-segment" role="tablist">
       {tabs.map((tab) => {
         const isActive = active === tab.value;
-        const className = isActive ? 'am-segment__tab am-segment__tab--active' : 'am-segment__tab';
 
         return (
-          <Button
+          <motion.button
             key={tab.value}
-            type={isActive ? 'primary' : 'secondary'}
+            {...pressScale}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            className={isActive ? 'am-segment__tab am-segment__tab--active' : 'am-segment__tab'}
             onClick={() => {
               haptic.selectionChanged();
               onChange(tab.value);
             }}
-            className={className}
-            text={tab.label}
-          />
+          >
+            <Text type="subheadline2" weight="bold">
+              {tab.label}
+            </Text>
+          </motion.button>
         );
       })}
     </div>

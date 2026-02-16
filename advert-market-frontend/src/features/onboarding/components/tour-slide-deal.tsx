@@ -191,7 +191,7 @@ export function TourSlideDeal({ primaryRole }: TourSlideDealProps) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="am-onboarding-tour-slide">
       <Text type="title2" weight="bold" align="center">
         {isOwnerPrimary ? t('onboarding.tour.slide2.titleOwner') : t('onboarding.tour.slide2.titleAdvertiser')}
       </Text>
@@ -204,7 +204,7 @@ export function TourSlideDeal({ primaryRole }: TourSlideDealProps) {
           {dealView === 'timeline' ? (
             <motion.div key="timeline" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
               <ChannelHeader
-                icon={<NewspaperIcon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />}
+                icon={<NewspaperIcon className="am-onboarding-icon-sm am-onboarding-icon-secondary" />}
                 name={t('onboarding.tour.mockup.channelName1')}
                 detail="5.00 TON"
               />
@@ -226,13 +226,13 @@ export function TourSlideDeal({ primaryRole }: TourSlideDealProps) {
                 </motion.div>
               </AnimatePresence>
 
-              <div style={{ textAlign: 'center', padding: '8px 0 12px' }}>
+              <div className="am-onboarding-tour-slide__note">
                 <Text type="caption1" color="tertiary">
                   {t('onboarding.tour.timeline.simplifiedNote')}
                 </Text>
               </div>
 
-              <div style={{ marginTop: 12 }}>
+              <div className="am-onboarding-tour-slide__preview">
                 <TelegramPostPreview
                   text={creativePreview.text}
                   entities={creativePreview.entities}
@@ -242,17 +242,7 @@ export function TourSlideDeal({ primaryRole }: TourSlideDealProps) {
                 />
               </div>
 
-              <div
-                style={{
-                  position: 'sticky',
-                  bottom: -16,
-                  backgroundColor: 'var(--color-background-secondary)',
-                  paddingTop: 10,
-                  paddingBottom: 8,
-                  marginTop: 14,
-                  borderTop: '1px solid var(--color-border-separator)',
-                }}
-              >
+              <div className="am-onboarding-tour-slide__action-bar">
                 <Button
                   text={t('onboarding.tour.mockup.approve')}
                   type="primary"
@@ -269,7 +259,7 @@ export function TourSlideDeal({ primaryRole }: TourSlideDealProps) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      style={{ textAlign: 'center', marginTop: '8px' }}
+                      className="am-onboarding-tour-slide__status"
                     >
                       <Text type="caption1" color="accent">
                         {t('onboarding.tour.slide2.taskDone')}
@@ -303,7 +293,7 @@ export function TourSlideDeal({ primaryRole }: TourSlideDealProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="am-onboarding-tour-slide__states">
                 <Group header={t('onboarding.tour.allStates.groupNegotiation')}>
                   {negotiationStates.map((s) => (
                     <GroupItem key={s.key} text={s.text} description={s.desc} />

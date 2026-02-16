@@ -33,7 +33,6 @@ describe('OnboardingTourPage', () => {
         <Route path="/onboarding/tour" element={<OnboardingTourPage />} />
         <Route path="/onboarding/interest" element={<div>interest-page</div>} />
         <Route path="/catalog" element={<div>catalog-page</div>} />
-        <Route path="/profile/channels/new" element={<div>owner-entry-page</div>} />
       </Routes>,
       { initialEntries: ['/onboarding/tour'] },
     );
@@ -99,7 +98,7 @@ describe('OnboardingTourPage', () => {
     expect(screen.getByText('Skip tutorial?')).toBeInTheDocument();
   });
 
-  it('redirects owner to owner-first action after completion', async () => {
+  it('redirects owner to catalog after completion', async () => {
     act(() => {
       useOnboardingStore.getState().reset();
       useOnboardingStore.getState().toggleInterest('owner');
@@ -107,10 +106,10 @@ describe('OnboardingTourPage', () => {
     });
 
     const { user } = renderPage();
-    await user.click(screen.getByRole('button', { name: 'Add channel' }));
+    await user.click(screen.getByRole('button', { name: 'Open catalog' }));
 
     await waitFor(() => {
-      expect(screen.getByText('owner-entry-page')).toBeInTheDocument();
+      expect(screen.getByText('catalog-page')).toBeInTheDocument();
     });
   });
 

@@ -34,7 +34,7 @@ export const Info: Story = {
 
 export const AllTypes: Story = {
   render: () => (
-    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+    <div className="flex gap-3 flex-wrap">
       <ToastDemo type="success" message="Payment confirmed — 50 TON" />
       <ToastDemo type="error" message="Insufficient balance" />
       <ToastDemo type="info" message="Creative submitted for review" />

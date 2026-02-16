@@ -34,7 +34,7 @@ export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="am-onboarding-tour-slide">
       <Text type="title2" weight="bold" align="center">
         {isOwnerPrimary ? t('onboarding.tour.slide1.titleOwner') : t('onboarding.tour.slide1.titleAdvertiser')}
       </Text>

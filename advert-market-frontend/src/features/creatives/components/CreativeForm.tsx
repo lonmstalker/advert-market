@@ -1,4 +1,4 @@
-import { Input, Text, Toggle } from '@telegram-tools/ui-kit';
+import { Group, GroupItem, Input, Text, Toggle } from '@telegram-tools/ui-kit';
 import { type RefObject, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/shared/ui';
@@ -109,17 +109,17 @@ export function CreativeForm({
   }, [isFocused, selection.start, isActive]);
 
   const charRatio = text.length / MAX_TEXT_LENGTH;
-  const counterColor =
+  const counterStateClass =
     charRatio > 0.95
-      ? 'var(--color-state-destructive)'
+      ? 'am-creative-counter am-creative-counter--danger'
       : charRatio > 0.8
-        ? 'var(--color-state-warning)'
-        : 'var(--color-foreground-tertiary)';
+        ? 'am-creative-counter am-creative-counter--warning'
+        : 'am-creative-counter am-creative-counter--default';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <div style={{ marginBottom: 8 }}>
+    <div className="am-creative-form">
+      <div className="am-creative-form__field">
+        <div className="am-creative-form__label">
           <Text type="subheadline2" color="secondary">
             {t('creatives.form.title')}
           </Text>
@@ -127,19 +127,12 @@ export function CreativeForm({
         <Input value={title} onChange={onTitleChange} placeholder={t('creatives.form.titlePlaceholder')} />
       </div>
 
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <div className="am-creative-form__field">
+        <div className="am-creative-form__field-head">
           <Text type="subheadline2" color="secondary">
             {t('creatives.form.text')}
           </Text>
-          <span
-            style={{
-              fontSize: 12,
-              fontVariantNumeric: 'tabular-nums',
-              color: counterColor,
-              transition: 'color 0.3s',
-            }}
-          >
+          <span className={counterStateClass}>
             {text.length}/{MAX_TEXT_LENGTH}
           </span>
         </div>
@@ -150,7 +143,7 @@ export function CreativeForm({
           disabled={!hasSelection}
         />
         {!hasSelection && isFocused && (
-          <div style={{ marginTop: 2, marginBottom: 4 }}>
+          <div className="am-creative-form__hint">
             <Text type="caption2" color="tertiary">
               {t('creatives.form.selectTextHint')}
             </Text>
@@ -163,8 +156,8 @@ export function CreativeForm({
           placeholder={t('creatives.form.textPlaceholder')}
           maxLength={MAX_TEXT_LENGTH}
           rows={6}
-          autoResize
-          style={{ resize: 'none', minHeight: 140 }}
+          autosize
+          className="am-creative-form__textarea"
           onFocus={() => {
             setIsFocused(true);
             syncSelection();
@@ -188,10 +181,12 @@ export function CreativeForm({
       />
       <ButtonBuilder buttons={buttons} onChange={onButtonsChange} />
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text type="body">{t('creatives.form.disablePreview')}</Text>
-        <Toggle isEnabled={disableWebPagePreview} onChange={onDisableWebPagePreviewChange} />
-      </div>
+      <Group>
+        <GroupItem
+          text={t('creatives.form.disablePreview')}
+          after={<Toggle isEnabled={disableWebPagePreview} onChange={onDisableWebPagePreviewChange} />}
+        />
+      </Group>
 
       <LinkInputSheet
         open={linkSheetOpen}

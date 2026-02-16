@@ -12,7 +12,7 @@ type ProfileHeroProps = {
 export function ProfileHero({ displayName, username, roleBadge, memberSince, avatarUrl }: ProfileHeroProps) {
   return (
     <AppSurfaceCard className="am-profile-hero">
-      <div className="flex flex-col items-center pt-6 px-4 pb-4 gap-2">
+      <div className="flex flex-col items-center pt-8 px-5 pb-6 gap-3">
         <div className="am-profile-avatar-ring p-[3px] bg-accent">
           <div className="w-full h-full rounded-full overflow-hidden border-[3px] border-bg-base flex-center">
             {avatarUrl ? (
@@ -35,7 +35,7 @@ export function ProfileHero({ displayName, username, roleBadge, memberSince, ava
             {displayName}
           </Text>
           {username && (
-            <div className="mt-0.5">
+            <div className="mt-1">
               <Text type="body" color="secondary">
                 {username}
               </Text>

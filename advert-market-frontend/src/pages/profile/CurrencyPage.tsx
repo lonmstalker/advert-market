@@ -5,16 +5,18 @@ import { useTranslation } from 'react-i18next';
 import { updateSettings } from '@/features/profile/api/profile-api';
 import { profileKeys } from '@/shared/api';
 import { useToast } from '@/shared/hooks';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { CURRENCIES } from '@/shared/lib/constants/currencies';
 import { preserveLanguageOnSettingsUpdate } from '@/shared/lib/profile-settings';
 import { useSettingsStore } from '@/shared/stores/settings-store';
-import { BackButtonHandler } from '@/shared/ui';
+import { AppPageShell, BackButtonHandler } from '@/shared/ui';
 import { pressScale, slideFromRight, staggerChildren } from '@/shared/ui/animations';
 
 export default function CurrencyPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { showError } = useToast();
+  const haptic = useHaptic();
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
   const setDisplayCurrency = useSettingsStore((s) => s.setDisplayCurrency);
   const setFromProfile = useSettingsStore((s) => s.setFromProfile);
@@ -40,17 +42,18 @@ export default function CurrencyPage() {
 
   function handleSelect(code: string) {
     if (code === displayCurrency) return;
+    haptic.selectionChanged();
     mutation.mutate(code);
   }
 
   return (
-    <motion.div {...slideFromRight} style={{ padding: '16px' }}>
+    <AppPageShell withTabsPadding={false} testId="profile-currency-page">
       <BackButtonHandler />
       <Text type="title1" weight="bold">
         {t('profile.currency')}
       </Text>
 
-      <motion.div {...staggerChildren} initial="initial" animate="animate" style={{ marginTop: 16 }}>
+      <motion.div {...staggerChildren} initial="initial" animate="animate" className="mt-5">
         <motion.div {...slideFromRight}>
           <Group header={t('profile.currency.title')} footer={t('profile.currency.hint')}>
             {CURRENCIES.map(({ code, symbol, labelKey }) => (
@@ -59,19 +62,9 @@ export default function CurrencyPage() {
                   text={t(labelKey)}
                   before={
                     <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        background:
-                          displayCurrency === code
-                            ? 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)'
-                            : 'var(--color-background-section)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'background 0.2s ease',
-                      }}
+                      className={`am-icon-circle am-icon-circle--md transition-colors duration-200 ${
+                        displayCurrency === code ? 'bg-soft-accent' : 'bg-bg-secondary'
+                      }`}
                     >
                       <Text type="body" weight="bold" color={displayCurrency === code ? 'accent' : 'secondary'}>
                         {symbol}
@@ -86,6 +79,6 @@ export default function CurrencyPage() {
           </Group>
         </motion.div>
       </motion.div>
-    </motion.div>
+    </AppPageShell>
   );
 }

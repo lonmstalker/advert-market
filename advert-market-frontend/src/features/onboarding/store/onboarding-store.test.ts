@@ -116,7 +116,7 @@ describe('onboarding role resolution', () => {
   });
 
   it('resolves owner route', () => {
-    expect(resolveOnboardingRoute('owner')).toBe('/profile/channels/new');
+    expect(resolveOnboardingRoute('owner')).toBe('/catalog');
   });
 
   it('resolves advertiser route', () => {

@@ -24,15 +24,13 @@ export function ChannelPricingTab({ channel, minPrice, heroCpm }: ChannelPricing
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="px-4 pb-4"
+      className="px-4 pb-5"
     >
       {minPrice != null && (
-        <div className="mb-4">
+        <div className="mb-5">
           <div className="flex items-baseline gap-2 flex-wrap">
             <Text type="title1" weight="bold">
-              <span className="am-tabnum">
-                {t('catalog.channel.from', { price: formatTon(minPrice) })}
-              </span>
+              <span className="am-tabnum">{t('catalog.channel.from', { price: formatTon(minPrice) })}</span>
             </Text>
             <Text type="caption1" color="secondary">
               <span className="am-tabnum">{formatFiat(minPrice)}</span>
@@ -60,7 +58,7 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3.5">
       {rules.map((rule) => {
         const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
         const primaryType = rule.postTypes[0] ?? 'NATIVE';
@@ -68,7 +66,7 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
         const overlap = buildOverlapLabel(channel.postFrequencyHours, undefined, t);
         return (
           <div key={rule.id} className="bg-bg-base border border-separator rounded-[14px] overflow-hidden">
-            <div className="py-3.5 px-4 flex items-center gap-3">
+            <div className="py-4 px-4 flex items-center gap-3.5">
               <div className="w-10 h-10 rounded-[10px] bg-bg-secondary flex items-center justify-center shrink-0">
                 <PostTypeIcon postType={primaryType} className="w-5 h-5 text-fg-secondary" />
               </div>

@@ -3,6 +3,10 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Tappable } from '@/shared/ui';
 
+function joinClasses(...classes: Array<string | false | null | undefined>): string {
+  return classes.filter(Boolean).join(' ');
+}
+
 type TimelineStep = {
   label: string;
   status: 'completed' | 'active' | 'pending';
@@ -26,10 +30,7 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
   };
 
   return (
-    <ul
-      aria-label={t('onboarding.tour.mockup.dealTimeline')}
-      style={{ display: 'flex', flexDirection: 'column', gap: '0', padding: '8px 0', listStyle: 'none', margin: 0 }}
-    >
+    <ul aria-label={t('onboarding.tour.mockup.dealTimeline')} className="am-mini-timeline">
       {steps.map((step, i) => {
         const isActive = step.status === 'active';
         const isCompleted = step.status === 'completed';
@@ -47,30 +48,10 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
         }
 
         return (
-          <li key={step.label} style={{ display: 'flex', alignItems: 'stretch', minHeight: '32px' }}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                width: '24px',
-                flexShrink: 0,
-              }}
-            >
+          <li key={step.label} className="am-mini-timeline__item">
+            <div className="am-mini-timeline__rail">
               {isCompleted ? (
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--color-accent-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginTop: '2px',
-                  }}
-                >
+                <div aria-hidden="true" className="am-mini-timeline__dot am-mini-timeline__dot--completed">
                   <Icon name="check" size="10px" className="am-icon-white" />
                 </div>
               ) : isActive ? (
@@ -78,57 +59,29 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
                   aria-hidden="true"
                   animate={{ opacity: [1, 0.72, 1], scale: [1, 0.96, 1] }}
                   transition={{ duration: 1.2, repeat: 2, ease: 'easeInOut' }}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    border: '2px solid var(--color-accent-primary)',
-                    backgroundColor: 'var(--color-background-base)',
-                    marginTop: '2px',
-                  }}
+                  className="am-mini-timeline__dot am-mini-timeline__dot--active"
                 />
               ) : (
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    border: '1.5px solid var(--color-border-separator)',
-                    marginTop: '2px',
-                  }}
-                />
+                <div aria-hidden="true" className="am-mini-timeline__dot am-mini-timeline__dot--pending" />
               )}
               {!isLast && (
                 <div
-                  style={{
-                    width: '1.5px',
-                    flex: 1,
-                    backgroundColor: isCompleted ? 'var(--color-accent-primary)' : 'var(--color-border-separator)',
-                    minHeight: '8px',
-                  }}
+                  className={joinClasses('am-mini-timeline__line', isCompleted && 'am-mini-timeline__line--completed')}
                 />
               )}
             </div>
 
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="am-mini-timeline__content">
               <Tappable
-                className="focusable"
+                className={joinClasses(
+                  'am-mini-timeline__step focusable',
+                  isActive && 'am-mini-timeline__step--active',
+                  isClickable && 'am-mini-timeline__step--clickable',
+                  isExpanded && 'am-mini-timeline__step--expanded',
+                )}
                 aria-expanded={isExpanded}
                 aria-label={`${step.label} — ${statusLabels[step.status] ?? step.status}`}
                 onClick={isClickable ? handleClick : undefined}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: isActive ? '2px 8px 2px 8px' : '0 0 0 8px',
-                  cursor: isClickable ? 'pointer' : 'default',
-                  background: isActive ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)' : 'none',
-                  border: 'none',
-                  borderRadius: isActive ? '8px' : '0',
-                  textAlign: 'left',
-                  WebkitTapHighlightColor: 'transparent',
-                  marginBottom: isExpanded ? '0' : '8px',
-                }}
               >
                 <Text
                   type="caption1"
@@ -146,9 +99,9 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.25, ease: 'easeOut' }}
-                    style={{ overflow: 'hidden', paddingLeft: '8px' }}
+                    className="am-mini-timeline__details"
                   >
-                    <div style={{ paddingBottom: '8px', paddingTop: '2px' }}>
+                    <div className="am-mini-timeline__details-inner">
                       <Text type="caption1" color="secondary">
                         {step.description}
                       </Text>

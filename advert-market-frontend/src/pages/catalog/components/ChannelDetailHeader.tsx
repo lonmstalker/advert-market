@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { ChannelDetail } from '@/features/channels';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { getChannelLanguages } from '@/shared/lib/channel-utils';
 import { formatChannelAge } from '@/shared/lib/time-utils';
 import { LanguageBadge } from '@/shared/ui';
@@ -20,11 +21,12 @@ type ChannelDetailHeaderProps = {
 export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetailHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const haptic = useHaptic();
   const langs = getChannelLanguages(channel);
 
   return (
     <motion.div {...fadeIn}>
-      <div className="px-4 pt-4 pb-3.5 bg-bg-base border-b border-separator">
+      <div className="px-4 pt-5 pb-4 bg-bg-base border-b border-separator">
         <div className="flex items-start gap-3">
           <ChannelAvatar title={channel.title} size="lg" />
           <div className="flex-1 min-w-0">
@@ -54,7 +56,10 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
           </div>
           <div className="flex gap-1.5 shrink-0">
             <Tappable
-              onClick={onShare}
+              onClick={() => {
+                haptic.impactOccurred('light');
+                onShare();
+              }}
               className="am-icon-button"
               aria-label={t('catalog.channel.share')}
             >
@@ -62,7 +67,10 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
             </Tappable>
             {isOwner && (
               <Tappable
-                onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
+                onClick={() => {
+                  haptic.impactOccurred('light');
+                  navigate(`/profile/channels/${channel.id}/edit`);
+                }}
                 className="am-icon-button"
                 aria-label={t('catalog.channel.edit')}
               >
@@ -73,7 +81,7 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
         </div>
 
         {channel.topics.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2.5">
+          <div className="flex flex-wrap gap-1.5 mt-3">
             {channel.topics.map((topic) => (
               <span key={topic.slug} className="am-topic-tag">
                 {topic.name}

@@ -1,5 +1,6 @@
-import type { ComponentType, CSSProperties, SVGProps } from 'react';
+import type { ComponentType, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { Tappable } from '@/shared/ui';
 import {
   FormatBoldIcon,
@@ -19,29 +20,6 @@ type FormattingToolbarProps = {
   disabled?: boolean;
 };
 
-const toolbarStyle: CSSProperties = {
-  display: 'flex',
-  gap: 4,
-  padding: '4px 0',
-};
-
-const buttonBase: CSSProperties = {
-  width: 36,
-  height: 36,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 8,
-  border: 'none',
-  cursor: 'pointer',
-  transition: 'background 0.15s',
-};
-
-const iconStyle: CSSProperties = {
-  width: 18,
-  height: 18,
-};
-
 const BUTTONS: Array<{ type: TextEntityType; icon: ComponentType<SVGProps<SVGSVGElement>>; labelKey: string }> = [
   { type: TextEntityType.BOLD, icon: FormatBoldIcon, labelKey: 'creatives.form.formatting.bold' },
   { type: TextEntityType.ITALIC, icon: FormatItalicIcon, labelKey: 'creatives.form.formatting.italic' },
@@ -57,9 +35,20 @@ const BUTTONS: Array<{ type: TextEntityType; icon: ComponentType<SVGProps<SVGSVG
 
 export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: FormattingToolbarProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
+
+  function handleFormat(type: TextEntityType) {
+    haptic.impactOccurred('light');
+    onFormat(type);
+  }
+
+  function handleLink() {
+    haptic.impactOccurred('light');
+    onLink();
+  }
 
   return (
-    <div style={toolbarStyle}>
+    <div className="am-formatting-toolbar">
       {BUTTONS.map((btn) => {
         const isActive = activeTypes.has(btn.type);
         const Icon = btn.icon;
@@ -67,38 +56,30 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
           <Tappable
             key={btn.type}
             disabled={disabled}
-            onClick={() => onFormat(btn.type)}
+            onClick={() => handleFormat(btn.type)}
             onPointerDown={(e) => e.preventDefault()}
             onMouseDown={(e) => e.preventDefault()}
-            style={{
-              ...buttonBase,
-              background: isActive ? 'var(--am-soft-accent-bg)' : 'transparent',
-              color: isActive ? 'var(--color-accent-primary)' : 'var(--color-foreground-secondary)',
-              opacity: disabled ? 0.4 : 1,
-            }}
+            className="am-formatting-toolbar__button"
+            data-active={isActive}
+            data-disabled={disabled ? 'true' : 'false'}
             aria-pressed={isActive}
             aria-label={t(btn.labelKey)}
           >
-            <Icon style={iconStyle} />
+            <Icon className="am-formatting-toolbar__icon" />
           </Tappable>
         );
       })}
       <Tappable
         disabled={disabled}
-        onClick={onLink}
+        onClick={handleLink}
         onPointerDown={(e) => e.preventDefault()}
         onMouseDown={(e) => e.preventDefault()}
-        style={{
-          ...buttonBase,
-          background: activeTypes.has(TextEntityType.TEXT_LINK) ? 'var(--am-soft-accent-bg)' : 'transparent',
-          color: activeTypes.has(TextEntityType.TEXT_LINK)
-            ? 'var(--color-accent-primary)'
-            : 'var(--color-foreground-secondary)',
-          opacity: disabled ? 0.4 : 1,
-        }}
+        className="am-formatting-toolbar__button"
+        data-active={activeTypes.has(TextEntityType.TEXT_LINK)}
+        data-disabled={disabled ? 'true' : 'false'}
         aria-label={t('creatives.form.formatting.link')}
       >
-        <LinkIcon style={iconStyle} />
+        <LinkIcon className="am-formatting-toolbar__icon" />
       </Tappable>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Icon, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode } from 'react';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { pressScale, Tappable } from '@/shared/ui';
 
 type RoleCardProps = {
@@ -18,18 +19,24 @@ const previewContainer = {
 };
 
 export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: RoleCardProps) {
+  const haptic = useHaptic();
+
+  const handleToggle = () => {
+    haptic.impactOccurred('light');
+    onToggle();
+  };
+
   return (
     <motion.div {...pressScale} data-testid="role-card-root">
       <Tappable
-        className={`focusable flex flex-col p-0 rounded-[12px] cursor-pointer text-left w-full overflow-hidden transition-[border-color,background-color] duration-150 ease-in-out [-webkit-tap-highlight-color:transparent] border ${isSelected ? 'border-accent bg-soft-accent' : 'border-separator bg-bg-base'}`}
+        className="am-onboarding-role-card focusable"
         data-testid="role-card-trigger"
-        onClick={onToggle}
+        data-selected={isSelected ? 'true' : 'false'}
+        onClick={handleToggle}
       >
-        <div className="flex items-center gap-4 p-4 w-full">
-          <div className="size-14 rounded-[14px] bg-bg-secondary flex items-center justify-center shrink-0 text-accent">
-            {icon}
-          </div>
-          <div className="flex-1 min-w-0">
+        <div className="am-onboarding-role-card__main">
+          <div className="am-onboarding-role-card__icon">{icon}</div>
+          <div className="am-onboarding-role-card__copy">
             <Text type="body" weight="medium">
               {title}
             </Text>
@@ -44,7 +51,7 @@ export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: 
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.15 }}
-                className="shrink-0"
+                className="am-onboarding-role-card__check"
               >
                 <Icon name="check" color="accent" size="24px" />
               </motion.div>
@@ -59,10 +66,15 @@ export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: 
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="overflow-hidden w-full"
+              className="am-onboarding-role-card__details"
             >
-              <div className="h-px bg-separator mx-4" />
-              <motion.div variants={previewContainer} initial="initial" animate="animate" className="px-4 pt-2 pb-4">
+              <div className="am-onboarding-role-card__divider" />
+              <motion.div
+                variants={previewContainer}
+                initial="initial"
+                animate="animate"
+                className="am-onboarding-role-card__preview"
+              >
                 {children}
               </motion.div>
             </motion.div>

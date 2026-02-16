@@ -1,8 +1,8 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { useIsConnectionRestored } from '@tonconnect/ui-react';
-import { ArrowUp, Plus, RefreshCw, SendHorizontal } from 'lucide-react';
+import { RefreshCw, SendHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { BalanceCard } from '@/features/wallet/components/BalanceCard';
@@ -12,7 +12,7 @@ import { WalletSkeleton } from '@/features/wallet/components/WalletSkeleton';
 import { useTransactions } from '@/features/wallet/hooks/useTransactions';
 import { useWalletSummary } from '@/features/wallet/hooks/useWalletSummary';
 import { useHaptic } from '@/shared/hooks';
-import { AppPageShell, EmptyState, Tappable } from '@/shared/ui';
+import { AppPageShell, EmptyState, SegmentControl, Tappable } from '@/shared/ui';
 import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
 import { ScrollIcon } from '@/shared/ui/icons';
 
@@ -25,6 +25,8 @@ export default function WalletPage() {
   const navigate = useNavigate();
   const isConnectionRestored = useIsConnectionRestored();
   const haptic = useHaptic();
+
+  const [walletTab, setWalletTab] = useState<'crypto' | 'ton'>('crypto');
 
   const { data: summary, isLoading: summaryLoading } = useWalletSummary();
   const { data: txData, isLoading: txLoading } = useTransactions(undefined, 5);
@@ -43,7 +45,7 @@ export default function WalletPage() {
     return (
       <AppPageShell variant="finance" testId="wallet-page-shell">
         <EmptyState
-          icon={<ScrollIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+          icon={<ScrollIcon className="w-7 h-7 text-fg-tertiary" />}
           title={t('wallet.empty.title')}
           description={t('wallet.empty.description')}
           actionLabel={t('wallet.empty.cta')}
@@ -57,14 +59,12 @@ export default function WalletPage() {
   const escrowAmount = isOwner ? summary.inEscrowNano : summary.activeEscrowNano;
   const quickActions = [
     { key: 'transfer', label: t('wallet.quickAction.transfer'), Icon: SendHorizontal },
-    { key: 'topUp', label: t('wallet.quickAction.topUp'), Icon: Plus },
-    { key: 'withdraw', label: t('wallet.quickAction.withdraw'), Icon: ArrowUp },
     { key: 'exchange', label: t('wallet.quickAction.exchange'), Icon: RefreshCw },
   ] as const;
 
   return (
     <AppPageShell variant="finance" testId="wallet-page-shell">
-      <motion.div {...fadeIn}>
+      <motion.div {...fadeIn} className="flex flex-col gap-5">
         <div className="am-wallet-top">
           <div className="am-wallet-pill">
             <Text type="subheadline2" weight="medium">
@@ -73,16 +73,14 @@ export default function WalletPage() {
           </div>
 
           <div className="am-wallet-segment">
-            <div className="am-wallet-segment-active py-[7px] px-[18px]">
-              <Text type="subheadline2" weight="bold">
-                {t('wallet.segment.crypto')}
-              </Text>
-            </div>
-            <div className="py-[7px] px-[18px]">
-              <Text type="subheadline2" weight="bold">
-                {t('wallet.segment.ton')}
-              </Text>
-            </div>
+            <SegmentControl
+              tabs={[
+                { value: 'crypto' as const, label: t('wallet.segment.crypto') },
+                { value: 'ton' as const, label: t('wallet.segment.ton') },
+              ]}
+              active={walletTab}
+              onChange={setWalletTab}
+            />
           </div>
         </div>
 
@@ -94,11 +92,11 @@ export default function WalletPage() {
               key={key}
               className="am-wallet-action"
               onClick={() => {
-                haptic.selectionChanged();
+                haptic.impactOccurred('light');
               }}
               aria-label={label}
             >
-              <div className="flex-center flex-col gap-2">
+              <div className="flex-center flex-col gap-2.5">
                 <div className="am-wallet-actionIcon flex-center">
                   <Icon size={24} strokeWidth={1.5} />
                 </div>
@@ -116,11 +114,18 @@ export default function WalletPage() {
 
         {transactions.length > 0 && (
           <motion.div {...fadeIn} transition={{ delay: 0.3 }}>
-            <div className="flex justify-between items-center mb-2.5">
+            <div className="flex justify-between items-center mb-4">
               <Text type="title3" weight="bold">
                 {t('wallet.recentTransactions')}
               </Text>
-              <motion.div {...pressScale} onClick={() => navigate('/wallet/history')} className="cursor-pointer">
+              <motion.div
+                {...pressScale}
+                onClick={() => {
+                  haptic.impactOccurred('light');
+                  navigate('/wallet/history');
+                }}
+                className="cursor-pointer"
+              >
                 <Text type="subheadline2" weight="medium" color="accent">
                   {t('wallet.viewAll')}
                 </Text>

@@ -9,30 +9,11 @@ type ChannelHeaderProps = {
 
 export function ChannelHeader({ icon, name, detail }: ChannelHeaderProps) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '4px 0 8px',
-      }}
-    >
-      <div
-        aria-hidden="true"
-        style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          backgroundColor: 'var(--color-background-secondary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
+    <div data-testid="onboarding-channel-header" className="am-onboarding-channel-header">
+      <div aria-hidden="true" className="am-onboarding-channel-header__icon">
         {icon}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="am-onboarding-channel-header__copy">
         <Text type="subheadline1" weight="medium">
           {name}
         </Text>

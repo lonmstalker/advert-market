@@ -32,6 +32,7 @@ describe('useTelegram', () => {
             last_name: 'Doe',
             username: 'johndoe',
             language_code: 'en',
+            photo_url: 'https://t.me/i/userpic/320/johndoe.jpg',
           },
         },
         colorScheme: 'light',
@@ -52,6 +53,7 @@ describe('useTelegram', () => {
       lastName: 'Doe',
       username: 'johndoe',
       languageCode: 'en',
+      photoUrl: 'https://t.me/i/userpic/320/johndoe.jpg',
     });
     expect(result.current.platform).toBe('android');
     expect(result.current.isExpanded).toBe(true);

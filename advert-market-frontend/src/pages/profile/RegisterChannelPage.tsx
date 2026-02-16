@@ -182,10 +182,9 @@ export default function RegisterChannelPage() {
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" {...slideFromLeft} className="flex-1 flex flex-col">
-              <div className="flex-1 flex flex-col gap-4">
-                {/* Instruction */}
+              <div className="flex-1 flex flex-col gap-5">
                 <AppSurfaceCard>
-                  <div className="p-4 flex flex-col gap-3">
+                  <div className="p-5 flex flex-col gap-3.5">
                     <Text type="subheadline2" color="secondary">
                       {t('profile.register.addBotInstruction')}
                     </Text>
@@ -199,7 +198,6 @@ export default function RegisterChannelPage() {
                   </div>
                 </AppSurfaceCard>
 
-                {/* Username input */}
                 <div>
                   <div className="mb-2">
                     <Text type="subheadline2" color="secondary">
@@ -224,8 +222,7 @@ export default function RegisterChannelPage() {
                 </div>
               </div>
 
-              {/* Verify button */}
-              <div className="shrink-0 pb-8 pt-4">
+              <div className="shrink-0 pb-8 pt-6">
                 <motion.div {...pressScale}>
                   <Button
                     text={verifyMutation.isPending ? t('profile.register.verifying') : t('profile.register.verify')}
@@ -241,11 +238,10 @@ export default function RegisterChannelPage() {
 
           {step === 2 && verifyData && (
             <motion.div key="step2" {...slideFromRight} className="flex-1 flex flex-col">
-              <div className="flex-1 flex flex-col gap-4">
-                {/* Channel info */}
+              <div className="flex-1 flex flex-col gap-5">
                 <AppSurfaceCard>
-                  <div className="p-4">
-                    <div className="mb-1">
+                  <div className="p-5">
+                    <div className="mb-1.5">
                       <Text type="subheadline2" color="secondary">
                         {t('profile.register.channelInfo')}
                       </Text>
@@ -266,7 +262,6 @@ export default function RegisterChannelPage() {
                   </div>
                 </AppSurfaceCard>
 
-                {/* Category select */}
                 <div>
                   <div className="mb-2">
                     <Text type="subheadline2" color="secondary">
@@ -276,7 +271,6 @@ export default function RegisterChannelPage() {
                   <Select options={categoryOptions} value={selectedCategory} onChange={setSelectedCategory} />
                 </div>
 
-                {/* Price input */}
                 <div>
                   <div className="mb-2">
                     <Text type="subheadline2" color="secondary">
@@ -297,8 +291,7 @@ export default function RegisterChannelPage() {
                 </div>
               </div>
 
-              {/* Register button */}
-              <div className="shrink-0 pb-8 pt-4">
+              <div className="shrink-0 pb-8 pt-6">
                 <motion.div {...pressScale}>
                   <Button
                     text={registerMutation.isPending ? t('profile.register.submitting') : t('profile.register.submit')}

@@ -12,6 +12,7 @@ import { TourSlideDeal } from '@/features/onboarding/components/tour-slide-deal'
 import { TourSlideWallet } from '@/features/onboarding/components/tour-slide-wallet';
 import { resolveOnboardingRoute, useOnboardingStore } from '@/features/onboarding/store/onboarding-store';
 import { profileKeys } from '@/shared/api';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
 import { pressScale, Tappable } from '@/shared/ui';
 
@@ -31,6 +32,7 @@ export default function OnboardingTourPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { interests, activeSlide, setActiveSlide, getTaskState, getPrimaryRole, reset } = useOnboardingStore();
+  const haptic = useHaptic();
   const [showError, setShowError] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const isAnimating = useRef(false);
@@ -58,8 +60,10 @@ export default function OnboardingTourPage() {
     onSuccess: (updatedProfile) => {
       hasCompleted.current = true;
       queryClient.setQueryData(profileKeys.me, updatedProfile);
+      const resolvedPath = resolveOnboardingRoute(primaryRole);
       trackOnboardingEvent('onboarding_complete', { role: primaryRole, variant: 'direct_replace' });
-      navigate(resolveOnboardingRoute(primaryRole), { replace: true });
+      trackOnboardingEvent('onboarding_route_resolved', { role: primaryRole, path: resolvedPath });
+      navigate(resolvedPath, { replace: true });
       reset();
     },
     onError: () => {
@@ -79,6 +83,7 @@ export default function OnboardingTourPage() {
 
   function handleNext() {
     if (isAnimating.current || mutation.isPending) return;
+    haptic.impactOccurred('medium');
 
     const step = slideToStepMap[activeSlide] ?? 'tour-1';
     trackOnboardingEvent('onboarding_primary_click', { step });
@@ -106,7 +111,10 @@ export default function OnboardingTourPage() {
         testId="onboarding-tour-step"
         topAction={
           <Tappable
-            onClick={() => setShowSkipConfirm(true)}
+            onClick={() => {
+              haptic.impactOccurred('light');
+              setShowSkipConfirm(true);
+            }}
             className="border-none bg-transparent text-fg-secondary min-h-9 min-w-11 py-2 flex items-center"
             aria-label={t('onboarding.tour.skip')}
           >
@@ -115,9 +123,9 @@ export default function OnboardingTourPage() {
             </Text>
           </Tappable>
         }
-        contentClassName="justify-center relative overflow-hidden pt-2"
+        contentClassName="justify-center relative overflow-hidden pt-3"
         footer={
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <motion.div {...pressScale}>
               <Button
                 text={isLastSlide ? finishText : t('onboarding.tour.next')}
@@ -159,11 +167,7 @@ export default function OnboardingTourPage() {
           </motion.div>
         </AnimatePresence>
 
-        <div
-          role="tablist"
-          aria-label={t('onboarding.tour.next')}
-          className="flex justify-center gap-1.5 pt-3 pb-1"
-        >
+        <div role="tablist" aria-label={t('onboarding.tour.next')} className="flex justify-center gap-1.5 pt-4 pb-2">
           {(['catalog', 'deal', 'wallet'] as const).map((key, i) => {
             const isActive = i === activeSlide;
             return (

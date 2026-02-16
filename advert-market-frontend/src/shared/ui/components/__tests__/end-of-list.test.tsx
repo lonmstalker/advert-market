@@ -10,9 +10,7 @@ describe('EndOfList', () => {
 
   it('renders two separator lines', () => {
     const { container } = render(<EndOfList label="End" />);
-    const separators = container.querySelectorAll('div > div');
-    // wrapper > [separator, text, separator] — find divs with background
-    const lines = Array.from(separators).filter((el) => (el as HTMLElement).style.height === '0.5px');
+    const lines = container.querySelectorAll('.bg-separator');
     expect(lines).toHaveLength(2);
   });
 });

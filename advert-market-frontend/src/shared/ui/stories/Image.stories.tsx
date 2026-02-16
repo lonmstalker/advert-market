@@ -62,7 +62,7 @@ export const AnimatedScale: Story = {
 
 export const Gallery: Story = {
   render: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+    <div className="grid grid-cols-3 gap-2">
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <motion.div key={i} {...fadeIn} transition={{ delay: i * 0.1, duration: 0.3 }}>
           <Image

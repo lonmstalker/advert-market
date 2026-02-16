@@ -36,13 +36,13 @@ export function DealTimeline({ steps }: DealTimelineProps) {
   const visibleSteps = [...nonPendingSteps, ...visiblePending];
 
   return (
-    <div className="px-4">
-      <div className="mb-3">
+    <div className="px-4 pt-2">
+      <div className="mb-4">
         <Text type="subheadline2" weight="bold">
           {t('deals.detail.timeline')}
         </Text>
       </div>
-      <ul aria-label={t('deals.detail.timeline')} className="flex flex-col gap-1 list-none m-0 p-0">
+      <ul aria-label={t('deals.detail.timeline')} className="flex flex-col gap-1.5 list-none m-0 p-0">
         {visibleSteps.map((step, i) => {
           const globalIndex = steps.indexOf(step);
           const isActive = step.state === 'active';
@@ -52,11 +52,14 @@ export function DealTimeline({ steps }: DealTimelineProps) {
           const isExpanded = expandedIndex === globalIndex && !!step.description;
 
           return (
-            <li key={`${step.status}-${globalIndex}`} className="flex items-stretch min-h-9">
+            <li key={`${step.status}-${globalIndex}`} className="flex items-stretch min-h-11">
               {/* Node column */}
               <div className="flex flex-col items-center w-7 shrink-0">
                 {isCompleted ? (
-                  <div aria-hidden="true" className="w-4 h-4 rounded-full bg-accent flex items-center justify-center mt-0.5">
+                  <div
+                    aria-hidden="true"
+                    className="am-timeline-node-completed rounded-full bg-accent flex items-center justify-center mt-0.5"
+                  >
                     <Icon name="check" size="10px" className="am-icon-white" />
                   </div>
                 ) : isActive ? (
@@ -70,28 +73,28 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                       ],
                     }}
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                    className="w-5 h-5 rounded-full border-[2.5px] border-accent bg-bg-base am-timeline-glow"
+                    className="am-timeline-node-active rounded-full border-accent bg-bg-base am-timeline-glow"
                   />
                 ) : (
-                  <div aria-hidden="true" className="w-3 h-3 rounded-full border-[1.5px] border-separator mt-1" />
+                  <div aria-hidden="true" className="am-timeline-node-pending rounded-full border-separator mt-1" />
                 )}
                 {!isLast && (
                   <div
                     className={joinClasses(
-                      'flex-1 min-h-2',
-                      isCompleted ? 'w-0.5 bg-accent' : 'w-[1.5px] bg-separator',
+                      'flex-1 min-h-3',
+                      isCompleted ? 'am-timeline-rail-completed bg-accent' : 'am-timeline-rail-pending bg-separator',
                     )}
                   />
                 )}
               </div>
 
               {/* Content column */}
-              <div className={joinClasses('flex-1 min-w-0', !isLast && 'pb-2')}>
+              <div className={joinClasses('flex-1 min-w-0', !isLast && 'pb-3')}>
                 <Tappable
                   onClick={step.description ? () => setExpandedIndex(isExpanded ? null : globalIndex) : undefined}
                   className={joinClasses(
                     'flex items-center justify-between w-full border-none text-left [-webkit-tap-highlight-color:transparent]',
-                    isActive ? 'py-1 px-2 bg-soft-accent rounded-lg' : 'pl-2 bg-transparent',
+                    isActive ? 'py-1.5 px-2.5 bg-soft-accent rounded-lg' : 'pl-2.5 bg-transparent',
                     step.description ? 'cursor-pointer' : 'cursor-default',
                   )}
                 >
@@ -137,7 +140,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
       {showExpandButton && (
         <Tappable
           onClick={() => setShowAllPending(true)}
-          className="block bg-transparent border-none cursor-pointer pt-1.5 pl-9 text-[13px] font-medium text-accent [-webkit-tap-highlight-color:transparent]"
+          className="block bg-transparent border-none cursor-pointer pt-2.5 pl-9 text-[13px] font-medium text-accent [-webkit-tap-highlight-color:transparent]"
         >
           {t('deals.detail.moreSteps', { count: collapsedCount })}
         </Tappable>

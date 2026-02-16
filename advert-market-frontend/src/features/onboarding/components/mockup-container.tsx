@@ -6,21 +6,7 @@ type MockupContainerProps = {
 
 export function MockupContainer({ children }: MockupContainerProps) {
   return (
-    <div
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: '16px',
-        border: '1px solid var(--color-border-separator)',
-        backgroundColor: 'var(--color-background-secondary)',
-        padding: '16px',
-        maxHeight: '420px',
-        overflowY: 'auto',
-        scrollbarWidth: 'none',
-        WebkitOverflowScrolling: 'touch',
-      }}
-    >
+    <div data-testid="onboarding-mockup-container" className="am-onboarding-mockup">
       {children}
     </div>
   );

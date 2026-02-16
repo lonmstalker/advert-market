@@ -265,25 +265,23 @@ Project uses **Tailwind CSS v4** with CSS-first configuration. NO `tailwind.conf
 
 | File | Purpose |
 |------|---------|
-| `src/styles/tailwind.css` | `@import "tailwindcss"` + `@theme {}` bridge tokens |
-| `src/styles/components.css` | `@layer components {}` for reusable patterns |
-| `src/styles/global.css` | Design tokens, `.am-*` classes, keyframes |
+| `src/app/app.css` | Single source of truth: `@import "tailwindcss"`, `@theme {}` bridge tokens, `@layer base/components`, design tokens, `.am-*` classes, keyframes |
 
 ### CSS Import Order (in `main.tsx`)
 
 ```
-ui-kit.css → tailwind.css → components.css → global.css
+ui-kit.css → app.css
 ```
 
 ### Rules
 
 1. **Utility-first** — prefer Tailwind classes over inline `style={{}}`
 2. **`@theme {}` for tokens** — bridge CSS variables to Tailwind utilities
-3. **`@layer components {}`** for reusable class patterns
+3. **`@layer components {}`** for reusable class patterns (inside `app.css`)
 4. **`@apply`** only inside `@layer components {}` — never in component files
 5. **`data-*` attributes** for state variants
 6. **NO `tailwind.config.ts`** — all config is CSS-based
-7. **NO `@keyframes` inside `@theme`** — keyframes go in `global.css`
+7. **NO `@keyframes` inside `@theme`** — keyframes go in `app.css`
 8. **`joinClasses()`** for conditional class merging (NOT `cn()` or `clsx`)
 
 ## General Rules

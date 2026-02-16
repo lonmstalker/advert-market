@@ -23,14 +23,10 @@ export function AppPageShell({
 }: AppPageShellProps) {
   const isFinance = variant === 'finance';
   const pageClass = isFinance ? 'am-page am-page--finance' : 'am-page';
-  const stackClass = isFinance ? 'am-finance-stack' : 'am-page-stack';
 
   return (
-    <main
-      className={joinClasses(pageClass, withTabsPadding && 'am-page-with-tabs', className)}
-      data-testid={testId}
-    >
-      <div className={joinClasses(stackClass, stackClassName)}>{children}</div>
+    <main className={joinClasses(pageClass, withTabsPadding && 'am-page-with-tabs', className)} data-testid={testId}>
+      <div className={joinClasses('am-page-stack', stackClassName)}>{children}</div>
     </main>
   );
 }

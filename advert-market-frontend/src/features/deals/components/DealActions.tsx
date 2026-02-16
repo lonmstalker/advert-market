@@ -39,7 +39,7 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
 
   return (
     <>
-      <FixedBottomBar className="am-fixed-bottom-bar flex gap-2">
+      <FixedBottomBar className="flex gap-3">
         {actions.map((action) => (
           <motion.div key={action.type} {...pressScale} className="flex-1">
             <Button

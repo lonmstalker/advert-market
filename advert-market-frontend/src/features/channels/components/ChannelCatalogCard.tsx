@@ -1,7 +1,8 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { getChannelLanguages } from '@/shared/lib/channel-utils';
 import { formatCompactNumber } from '@/shared/lib/format-number';
 import { formatTonCompact } from '@/shared/lib/ton-format';
@@ -17,22 +18,45 @@ type ChannelCatalogCardProps = {
   onClick: () => void;
 };
 
+function formatCategoryLabel(slug: string): string {
+  const normalized = slug.replaceAll('-', ' ').replaceAll('_', ' ').trim();
+  if (normalized.length === 0) return slug;
+  return normalized[0]?.toUpperCase() + normalized.slice(1);
+}
+
+function formatEngagementRate(value: number | undefined): string {
+  if (value == null || Number.isNaN(value)) return '—';
+  const digits = value >= 10 ? 0 : 1;
+  return `${value.toFixed(digits)}%`;
+}
+
 export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, onClick }: ChannelCatalogCardProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const langs = getChannelLanguages(channel);
+  const topCategories = channel.categories.slice(0, 3).map(formatCategoryLabel);
+  const categories = topCategories.length > 0 ? topCategories : [t('catalog.filters.topicAll')];
+  const subscriberCount = formatCompactNumber(channel.subscriberCount);
+  const avgViews = channel.avgViews ? formatCompactNumber(channel.avgViews) : '—';
+  const er = formatEngagementRate(channel.engagementRate);
+
+  const handleClick = useCallback(() => {
+    haptic.impactOccurred('light');
+    onClick();
+  }, [haptic, onClick]);
 
   return (
     <motion.div
       {...listItem}
       {...pressScale}
-      onClick={onClick}
+      onClick={handleClick}
       className="cursor-pointer [-webkit-tap-highlight-color:transparent]"
     >
-      <AppSurfaceCard className="am-catalog-card" testId="catalog-channel-card">
-        <div className="flex items-center gap-3 px-4 py-4">
+      <AppSurfaceCard className="am-catalog-card am-channel-card" testId="catalog-channel-card">
+        <div className="am-channel-card__header">
           <ChannelAvatar title={channel.title} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1 min-w-0">
+          <div className="am-channel-card__identity">
+            <div className="am-channel-card__title-row">
               <Text type="body" weight="bold">
                 <span className="block truncate">{channel.title}</span>
               </Text>
@@ -47,22 +71,56 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
                 <LanguageBadge key={code} code={code} size="sm" />
               ))}
             </div>
-            <Text type="caption1" color="secondary">
-              <span className="block truncate">
-                {channel.username ? `@${channel.username} · ` : ''}
-                {formatCompactNumber(channel.subscriberCount)} {t('catalog.channel.subs')}
-              </span>
-            </Text>
+            {channel.username && (
+              <Text type="caption1" color="secondary">
+                <span className="block truncate">@{channel.username}</span>
+              </Text>
+            )}
           </div>
           {channel.pricePerPostNano != null && (
-            <div className="text-right shrink-0">
-              <Text type="callout" weight="bold">
+            <div className="am-channel-card__price">
+              <Text type="subheadline2" weight="bold">
                 <span className="tabular-nums">
                   {t('catalog.channel.from', { price: `${formatTonCompact(channel.pricePerPostNano)} TON` })}
                 </span>
               </Text>
             </div>
           )}
+        </div>
+
+        <div className="am-channel-card__categories">
+          {categories.map((category) => (
+            <Text key={category} type="caption2" weight="bold" color="secondary">
+              <span className="am-channel-card__chip">{category}</span>
+            </Text>
+          ))}
+        </div>
+
+        <div className="am-channel-card__metrics">
+          <div className="am-channel-card__metric">
+            <Text type="subheadline1" weight="bold">
+              <span className="am-tabnum">{subscriberCount}</span>
+            </Text>
+            <Text type="caption2" color="secondary">
+              {t('catalog.channel.subs')}
+            </Text>
+          </div>
+          <div className="am-channel-card__metric">
+            <Text type="subheadline2" color="secondary">
+              <span className="am-tabnum">{avgViews}</span>
+            </Text>
+            <Text type="caption2" color="secondary">
+              {t('catalog.channel.views')}
+            </Text>
+          </div>
+          <div className="am-channel-card__metric">
+            <Text type="subheadline2" color="secondary">
+              <span className="am-tabnum">{er}</span>
+            </Text>
+            <Text type="caption2" color="secondary">
+              ER
+            </Text>
+          </div>
         </div>
       </AppSurfaceCard>
     </motion.div>

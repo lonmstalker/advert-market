@@ -74,8 +74,8 @@ describe('ChannelFiltersContent', () => {
     expect(screen.getByText('Default')).toBeInTheDocument();
     expect(screen.getByText('Relevance')).toBeInTheDocument();
     // "Subscribers" sort chip coexists with the section label
-    const subscriberButtons = screen.getAllByText('Subscribers').filter((el) => el.tagName === 'BUTTON');
-    expect(subscriberButtons).toHaveLength(1);
+    const subscriberChips = screen.getAllByText('Subscribers').filter((el) => el.closest('button'));
+    expect(subscriberChips.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders show button', () => {

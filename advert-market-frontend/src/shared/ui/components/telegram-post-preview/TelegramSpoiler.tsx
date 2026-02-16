@@ -1,4 +1,3 @@
-import { Button } from '@telegram-tools/ui-kit';
 import { type ReactNode, useCallback, useState } from 'react';
 
 type TelegramSpoilerProps = {
@@ -13,11 +12,12 @@ export function TelegramSpoiler({ children }: TelegramSpoilerProps) {
   }, []);
 
   return (
-    <Button
-      type="secondary"
+    <button
+      type="button"
       className={revealed ? 'am-tg-spoiler am-tg-spoiler--revealed' : 'am-tg-spoiler'}
       onClick={handleClick}
-      icon={<span className="am-tg-spoiler__content">{children}</span>}
-    />
+    >
+      <span className="am-tg-spoiler__content">{children}</span>
+    </button>
   );
 }

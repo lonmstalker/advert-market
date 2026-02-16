@@ -13,7 +13,7 @@ export function OnboardingLogo({ testId }: OnboardingLogoProps) {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="size-[120px] rounded-[32px] bg-bg-base flex items-center justify-center relative mb-4"
+      className="am-onboarding-logo size-[120px] rounded-[32px] flex items-center justify-center relative mb-4"
       data-testid={testId}
     >
       <motion.div
@@ -21,21 +21,7 @@ export function OnboardingLogo({ testId }: OnboardingLogoProps) {
         initial={false}
         animate={shouldReduceMotion ? undefined : { rotate: [0, 360] }}
         transition={shouldReduceMotion ? undefined : { duration: 6, ease: 'linear', repeat: 2 }}
-        style={{
-          position: 'absolute',
-          inset: '-4px',
-          borderRadius: '36px',
-          border: '1px solid var(--color-accent-primary)',
-          opacity: 0.4,
-          backgroundImage:
-            'conic-gradient(from 0deg, var(--color-accent-primary) 0%, transparent 30%, transparent 70%, var(--color-accent-primary) 100%)',
-          mask: 'linear-gradient(var(--color-static-white) 0 0) content-box, linear-gradient(var(--color-static-white) 0 0)',
-          maskComposite: 'exclude',
-          WebkitMask:
-            'linear-gradient(var(--color-static-white) 0 0) content-box, linear-gradient(var(--color-static-white) 0 0)',
-          WebkitMaskComposite: 'xor',
-          padding: '1px',
-        }}
+        className="am-onboarding-logo__orbit"
       />
       <MegaphoneIcon width={56} height={56} className="text-accent" />
     </motion.div>

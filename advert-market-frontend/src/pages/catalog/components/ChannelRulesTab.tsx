@@ -19,7 +19,7 @@ export function ChannelRulesTab({ channel }: ChannelRulesTabProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      style={{ padding: '0 16px 16px' }}
+      className="px-4 pb-5"
     >
       {channel.rules ? (
         <>
@@ -27,7 +27,7 @@ export function ChannelRulesTab({ channel }: ChannelRulesTabProps) {
           {channel.rules.customRules && <ChannelOwnerNote customRules={channel.rules.customRules} />}
         </>
       ) : (
-        <div style={{ padding: '24px 0', textAlign: 'center' }}>
+        <div className="py-8 text-center">
           <Text type="body" color="secondary">
             {t('catalog.channel.noRules')}
           </Text>

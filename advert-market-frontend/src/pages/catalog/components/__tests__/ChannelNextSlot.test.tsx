@@ -65,10 +65,9 @@ describe('ChannelNextSlot', () => {
 
     const { container } = renderWithProviders(<ChannelNextSlot nextAvailableSlot="2026-02-14T13:00:00Z" />);
 
-    // The inner styled div has border-radius: 10 and the background
-    const styledDiv = container.querySelector('div[style*="border-radius"]') as HTMLElement;
+    const styledDiv = container.querySelector('.rounded-\\[10px\\]') as HTMLElement;
     expect(styledDiv).toBeTruthy();
-    expect(styledDiv.style.background).toContain('var(--color-background-section)');
+    expect(styledDiv.className).toContain('bg-bg-secondary');
   });
 
   it('uses success background when slot is available now', () => {
@@ -76,8 +75,8 @@ describe('ChannelNextSlot', () => {
 
     const { container } = renderWithProviders(<ChannelNextSlot nextAvailableSlot="2026-02-12T10:00:00Z" />);
 
-    const styledDiv = container.querySelector('div[style*="border-radius"]') as HTMLElement;
+    const styledDiv = container.querySelector('.rounded-\\[10px\\]') as HTMLElement;
     expect(styledDiv).toBeTruthy();
-    expect(styledDiv.style.background).toContain('var(--color-state-success)');
+    expect(styledDiv.className).toContain('bg-soft-success');
   });
 });

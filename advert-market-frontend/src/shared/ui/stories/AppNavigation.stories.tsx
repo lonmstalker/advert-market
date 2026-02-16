@@ -31,9 +31,9 @@ export const FixedBottomBarActions: Story = {
   render: () => (
     <div style={{ minHeight: '60vh' }}>
       <FixedBottomBar>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Button text="Отмена" type="secondary" />
-          <Button text="Продолжить" type="primary" />
+        <div className="grid grid-cols-2 gap-3">
+          <Button text="Cancel" type="secondary" />
+          <Button text="Continue" type="primary" />
         </div>
       </FixedBottomBar>
       <div className="am-fixed-bottom-bar-spacer" />

@@ -10,7 +10,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { getMinPrice } from '@/shared/lib/channel-utils';
 import { copyToClipboard } from '@/shared/lib/clipboard';
 import { computeCpm } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState, PageLoader, SegmentControl } from '@/shared/ui';
+import { AppPageShell, BackButtonHandler, EmptyState, PageLoader, SegmentControl } from '@/shared/ui';
 import { SearchOffIcon } from '@/shared/ui/icons';
 import { ChannelAboutTab } from './components/ChannelAboutTab';
 import { ChannelDetailCta } from './components/ChannelDetailCta';
@@ -88,21 +88,23 @@ export default function ChannelDetailPage() {
   return (
     <>
       <BackButtonHandler />
-      <div className="pb-[calc(var(--am-fixed-bottom-bar-base,92px)+var(--am-safe-area-bottom))]">
-        <ChannelDetailHeader channel={channel} isOwner={isOwner} onShare={handleShare} />
+      <AppPageShell withTabsPadding={false} testId="channel-detail-page-shell">
+        <div className="pb-[calc(var(--am-fixed-bottom-bar-base,92px)+var(--am-safe-area-bottom))]">
+          <ChannelDetailHeader channel={channel} isOwner={isOwner} onShare={handleShare} />
 
-        {channel.nextAvailableSlot && <ChannelNextSlot nextAvailableSlot={channel.nextAvailableSlot} />}
+          {channel.nextAvailableSlot && <ChannelNextSlot nextAvailableSlot={channel.nextAvailableSlot} />}
 
-        <div className="pt-2 px-4 pb-3">
-          <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
+          <div className="pt-4 px-4 pb-4">
+            <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
+          </div>
+
+          <AnimatePresence mode="wait">
+            {activeTab === 'about' && <ChannelAboutTab channel={channel} telegramLink={telegramLink} />}
+            {activeTab === 'pricing' && <ChannelPricingTab channel={channel} minPrice={minPrice} heroCpm={heroCpm} />}
+            {activeTab === 'rules' && <ChannelRulesTab channel={channel} />}
+          </AnimatePresence>
         </div>
-
-        <AnimatePresence mode="wait">
-          {activeTab === 'about' && <ChannelAboutTab channel={channel} telegramLink={telegramLink} />}
-          {activeTab === 'pricing' && <ChannelPricingTab channel={channel} minPrice={minPrice} heroCpm={heroCpm} />}
-          {activeTab === 'rules' && <ChannelRulesTab channel={channel} />}
-        </AnimatePresence>
-      </div>
+      </AppPageShell>
 
       {!isOwner && <ChannelDetailCta channelId={channel.id} minPrice={minPrice} />}
     </>

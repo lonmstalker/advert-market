@@ -2,27 +2,26 @@ import { Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
 import type { TransactionStatus } from '../types/wallet';
 
-type StatusStyle = {
-  colorVar: string;
-  bg: string;
+type StatusConfig = {
+  badgeClass: string;
+  textColor: 'accent' | 'warning' | 'success' | 'danger';
   i18nKey: string;
 };
 
-// Using rgba for background tints — same pattern as DealStatusBadge (deal-status.ts)
-const STATUS_STYLES: Record<TransactionStatus, StatusStyle> = {
+const STATUS_CONFIG: Record<TransactionStatus, StatusConfig> = {
   pending: {
-    colorVar: 'var(--color-state-warning)',
-    bg: 'var(--am-soft-warning-bg)',
+    badgeClass: 'bg-soft-warning',
+    textColor: 'warning',
     i18nKey: 'wallet.status.pending',
   },
   confirmed: {
-    colorVar: 'var(--color-state-success)',
-    bg: 'var(--am-soft-success-bg)',
+    badgeClass: 'bg-soft-success',
+    textColor: 'success',
     i18nKey: 'wallet.status.confirmed',
   },
   failed: {
-    colorVar: 'var(--color-state-destructive)',
-    bg: 'var(--am-soft-destructive-bg)',
+    badgeClass: 'bg-soft-destructive',
+    textColor: 'danger',
     i18nKey: 'wallet.status.failed',
   },
 };
@@ -33,23 +32,16 @@ type TransactionStatusBadgeProps = {
 
 export function TransactionStatusBadge({ status }: TransactionStatusBadgeProps) {
   const { t } = useTranslation();
-  const style = STATUS_STYLES[status];
+  const config = STATUS_CONFIG[status];
 
   return (
     <span
-      style={{
-        display: 'inline-block',
-        padding: '2px 8px',
-        borderRadius: 6,
-        backgroundColor: style.bg,
-        whiteSpace: 'nowrap',
-      }}
+      data-testid="transaction-status-badge"
+      className={`inline-block rounded-[6px] px-2 py-0.5 whitespace-nowrap ${config.badgeClass}`}
     >
-      <span style={{ color: style.colorVar, fontSize: 12 }}>
-        <Text type="caption1" weight="bold">
-          {t(style.i18nKey)}
-        </Text>
-      </span>
+      <Text type="caption1" weight="bold" color={config.textColor}>
+        {t(config.i18nKey)}
+      </Text>
     </span>
   );
 }

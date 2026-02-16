@@ -5,19 +5,9 @@ type RuleIndicatorProps = {
 export function RuleIndicator({ allowed }: RuleIndicatorProps) {
   return (
     <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        background: allowed
-          ? 'color-mix(in srgb, var(--color-state-success) 12%, transparent)'
-          : 'color-mix(in srgb, var(--color-state-destructive) 12%, transparent)',
-        flexShrink: 0,
-        marginTop: 1,
-      }}
+      className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 mt-px ${
+        allowed ? 'bg-soft-success' : 'bg-soft-destructive'
+      }`}
     >
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
         {allowed ? (

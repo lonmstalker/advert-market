@@ -1,7 +1,9 @@
 import { Text } from '@telegram-tools/ui-kit';
+import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 import { useHaptic } from '@/shared/hooks/use-haptic';
+import { pressScale } from '@/shared/ui/animations';
 import { DocumentIcon, PersonIcon, SearchIcon, WalletIcon } from '../icons';
 
 const tabs = [
@@ -26,10 +28,10 @@ export function BottomTabs() {
           data-active={undefined}
         >
           {({ isActive }) => (
-            <span className="am-tab-item" data-active={isActive}>
+            <motion.span {...pressScale} className="am-tab-item" data-active={isActive}>
               <Icon width={24} height={24} />
               <Text type="caption2">{t(labelKey)}</Text>
-            </span>
+            </motion.span>
           )}
         </NavLink>
       ))}

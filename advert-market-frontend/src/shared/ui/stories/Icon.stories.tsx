@@ -39,9 +39,9 @@ export const AllIcons: Story = {
   render: () => {
     const names = ['cross', 'chevron', 'doubleChevron', 'check'] as const;
     return (
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+      <div className="flex gap-6 items-center">
         {names.map((name) => (
-          <div key={name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+          <div key={name} className="flex flex-col items-center gap-1">
             <Icon name={name} size="28px" />
             <Text type="caption2" color="secondary">
               {name}
@@ -66,9 +66,9 @@ export const AllColors: Story = {
       'success',
     ] as const;
     return (
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="flex gap-4 items-center flex-wrap">
         {colors.map((color) => (
-          <div key={color} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+          <div key={color} className="flex flex-col items-center gap-1">
             <Icon name="check" size="24px" color={color} />
             <Text type="caption2" color="secondary">
               {color}

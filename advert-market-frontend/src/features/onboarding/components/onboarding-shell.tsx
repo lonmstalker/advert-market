@@ -24,24 +24,24 @@ export function OnboardingShell({
   return (
     <div
       data-testid={testId}
-      className="flex flex-col px-[var(--am-onboarding-page-padding)] min-h-[calc(var(--am-viewport-stable-height)-var(--am-onboarding-top-chrome-height,40px))]"
+      className="am-onboarding-shell flex flex-col min-h-[calc(var(--am-viewport-stable-height)-var(--am-onboarding-top-chrome-height,40px))]"
     >
-      <div className="w-full max-w-[var(--am-onboarding-max-width)] mx-auto min-h-11 flex justify-end items-center">
-        {topAction}
-      </div>
+      <div className="am-onboarding-shell__container w-full min-h-[calc(var(--am-viewport-stable-height)-var(--am-onboarding-top-chrome-height,40px))] flex flex-col">
+        <div className="am-onboarding-shell__top min-h-11 flex justify-end items-center">{topAction}</div>
 
-      <div
-        className={joinClasses(
-          'flex-1 min-h-0 w-full max-w-[var(--am-onboarding-max-width)] mx-auto flex flex-col',
-          centerContent ? 'justify-center' : 'justify-start',
-          contentClassName,
-        )}
-      >
-        {children}
-      </div>
+        <div
+          className={joinClasses(
+            'am-onboarding-shell__content flex-1 min-h-0 w-full flex flex-col',
+            centerContent ? 'justify-center' : 'justify-start',
+            contentClassName,
+          )}
+        >
+          {children}
+        </div>
 
-      <div className="shrink-0 w-full max-w-[var(--am-onboarding-max-width)] mx-auto pt-3 pb-[calc(var(--am-onboarding-footer-padding-bottom)+var(--am-safe-area-bottom))]">
-        {footer}
+        <div className="am-onboarding-shell__footer shrink-0 w-full pt-5 pb-[calc(var(--am-onboarding-footer-padding-bottom)+var(--am-safe-area-bottom))]">
+          {footer}
+        </div>
       </div>
     </div>
   );

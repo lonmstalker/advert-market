@@ -44,9 +44,9 @@ export const TransactionListItem = memo(function TransactionListItem({
       {...listItem}
       {...pressScale}
       onClick={handleClick}
-      className="cursor-pointer bg-card-surface border border-card-border rounded-[16px] shadow-card px-3.5"
+      className="cursor-pointer bg-card-surface border border-card-border rounded-[16px] shadow-card px-4"
     >
-      <div className="flex items-center gap-3 py-3">
+      <div className="flex items-center gap-3.5 py-3.5">
         <span
           className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-card-border"
           style={{ background: getTransactionTypeTint(transaction.type) }}
@@ -65,7 +65,9 @@ export const TransactionListItem = memo(function TransactionListItem({
 
         <div className="shrink-0 text-right">
           <Text type="callout" weight="bold">
-            <span className="am-tabnum" style={{ color: amountColor }}>{formattedAmount} TON</span>
+            <span className="am-tabnum" style={{ color: amountColor }}>
+              {formattedAmount} TON
+            </span>
           </Text>
           <Text type="caption1" color="tertiary">
             {time}

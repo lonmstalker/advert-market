@@ -62,8 +62,8 @@ describe('creatives-api helpers', () => {
     expect(uploaded.type).toBe('PHOTO');
     expect(uploaded.mimeType.startsWith('image/')).toBe(true);
     expect(uploaded.sizeBytes).toBeGreaterThan(0);
-    expect(uploaded.url.startsWith('http://') || uploaded.url.startsWith('https://') || uploaded.url.startsWith('data:')).toBe(
-      true,
-    );
+    expect(
+      uploaded.url.startsWith('http://') || uploaded.url.startsWith('https://') || uploaded.url.startsWith('data:'),
+    ).toBe(true);
   });
 });

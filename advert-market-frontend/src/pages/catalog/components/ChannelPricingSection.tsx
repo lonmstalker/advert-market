@@ -34,9 +34,7 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
         <Text type="title1" weight="bold">
-          <span className="am-tabnum">
-            {t('catalog.channel.from', { price: formatTon(minPrice) })}
-          </span>
+          <span className="am-tabnum">{t('catalog.channel.from', { price: formatTon(minPrice) })}</span>
         </Text>
         <Text type="caption1" color="secondary">
           <span className="am-tabnum">{formatFiat(minPrice)}</span>
@@ -117,9 +115,7 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
             {minPrice != null && (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                 <Text type="title1" weight="bold">
-                  <span className="am-tabnum">
-                    {t('catalog.channel.from', { price: formatTon(minPrice) })}
-                  </span>
+                  <span className="am-tabnum">{t('catalog.channel.from', { price: formatTon(minPrice) })}</span>
                 </Text>
                 <Text type="caption1" color="secondary">
                   <span className="am-tabnum">{formatFiat(minPrice)}</span>

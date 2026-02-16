@@ -20,8 +20,8 @@ export function ChannelAboutTab({ channel, telegramLink }: ChannelAboutTabProps)
       transition={{ duration: 0.15 }}
     >
       {channel.description && (
-        <motion.div {...slideUp} style={{ padding: '0 16px 16px' }}>
-          <div style={{ whiteSpace: 'pre-wrap' }}>
+        <motion.div {...slideUp} className="px-4 pb-5">
+          <div className="whitespace-pre-wrap">
             <Text type="subheadline1" color="secondary">
               {channel.description}
             </Text>

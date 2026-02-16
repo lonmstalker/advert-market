@@ -1,6 +1,7 @@
 import { GroupItem, Text } from '@telegram-tools/ui-kit';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { Tappable } from '@/shared/ui';
 import { FileIcon, ImageIcon, VideoIcon } from '@/shared/ui/icons';
 import type { MediaItem, MediaType } from '../types/creative';
@@ -30,6 +31,7 @@ function formatFileSize(sizeBytes: number): string {
 
 export function MediaItemList({ media, onChange, onUploadMedia, onDeleteMedia }: MediaItemListProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -88,7 +90,10 @@ export function MediaItemList({ media, onChange, onUploadMedia, onDeleteMedia }:
             description={item.fileSize || formatFileSize(item.sizeBytes)}
             after={
               <Tappable
-                onClick={() => void removeMedia(index)}
+                onClick={() => {
+                  haptic.impactOccurred('light');
+                  void removeMedia(index);
+                }}
                 className="border-0 bg-transparent text-sm text-destructive"
                 aria-label={t('creatives.form.removeMedia')}
               >
@@ -114,7 +119,10 @@ export function MediaItemList({ media, onChange, onUploadMedia, onDeleteMedia }:
       />
 
       <Tappable
-        onClick={() => inputRef.current?.click()}
+        onClick={() => {
+          haptic.impactOccurred('light');
+          inputRef.current?.click();
+        }}
         className="flex items-center justify-center rounded-row border border-separator bg-bg-base px-4 py-3 text-sm text-accent"
         disabled={isUploading}
       >

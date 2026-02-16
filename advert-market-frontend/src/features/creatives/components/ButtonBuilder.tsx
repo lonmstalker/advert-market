@@ -1,8 +1,8 @@
 import { Input, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { Tappable } from '@/shared/ui';
-import { pressScale } from '@/shared/ui/animations';
 import { CrossIcon } from '@/shared/ui/icons';
 import type { InlineButton, TelegramKeyboardRow } from '../types/creative';
 import { ensureButtonId, makeLocalId } from '../types/creative';
@@ -23,6 +23,7 @@ function createEmptyButton(): InlineButton {
 
 export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow = 5 }: ButtonBuilderProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
 
   const addRow = () => {
     if (buttons.length >= maxRows) return;
@@ -86,7 +87,10 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
                 {t('creatives.form.rowLabel', { index: rowIndex + 1 })}
               </Text>
               <Tappable
-                onClick={() => removeRow(rowIndex)}
+                onClick={() => {
+                  haptic.impactOccurred('light');
+                  removeRow(rowIndex);
+                }}
                 className="flex h-7 w-7 items-center justify-center rounded-full border-0 bg-soft-destructive text-destructive"
                 aria-label={t('creatives.form.removeRow')}
               >
@@ -102,7 +106,10 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
                       {t('creatives.form.buttonLabel', { index: buttonIndex + 1 })}
                     </Text>
                     <Tappable
-                      onClick={() => removeButton(rowIndex, buttonIndex)}
+                      onClick={() => {
+                        haptic.impactOccurred('light');
+                        removeButton(rowIndex, buttonIndex);
+                      }}
                       className="flex h-6 w-6 items-center justify-center rounded-full border-0 bg-transparent text-destructive"
                       aria-label={t('creatives.form.removeButton')}
                     >
@@ -128,7 +135,10 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
             {row.length < maxButtonsPerRow && (
               <div className="mt-2">
                 <Tappable
-                  onClick={() => addButton(rowIndex)}
+                  onClick={() => {
+                    haptic.impactOccurred('light');
+                    addButton(rowIndex);
+                  }}
                   className="flex w-full items-center justify-center gap-1 rounded-row border border-separator bg-bg-base px-3 py-2 text-sm text-fg-secondary"
                 >
                   <span aria-hidden="true">+</span>
@@ -141,15 +151,16 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
       </AnimatePresence>
 
       {buttons.length < maxRows && (
-        <motion.div {...pressScale}>
-          <Tappable
-            onClick={addRow}
-            className="flex w-full items-center justify-center gap-2 rounded-row border border-separator bg-bg-base px-4 py-3 text-sm text-accent"
-          >
-            <span aria-hidden="true">+</span>
-            {t('creatives.form.addRow')}
-          </Tappable>
-        </motion.div>
+        <Tappable
+          onClick={() => {
+            haptic.impactOccurred('light');
+            addRow();
+          }}
+          className="flex w-full items-center justify-center gap-2 rounded-row border border-separator bg-bg-base px-4 py-3 text-sm text-accent"
+        >
+          <span aria-hidden="true">+</span>
+          {t('creatives.form.addRow')}
+        </Tappable>
       )}
     </div>
   );

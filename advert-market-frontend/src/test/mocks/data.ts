@@ -15,7 +15,7 @@ export const mockUser = {
   displayCurrency: 'USD',
   currencyMode: 'AUTO' as 'AUTO' | 'MANUAL',
   notificationSettings: mockNotificationSettings,
-  onboardingCompleted: false,
+  onboardingCompleted: true,
   interests: ['advertiser'] as string[],
   createdAt: '2026-01-15T10:00:00Z',
 };

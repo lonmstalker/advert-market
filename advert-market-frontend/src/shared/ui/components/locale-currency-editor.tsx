@@ -301,13 +301,11 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
           <Text type="caption1" color="secondary">
             {t('profile.localeCurrency.manualMicrocopy')}
           </Text>
-          <Button
-            type="secondary"
-            className="am-locale-editor__link"
-            disabled={isPending}
-            onClick={handleSelectAutoMode}
-            text={t('profile.localeCurrency.resetAuto')}
-          />
+          <button type="button" className="am-locale-editor__link" disabled={isPending} onClick={handleSelectAutoMode}>
+            <Text type="caption1" color="accent">
+              {t('profile.localeCurrency.resetAuto')}
+            </Text>
+          </button>
         </div>
       )}
 
@@ -318,13 +316,11 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
               currency: undoState.nextCurrency,
             })}
           </Text>
-          <Button
-            type="secondary"
-            className="am-locale-editor__link"
-            onClick={handleUndo}
-            disabled={isPending}
-            text={t('profile.localeCurrency.undo')}
-          />
+          <button type="button" className="am-locale-editor__link" onClick={handleUndo} disabled={isPending}>
+            <Text type="caption1" color="accent">
+              {t('profile.localeCurrency.undo')}
+            </Text>
+          </button>
         </div>
       )}
 

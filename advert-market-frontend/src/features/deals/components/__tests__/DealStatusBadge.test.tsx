@@ -48,10 +48,10 @@ describe('DealStatusBadge', () => {
     }
   });
 
-  it('applies background color style based on status color config', () => {
+  it('applies background color class based on status color config', () => {
     const { container } = renderWithProviders(<DealStatusBadge status="DISPUTED" />);
-    const badge = container.querySelector('span');
+    const badge = container.querySelector('[data-testid="deal-status-badge"]');
     expect(badge).toBeTruthy();
-    expect(badge?.style.backgroundColor).toBe('var(--am-soft-destructive-bg)');
+    expect(badge?.className).toContain('bg-soft-destructive');
   });
 });

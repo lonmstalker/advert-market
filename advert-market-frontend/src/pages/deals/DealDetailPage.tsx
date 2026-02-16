@@ -13,13 +13,13 @@ import { PaymentProvider } from '@/features/deals/components/PaymentContext';
 import { PaymentSheetContent } from '@/features/deals/components/PaymentSheet';
 import { useDealDetail } from '@/features/deals/hooks/useDealDetail';
 import { useDealTransition } from '@/features/deals/hooks/useDealTransition';
-import { mapDealDetailDtoToViewModel } from '@/features/deals/lib/deal-mapper';
 import type { DealAction, DealActionType } from '@/features/deals/lib/deal-actions';
 import { getDealActions } from '@/features/deals/lib/deal-actions';
+import { mapDealDetailDtoToViewModel } from '@/features/deals/lib/deal-mapper';
 import { buildTimelineSteps, getStatusConfig } from '@/features/deals/lib/deal-status';
 import type { DealChannelMetadata, DealStatus } from '@/features/deals/types/deal';
-import { channelKeys, profileKeys } from '@/shared/api/query-keys';
 import { fetchProfile } from '@/shared/api/auth';
+import { channelKeys, profileKeys } from '@/shared/api/query-keys';
 import { useCountdown } from '@/shared/hooks/use-countdown';
 import { useToast } from '@/shared/hooks/use-toast';
 import { loadPendingIntent } from '@/shared/ton';
@@ -165,7 +165,7 @@ export default function DealDetailPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          icon={<SadFaceIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+          icon={<SadFaceIcon className="w-7 h-7 text-fg-tertiary" />}
           title={t('errors.notFound')}
           description={t('deals.empty.description')}
           actionLabel={t('common.back')}
@@ -187,8 +187,8 @@ export default function DealDetailPage() {
           <DealHeroSection deal={deal} statusConfig={statusConfig} isTerminal={isTerminal} countdown={countdown} />
 
           {isCreativeBlocked && (
-            <div className="pb-3">
-              <div className="am-surface-row flex flex-col items-center gap-2 py-5 px-4 text-center">
+            <div className="pb-4">
+              <div className="am-surface-row flex flex-col items-center gap-3 py-6 px-4 text-center">
                 <DocumentIcon size={28} className="text-fg-tertiary" />
                 <Text type="caption1" color="secondary">
                   {t('deals.detail.creativeBlocked')}
@@ -198,7 +198,9 @@ export default function DealDetailPage() {
           )}
 
           <div
-            className={actions.length > 0 ? 'pb-[calc(var(--am-fixed-bottom-bar-base,92px)+var(--am-safe-area-bottom))]' : 'pb-4'}
+            className={
+              actions.length > 0 ? 'pb-[calc(var(--am-fixed-bottom-bar-base,92px)+var(--am-safe-area-bottom))]' : 'pb-6'
+            }
           >
             {timelineSteps.length > 0 && <DealTimeline steps={timelineSteps} />}
           </div>

@@ -6,8 +6,18 @@ import { DealActions } from '../DealActions';
 function makeAction(type: DealActionType, overrides: Partial<DealAction> = {}): DealAction {
   const defaults: Record<DealActionType, Omit<DealAction, 'type'>> = {
     accept: { i18nKey: 'deals.actions.accept', variant: 'primary', requiresConfirm: false, targetStatus: 'ACCEPTED' },
-    reject: { i18nKey: 'deals.actions.reject', variant: 'destructive', requiresConfirm: true, targetStatus: 'CANCELLED' },
-    cancel: { i18nKey: 'deals.actions.cancel', variant: 'destructive', requiresConfirm: true, targetStatus: 'CANCELLED' },
+    reject: {
+      i18nKey: 'deals.actions.reject',
+      variant: 'destructive',
+      requiresConfirm: true,
+      targetStatus: 'CANCELLED',
+    },
+    cancel: {
+      i18nKey: 'deals.actions.cancel',
+      variant: 'destructive',
+      requiresConfirm: true,
+      targetStatus: 'CANCELLED',
+    },
     counter_offer: {
       i18nKey: 'deals.actions.counterOffer',
       variant: 'secondary',
@@ -36,7 +46,12 @@ function makeAction(type: DealActionType, overrides: Partial<DealAction> = {}): 
       targetStatus: 'DISPUTED',
       requiresReason: true,
     },
-    publish: { i18nKey: 'deals.actions.publish', variant: 'primary', requiresConfirm: false, targetStatus: 'PUBLISHED' },
+    publish: {
+      i18nKey: 'deals.actions.publish',
+      variant: 'primary',
+      requiresConfirm: false,
+      targetStatus: 'PUBLISHED',
+    },
     schedule: {
       i18nKey: 'deals.actions.schedule',
       variant: 'secondary',

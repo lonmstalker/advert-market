@@ -57,8 +57,8 @@ export default function NotificationsPage() {
       <BackButtonHandler />
       <AppSectionHeader title={t('profile.notifications')} />
 
-      <motion.div {...slideFromRight}>
-        <motion.div {...staggerChildren} initial="initial" animate="animate">
+      <motion.div {...slideFromRight} className="flex flex-col gap-6">
+        <motion.div {...staggerChildren} initial="initial" animate="animate" className="flex flex-col gap-6">
           <motion.div {...slideFromRight}>
             <Group header={t('profile.notifications.deals')}>
               <GroupItem
@@ -66,7 +66,7 @@ export default function NotificationsPage() {
                 description={t('profile.notifications.newOffers.hint')}
                 onClick={() => handleToggle('deals', 'newOffers', !notificationSettings.deals.newOffers)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.deals.newOffers}
                       onChange={(v) => handleToggle('deals', 'newOffers', v)}
@@ -78,7 +78,7 @@ export default function NotificationsPage() {
                 text={t('profile.notifications.acceptReject')}
                 onClick={() => handleToggle('deals', 'acceptReject', !notificationSettings.deals.acceptReject)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.deals.acceptReject}
                       onChange={(v) => handleToggle('deals', 'acceptReject', v)}
@@ -90,7 +90,7 @@ export default function NotificationsPage() {
                 text={t('profile.notifications.deliveryStatus')}
                 onClick={() => handleToggle('deals', 'deliveryStatus', !notificationSettings.deals.deliveryStatus)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.deals.deliveryStatus}
                       onChange={(v) => handleToggle('deals', 'deliveryStatus', v)}
@@ -108,7 +108,7 @@ export default function NotificationsPage() {
                 description={t('profile.notifications.deposits.hint')}
                 onClick={() => handleToggle('financial', 'deposits', !notificationSettings.financial.deposits)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.financial.deposits}
                       onChange={(v) => handleToggle('financial', 'deposits', v)}
@@ -120,7 +120,7 @@ export default function NotificationsPage() {
                 text={t('profile.notifications.payouts')}
                 onClick={() => handleToggle('financial', 'payouts', !notificationSettings.financial.payouts)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.financial.payouts}
                       onChange={(v) => handleToggle('financial', 'payouts', v)}
@@ -133,7 +133,7 @@ export default function NotificationsPage() {
                 description={t('profile.notifications.escrow.hint')}
                 onClick={() => handleToggle('financial', 'escrow', !notificationSettings.financial.escrow)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.financial.escrow}
                       onChange={(v) => handleToggle('financial', 'escrow', v)}
@@ -150,7 +150,7 @@ export default function NotificationsPage() {
                 text={t('profile.notifications.opened')}
                 onClick={() => handleToggle('disputes', 'opened', !notificationSettings.disputes.opened)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.disputes.opened}
                       onChange={(v) => handleToggle('disputes', 'opened', v)}
@@ -162,7 +162,7 @@ export default function NotificationsPage() {
                 text={t('profile.notifications.resolved')}
                 onClick={() => handleToggle('disputes', 'resolved', !notificationSettings.disputes.resolved)}
                 after={
-                  <span role="none" onClick={(e) => e.stopPropagation()}>
+                  <span role="none" className="am-toggle-accent" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       isEnabled={notificationSettings.disputes.resolved}
                       onChange={(v) => handleToggle('disputes', 'resolved', v)}

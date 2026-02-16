@@ -1,7 +1,69 @@
 # Design Guidelines — 2026 Edition
 
 > Living design system for advert-market Telegram Mini App.
-> Bound to `@telegram-tools/ui-kit` 0.2.4+, Tailwind CSS v4, `motion/react`, and `global.css` token system.
+> Bound to `@telegram-tools/ui-kit` 0.2.4+, Tailwind CSS v4, `motion/react`, and `app.css` token system.
+
+---
+
+## 0. Telegram 2026 Native Illusion Contract
+
+Starting from Telegram WebApp API 8.x/9.x, our target is not "web page in messenger", but native illusion:
+the app must feel and behave like a native Telegram surface at 60 FPS+.
+
+### 0.1 Fullscreen + Safe Areas
+
+- Fullscreen-first for immersive flows (dashboards, editor, wallet, long-form flows):
+  - preferred: `Telegram.WebApp.requestFullscreen()` (feature-detected)
+  - fallback: visually sync bars via `setHeaderColor` + `setBottomBarColor`
+- Safe areas are mandatory. All page shells must consume safe-area insets from Telegram CSS vars.
+- For our app, source of truth remains `app.css` bridge vars:
+  - `--am-safe-area-top/right/bottom/left`
+  - mapped from Telegram viewport safe-area vars with `env()` fallback
+- Never place CTA/tabs flush to device edges. Always include content gutter + safe-area compensation.
+
+### 0.2 Gesture Safety
+
+- If a screen contains vertical scroll, explicitly disable close-on-swipe conflicts:
+  - `Telegram.WebApp.disableVerticalSwipes()` (or SwipeBehavior API when available)
+- Re-enable only when screen has no internal scroll and closure gesture is desired.
+
+### 0.3 Dynamic Theming (Strict)
+
+- No hardcoded UI colors for surfaces/text/controls.
+- All color decisions must originate from Telegram theme vars (`--tg-theme-*`) through our semantic bridge (`--color-*` -> `--am-*`).
+- Use `color-mix(...)` for interactive states and translucent layers instead of inventing ad-hoc colors.
+- In dark OLED themes: prefer elevation by surface contrast (`secondary/bg`) and borders; avoid heavy drop shadows.
+
+### 0.4 Native Telegram Controls (Must Use)
+
+- Primary screen action: Telegram native `BottomButton` / `MainButton` (when flow is single-primary-action).
+- Secondary companion action: Telegram native `SecondaryButton` when API is available.
+- Back navigation: Telegram native `BackButton` only; no custom back arrow inside content.
+- Settings entry: Telegram native `SettingsButton` when settings context exists.
+- If a native API is unavailable in the current client, fallback to UI Kit controls with identical hierarchy.
+
+### 0.5 Performance + Interaction Baseline
+
+- Motion budget: animate only `transform` and `opacity`.
+- No layout-thrashing animations (`width/height/padding/top/left`) in critical paths.
+- Every interactive control must trigger haptics via `useHaptic` mapping.
+- Loading strategy: skeletons first, spinner second (only when skeleton is impossible).
+
+### 0.6 Progressive Enhancement Matrix
+
+Use runtime feature detection for advanced APIs and provide explicit fallback behavior:
+
+| Capability | Preferred API | Fallback |
+|---|---|---|
+| Fullscreen | `requestFullscreen` | Header/bottom bar color sync |
+| Safe area | Telegram safe-area vars | `env(safe-area-inset-*)` bridge |
+| Bottom CTA | `BottomButton`/`SecondaryButton` | UI Kit + fixed bottom bar |
+| Settings entry | `SettingsButton` | Profile/settings route button |
+| Keyboard close | `hideKeyboard` | blur active input |
+| Storage (sync) | `CloudStorage` | query cache + backend profile |
+| Storage (local) | `DeviceStorage` | IndexedDB/localStorage |
+| Secure secrets | `SecureStorage` | session-bound memory + backend token flow |
+| Biometric confirm | `BiometricManager` | confirmation dialog + PIN/password flow |
 
 ---
 
@@ -12,9 +74,9 @@
 The app must feel like a part of Telegram, not a separate website.
 
 - Colors **only** via CSS variables (`--color-*`). No hardcoded hex/rgb (exception: brand colors like Telegram Blue `#3390EC` for `VerifiedBadge`)
-- Semi-transparent tints: `color-mix(in srgb, var(--color-*) N%, transparent)`. Pre-defined tints in `global.css` (`--am-soft-*-bg`)
+- Semi-transparent tints: `color-mix(in srgb, var(--color-*) N%, transparent)`. Pre-defined tints in `app.css` (`--am-soft-*-bg`)
 - `ThemeProvider` auto-syncs with Telegram theme — custom dark mode forbidden
-- `body` uses `var(--color-background-secondary)` (see `global.css`)
+- `body` uses `var(--color-background-secondary)` (see `app.css`)
 - Back navigation via `backButton.show()` from TMA SDK, no custom back arrows
 
 ### Minimal Information Per Screen
@@ -49,7 +111,7 @@ The visual layer that gives depth and spatial awareness.
 
 ### Page Atmosphere
 
-Every page has a subtle radial gradient background via `::before` pseudo-element on `.am-page` / `.am-finance-page` (defined in `global.css`). Implemented in `AppPageShell` (`src/shared/ui/layout/app-page-shell.tsx`).
+Every page has a subtle radial gradient background via `::before` pseudo-element on `.am-page` / `.am-finance-page` (defined in `app.css`). Implemented in `AppPageShell` (`src/shared/ui/layout/app-page-shell.tsx`).
 
 ### Glass Blur Rules
 
@@ -64,7 +126,7 @@ Every page has a subtle radial gradient background via `::before` pseudo-element
 
 ### Deep Gunmetal OLED Theme
 
-Dark mode uses Deep Gunmetal (`#1C1C1E` base), not pure black. OLED-safe with sufficient contrast. Defined in `global.css` dark theme variables.
+Dark mode uses Deep Gunmetal (`#1C1C1E` base), not pure black. OLED-safe with sufficient contrast. Defined in `app.css` dark theme variables.
 
 ---
 
@@ -76,32 +138,30 @@ The project uses **Tailwind CSS v4** with CSS-first configuration. There is no `
 
 | File | Purpose |
 |------|---------|
-| `src/styles/tailwind.css` | `@import "tailwindcss"` + `@theme {}` bridge tokens |
-| `src/styles/components.css` | `@layer components {}` for reusable patterns |
-| `src/styles/global.css` | Design tokens, `.am-*` classes, keyframes |
+| `src/app/app.css` | Single source of truth: `@import "tailwindcss"`, `@theme {}` bridge tokens, `@layer base/components`, design tokens, `.am-*` classes, keyframes |
 | `@telegram-tools/ui-kit/dist/index.css` | UI Kit base styles |
 
 ### CSS Import Order (in `main.tsx`)
 
 ```
-ui-kit.css → tailwind.css → components.css → global.css
+ui-kit.css → app.css
 ```
 
 ### Rules
 
 1. **Utility-first** — prefer Tailwind classes over inline `style={{}}`
 2. **`@theme {}` for tokens** — bridge CSS variables to Tailwind utilities
-3. **`@layer components {}`** for reusable class patterns (in `components.css`)
+3. **`@layer components {}`** for reusable class patterns (in `app.css`)
 4. **`@apply`** only inside `@layer components {}` — never in component files
 5. **`data-*` attributes** for state variants: `data-[active=true]:bg-accent`
 6. **NO `tailwind.config.ts`** — all config is CSS-based
-7. **NO `@keyframes` inside `@theme`** — keyframes go in `global.css`
+7. **NO `@keyframes` inside `@theme`** — keyframes go in `app.css`
 8. **`joinClasses()`** for conditional class merging (NOT `cn()` or `clsx`)
 
 ### Token Example
 
 ```css
-/* tailwind.css */
+/* app.css */
 @theme {
   --color-accent: var(--color-accent-primary);
   --color-surface: var(--color-background-base);
@@ -154,7 +214,12 @@ Tab → List → Detail → Action Sheet/Dialog
 
 ### MainButton
 
-For single-action form pages, prefer Telegram `mainButton` over `<FixedBottomBar>`. Multi-action layouts (Accept/Decline) use `<FixedBottomBar>`.
+For single-action form pages, prefer Telegram native bottom controls:
+
+- `BottomButton` (or `MainButton`) for primary action
+- `SecondaryButton` for paired secondary action when supported
+
+`<FixedBottomBar>` remains fallback for unsupported Telegram clients or custom multi-action layouts.
 
 ### Filters
 

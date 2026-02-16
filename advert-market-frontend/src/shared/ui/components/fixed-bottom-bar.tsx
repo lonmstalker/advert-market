@@ -7,8 +7,10 @@ type FixedBottomBarProps = {
 
 export function FixedBottomBar({ children, className }: FixedBottomBarProps) {
   return (
-    <div className={className ? `am-fixed-bottom-bar ${className}` : 'am-fixed-bottom-bar'}>
-      {children}
+    <div className="am-fixed-bottom-bar">
+      <div className={className ? `am-fixed-bottom-bar__inner ${className}` : 'am-fixed-bottom-bar__inner'}>
+        {children}
+      </div>
     </div>
   );
 }

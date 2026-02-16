@@ -14,18 +14,17 @@ describe('TransactionStatusBadge', () => {
     expect(screen.getByText(expectedLabels[status])).toBeInTheDocument();
   });
 
-  it('applies correct background color per status', () => {
-    const expectedBg: Record<TransactionStatus, string> = {
-      pending: 'var(--am-soft-warning-bg)',
-      confirmed: 'var(--am-soft-success-bg)',
-      failed: 'var(--am-soft-destructive-bg)',
+  it('applies correct CSS class per status', () => {
+    const expectedClass: Record<TransactionStatus, string> = {
+      pending: 'bg-soft-warning',
+      confirmed: 'bg-soft-success',
+      failed: 'bg-soft-destructive',
     };
 
     for (const status of TRANSACTION_STATUSES) {
       const { unmount } = renderWithProviders(<TransactionStatusBadge status={status} />);
-      const outerSpan = document.querySelector('span[style*="background-color"]');
-      expect(outerSpan).toBeTruthy();
-      expect((outerSpan as HTMLElement).style.backgroundColor).toBe(expectedBg[status]);
+      const badge = screen.getByTestId('transaction-status-badge');
+      expect(badge.className).toContain(expectedClass[status]);
       unmount();
     }
   });

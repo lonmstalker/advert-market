@@ -15,6 +15,7 @@ import {
 } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useDebounce } from '@/shared/hooks/use-debounce';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
 import { formatCompactNumber } from '@/shared/lib/format-number';
 import { computeCpm, formatCpm } from '@/shared/lib/ton-format';
@@ -32,6 +33,7 @@ export default function CatalogPage() {
   const [searchFocused, setSearchFocused] = useState(false);
   const debouncedSearch = useDebounce(searchInput, 300);
   const [sheetOpened, setSheetOpened] = useState(false);
+  const haptic = useHaptic();
 
   // ref breaks the filters→effect→setFilters→filters dependency cycle
   const filtersRef = useRef(filters);
@@ -113,8 +115,9 @@ export default function CatalogPage() {
   }, [channels]);
 
   const handleOpenFilters = useCallback(() => {
+    haptic.impactOccurred('light');
     setSheetOpened(true);
-  }, []);
+  }, [haptic]);
 
   const sheets = { filters: ChannelFiltersContent };
 
@@ -154,7 +157,7 @@ export default function CatalogPage() {
         ) : channels.length === 0 ? (
           <motion.div key="empty" {...fadeIn}>
             <EmptyState
-              icon={<SearchOffIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+              icon={<SearchOffIcon className="w-7 h-7 text-fg-tertiary" />}
               title={t('catalog.empty.title')}
               description={t('catalog.empty.description')}
               actionLabel={t('catalog.empty.cta')}
@@ -167,7 +170,7 @@ export default function CatalogPage() {
         ) : (
           <motion.div key="list" {...staggerChildren} initial="initial" animate="animate">
             {summary && (
-              <div className="py-1.5 px-0.5">
+              <div className="py-3 px-1">
                 <Text type="footnote" color="secondary">
                   {summary.avgCpm != null
                     ? t('catalog.summary', {
@@ -192,7 +195,7 @@ export default function CatalogPage() {
             </div>
 
             {isFetchingNextPage && (
-              <div className="am-catalog-grid pt-3">
+              <div className="am-catalog-grid pt-4">
                 <ChannelCardSkeleton />
               </div>
             )}

@@ -76,7 +76,7 @@ export default function CreateDealPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          icon={<SadFaceIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+          icon={<SadFaceIcon className="w-7 h-7 text-fg-tertiary" />}
           title={t('errors.notFound')}
           description={t('catalog.empty.description')}
           actionLabel={t('common.back')}
@@ -98,9 +98,8 @@ export default function CreateDealPage() {
     <>
       <BackButtonHandler />
       <AppPageShell withTabsPadding={false} testId="deal-create-page-shell">
-        <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 40px)' }}>
-          {/* Form content */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <motion.div {...fadeIn} className="flex flex-col min-h-[calc(100vh-40px)]">
+          <div className="flex-1 flex flex-col gap-5">
             <Text type="title1" weight="bold">
               {t('deals.create.title')}
             </Text>
@@ -108,7 +107,7 @@ export default function CreateDealPage() {
             <ChannelCard channel={channel} />
 
             <div>
-              <div style={{ marginBottom: 8 }}>
+              <div className="mb-2">
                 <Text type="subheadline2" color="secondary">
                   {t('deals.create.postType')}
                 </Text>
@@ -118,7 +117,7 @@ export default function CreateDealPage() {
 
             {selectedRule && (
               <AppSurfaceCard>
-                <div style={{ textAlign: 'center', padding: 16 }}>
+                <div className="text-center p-4">
                   <Text type="subheadline2" color="secondary">
                     {t('deals.create.price')}
                   </Text>
@@ -139,8 +138,7 @@ export default function CreateDealPage() {
             />
           </div>
 
-          {/* Bottom CTA */}
-          <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
+          <div className="shrink-0 pb-8 pt-6">
             <motion.div {...pressScale}>
               <Button
                 text={

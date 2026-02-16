@@ -1,6 +1,5 @@
 import type { TextEntity } from '@/shared/types/text-entity';
 import { renderEntities } from './entity-renderer';
-import { postBody } from './styles';
 
 type TelegramPostBodyProps = {
   text: string;
@@ -12,5 +11,5 @@ export function TelegramPostBody({ text, entities }: TelegramPostBodyProps) {
 
   const nodes = renderEntities(text, entities);
 
-  return <div style={postBody}>{nodes}</div>;
+  return <div className="am-tg-message-text">{nodes}</div>;
 }

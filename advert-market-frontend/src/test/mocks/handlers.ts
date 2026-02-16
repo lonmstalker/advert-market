@@ -113,7 +113,7 @@ function convertLegacyTimelineEvents(events: LegacyTimelineEvent[], deal: MockDe
   }
 
   return events.map((event, index) => {
-    const prevStatus = index > 0 ? events[index - 1]?.status ?? null : null;
+    const prevStatus = index > 0 ? (events[index - 1]?.status ?? null) : null;
     return {
       id: parseTimelineEventId(event.id, index + 1),
       eventType: event.type,
@@ -167,7 +167,7 @@ function normalizeStoredTimelineEvents(rawEvents: unknown, deal: MockDealState):
               ? event.id
               : index + 1,
         eventType: event.type,
-        fromStatus: index > 0 ? normalized[index - 1]?.toStatus ?? null : null,
+        fromStatus: index > 0 ? (normalized[index - 1]?.toStatus ?? null) : null,
         toStatus: event.status,
         actorId: mapActorRoleToId(actorRole, deal),
         createdAt: typeof event.createdAt === 'string' ? event.createdAt : deal.createdAt,
@@ -491,7 +491,8 @@ function normalizeMediaAssets(rawDraft: unknown, creativeId: string): MockMediaA
         typeof item.fileName === 'string' && item.fileName.trim()
           ? item.fileName
           : defaultFileNameByMediaType(type, index);
-      const fileSize = typeof item.fileSize === 'string' && item.fileSize.trim() ? item.fileSize : formatFileSize(sizeBytes);
+      const fileSize =
+        typeof item.fileSize === 'string' && item.fileSize.trim() ? item.fileSize : formatFileSize(sizeBytes);
       const thumbnailUrl =
         typeof item.thumbnailUrl === 'string' && item.thumbnailUrl.startsWith('http')
           ? item.thumbnailUrl
@@ -1334,13 +1335,14 @@ export const handlers = [
     const bodyText = formData ? null : await readBodyTextSafe(request);
     const requestedType = formData?.get('mediaType') ?? (bodyText ? parseMultipartField(bodyText, 'mediaType') : null);
     const fallbackFileMeta = bodyText ? parseMultipartFileMeta(bodyText) : {};
-    const type = typeof requestedType === 'string' && requestedType
-      ? normalizeMediaType(requestedType)
-      : file
-        ? inferMediaTypeFromMime(file.type || 'application/octet-stream')
-        : fallbackFileMeta.mimeType
-          ? inferMediaTypeFromMime(fallbackFileMeta.mimeType)
-        : 'PHOTO';
+    const type =
+      typeof requestedType === 'string' && requestedType
+        ? normalizeMediaType(requestedType)
+        : file
+          ? inferMediaTypeFromMime(file.type || 'application/octet-stream')
+          : fallbackFileMeta.mimeType
+            ? inferMediaTypeFromMime(fallbackFileMeta.mimeType)
+            : 'PHOTO';
     const id = `media-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
     const mimeType = file?.type || fallbackFileMeta.mimeType || defaultMimeByMediaType(type);
     const sizeBytes = file?.size ?? fallbackFileMeta.sizeBytes ?? 1024;

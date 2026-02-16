@@ -50,11 +50,11 @@ export const Animated: Story = {
 
 export const PairActions: Story = {
   render: () => (
-    <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-      <motion.div {...pressScale} style={{ flex: 1 }}>
+    <div className="flex gap-3 w-full">
+      <motion.div {...pressScale} className="flex-1">
         <Button text="Decline" type="secondary" />
       </motion.div>
-      <motion.div {...pressScale} style={{ flex: 1 }}>
+      <motion.div {...pressScale} className="flex-1">
         <Button text="Accept" type="primary" />
       </motion.div>
     </div>

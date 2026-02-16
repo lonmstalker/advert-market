@@ -27,9 +27,9 @@ export const AllColors: Story = {
   render: () => {
     const colors = ['primary', 'secondary', 'accent'] as const;
     return (
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+      <div className="flex gap-6 items-center">
         {colors.map((c) => (
-          <div key={c} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <div key={c} className="flex flex-col items-center gap-2">
             <Spinner size="32px" color={c} />
             <Text type="caption2" color="secondary">
               {c}
@@ -43,15 +43,7 @@ export const AllColors: Story = {
 
 export const WhiteOnDark: Story = {
   render: () => (
-    <div
-      style={{
-        background: '#1C1C1E',
-        padding: '24px',
-        borderRadius: '12px',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
+    <div className="flex justify-center p-6 rounded-control" style={{ background: '#1C1C1E' }}>
       <Spinner size="32px" color="white" />
     </div>
   ),
@@ -59,7 +51,7 @@ export const WhiteOnDark: Story = {
 
 export const PageLoader: Story = {
   render: () => (
-    <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+    <motion.div {...fadeIn} className="flex flex-col items-center gap-3">
       <Spinner size="40px" color="accent" />
       <Text type="callout" color="secondary">
         Loading deals...

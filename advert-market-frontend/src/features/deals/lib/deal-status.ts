@@ -159,7 +159,7 @@ const COLOR_VAR_MAP: Record<StatusColor, string> = {
 };
 
 const COLOR_BG_MAP: Record<StatusColor, string> = {
-  // "Soft badge" backgrounds are defined centrally in global.css using color-mix.
+  // "Soft badge" backgrounds are defined centrally in app.css using color-mix.
   // Returning CSS vars here keeps unit tests stable (jsdom doesn't need to parse color-mix).
   accent: 'var(--am-soft-accent-bg)',
   warning: 'var(--am-soft-warning-bg)',
@@ -174,6 +174,30 @@ export function statusColorVar(color: StatusColor): string {
 
 export function statusBgVar(color: StatusColor): string {
   return COLOR_BG_MAP[color];
+}
+
+const COLOR_BG_CLASS_MAP: Record<StatusColor, string> = {
+  accent: 'bg-soft-accent',
+  warning: 'bg-soft-warning',
+  success: 'bg-soft-success',
+  destructive: 'bg-soft-destructive',
+  secondary: 'bg-soft-secondary',
+};
+
+export function statusBgClass(color: StatusColor): string {
+  return COLOR_BG_CLASS_MAP[color];
+}
+
+const COLOR_TEXT_CLASS_MAP: Record<StatusColor, string> = {
+  accent: 'text-accent',
+  warning: 'text-warning',
+  success: 'text-success',
+  destructive: 'text-destructive',
+  secondary: 'text-fg-secondary',
+};
+
+export function statusTextClass(color: StatusColor): string {
+  return COLOR_TEXT_CLASS_MAP[color];
 }
 
 /**

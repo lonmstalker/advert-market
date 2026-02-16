@@ -1,3 +1,4 @@
+import { Text } from '@telegram-tools/ui-kit';
 import { useTranslation } from 'react-i18next';
 import { PulsingDot } from '@/shared/ui';
 import { CheckCircleIcon } from '@/shared/ui/icons';
@@ -19,9 +20,9 @@ export function MiniTimeline({ currentStatus }: MiniTimelineProps) {
           {i > 0 && <Line completed={step.state === 'completed' || step.state === 'active'} />}
           <div className="flex flex-col items-center gap-0.5">
             <Node state={step.state} />
-            <span className="text-[10px] leading-tight text-[var(--color-foreground-secondary)]">
+            <Text type="caption2" color="secondary">
               {t(step.i18nKey)}
-            </span>
+            </Text>
           </div>
         </div>
       ))}
@@ -33,7 +34,7 @@ function Node({ state }: { state: 'completed' | 'active' | 'pending' }) {
   if (state === 'completed') {
     return (
       <span data-testid="mini-timeline-check" className="flex items-center justify-center">
-        <CheckCircleIcon size={14} strokeWidth={2} style={{ color: 'var(--color-accent-primary)' }} />
+        <CheckCircleIcon size={14} strokeWidth={2} className="text-accent" />
       </span>
     );
   }
@@ -46,23 +47,14 @@ function Node({ state }: { state: 'completed' | 'active' | 'pending' }) {
     );
   }
 
-  return (
-    <span
-      data-testid="mini-timeline-pending"
-      className="block h-2 w-2 shrink-0 rounded-full"
-      style={{ background: 'var(--color-border-separator)' }}
-    />
-  );
+  return <span data-testid="mini-timeline-pending" className="block h-2 w-2 shrink-0 rounded-full bg-separator" />;
 }
 
 function Line({ completed }: { completed: boolean }) {
   return (
     <span
       data-testid="mini-timeline-line"
-      className="h-px w-4 shrink-0"
-      style={{
-        background: completed ? 'var(--color-accent-primary)' : 'var(--color-border-separator)',
-      }}
+      className={`h-px w-4 shrink-0 ${completed ? 'bg-accent' : 'bg-separator'}`}
     />
   );
 }

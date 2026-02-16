@@ -41,7 +41,7 @@ export default function TransactionDetailPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          icon={<SadFaceIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+          icon={<SadFaceIcon className="w-7 h-7 text-fg-tertiary" />}
           title={t('errors.notFound')}
           description={t('wallet.empty.description')}
           actionLabel={t('common.back')}
@@ -68,10 +68,16 @@ export default function TransactionDetailPage() {
       <BackButtonHandler />
       <AppPageShell variant="finance" withTabsPadding={false} testId="wallet-transaction-page-shell">
         <motion.div {...fadeIn}>
-          <div className="am-finance-card overflow-hidden relative" style={{ background: 'color-mix(in srgb, var(--am-card-surface) 92%, transparent)' }}>
+          <div
+            className="am-finance-card overflow-hidden relative"
+            style={{ background: 'color-mix(in srgb, var(--am-card-surface) 92%, transparent)' }}
+          >
             <div
               className="absolute top-0 left-0 right-0 h-[110px] pointer-events-none"
-              style={{ background: tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)' }}
+              style={{
+                background:
+                  tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)',
+              }}
             />
 
             <div className="relative text-center px-4 pt-7 pb-5">
@@ -89,7 +95,7 @@ export default function TransactionDetailPage() {
                 transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
               >
                 <Text type="largeTitle" weight="bold">
-                  <span className="am-wallet-headerAmount" style={{ color: amountColor }} >
+                  <span className="am-tabnum" style={{ color: amountColor }}>
                     {sign}
                     {formatTon(tx.amountNano)}
                   </span>
@@ -116,7 +122,7 @@ export default function TransactionDetailPage() {
           </div>
 
           {/* Details */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             <Group>
               <GroupItem text={t('wallet.detail.type')} after={<Text type="body">{t(config.i18nKey)}</Text>} />
               <GroupItem
@@ -132,7 +138,10 @@ export default function TransactionDetailPage() {
               {tx.dealId && (
                 <GroupItem
                   text={t('wallet.detail.deal')}
-                  onClick={() => navigate(`/deals/${tx.dealId}`)}
+                  onClick={() => {
+                    haptic.impactOccurred('light');
+                    navigate(`/deals/${tx.dealId}`);
+                  }}
                   after={
                     <Text type="body" color="accent">
                       {t('wallet.detail.viewDeal')} →

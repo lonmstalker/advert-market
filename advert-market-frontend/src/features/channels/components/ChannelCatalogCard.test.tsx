@@ -58,9 +58,28 @@ describe('ChannelCatalogCard', () => {
     expect(screen.queryByText(/from .* TON/)).not.toBeInTheDocument();
   });
 
-  it('shows subscriber count in subtitle formatted as 125K', () => {
+  it('renders subscriber metric formatted as 125K', () => {
     renderCard({ subscriberCount: 125000 });
-    expect(screen.getByText(/125K.*subs/)).toBeInTheDocument();
+    expect(screen.getByText('125K')).toBeInTheDocument();
+    expect(screen.getByText(/subs/i)).toBeInTheDocument();
+  });
+
+  it('renders categories as compact chips', () => {
+    renderCard({ categories: ['crypto', 'finance'] });
+    expect(screen.getByText('Crypto')).toBeInTheDocument();
+    expect(screen.getByText('Finance')).toBeInTheDocument();
+  });
+
+  it('renders average views metric', () => {
+    renderCard({ avgViews: 45000 });
+    expect(screen.getByText(/45K/)).toBeInTheDocument();
+    expect(screen.getByText(/views/i)).toBeInTheDocument();
+  });
+
+  it('renders ER metric as percentage', () => {
+    renderCard({ engagementRate: 3.6 });
+    expect(screen.getByText('3.6%')).toBeInTheDocument();
+    expect(screen.getByText(/ER/i)).toBeInTheDocument();
   });
 
   it('calls onClick when card is clicked', async () => {

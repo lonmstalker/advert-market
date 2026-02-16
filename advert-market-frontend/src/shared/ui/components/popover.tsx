@@ -1,4 +1,3 @@
-import { Button } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -70,14 +69,11 @@ export function Popover({ content, children }: PopoverProps) {
   }, [open]);
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <span className="inline-flex items-center">
       <span ref={triggerRef} className="am-popover-trigger">
-        <Button
-          type="secondary"
-          className="am-popover-trigger__button"
-          icon={<span className="am-popover-trigger__content">{children}</span>}
-          onClick={toggle}
-        />
+        <button type="button" className="am-popover-trigger__button" onClick={toggle}>
+          <span className="am-popover-trigger__content">{children}</span>
+        </button>
       </span>
       {createPortal(
         <AnimatePresence>
@@ -89,11 +85,7 @@ export function Popover({ content, children }: PopoverProps) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
                 onClick={close}
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  zIndex: 9998,
-                }}
+                className="am-popover-backdrop"
               />
               <motion.div
                 ref={popoverRef}
@@ -101,36 +93,14 @@ export function Popover({ content, children }: PopoverProps) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: 4 }}
                 transition={{ duration: 0.15 }}
+                className="am-popover-bubble"
                 style={{
-                  position: 'fixed',
                   top: coords ? coords.top : -9999,
                   left: coords ? coords.left : -9999,
-                  transform: 'translateY(-100%)',
-                  zIndex: 9999,
-                  background: 'var(--color-background-base)',
-                  border: '1px solid var(--color-border-separator)',
-                  borderRadius: 10,
-                  padding: '8px 12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'auto',
                 }}
               >
                 {content}
-                {/* Arrow */}
-                <span
-                  style={{
-                    position: 'absolute',
-                    bottom: -5,
-                    left: '50%',
-                    transform: 'translateX(-50%) rotate(45deg)',
-                    width: 10,
-                    height: 10,
-                    background: 'var(--color-background-base)',
-                    borderRight: '1px solid var(--color-border-separator)',
-                    borderBottom: '1px solid var(--color-border-separator)',
-                  }}
-                />
+                <span className="am-popover-arrow" />
               </motion.div>
             </>
           )}

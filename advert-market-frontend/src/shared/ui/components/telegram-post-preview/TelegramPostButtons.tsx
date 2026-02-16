@@ -1,6 +1,5 @@
 import type { InlineButton } from '@/shared/types/text-entity';
 import { GlobeIcon } from '../../icons';
-import { buttonsContainer, inlineButton } from './styles';
 
 type TelegramPostButtonsProps = {
   buttons: InlineButton[];
@@ -9,13 +8,22 @@ type TelegramPostButtonsProps = {
 export function TelegramPostButtons({ buttons }: TelegramPostButtonsProps) {
   if (buttons.length === 0) return null;
 
+  const rows: InlineButton[][] = [];
+  for (let i = 0; i < buttons.length; i += 2) {
+    rows.push(buttons.slice(i, i + 2));
+  }
+
   return (
-    <div style={buttonsContainer}>
-      {buttons.map((btn, index) => (
-        <span key={`${btn.url}-${index}`} style={inlineButton}>
-          {btn.text}
-          <GlobeIcon style={{ width: 12, height: 12, opacity: 0.7 }} />
-        </span>
+    <div className="am-tg-inline-keyboard">
+      {rows.map((row) => (
+        <div key={row.map((b) => b.url).join(',')} className="am-tg-inline-keyboard-row">
+          {row.map((btn) => (
+            <span key={btn.url} className="am-tg-inline-button">
+              {btn.text}
+              <GlobeIcon className="am-tg-inline-icon" />
+            </span>
+          ))}
+        </div>
       ))}
     </div>
   );
