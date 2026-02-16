@@ -68,23 +68,33 @@ body {
 
   /* Semantic color bridge: Telegram theme → app tokens.
      Primary source is --tg-theme-*; fallback is static hex for non-TMA contexts. */
-  --color-accent-primary: var(--tg-theme-button-color, #007aff);
+  --color-accent-primary: var(--tg-theme-button-color, #3390ec);
   --color-foreground-primary: var(--tg-theme-text-color, #000000);
   --color-foreground-secondary: var(--tg-theme-hint-color, #8e8e93);
   --color-foreground-tertiary: var(--tg-theme-hint-color, #5d6872);
   --color-background-base: var(--tg-theme-bg-color, #ffffff);
   --color-background-secondary: var(--tg-theme-secondary-bg-color, #f1f3f4);
   --color-background-modal: var(--tg-theme-bg-color, #ffffff);
-  --color-border-separator: rgba(0, 0, 0, 0.1);
-  --color-link: var(--tg-theme-link-color, #007aff);
+  --color-border-separator: rgba(0, 0, 0, 0.08);
+  --color-link: var(--tg-theme-link-color, #3390ec);
 
-  /* App surfaces (Telegram Wallet native 2026). */
-  --am-app-background: var(--tg-theme-secondary-bg-color, #f1f3f4);
-  --am-page-background: var(--tg-theme-secondary-bg-color, #f1f3f4);
+  /* State colors (no Telegram theme equivalent — always static). */
+  --color-state-success: #34c759;
+  --color-state-destructive: #ff3b30;
+  --color-state-warning: #ff9500;
+
+  /* Static colors (must NOT invert with theme). */
+  --color-static-white: #ffffff;
+  --color-static-black: #000000;
+
+  /* App surfaces (Telegram Wallet native 2026).
+     Bridge through --color-* so dark theme overrides cascade automatically. */
+  --am-app-background: var(--color-background-secondary);
+  --am-page-background: var(--color-background-secondary);
   --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, color-mix(in srgb, var(--color-accent-primary) 9%, transparent) 0%, transparent 72%);
-  --am-card-surface: var(--tg-theme-bg-color, #ffffff);
-  --am-row-surface: var(--tg-theme-bg-color, #ffffff);
-  --am-control-surface: var(--tg-theme-secondary-bg-color, #f1f3f4);
+  --am-card-surface: var(--color-background-base);
+  --am-row-surface: var(--color-background-base);
+  --am-control-surface: var(--color-background-secondary);
   --am-input-bg: color-mix(in srgb, var(--color-background-secondary) 85%, var(--color-background-base));
   --am-input-placeholder: var(--color-foreground-secondary);
   --am-header-surface: color-mix(in srgb, var(--am-card-surface) 88%, transparent);
@@ -138,42 +148,102 @@ body {
   --am-wallet-action-border: rgba(25, 47, 74, 0.1);
   --am-wallet-action-icon-bg: color-mix(in srgb, var(--color-accent-primary) 14%, transparent);
   --am-wallet-action-icon: var(--color-accent-primary);
+
+  /* Preview-only Telegram chat tokens (isolated to telegram-post-preview component). */
+  --am-tg-chat-bg-light: #8ca97f;
+  --am-tg-chat-bg-dark: #0f0f0f;
+  --am-tg-bubble-bg-light: #ffffff;
+  --am-tg-bubble-bg-dark: #18222d;
+  --am-tg-inline-btn-bg-light: rgba(0, 0, 0, 0.08);
+  --am-tg-inline-btn-bg-dark: rgba(255, 255, 255, 0.08);
+  --am-tg-chat-bg: var(--am-tg-chat-bg-light);
+  --am-tg-bubble-bg: var(--am-tg-bubble-bg-light);
+  --am-tg-inline-btn-bg: var(--am-tg-inline-btn-bg-light);
+  --am-tg-chat-pattern-url: url('/assets/tg-pattern.svg');
 }
 
 /* Dark theme overrides.
-   --tg-theme-* is the primary source; these are fallbacks for when
-   Telegram doesn't inject theme vars (e.g. standalone browser testing). */
-[theme-mode='dark'] {
-  --color-background-secondary: var(--tg-theme-secondary-bg-color, #0f161c);
-  --color-background-base: var(--tg-theme-bg-color, #17212b);
-  --color-background-modal: #1c2936;
+   Activated by: ThemeProvider (theme-mode), VITE_FORCE_THEME (data-theme),
+   or system preference (prefers-color-scheme). Deep Gunmetal OLED base. */
+[theme-mode='dark'],
+[data-theme='dark'] {
+  --color-background-secondary: var(--tg-theme-secondary-bg-color, #1c1c1e);
+  --color-background-base: var(--tg-theme-bg-color, #2c2c2e);
+  --color-background-modal: #2c2c2e;
   --color-border-separator: rgba(255, 255, 255, 0.08);
   --color-foreground-primary: var(--tg-theme-text-color, #f5f5f5);
-  --color-foreground-secondary: var(--tg-theme-hint-color, #889098);
-  --color-foreground-tertiary: #5d6872;
-  --color-accent-primary: var(--tg-theme-button-color, #50a8eb);
-  --color-link: var(--tg-theme-link-color, #50a8eb);
+  --color-foreground-secondary: var(--tg-theme-hint-color, #98989f);
+  --color-foreground-tertiary: #6e6e73;
+  --color-accent-primary: var(--tg-theme-button-color, #3390ec);
+  --color-link: var(--tg-theme-link-color, #3390ec);
 
-  --am-card-border: rgba(255, 255, 255, 0.05);
-  --am-border-strong: rgba(255, 255, 255, 0.1);
+  --color-state-success: #30d158;
+  --color-state-destructive: #ff453a;
+  --color-state-warning: #ff9f0a;
+
+  --am-card-border: rgba(255, 255, 255, 0.06);
+  --am-border-strong: rgba(255, 255, 255, 0.12);
   --am-shadow-sm: none;
   --am-shadow-card: none;
   --am-shadow-elevated: none;
   --am-card-shadow: none;
   --am-tabbar-shadow: none;
 
-  --am-wallet-hero-surface: #1c2936;
+  --am-wallet-hero-surface: #2c2c2e;
   --am-wallet-top-pill-border: rgba(255, 255, 255, 0.1);
   --am-wallet-action-border: rgba(255, 255, 255, 0.08);
 
-  --am-skeleton-base: #232e3c;
+  --am-skeleton-base: #3a3a3c;
   --am-skeleton-highlight: rgba(245, 245, 245, 0.05);
+
+  --am-tg-chat-bg: var(--am-tg-chat-bg-dark);
+  --am-tg-bubble-bg: var(--am-tg-bubble-bg-dark);
+  --am-tg-inline-btn-bg: var(--am-tg-inline-btn-bg-dark);
+}
+
+/* System dark mode auto-detection (non-Telegram, no explicit theme attribute). */
+@media (prefers-color-scheme: dark) {
+  :root:not([theme-mode]):not([data-theme]) {
+    --color-background-secondary: #1c1c1e;
+    --color-background-base: #2c2c2e;
+    --color-background-modal: #2c2c2e;
+    --color-border-separator: rgba(255, 255, 255, 0.08);
+    --color-foreground-primary: #f5f5f5;
+    --color-foreground-secondary: #98989f;
+    --color-foreground-tertiary: #6e6e73;
+    --color-accent-primary: #3390ec;
+    --color-link: #3390ec;
+
+    --color-state-success: #30d158;
+    --color-state-destructive: #ff453a;
+    --color-state-warning: #ff9f0a;
+
+    --am-card-border: rgba(255, 255, 255, 0.06);
+    --am-border-strong: rgba(255, 255, 255, 0.12);
+    --am-shadow-sm: none;
+    --am-shadow-card: none;
+    --am-shadow-elevated: none;
+    --am-card-shadow: none;
+    --am-tabbar-shadow: none;
+
+    --am-wallet-hero-surface: #2c2c2e;
+    --am-wallet-top-pill-border: rgba(255, 255, 255, 0.1);
+    --am-wallet-action-border: rgba(255, 255, 255, 0.08);
+
+    --am-skeleton-base: #3a3a3c;
+    --am-skeleton-highlight: rgba(245, 245, 245, 0.05);
+
+    --am-tg-chat-bg: var(--am-tg-chat-bg-dark);
+    --am-tg-bubble-bg: var(--am-tg-bubble-bg-dark);
+    --am-tg-inline-btn-bg: var(--am-tg-inline-btn-bg-dark);
+  }
 }
 
 /* Light theme: explicit fallback for standalone (non-TMA) context.
    In TMA, :root already bridges to --tg-theme-* so these are redundant. */
-[theme-mode='light'] {
-  --color-border-separator: rgba(0, 0, 0, 0.1);
+[theme-mode='light'],
+[data-theme='light'] {
+  --color-border-separator: rgba(0, 0, 0, 0.08);
   --am-card-border: rgba(12, 26, 42, 0.08);
   --am-border-strong: rgba(12, 26, 42, 0.16);
 }
@@ -440,7 +510,8 @@ body {
   animation: am-shimmer 1.4s linear infinite;
 }
 
-[theme-mode='dark'] .am-skeleton-block {
+[theme-mode='dark'] .am-skeleton-block,
+[data-theme='dark'] .am-skeleton-block {
   background: linear-gradient(110deg, var(--am-skeleton-base) 8%, var(--am-skeleton-highlight) 18%, var(--am-skeleton-base) 33%);
   background-size: 220% 100%;
 }

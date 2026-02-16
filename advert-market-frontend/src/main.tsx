@@ -8,6 +8,12 @@ import '@/app/tailwind.css';
 import '@/app/components.css';
 import '@/app/global.css';
 
+// Apply forced theme early (before React renders) so CSS dark overrides take effect immediately.
+const forcedTheme = import.meta.env.VITE_FORCE_THEME;
+if (forcedTheme === 'dark' || forcedTheme === 'light') {
+  document.documentElement.setAttribute('data-theme', forcedTheme);
+}
+
 let webViewportFallbackBound = false;
 
 function bindWebViewportCssVarsFallback() {

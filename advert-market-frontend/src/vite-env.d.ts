@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_TON_MANIFEST_URL?: string;
   readonly VITE_TON_DEPOSIT_POLL_INTERVAL_MS?: string;
   readonly VITE_MOCK_API?: string;
+  readonly VITE_FORCE_THEME?: 'light' | 'dark';
 }
 
 interface ImportMeta {

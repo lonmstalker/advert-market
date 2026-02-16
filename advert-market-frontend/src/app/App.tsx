@@ -64,14 +64,21 @@ const queryClient = new QueryClient({
 });
 
 function useTelegramTheme(): 'light' | 'dark' {
-  // Telegram-native theme sync (signal updates on theme change).
-  const isDark = useSignal(themeParams.isDark, () => false);
-
   // Force theme for dev/E2E matrix runs outside Telegram.
   const forced = import.meta.env.VITE_FORCE_THEME;
   if (forced === 'dark' || forced === 'light') return forced;
 
-  return isDark ? 'dark' : 'light';
+  // Telegram-native theme sync (signal updates on theme change).
+  const isDark = useSignal(themeParams.isDark, () => false);
+  if (isDark) return 'dark';
+
+  // Outside Telegram: detect system color scheme preference.
+  const isMounted = themeParams.isMounted();
+  if (!isMounted && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+
+  return 'light';
 }
 
 function ErrorBoundaryLayout() {

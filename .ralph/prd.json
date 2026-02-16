@@ -1,226 +1,239 @@
 {
   "project": "advert-market",
-  "branchName": "ralph/av4.2-ton-sdk-hardening",
-  "description": "TON SDK Integration Hardening — fix 3 CRITICAL bugs (race condition, NPE, secret leak), 5 HIGH bugs (overflow, validation), and add missing tests. TDD approach: RED test first, then GREEN fix.",
+  "branchName": "ralph/frontend-visual-overhaul",
+  "description": "Frontend visual overhaul: fix text contrast, dark mode fallback, layout overflow, and bring all screens to Telegram Wallet-level quality. Full UI audit with Playwright visual regression tests. Reference: Telegram Wallet (13 screenshots in 'скрины кошелька/').",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Fix race condition in updateConfirmed — add CAS version check",
-      "description": "As a platform operator, I need deposit confirmation to be atomic so that double-spend is impossible.",
+      "title": "Define CSS variable fallbacks for non-Telegram environments",
+      "description": "App renders invisible text outside Telegram because --tg-theme-* CSS vars are unset. Define complete fallback palette in global.css :root block so dev server, E2E, and web preview always render readable content.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldNotConfirmSameDepositTwice_concurrentCAS` in `JooqTonTransactionRepositoryTest` — call `updateConfirmed()` twice with same id and same expectedVersion, assert second call returns false",
-        "GREEN: Add `int expectedVersion` parameter to `JooqTonTransactionRepository.updateConfirmed()`, add `.and(TON_TRANSACTIONS.VERSION.eq(expectedVersion))` to WHERE clause, set VERSION to `expectedVersion + 1`",
-        "Update `DepositWatcher.confirmDeposit()` to pass `record.getVersion()` into `updateConfirmed()`",
-        "If `updateConfirmed()` returns false, log WARN 'Deposit id={} already confirmed by another instance' and skip event publication — do NOT throw",
-        "All existing DepositWatcherTest tests pass",
-        "Tests pass"
+        "Define light theme fallback values in global.css :root for ALL --color-* variables: --color-foreground-primary: #000000, --color-foreground-secondary: #8E8E93, --color-foreground-tertiary: #C7C7CC, --color-background-base: #FFFFFF, --color-background-secondary: #F1F3F4, --color-accent-primary: #3390EC (Telegram Blue), --color-state-success: #34C759, --color-state-destructive: #FF3B30, --color-state-warning: #FF9500, --color-border-separator: rgba(0,0,0,0.08)",
+        "Define dark theme fallback via @media (prefers-color-scheme: dark) for non-Telegram: --color-background-base: #1C2C3E, --color-background-secondary: #1C1C1E (Deep Gunmetal OLED), --color-foreground-primary: #FFFFFF, --color-foreground-secondary: #98989F, --color-accent-primary: #3390EC",
+        "Support VITE_FORCE_THEME env var: when set to 'dark', apply [data-theme='dark'] on <html> in main.tsx, global.css handles [data-theme='dark'] selector",
+        "Fallback values are overridden when Telegram SDK sets --tg-theme-* vars (SDK values take precedence via specificity or variable reassignment)",
+        "All --am-* spatial tokens (--am-card-surface, --am-card-border, --am-card-shadow, --am-page-atmosphere, etc.) have fallback values in both light and dark",
+        "No pure #000000 used as background anywhere in dark theme (OLED-safe Deep Gunmetal only)",
+        "WCAG AA contrast: 4.5:1 for body text, 3:1 for large text (title1+) in both themes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: both light and dark theme render readable text on all pages"
       ],
       "priority": 1,
       "passes": false,
-      "notes": "CRITICAL: prevents double-spend. Files: JooqTonTransactionRepository.java, DepositWatcher.java, JooqTonTransactionRepositoryTest.java, DepositWatcherTest.java"
+      "notes": "CRITICAL: This unblocks ALL other visual fixes. Without fallbacks, nothing is visible outside Telegram. Files: src/styles/global.css, src/main.tsx (VITE_FORCE_THEME). Do NOT create tailwind.config.ts — project uses Tailwind v4 CSS-first. CSS import order: ui-kit.css -> tailwind.css -> components.css -> global.css."
     },
     {
       "id": "US-002",
-      "title": "Filter null txHash and null inMsg from TON Center response",
-      "description": "As a developer, I need blockchain data validated at boundary so null txHash never reaches domain logic.",
+      "title": "Fix catalog channel card layout — truncation, alignment, overflow",
+      "description": "Channel names overlap language badges and prices. Cards need proper flex layout with text-overflow: ellipsis.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldFilterOutTransactionsWithNullTxHash` in `TonCenterBlockchainAdapterTest` — response with txId.hash=null should be excluded from result list",
-        "RED: Write test `shouldFilterOutTransactionsWithNullInMsg` — response with inMsg=null should be excluded",
-        "GREEN: In `TonCenterBlockchainAdapter.getTransactions()`, add `.filter(tx -> tx.getTransactionId() != null && tx.getTransactionId().getHash() != null)` before `.map()`",
-        "GREEN: Add `.filter(tx -> tx.getInMsg() != null)` before `.map()`",
-        "Log WARN for each filtered transaction: 'Skipping TON transaction with missing txHash/inMsg'",
-        "All existing TonCenterBlockchainAdapterTest tests pass",
-        "Tests pass"
+        "Channel name truncates with ellipsis when exceeding available space (flex: 1, min-width: 0, overflow: hidden, text-overflow: ellipsis, white-space: nowrap)",
+        "Language badge (RU/EN) is fixed-width, does not shift with name length",
+        "VerifiedBadge icon is inline with name, never wraps to next line",
+        "Price ('от 5 TON') is right-aligned with flex-shrink: 0, never overlaps name",
+        "Subscriber count and @handle are on separate line, fully visible, secondary color",
+        "Max 4 data points per card: avatar + name + subscribers + price (per DESIGN_GUIDELINES sec.9)",
+        "Avatar letter has proper contrast against colored background",
+        "Category chip row scrolls horizontally without layout shift",
+        "Summary line ('14 каналов · ...') uses footnote/secondary color",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: catalog page at 390x844, check card layout and text truncation"
       ],
       "priority": 2,
       "passes": false,
-      "notes": "CRITICAL: prevents NPE. File: TonCenterBlockchainAdapter.java, TonCenterBlockchainAdapterTest.java"
+      "notes": "Files: src/features/channels/components/ (ChannelListItem or similar), src/pages/catalog/. Use joinClasses() for conditional classes, NOT cn()/clsx. Use <Text> component from @telegram-tools/ui-kit for all text."
     },
     {
       "id": "US-003",
-      "title": "Eliminate mnemonic exposure in stack traces and logs",
-      "description": "As a security engineer, I need the platform wallet mnemonic to never appear in logs, stack traces, or error messages.",
+      "title": "Fix deal list card readability — status badges, amounts, hierarchy",
+      "description": "Deal status badges are tiny colored bars with invisible text. Need proper pill badges with contrasting text.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldNotExposeMnemonicInExceptionMessage` in `TonWalletServiceTest` — call constructor with invalid mnemonic, catch exception, assert message does NOT contain the mnemonic words",
-        "GREEN: In `TonWalletService.deriveKeyPair()`, catch exception and throw new `IllegalStateException(\"Failed to derive key pair from mnemonic\")` WITHOUT chaining the original exception (no `ex` in constructor)",
-        "Verify `TonConfig.tonWalletService()` does NOT log the decrypted mnemonic at any level",
-        "Tests pass"
+        "Status badge uses caption1 (12px) minimum, colored pill background with white text on dark pills, dark text on light pills",
+        "Status colors follow deal-status.ts config, visible in both light and dark themes",
+        "Deal amount ('3 TON') uses callout typography, right-aligned, clearly visible",
+        "Channel name uses body/medium weight, truncates with ellipsis if needed",
+        "Date/time uses subheadline2/secondary color, right-aligned below amount",
+        "Channel avatar has proper letter contrast",
+        "Segment control (Рекламодатель/Владелец) has clear active/inactive states",
+        "Empty state for 'no deals' has icon + heading + description + CTA button ('Find a channel' -> /catalog)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: deals list page, check badge readability and amount visibility"
       ],
       "priority": 3,
       "passes": false,
-      "notes": "CRITICAL security. File: TonWalletService.java, TonConfig.java, TonWalletServiceTest.java"
+      "notes": "Files: src/features/deals/components/ (DealListItem, DealStatusBadge), src/pages/deals/. Status colors defined in src/features/deals/lib/deal-status.ts."
     },
     {
       "id": "US-004",
-      "title": "Change TonBlockchainPort.getSeqno() return type from int to long",
-      "description": "As a developer, I need seqno transmitted as long to prevent overflow on high-activity wallets.",
+      "title": "Fix deal detail page — amount visibility, timeline spacing, action button",
+      "description": "Deal amount is invisible, timeline steps float disconnected, action button overlaps content.",
       "acceptanceCriteria": [
-        "Change `TonBlockchainPort.getSeqno(@NonNull String address)` return type from `int` to `long`",
-        "Update `TonCenterBlockchainAdapter.getSeqno()` — remove `(int)` cast, return raw `long` from tonCenter",
-        "Update `TonWalletService.submitTransaction()` — use `long seqno` variable",
-        "Update `ResilientTonBlockchainPort.getSeqno()` delegate — return `long`",
-        "Update all test mocks that stub `getSeqno()` to return `long` values",
-        "All existing tests pass",
-        "Tests pass"
+        "Deal amount uses title1 bold or title2 bold, high contrast foreground-primary color",
+        "Fiat equivalent (~$16.50) uses body/secondary color below amount",
+        "Status section has clear background (soft color pill) with readable text",
+        "Timeline steps have proper vertical connector lines, consistent spacing",
+        "Active timeline step has accent color dot with subtle pulse animation (PulsingDot component)",
+        "Completed steps have check icon, pending steps have muted dot",
+        "'Ещё N шагов' link is accent-colored, properly spaced",
+        "Metadata chips (date, deadline, timer) use consistent chip styling, don't overlap",
+        "Comment text uses body weight with 16px padding",
+        "Action button ('Отменить') is in FixedBottomBar with proper safe-area-bottom padding",
+        "No excessive empty whitespace — content fills viewport or has appropriate footer",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: deal detail page, check amount, timeline, and action button"
       ],
       "priority": 4,
       "passes": false,
-      "notes": "HIGH: type change across port interface. Files: TonBlockchainPort.java, TonCenterBlockchainAdapter.java, TonWalletService.java, TonConfig.java (ResilientTonBlockchainPort), all related tests"
+      "notes": "Files: src/pages/deals/deal-detail/, src/features/deals/components/ (DealTimeline, MiniTimeline, DealHeader). Use existing PulsingDot from src/shared/ui/components/pulsing-dot.tsx."
     },
     {
       "id": "US-005",
-      "title": "Fix seqno persistence for first-time deposit detection",
-      "description": "As a developer, I need the first-detected block seqno to be persisted so that confirmation counting starts correctly.",
+      "title": "Fix wallet page — balance prominence, action buttons, transaction list",
+      "description": "Balance is invisible, action button labels are cut off, transaction amounts lack color coding. Must match Telegram Wallet reference quality.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldSaveBlockSeqnoOnFirstDetection` in `DepositWatcherTest` — deposit with seqno=null should get seqno saved after first poll, not stay null forever",
-        "GREEN: In `DepositWatcher.resolveConfirmedBlocks()`, when `record.getSeqno() == null`: extract block info from `TonTransactionInfo`, save via new `txRepository.updateSeqno(id, seqno, expectedVersion)` method",
-        "Add `updateSeqno(long id, long seqno, int expectedVersion)` method to `JooqTonTransactionRepository` with CAS version check",
-        "After saving seqno, calculate and return `(int)(masterSeqno - savedSeqno)` in same cycle instead of returning -1",
-        "All existing DepositWatcher tests pass",
-        "Tests pass"
+        "Balance uses hero typography (88px) or title1 bold, centered, foreground-primary color, font-variant-numeric: tabular-nums",
+        "Fiat equivalent below balance uses body/secondary color",
+        "'В эскроу: N TON' is clearly readable with soft accent background badge",
+        "Action buttons (Перевод, Пополнить, Вывести, Обменять) have icon above label, equal width, no truncation",
+        "Action button icons use size 24, strokeWidth 1.5, accent color (per icon conventions)",
+        "Transaction amounts: green (--color-state-success) for income (+), red (--color-state-destructive) for expense (-), with tabular-nums",
+        "Transaction type icons are colored circles (matching Telegram Wallet reference): deposit=blue, payout=green, refund=orange, fee=gray",
+        "Date group headers ('Сегодня', 'Вчера', '15 января') have section header styling with proper spacing",
+        "'Connect Wallet' button is prominent, uses TonConnect brand blue",
+        "Crypto/TON segment control has clear active state",
+        "Stats cards (В эскроу, Завершённых сделок) have proper card styling with readable numbers",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: wallet page, check balance, action buttons, and transaction list"
       ],
       "priority": 5,
       "passes": false,
-      "notes": "HIGH: depends on US-004 (seqno is long). Files: DepositWatcher.java, JooqTonTransactionRepository.java, DepositWatcherTest.java"
+      "notes": "Files: src/pages/wallet/, src/features/wallet/components/. Reference: скрины кошелька/ screenshots 1, 5, 9, 10. Use <Text> with type='hero' for balance."
     },
     {
       "id": "US-006",
-      "title": "Add overflow guard for subwalletId long-to-int cast",
-      "description": "As a developer, I need subwalletId safely stored so that overflow doesn't create address collisions.",
+      "title": "Fix profile page — name visibility, empty state, settings",
+      "description": "User name and section headings are invisible. Empty state text blends into card background.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldRejectSubwalletIdExceedingIntMax` in `EscrowServiceTest` — mock `tonWalletPort.generateDepositAddress()` returning subwalletId = Integer.MAX_VALUE + 1L, assert `IllegalStateException` is thrown",
-        "GREEN: In `EscrowService.generateDepositAddress()`, add guard: `if (addressInfo.subwalletId() > Integer.MAX_VALUE) throw new IllegalStateException(\"Subwallet ID overflow: \" + addressInfo.subwalletId())`",
-        "All existing EscrowService tests pass",
-        "Tests pass"
+        "User name uses title2 bold, foreground-primary, high contrast",
+        "@handle uses body/secondary color",
+        "Role badge ('Рекламодатель') has accent soft background with accent text",
+        "'Участник с...' uses caption1/tertiary color",
+        "Avatar circle has proper border/shadow for depth",
+        "'МОИ КАНАЛЫ' section header uses footnote/secondary uppercase",
+        "Empty state: icon visible (proper contrast), 'Нет каналов' uses title3 foreground-primary, description uses body/secondary, 'Добавить канал' button is primary",
+        "'Мои креативы' GroupItem has chevron, proper icon, readable text",
+        "Settings section: 'Язык и валюта' and 'Уведомления' GroupItems have proper icon colors and chevron",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: profile page, check name, empty state, and settings"
       ],
       "priority": 6,
       "passes": false,
-      "notes": "HIGH. File: EscrowService.java, EscrowServiceTest.java"
+      "notes": "Files: src/pages/profile/, src/features/profile/components/. Use <Group> + <GroupItem> from ui-kit for settings sections."
     },
     {
       "id": "US-007",
-      "title": "Validate positive amount in DepositWatcher matching",
-      "description": "As a platform operator, I need deposits with zero or negative amounts rejected so invalid blockchain data doesn't create false confirmations.",
+      "title": "Fix onboarding flow — text visibility, spacing, hierarchy",
+      "description": "Titles are clipped/invisible, app name blends into gradient, excessive whitespace on locale step.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldNotMatchTransactionWithZeroAmount` in `DepositWatcherTest` — TX with amountNano=0 should not be matched",
-        "RED: Write test `shouldNotMatchTransactionWithNegativeAmount` — TX with amountNano=-1 should not be matched",
-        "GREEN: In `DepositWatcher.findMatchingTx()`, add `tx.amountNano() > 0` to the stream filter predicate",
-        "All existing DepositWatcher tests pass",
-        "Tests pass"
+        "Step 1 (Язык и валюта): heading uses title2 bold foreground-primary, description uses body/secondary, no excessive top whitespace",
+        "Step 2 (Welcome): 'Ad Market' app name uses title1 bold foreground-primary (not blending into gradient)",
+        "Feature cards (Каталог каналов, Эскроу TON, Отслеживание сделок) have consistent card styling with icon + title + description",
+        "Step 3 (Кто вы?): heading 'Кто вы?' is fully visible, not clipped at viewport top",
+        "Role cards have clear selected/unselected states (border accent for selected, default for unselected)",
+        "Expanded role details (Находите каналы, etc.) appear with smooth animation",
+        "Tour step: channel names in mock catalog are fully visible with proper truncation",
+        "Step indicators (dots/progress) have proper accent/tertiary contrast",
+        "'Продолжить' button always visible at bottom, not hidden behind content",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: navigate through all onboarding steps, check text visibility at each step"
       ],
       "priority": 7,
       "passes": false,
-      "notes": "HIGH. File: DepositWatcher.java, DepositWatcherTest.java"
+      "notes": "Files: src/pages/onboarding/, src/features/onboarding/components/. Multiple steps — verify each step renders correctly."
     },
     {
       "id": "US-008",
-      "title": "Handle duplicate TX in getTransactions matching — pick most recent by lt",
-      "description": "As a developer, I need deposit matching to pick the correct transaction when TON Center returns multiple TXs.",
+      "title": "Fix channel detail page — header, stats, pricing tabs",
+      "description": "Channel name barely visible in header, stats cards need better contrast, pricing tab amounts hard to read.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldSelectMostRecentTransactionByLt` in `DepositWatcherTest` — when 2 TXs match amount filter, the one with higher `lt` is selected",
-        "GREEN: Replace `.findFirst()` with `.max(Comparator.comparingLong(TonTransactionInfo::lt))` in `DepositWatcher.findMatchingTx()`",
-        "RED: Write test `shouldExcludeAlreadyProcessedTxHashes` — TX with txHash already in ton_transactions DB should not be matched",
-        "GREEN: Before matching, load existing txHashes from `txRepository` for the deposit address and filter them out",
-        "All existing DepositWatcher tests pass",
-        "Tests pass"
+        "Channel name uses title2 bold foreground-primary in header",
+        "@handle uses body/secondary",
+        "VerifiedBadge and language badge inline with name, proper spacing",
+        "Category tags (Криптовалюта, Финансы) use chip styling with soft color backgrounds",
+        "Stats cards (Подписчики, Средний охват, Вовлечённость) have clear numbers in title2 bold, labels in caption1/secondary",
+        "'36% reach' secondary stat is readable in both themes",
+        "'Открыть канал в Telegram' row has proper chevron and Telegram icon",
+        "Tab bar (О канале / Цены / Правила) has clear active/inactive states with accent underline",
+        "Pricing tab: 'от N TON' header uses title2 bold, fiat equivalent in body/secondary",
+        "Price cards: post type icon + name + time + CPM on left, amount (title2 bold) + fiat on right",
+        "Info buttons have proper tertiary color, don't interfere with tap targets",
+        "Share and Edit action buttons in header have proper icon contrast",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: channel detail page with About and Pricing tabs"
       ],
       "priority": 8,
       "passes": false,
-      "notes": "HIGH. Files: DepositWatcher.java, DepositWatcherTest.java"
+      "notes": "Files: src/pages/catalog/channel-detail/, src/features/channels/components/. Navigate to a channel from catalog to verify."
     },
     {
       "id": "US-009",
-      "title": "Add retry_count column and failure escalation for deposits",
-      "description": "As a platform operator, I need failed deposit processing attempts tracked so permanently broken deposits are escalated.",
+      "title": "Audit and fix glass blur budget, pressScale, haptic, and tabular-nums",
+      "description": "Systematic audit: ensure blur(12px) for cards, blur(20px) for chrome only, atmosphere gradient doesn't kill readability, pressScale on all interactive elements.",
       "acceptanceCriteria": [
-        "Create DB migration `017-ton-transaction-retry-count.sql`: ALTER TABLE ton_transactions ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0",
-        "Add `retry_count` field to jOOQ generated class (regenerate or add manually to match schema)",
-        "Add `maxRetries` property to `TonProperties.Deposit` with @DefaultValue(\"5\")",
-        "RED: Write test `shouldMarkDepositAsFailedAfterMaxRetries` in `DepositWatcherTest`",
-        "GREEN: In `processOneSafely()` catch block: increment retry_count via repository, if retry_count >= maxRetries then updateStatus to FAILED and increment metric `ton.deposit.permanently_failed`",
-        "Add `incrementRetryCount(long id)` method to `JooqTonTransactionRepository`",
-        "Tests pass"
+        "Audit all AppSurfaceCard usages: confirm backdrop-filter: blur(12px), NOT blur(20px)",
+        "Bottom tabs (.am-bottom-tabs): confirm blur(20px)",
+        "Atmosphere gradient (AppPageShell::before): verify opacity doesn't reduce text contrast below WCAG AA threshold, adjust opacity if needed",
+        "Finance page atmosphere (isFinance variant): slightly stronger glow but still WCAG compliant",
+        "All Button, GroupItem onClick, and card onClick have pressScale animation from animations.ts",
+        "All card/list item onClick triggers haptic impactOccurred('light') via useHaptic()",
+        "All CTA buttons trigger impactOccurred('medium')",
+        "All tab/segment switches trigger selectionChanged()",
+        "font-variant-numeric: tabular-nums on ALL numeric displays (balance, amounts, prices, stats, dates — per DESIGN_GUIDELINES sec.2)",
+        "No blur(20px) on any content card (GPU budget for budget Android)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: spot-check pressScale and tabular-nums on wallet and catalog pages"
       ],
       "priority": 9,
       "passes": false,
-      "notes": "MEDIUM. Files: new migration SQL, TonProperties.java, DepositWatcher.java, JooqTonTransactionRepository.java, DepositWatcherTest.java"
+      "notes": "Cross-cutting audit. Use Grep to find all blur() usages, all onClick handlers, all numeric displays. Check: AppSurfaceCard, AppPageShell, BottomTabs, all page components. Import pressScale from src/shared/ui/animations.ts. Import useHaptic from src/shared/hooks/use-haptic.ts."
     },
     {
       "id": "US-010",
-      "title": "Normalize wallet address format for seqno queries",
-      "description": "As a developer, I need consistent address formats when querying TON Center API.",
+      "title": "Fix Eruda debug button positioning",
+      "description": "Eruda widget overlaps bottom tab bar and interactive elements in bottom-right corner.",
       "acceptanceCriteria": [
-        "RED: Write test `shouldUseConsistentAddressFormatForSeqnoQuery` in `TonWalletServiceTest` — verify the address passed to `blockchainPort.getSeqno()` uses raw format",
-        "GREEN: In `TonWalletService.submitTransaction()`, replace `wallet.getAddress().toBounceable()` with `wallet.getAddress().toString()` for seqno query",
-        "All existing TonWalletService tests pass",
-        "Tests pass"
+        "Eruda entry button does not overlap bottom tabs, FixedBottomBar, or any interactive element",
+        "Add CSS override in global.css to reposition eruda-entry to a non-interfering location (e.g., top-right below safe area)",
+        "Eruda is hidden in production builds (import.meta.env.PROD)",
+        "Eruda is hidden in E2E mode (import.meta.env.MODE === 'e2e') — already done, verify",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: confirm Eruda button does not overlap bottom tabs"
       ],
       "priority": 10,
       "passes": false,
-      "notes": "MEDIUM. File: TonWalletService.java, TonWalletServiceTest.java"
+      "notes": "Low priority fix. File: src/styles/global.css (CSS override for .eruda-entry or #eruda), src/main.tsx."
     },
     {
       "id": "US-011",
-      "title": "Tune Circuit Breaker — separate 429 rate limit from 5xx errors",
-      "description": "As a platform operator, I need the circuit breaker to tolerate TON Center rate limiting without blocking deposit monitoring.",
+      "title": "Implement Playwright visual regression test suite",
+      "description": "Automated screenshot tests for all main pages in light and dark themes to prevent future visual regression.",
       "acceptanceCriteria": [
-        "Create `TonRateLimitException extends RuntimeException` in `advert-market-financial` ton.client package",
-        "In `TonCenterBlockchainAdapter`, detect HTTP 429 responses and throw `TonRateLimitException` instead of generic exception",
-        "In `TonResilienceConfig`, configure circuit breaker with `ignoreExceptions(TonRateLimitException.class)` so 429s don't count toward failure rate",
-        "RED: Write test `shouldNotCountRateLimitAsCircuitBreakerFailure` in `TonCenterBlockchainAdapterTest`",
-        "GREEN: Implement the 429 detection and exception separation",
-        "Tests pass"
+        "New test file: e2e/visual-regression.spec.ts",
+        "Tests cover: onboarding-locale, onboarding-welcome, onboarding-interest, catalog, channel-detail, channel-prices, deals-list, deal-detail, wallet, profile (10 pages)",
+        "Each page tested in both light and dark themes (VITE_FORCE_THEME env var)",
+        "Viewport: 390x844 (iPhone 14 Pro)",
+        "Screenshot comparison via toHaveScreenshot() with maxDiffPixels tolerance",
+        "Test verifies key text elements are present and visible (not empty text content)",
+        "Test navigates through MSW-mocked flow (VITE_MOCK_API=true)",
+        "Tests pass with initial baseline generation: npx playwright test --update-snapshots",
+        "Tests integrated into npm run test:e2e pipeline",
+        "Baseline screenshots committed to repo in e2e/__screenshots__/",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: run visual regression tests, confirm all screenshots captured"
       ],
       "priority": 11,
       "passes": false,
-      "notes": "MEDIUM. Files: new TonRateLimitException.java, TonCenterBlockchainAdapter.java, TonResilienceConfig.java, TonCenterBlockchainAdapterTest.java"
-    },
-    {
-      "id": "US-012",
-      "title": "Add negative tests for TonCenterBlockchainAdapter malformed responses",
-      "description": "As a developer, I need the blockchain adapter to handle all malformed responses gracefully.",
-      "acceptanceCriteria": [
-        "Test in TonCenterBlockchainAdapterTest: response with txId=null — transaction filtered, empty list returned",
-        "Test: response with txId.hash=null — transaction filtered",
-        "Test: response with inMsg=null — transaction filtered",
-        "Test: empty result list — returns empty list, no exception",
-        "Test: ok=false response — throws appropriate DomainException",
-        "Tests pass"
-      ],
-      "priority": 12,
-      "passes": false,
-      "notes": "Test gap. Depends on US-002 being implemented first. File: TonCenterBlockchainAdapterTest.java"
-    },
-    {
-      "id": "US-013",
-      "title": "Add idempotency tests for EscrowService duplicate calls",
-      "description": "As a developer, I need tests proving duplicate confirmDeposit/releaseEscrow/refundEscrow calls are idempotent.",
-      "acceptanceCriteria": [
-        "Test in EscrowServiceTest: `confirmDeposit()` called twice with same txHash — `ledgerPort.transfer()` invoked only once (second call is no-op due to idempotency_key)",
-        "Test: `releaseEscrow()` called twice with same dealId — `ledgerPort.transfer()` invoked only once",
-        "Test: `refundEscrow()` called twice with same dealId — `ledgerPort.transfer()` invoked only once",
-        "Mock `ledgerPort.transfer()` to throw `IdempotencyViolationException` on second call, verify EscrowService handles gracefully",
-        "Tests pass"
-      ],
-      "priority": 13,
-      "passes": false,
-      "notes": "Test gap. File: EscrowServiceTest.java"
-    },
-    {
-      "id": "US-014",
-      "title": "Add integration tests for concurrent deposit processing",
-      "description": "As a developer, I need integration tests verifying the deposit flow under concurrent load.",
-      "acceptanceCriteria": [
-        "Create `TonDepositConcurrencyIntegrationTest` in `advert-market-integration-tests` module",
-        "Test: two threads call repository `findPendingDeposits()` simultaneously — verify FOR UPDATE SKIP LOCKED prevents overlapping records",
-        "Test: two threads call `updateConfirmed()` with same id and version — only one succeeds (CAS)",
-        "Use `SharedContainers` singleton for PostgreSQL + Redis (NOT @Container/@Testcontainers)",
-        "Use `CountDownLatch` for thread synchronization",
-        "Tests pass"
-      ],
-      "priority": 14,
-      "passes": false,
-      "notes": "Test gap. Depends on US-001 (CAS fix). File: new TonDepositConcurrencyIntegrationTest.java in advert-market-integration-tests"
+      "notes": "Run AFTER all visual fixes are done (US-001 through US-010). Files: new e2e/visual-regression.spec.ts, playwright.config.ts (add project for visual). Use Playwright's built-in screenshot comparison. Existing E2E setup in advert-market-frontend/e2e/."
     }
   ]
 }
