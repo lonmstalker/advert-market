@@ -46,11 +46,11 @@ export const TransactionListItem = memo(function TransactionListItem({
       onClick={handleClick}
       style={{
         cursor: 'pointer',
-        background: 'var(--am-card-surface)',
+        background: 'color-mix(in srgb, var(--am-card-surface) 94%, transparent)',
         border: '1px solid var(--am-card-border)',
-        borderRadius: 18,
+        borderRadius: 16,
         boxShadow: 'var(--am-card-shadow)',
-        padding: '0 12px',
+        padding: '0 14px',
       }}
     >
       <div
@@ -67,7 +67,7 @@ export const TransactionListItem = memo(function TransactionListItem({
             height: 40,
             borderRadius: '50%',
             background: getTransactionTypeTint(transaction.type),
-            border: '1px solid color-mix(in srgb, var(--color-border-separator) 60%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--am-card-border) 90%, transparent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

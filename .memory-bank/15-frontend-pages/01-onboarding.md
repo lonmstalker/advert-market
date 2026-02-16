@@ -1,7 +1,7 @@
 # Onboarding
 
 > Direct-replace onboarding flow for Telegram Mini App.  
-> Current UX contract: **welcome (+ locale/currency sheet) -> interest -> tour (3 slides)** with **soft-gated tasks**, **sticky primary CTA**, **skip confirm** (tour only), and **role-aware finish route**.
+> Current UX contract: **locale/currency (first screen) -> welcome -> interest -> tour (3 slides)** with **soft-gated tasks**, **sticky primary CTA**, **skip confirm** (tour only), and **role-aware finish route**.
 
 ## Routes
 
@@ -18,53 +18,50 @@ Guard entry remains unchanged:
 | Field | Value |
 |---|---|
 | Route | `/onboarding` |
-| Goal | Explain value in <10s and start onboarding |
-| Primary action | `onboarding.welcome.start` (opens locale/currency sheet) |
+| Goal | Explicitly set language/currency before any product walkthrough content |
+| Primary action | `onboarding.locale.continue` |
 | Secondary action | None |
 
 ### UX Contract
 
-- Uses shared `OnboardingShell` with unified layout and sticky footer.
-- Top-right language icon/trigger is removed.
-- Primary CTA is rendered in sticky footer (not Telegram MainButton).
+- First visible onboarding surface is locale/currency editor (`LocaleCurrencyEditor`, onboarding mode).
+- Locale screen is inline (not a bottom sheet) and uses profile-seeded values.
+- Language and currency are editable before welcome content is shown.
+- On continue:
+  - locale editor closes,
+  - welcome content is shown on the same route (`/onboarding`),
+  - then user proceeds to interest selection.
 - Tracks analytics:
-  - `onboarding_view(step=welcome)`
-  - `onboarding_primary_click(step=welcome)`
+  - `locale_step_shown(source=onboarding-first-screen)`
+  - `locale_continue`
 
-## Step 1.1 — Locale & Currency (Bottom Sheet)
+## Step 1.1 — Welcome (Same Route, Post-Locale)
 
 | Field | Value |
 |---|---|
-| Surface | In-flow bottom sheet opened from Welcome CTA |
-| Goal | Make locale and currency explicit without adding a route |
-| Primary action | `onboarding.locale.continue` |
+| Surface | Inline state on `/onboarding` after locale confirmation |
+| Goal | Explain value in <10s and move to role selection |
+| Primary action | `onboarding.welcome.start` |
 | Secondary action | None (`Skip` is not available) |
 
 ### UX Contract
 
-- Sheet is prefilled from profile settings.
-  - `languageCode` is seeded from Telegram `language_code` on first login only.
-  - `displayCurrency` + `currencyMode` come from profile state.
-  - Frontend source of truth is `settings-store.languageCode` (not raw `i18n.language`).
-- Two selector rows are shown:
-  - Language
-  - Currency (`AUTO` by language or manual currency selection)
-- `AUTO` behavior:
-  - language update may change effective currency from backend mapping.
-  - UI shows temporary undo banner when currency changes due to `AUTO`.
-- `MANUAL` behavior:
-  - language change does not overwrite selected currency.
-  - microcopy and `Reset to auto` action are shown.
-- Continue closes sheet and navigates to `/onboarding/interest`.
-- Continue is disabled while locale/currency mutation is pending.
+- Welcome state reuses previous value proposition cards and CTA.
+- CTA now navigates directly to `/onboarding/interest` (no locale modal opening).
+- `onboarding_view(step=welcome)` is emitted when welcome state becomes visible.
+- `onboarding_primary_click(step=welcome)` is emitted on Start button tap.
 
 ### Analytics
 
-- `locale_step_shown`
-- `locale_continue`
-- `language_changed`
-- `currency_mode_changed`
-- `currency_changed`
+- Locale stage:
+  - `locale_step_shown`
+  - `locale_continue`
+  - `language_changed`
+  - `currency_mode_changed`
+  - `currency_changed`
+- Welcome stage:
+  - `onboarding_view(step=welcome)`
+  - `onboarding_primary_click(step=welcome)`
 
 ## Step 2 — Interest Selection
 

@@ -5,21 +5,44 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { FeatureCard } from '@/features/onboarding/components/feature-card';
 import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo';
-import { LocaleCurrencyStepSheet } from '@/features/onboarding/components/onboarding-settings-sheet';
 import { OnboardingShell } from '@/features/onboarding/components/onboarding-shell';
 import { useHaptic } from '@/shared/hooks';
 import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
-import { DocumentIcon, pressScale, SearchIcon, staggerChildren, WalletIcon } from '@/shared/ui';
+import { DocumentIcon, LocaleCurrencyEditor, pressScale, SearchIcon, staggerChildren, WalletIcon } from '@/shared/ui';
 
 export default function OnboardingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const haptic = useHaptic();
-  const [showSettings, setShowSettings] = useState(false);
+  const [stage, setStage] = useState<'locale' | 'welcome'>('locale');
 
   useEffect(() => {
+    if (stage === 'locale') {
+      trackOnboardingEvent('locale_step_shown', { source: 'onboarding-first-screen' });
+      return;
+    }
+
     trackOnboardingEvent('onboarding_view', { step: 'welcome' });
-  }, []);
+  }, [stage]);
+
+  if (stage === 'locale') {
+    return (
+      <OnboardingShell
+        centerContent
+        footer={null}
+        contentStyle={{
+          justifyContent: 'center',
+        }}
+      >
+        <LocaleCurrencyEditor
+          mode="onboarding"
+          onContinue={() => {
+            setStage('welcome');
+          }}
+        />
+      </OnboardingShell>
+    );
+  }
 
   return (
     <OnboardingShell
@@ -33,7 +56,7 @@ export default function OnboardingPage() {
               onClick={() => {
                 trackOnboardingEvent('onboarding_primary_click', { step: 'welcome' });
                 haptic.impactOccurred('light');
-                setShowSettings(true);
+                navigate('/onboarding/interest');
               }}
             />
           </motion.div>
@@ -122,12 +145,6 @@ export default function OnboardingPage() {
           />
         </motion.div>
       </div>
-
-      <LocaleCurrencyStepSheet
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        onContinue={() => navigate('/onboarding/interest')}
-      />
     </OnboardingShell>
   );
 }

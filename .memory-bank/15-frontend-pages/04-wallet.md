@@ -18,20 +18,23 @@
 
 ## Visual System (Wallet-native pass)
 
-- Finance routes (`/wallet`, `/wallet/history`, `/wallet/history/:txId`) use a shared shell:
+- Finance routes (`/wallet`, `/wallet/history`, `/wallet/history/:txId`) use shared shell classes:
   - `.am-finance-page`
   - `.am-finance-stack`
   - `.am-finance-card`
-- Surface tokens are centralized in `src/app/global.css`:
+- Theme tokens are centralized in `src/app/global.css` and now have explicit light/dark overrides via `[theme-mode="light|dark"]`:
+  - `--am-app-background`
   - `--am-card-surface`
   - `--am-card-border`
   - `--am-card-shadow`
-  - `--am-app-background`
-- Bottom navigation follows floating capsule pattern with safe-area offset:
+  - `--am-finance-page-top-glow`
+  - wallet top/segment/action tokens (`--am-wallet-*`)
+- Bottom navigation uses floating capsule pattern with blur + active bordered segment:
   - `--am-bottom-tabs-height`
   - `--am-tabbar-bg`
   - `--am-tabbar-border`
   - `--am-tabbar-active-bg`
+  - `--am-tabbar-active-color`
 
 ---
 
@@ -118,6 +121,14 @@ The fields depend on the user's role (the backend returns the relevant ones, the
 - Withdraw buttons **none** (advertiser does not receive payment)
 
 **General:**
+- Top chrome:
+  - left chip with `wallet.title`
+  - right segment (`wallet.segment.crypto`, `wallet.segment.ton`)
+- Quick actions row (wallet-native visual pattern):
+  - transfer
+  - top up
+  - withdraw
+  - exchange
 - **Group `t('wallet.recentTransactions')`** — up to the last 5 transactions (`GroupItem`):
   - `before`: icon type (escrow_deposit/payout/refund/commission)
   - Header: description of the operation + name of the channel/deal

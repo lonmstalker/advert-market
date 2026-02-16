@@ -35,13 +35,9 @@ export async function initI18n() {
 
   const resources: Resource = {};
 
-  const primary = await localeLoaders[lng]();
-  resources[lng] = { translation: primary.default };
-
-  if (lng !== 'ru') {
-    const fallback = await localeLoaders.ru();
-    resources.ru = { translation: fallback.default };
-  }
+  const [ruLocale, enLocale] = await Promise.all([localeLoaders.ru(), localeLoaders.en()]);
+  resources.ru = { translation: ruLocale.default };
+  resources.en = { translation: enLocale.default };
 
   await i18n.use(initReactI18next).init({
     resources,

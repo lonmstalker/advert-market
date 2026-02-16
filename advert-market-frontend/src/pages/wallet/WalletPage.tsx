@@ -1,5 +1,6 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { useIsConnectionRestored } from '@tonconnect/ui-react';
+import { ArrowUp, Plus, RefreshCw, SendHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,8 @@ import { TransactionGroupList } from '@/features/wallet/components/TransactionGr
 import { WalletSkeleton } from '@/features/wallet/components/WalletSkeleton';
 import { useTransactions } from '@/features/wallet/hooks/useTransactions';
 import { useWalletSummary } from '@/features/wallet/hooks/useWalletSummary';
-import { EmptyState } from '@/shared/ui';
+import { useHaptic } from '@/shared/hooks';
+import { EmptyState, Tappable } from '@/shared/ui';
 import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
 import { ScrollIcon } from '@/shared/ui/icons';
 
@@ -22,6 +24,7 @@ export default function WalletPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isConnectionRestored = useIsConnectionRestored();
+  const haptic = useHaptic();
 
   const { data: summary, isLoading: summaryLoading } = useWalletSummary();
   const { data: txData, isLoading: txLoading } = useTransactions(undefined, 5);
@@ -52,11 +55,60 @@ export default function WalletPage() {
 
   const isOwner = isOwnerView(summary);
   const escrowAmount = isOwner ? summary.inEscrowNano : summary.activeEscrowNano;
+  const quickActions = [
+    { key: 'transfer', label: t('wallet.quickAction.transfer'), Icon: SendHorizontal },
+    { key: 'topUp', label: t('wallet.quickAction.topUp'), Icon: Plus },
+    { key: 'withdraw', label: t('wallet.quickAction.withdraw'), Icon: ArrowUp },
+    { key: 'exchange', label: t('wallet.quickAction.exchange'), Icon: RefreshCw },
+  ] as const;
 
   return (
     <motion.div {...fadeIn} className="am-finance-page">
       <div className="am-finance-stack">
+        <div className="am-wallet-top">
+          <div className="am-wallet-pill">
+            <Text type="subheadline2" weight="medium">
+              {t('wallet.title')}
+            </Text>
+          </div>
+
+          <div className="am-wallet-segment">
+            <div className="am-wallet-segment-active" style={{ padding: '7px 18px' }}>
+              <Text type="subheadline2" weight="bold">
+                {t('wallet.segment.crypto')}
+              </Text>
+            </div>
+            <div style={{ padding: '7px 18px' }}>
+              <Text type="subheadline2" weight="bold">
+                {t('wallet.segment.ton')}
+              </Text>
+            </div>
+          </div>
+        </div>
+
         <BalanceCard summary={summary} isOwner={isOwner} isConnectionRestored={isConnectionRestored} />
+
+        <div className="am-wallet-actions">
+          {quickActions.map(({ key, label, Icon }) => (
+            <Tappable
+              key={key}
+              className="am-wallet-action"
+              onClick={() => {
+                haptic.selectionChanged();
+              }}
+              aria-label={label}
+            >
+              <div className="flex-center" style={{ flexDirection: 'column', gap: 8 }}>
+                <div className="am-wallet-actionIcon flex-center">
+                  <Icon size={19} />
+                </div>
+                <Text type="caption1" weight="medium">
+                  {label}
+                </Text>
+              </div>
+            </Tappable>
+          ))}
+        </div>
 
         <motion.div {...slideUp} transition={{ delay: 0.2 }}>
           <MetricRow escrowAmount={escrowAmount} completedDealsCount={summary.completedDealsCount} />

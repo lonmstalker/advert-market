@@ -48,7 +48,8 @@ errors.* — frontend-only errors (validation, offline, timeout)
 1. `Telegram.WebApp.initDataUnsafe.user.language_code` at first login
 2. `GET /api/v1/profile` → `languageCode` is source-of-truth on subsequent logins
 3. Frontend sync rule: `useAuth` applies `profile.languageCode` to both settings store and `i18n`
-4. Fallback: `ru`
+4. Runtime i18n bundles: both `ru` and `en` are preloaded at app init to allow immediate language switching in onboarding/profile without lazy reload races.
+5. Fallback: `ru`
 
 ---
 

@@ -2,9 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Group, GroupItem, Icon, Text } from '@telegram-tools/ui-kit';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { profileKeys } from '@/shared/api/query-keys';
-import { updateLanguage, updateSettings } from '@/shared/api/profile';
 import type { CurrencyMode } from '@/shared/api/auth';
+import { updateLanguage, updateSettings } from '@/shared/api/profile';
+import { profileKeys } from '@/shared/api/query-keys';
 import { useToast } from '@/shared/hooks';
 import { CURRENCIES, LANGUAGES } from '@/shared/lib/constants';
 import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
@@ -43,6 +43,7 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
   const currencyMode = useSettingsStore((s) => s.currencyMode);
   const setFromProfile = useSettingsStore((s) => s.setFromProfile);
+  const setLanguageCode = useSettingsStore((s) => s.setLanguageCode);
 
   const languageCode = normalizeLanguage(storedLanguageCode || i18n.language);
 
@@ -52,7 +53,8 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
       const previousLanguage = i18n.language;
       const previousCurrency = displayCurrency;
       const previousMode = currencyMode;
-      i18n.changeLanguage(nextLanguage);
+      setLanguageCode(nextLanguage);
+      void i18n.changeLanguage(nextLanguage);
       return { previousLanguage, previousCurrency, previousMode };
     },
     onSuccess: (updatedProfile, _nextLanguage, context) => {
@@ -60,7 +62,7 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
       queryClient.setQueryData(profileKeys.me, updatedProfile);
       const updatedLanguage = normalizeLanguage(updatedProfile.languageCode);
       if (i18n.language !== updatedLanguage) {
-        i18n.changeLanguage(updatedLanguage);
+        void i18n.changeLanguage(updatedLanguage);
       }
 
       if (context?.previousMode === 'AUTO' && context.previousCurrency !== updatedProfile.displayCurrency) {
@@ -79,7 +81,9 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
     },
     onError: (_error, _nextLanguage, context) => {
       if (context?.previousLanguage) {
-        i18n.changeLanguage(context.previousLanguage);
+        const previousLanguage = normalizeLanguage(context.previousLanguage);
+        setLanguageCode(previousLanguage);
+        void i18n.changeLanguage(previousLanguage);
       }
       showError(t('common.toast.saveFailed'));
     },

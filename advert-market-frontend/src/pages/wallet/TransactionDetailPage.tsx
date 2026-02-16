@@ -73,6 +73,7 @@ export default function TransactionDetailPage() {
             style={{
               overflow: 'hidden',
               position: 'relative',
+              background: 'color-mix(in srgb, var(--am-card-surface) 92%, transparent)',
             }}
           >
             {/* Gradient backdrop — contained inside card */}
@@ -82,7 +83,7 @@ export default function TransactionDetailPage() {
                 top: 0,
                 left: 0,
                 right: 0,
-                height: 80,
+                height: 110,
                 background:
                   tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)',
                 pointerEvents: 'none',
@@ -113,7 +114,7 @@ export default function TransactionDetailPage() {
                 transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
               >
                 <Text type="largeTitle" weight="bold">
-                  <span style={{ fontVariantNumeric: 'tabular-nums', color: amountColor }}>
+                  <span className="am-wallet-headerAmount" style={{ color: amountColor }}>
                     {sign}
                     {formatTon(tx.amountNano)}
                   </span>
@@ -226,7 +227,7 @@ export default function TransactionDetailPage() {
                           width: 32,
                           height: 32,
                           borderRadius: '50%',
-                          background: 'var(--am-soft-accent-bg)',
+                          background: 'color-mix(in srgb, var(--am-soft-accent-bg) 82%, transparent)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',

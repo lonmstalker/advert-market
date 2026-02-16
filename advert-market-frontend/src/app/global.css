@@ -44,23 +44,22 @@ body {
   --am-fixed-bottom-bar-base: 92px;
   --am-bottom-tabs-height: 64px;
 
-  /* App surfaces (Telegram-native, wallet-like depth without hard shadows). */
-  --am-app-background:
-    radial-gradient(
-      120% 55% at 50% -10%,
-      color-mix(in srgb, var(--color-accent-primary) 12%, transparent) 0%,
-      transparent 65%
-    ),
-    var(--color-background-secondary);
-  --am-card-surface: color-mix(in srgb, var(--color-background-base) 90%, var(--color-background-section) 10%);
-  --am-card-border: color-mix(in srgb, var(--color-border-separator) 78%, transparent);
-  --am-card-shadow: 0 6px 18px color-mix(in srgb, var(--color-foreground-primary) 8%, transparent);
-  --am-tabbar-bg: color-mix(in srgb, var(--color-background-base) 88%, var(--color-background-section) 12%);
-  --am-tabbar-border: color-mix(in srgb, var(--color-border-separator) 72%, transparent);
-  --am-tabbar-active-bg: color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
-  --am-tabbar-active-color: var(--color-accent-primary);
+  /* App surfaces (Telegram wallet-inspired). */
+  --am-app-background: linear-gradient(180deg, #f5f6fa 0%, #eef0f5 100%);
+  --am-card-surface: rgba(255, 255, 255, 0.94);
+  --am-card-border: rgba(12, 26, 42, 0.08);
+  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.08);
+  --am-tabbar-bg: rgba(244, 247, 252, 0.92);
+  --am-tabbar-border: rgba(255, 255, 255, 0.82);
+  --am-tabbar-active-bg: rgba(0, 122, 255, 0.14);
+  --am-tabbar-active-color: #0b84ff;
   --am-finance-page-max-width: 780px;
   --am-finance-page-padding: 16px;
+  --am-finance-page-top-glow:
+    radial-gradient(120% 55% at 50% -12%, rgba(0, 122, 255, 0.18) 0%, transparent 70%);
+  --am-finance-muted: rgba(80, 94, 111, 0.72);
+  --am-finance-success-bg: rgba(53, 199, 89, 0.14);
+  --am-finance-success-text: #2ea14b;
 
   /* Soft badge backgrounds ("pastel" tints). */
   --am-soft-accent-bg: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
@@ -80,6 +79,56 @@ body {
     color-mix(in srgb, var(--color-state-success) 8%, transparent) 0%,
     transparent 100%
   );
+
+  --am-wallet-top-pill-bg: rgba(255, 255, 255, 0.75);
+  --am-wallet-top-pill-border: rgba(20, 37, 58, 0.1);
+  --am-wallet-segment-bg: rgba(220, 226, 236, 0.6);
+  --am-wallet-segment-active-bg: rgba(255, 255, 255, 0.95);
+  --am-wallet-action-bg: rgba(255, 255, 255, 0.78);
+  --am-wallet-action-border: rgba(25, 47, 74, 0.1);
+  --am-wallet-action-icon-bg: rgba(10, 132, 255, 0.14);
+  --am-wallet-action-icon: #127de8;
+}
+
+[theme-mode='dark'] {
+  --am-app-background:
+    radial-gradient(130% 55% at 50% -12%, rgba(16, 132, 255, 0.24) 0%, transparent 72%),
+    linear-gradient(180deg, #0a1118 0%, #080d14 100%);
+  --am-card-surface: rgba(15, 27, 41, 0.88);
+  --am-card-border: rgba(74, 125, 188, 0.34);
+  --am-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+  --am-tabbar-bg: rgba(8, 29, 50, 0.78);
+  --am-tabbar-border: rgba(79, 134, 202, 0.42);
+  --am-tabbar-active-bg: rgba(34, 144, 255, 0.24);
+  --am-tabbar-active-color: #45a6ff;
+  --am-finance-page-top-glow:
+    radial-gradient(120% 50% at 50% -10%, rgba(31, 146, 255, 0.34) 0%, transparent 72%);
+  --am-finance-muted: rgba(180, 200, 222, 0.78);
+  --am-finance-success-bg: rgba(52, 199, 89, 0.22);
+  --am-finance-success-text: #4dd974;
+  --am-soft-accent-bg: rgba(39, 148, 255, 0.2);
+  --am-soft-secondary-bg: rgba(166, 189, 215, 0.2);
+  --am-hero-gradient-accent: linear-gradient(180deg, rgba(36, 145, 255, 0.24) 0%, rgba(36, 145, 255, 0) 100%);
+  --am-hero-gradient-success: linear-gradient(180deg, rgba(56, 209, 105, 0.22) 0%, rgba(56, 209, 105, 0) 100%);
+  --am-wallet-top-pill-bg: rgba(15, 37, 60, 0.84);
+  --am-wallet-top-pill-border: rgba(87, 136, 195, 0.34);
+  --am-wallet-segment-bg: rgba(20, 44, 70, 0.9);
+  --am-wallet-segment-active-bg: rgba(255, 255, 255, 0.18);
+  --am-wallet-action-bg: rgba(15, 37, 62, 0.86);
+  --am-wallet-action-border: rgba(86, 137, 198, 0.33);
+  --am-wallet-action-icon-bg: rgba(57, 161, 255, 0.24);
+  --am-wallet-action-icon: #53b4ff;
+}
+
+[theme-mode='light'] {
+  --am-app-background: linear-gradient(180deg, #f5f6fa 0%, #eef0f5 100%);
+  --am-card-surface: rgba(255, 255, 255, 0.94);
+  --am-card-border: rgba(12, 26, 42, 0.08);
+  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.08);
+  --am-tabbar-bg: rgba(244, 247, 252, 0.92);
+  --am-tabbar-border: rgba(255, 255, 255, 0.82);
+  --am-tabbar-active-bg: rgba(0, 122, 255, 0.14);
+  --am-tabbar-active-color: #0b84ff;
 }
 
 /* Lucide baseline: prevent SVG icons from "floating" on text baselines. */
@@ -166,13 +215,28 @@ body {
 
 /* Finance page shell */
 .am-finance-page {
+  position: relative;
   width: min(100%, var(--am-finance-page-max-width));
   margin: 0 auto;
   padding: var(--am-finance-page-padding);
   padding-bottom: calc(var(--am-bottom-tabs-height) + var(--am-safe-area-bottom) + 18px);
 }
 
+.am-finance-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 160px;
+  background: var(--am-finance-page-top-glow);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .am-finance-stack {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -183,4 +247,81 @@ body {
   border: 1px solid var(--am-card-border);
   border-radius: 18px;
   box-shadow: var(--am-card-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.am-wallet-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.am-wallet-pill {
+  min-height: 38px;
+  padding: 9px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--am-wallet-top-pill-border);
+  background: var(--am-wallet-top-pill-bg);
+}
+
+.am-wallet-segment {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  gap: 4px;
+  border-radius: 24px;
+  background: var(--am-wallet-segment-bg);
+}
+
+.am-wallet-segment-active {
+  background: var(--am-wallet-segment-active-bg);
+  border-radius: 18px;
+}
+
+.am-wallet-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.am-wallet-action {
+  border: 1px solid var(--am-wallet-action-border);
+  background: var(--am-wallet-action-bg);
+  border-radius: 18px;
+  min-height: 84px;
+  padding: 12px 8px;
+}
+
+.am-wallet-actionIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--am-wallet-action-icon-bg);
+  color: var(--am-wallet-action-icon);
+}
+
+.am-wallet-headerAmount {
+  font-variant-numeric: tabular-nums;
+}
+
+.am-wallet-positiveChip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--am-finance-success-bg);
+  color: var(--am-finance-success-text);
+}
+
+.am-wallet-muted {
+  color: var(--am-finance-muted);
+}
+
+.am-history-header {
+  border: 1px solid var(--am-card-border);
+  background: color-mix(in srgb, var(--am-card-surface) 82%, transparent);
+  border-radius: 16px;
+  padding: 12px 14px;
 }

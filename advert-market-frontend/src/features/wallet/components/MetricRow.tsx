@@ -11,18 +11,19 @@ type MetricRowProps = {
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   overflow: 'hidden',
+  borderRadius: 18,
 };
 
 const cellStyle: React.CSSProperties = {
   flex: 1,
-  padding: '14px 12px',
+  padding: '16px 12px',
   textAlign: 'center',
 };
 
 const dividerStyle: React.CSSProperties = {
   width: 1,
   alignSelf: 'stretch',
-  background: 'var(--color-border-separator)',
+  background: 'var(--am-card-border)',
 };
 
 export function MetricRow({ escrowAmount, completedDealsCount }: MetricRowProps) {

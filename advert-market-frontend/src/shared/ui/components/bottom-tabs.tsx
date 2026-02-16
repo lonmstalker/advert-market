@@ -20,7 +20,7 @@ export function BottomTabs() {
       aria-label="Main navigation"
       style={{
         position: 'fixed',
-        bottom: 'calc(8px + var(--am-safe-area-bottom))',
+        bottom: 'calc(10px + var(--am-safe-area-bottom))',
         left: '50%',
         transform: 'translateX(-50%)',
         width: 'min(100%, 760px)',
@@ -32,11 +32,11 @@ export function BottomTabs() {
         height: 'var(--am-bottom-tabs-height)',
         background: 'var(--am-tabbar-bg)',
         border: '1px solid var(--am-tabbar-border)',
-        borderRadius: 28,
-        boxShadow: '0 12px 34px color-mix(in srgb, var(--color-foreground-primary) 14%, transparent)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        padding: '8px',
+        borderRadius: 30,
+        boxShadow: '0 14px 32px color-mix(in srgb, var(--color-foreground-primary) 18%, transparent)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        padding: '7px',
         zIndex: 100,
       }}
     >
@@ -57,7 +57,10 @@ export function BottomTabs() {
             textDecoration: 'none',
             color: isActive ? 'var(--am-tabbar-active-color)' : 'var(--color-foreground-secondary)',
             background: isActive ? 'var(--am-tabbar-active-bg)' : 'transparent',
-            transition: 'color 0.16s ease, background 0.16s ease, transform 0.16s ease',
+            border: isActive
+              ? '1px solid color-mix(in srgb, var(--am-tabbar-active-color) 35%, transparent)'
+              : '1px solid transparent',
+            transition: 'color 0.16s ease, background 0.16s ease, transform 0.16s ease, border-color 0.16s ease',
             transform: isActive ? 'translateY(-1px)' : 'translateY(0)',
           })}
         >

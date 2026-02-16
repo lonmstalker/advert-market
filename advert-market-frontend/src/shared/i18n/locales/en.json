@@ -491,6 +491,10 @@
   },
   "wallet": {
     "title": "Finance",
+    "segment": {
+      "crypto": "Crypto",
+      "ton": "TON"
+    },
     "connection": {
       "title": "TON wallet",
       "hint": "Connect to receive payouts"
@@ -564,7 +568,8 @@
     "quickAction": {
       "topUp": "Top up",
       "withdraw": "Withdraw",
-      "transfer": "Transfer"
+      "transfer": "Transfer",
+      "exchange": "Exchange"
     },
     "detail": {
       "type": "Type",

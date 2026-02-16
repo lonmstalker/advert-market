@@ -33,7 +33,7 @@ describe('MetricRow', () => {
     expect(divider).toHaveStyle({
       width: '1px',
       alignSelf: 'stretch',
-      background: 'var(--color-border-separator)',
+      background: 'var(--am-card-border)',
     });
   });
 

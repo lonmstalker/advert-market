@@ -41,11 +41,20 @@ export default function HistoryPage() {
       <BackButtonHandler />
       <motion.div {...fadeIn} className="am-finance-page">
         <div className="am-finance-stack">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text type="title1" weight="bold">
-              {t('wallet.history.title')}
-            </Text>
-            <FilterButton activeCount={activeFilterCount} onClick={handleFilterClick} />
+          <div className="am-history-header">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text type="title1" weight="bold">
+                {t('wallet.history.title')}
+              </Text>
+              <FilterButton activeCount={activeFilterCount} onClick={handleFilterClick} />
+            </div>
+            {activeFilterCount > 0 && (
+              <div style={{ marginTop: 4 }}>
+                <Text type="caption1" color="secondary">
+                  {t('wallet.filters.title')}: {activeFilterCount}
+                </Text>
+              </div>
+            )}
           </div>
 
           <AnimatePresence mode="wait">
