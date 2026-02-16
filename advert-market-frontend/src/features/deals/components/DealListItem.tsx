@@ -29,29 +29,25 @@ export const DealListItem = memo(function DealListItem({ deal, onClick }: DealLi
         haptic.impactOccurred('light');
         onClick();
       }}
-      style={{ cursor: 'pointer' }}
+      className="cursor-pointer [-webkit-tap-highlight-color:transparent]"
     >
       <AppSurfaceCard>
-        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* Row 1: avatar + title + price */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="flex flex-col gap-2.5 px-4 py-4">
+          <div className="flex items-center gap-3">
             <ChannelAvatar title={deal.channelTitle} size="sm" />
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="flex-1 min-w-0">
               <Text type="body" weight="medium">
-                <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {deal.channelTitle}
-                </span>
+                <span className="block truncate">{deal.channelTitle}</span>
               </Text>
             </div>
-            <div style={{ flexShrink: 0 }}>
+            <div className="shrink-0">
               <Text type="callout" weight="bold">
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
+                <span className="tabular-nums">{formatTon(deal.priceNano)}</span>
               </Text>
             </div>
           </div>
 
-          {/* Row 2: status badge + relative time */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="flex items-center justify-between">
             <DealStatusBadge status={deal.status} />
             <Text type="caption1" color="secondary">
               {formatRelativeTime(deal.updatedAt, i18n.language)}

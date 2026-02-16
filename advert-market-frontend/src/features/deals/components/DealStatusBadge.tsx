@@ -13,19 +13,12 @@ export function DealStatusBadge({ status }: DealStatusBadgeProps) {
 
   return (
     <span
-      style={{
-        display: 'inline-block',
-        padding: '2px 8px',
-        borderRadius: 6,
-        backgroundColor: statusBgVar(config.color),
-        whiteSpace: 'nowrap',
-      }}
+      className="inline-flex items-center px-2.5 py-0.5 rounded-[8px] whitespace-nowrap"
+      style={{ backgroundColor: statusBgVar(config.color) }}
     >
-      <span style={{ color: statusColorVar(config.color), fontSize: 12 }}>
-        <Text type="caption1" weight="bold">
-          {t(config.i18nKey)}
-        </Text>
-      </span>
+      <Text type="caption1" weight="bold">
+        <span style={{ color: statusColorVar(config.color) }}>{t(config.i18nKey)}</span>
+      </Text>
     </span>
   );
 }
