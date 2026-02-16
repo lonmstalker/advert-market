@@ -25,6 +25,7 @@ const defaultNotifications: NotificationSettings = {
 
 function renderPage(notifications = defaultNotifications) {
   useSettingsStore.setState({
+    languageCode: 'en',
     notificationSettings: notifications,
     isLoaded: true,
   });
@@ -99,6 +100,7 @@ describe('NotificationsPage', () => {
           displayName: 'Test User',
           languageCode: 'en',
           displayCurrency: 'USD',
+          currencyMode: 'AUTO',
           notificationSettings: useSettingsStore.getState().notificationSettings,
           onboardingCompleted: true,
           interests: [],

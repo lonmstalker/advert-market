@@ -120,6 +120,12 @@ Metrics: auth.logout
 -> 204 No Content
 ```
 
+Language sync policy:
+
+- On first login, `users.language_code` is seeded from Telegram `initData.user.language_code`.
+- On repeated login for existing users, backend does not overwrite profile language from Telegram.
+- Source of truth after first login is user profile settings.
+
 ### Frontend API Client Notes
 
 - The frontend may attempt an automatic re-login when any non-auth endpoint returns `401` (expired/invalid JWT).
@@ -137,6 +143,8 @@ Authorization: Bearer <token>
   "username": "johndoe",
   "displayName": "John Doe",
   "languageCode": "ru",
+  "displayCurrency": "RUB",
+  "currencyMode": "AUTO",
   "onboardingCompleted": false,
   "interests": [],
   "createdAt": "2026-01-01T00:00:00Z"
@@ -151,6 +159,35 @@ Body: { "interests": ["tech", "gaming"] }
 
 -> 200 OK (same schema as GET /profile, onboardingCompleted=true)
 ```
+
+```
+PUT /api/v1/profile/settings
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Body:
+{
+  "currencyMode": "AUTO"
+}
+```
+
+```
+PUT /api/v1/profile/settings
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Body:
+{
+  "currencyMode": "MANUAL",
+  "displayCurrency": "EUR"
+}
+```
+
+Settings behavior:
+
+- `AUTO`: effective `displayCurrency` is derived on server from `languageCode`.
+- `MANUAL`: selected currency is fixed and not overwritten by language changes.
+- Backward compatibility: payload with `displayCurrency` and no `currencyMode` is interpreted as manual override.
 
 ```
 DELETE /api/v1/profile
@@ -247,6 +284,11 @@ app:
     rate-limiter:
       max-attempts: 10                # per window per IP
       window-seconds: 60              # sliding window
+  locale-currency:
+    fallback-currency: USD
+    language-map:
+      ru: RUB
+      en: USD
 telegram:
   bot:
     token: ${TELEGRAM_BOT_TOKEN}      # used for HMAC key derivation
@@ -256,6 +298,7 @@ telegram:
 
 - `AuthProperties` (`app.auth`): `jwt.secret`, `jwt.expiration`, `antiReplayWindowSeconds`
 - `RateLimiterProperties` (`app.auth.rate-limiter`): `maxAttempts`, `windowSeconds`
+- `LocaleCurrencyProperties` (`app.locale-currency`): `fallbackCurrency`, `languageMap`
 
 | Variable | Description |
 |----------|-------------|

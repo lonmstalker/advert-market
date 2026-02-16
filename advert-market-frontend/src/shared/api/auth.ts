@@ -21,6 +21,8 @@ const notificationSettingsSchema = z.object({
 });
 
 export type NotificationSettings = z.infer<typeof notificationSettingsSchema>;
+export const currencyModeSchema = z.enum(['AUTO', 'MANUAL']);
+export type CurrencyMode = z.infer<typeof currencyModeSchema>;
 
 export const userProfileSchema = z
   .object({
@@ -30,6 +32,7 @@ export const userProfileSchema = z
     displayName: z.string(),
     languageCode: z.string(),
     displayCurrency: z.string(),
+    currencyMode: currencyModeSchema,
     notificationSettings: notificationSettingsSchema,
     onboardingCompleted: z.boolean(),
     interests: z.array(z.string()),

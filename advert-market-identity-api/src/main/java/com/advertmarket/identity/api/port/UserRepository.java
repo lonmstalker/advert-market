@@ -3,6 +3,7 @@ package com.advertmarket.identity.api.port;
 import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.shared.model.UserId;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +57,15 @@ public interface UserRepository {
      */
     void updateDisplayCurrency(@NonNull UserId userId,
             @NonNull String currency);
+
+    /**
+     * Updates the user's currency mode.
+     *
+     * @param userId user identifier
+     * @param mode currency selection mode
+     */
+    void updateCurrencyMode(@NonNull UserId userId,
+            @NonNull CurrencyMode mode);
 
     /**
      * Updates the user's notification settings.

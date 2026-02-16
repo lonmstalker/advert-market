@@ -11,7 +11,7 @@ import { useAuth } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
-import { BellIcon, CoinIcon, GlobeIcon, PaletteIcon, SatelliteIcon } from '@/shared/ui/icons';
+import { BellIcon, GlobeIcon, PaletteIcon, SatelliteIcon } from '@/shared/ui/icons';
 import { ProfileHero } from './components/ProfileHero';
 
 const CURRENCY_LABELS: Record<string, string> = {
@@ -26,8 +26,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
 };
 
 const SETTINGS_ITEMS: { key: string; icon: ComponentType<SVGProps<SVGSVGElement>>; route: string }[] = [
-  { key: 'language', icon: GlobeIcon, route: '/profile/language' },
-  { key: 'currency', icon: CoinIcon, route: '/profile/currency' },
+  { key: 'localeCurrency', icon: GlobeIcon, route: '/profile/locale-currency' },
   { key: 'notifications', icon: BellIcon, route: '/profile/notifications' },
 ];
 
@@ -71,6 +70,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
+  const currencyMode = useSettingsStore((s) => s.currencyMode);
 
   const { data: myChannels } = useQuery({
     queryKey: channelKeys.my(),
@@ -183,15 +183,14 @@ export default function ProfilePage() {
               <motion.div key={key} {...pressScale}>
                 <GroupItem
                   before={<SettingsIcon icon={icon} />}
-                  text={t(`profile.${key}`)}
+                  text={key === 'localeCurrency' ? t('profile.localeCurrency.label') : t(`profile.${key}`)}
                   after={
-                    key === 'language' ? (
+                    key === 'localeCurrency' ? (
                       <Text type="body" color="secondary">
-                        {LANGUAGE_LABELS[langCode] ?? langCode}
-                      </Text>
-                    ) : key === 'currency' ? (
-                      <Text type="body" color="secondary">
-                        {CURRENCY_LABELS[displayCurrency] ?? displayCurrency}
+                        {LANGUAGE_LABELS[langCode] ?? langCode} ·{' '}
+                        {currencyMode === 'AUTO'
+                          ? `${t('profile.localeCurrency.autoShort')} ${displayCurrency}`
+                          : (CURRENCY_LABELS[displayCurrency] ?? displayCurrency)}
                       </Text>
                     ) : undefined
                   }

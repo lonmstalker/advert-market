@@ -6,7 +6,9 @@
 
 ```
 /profile
-  ├── /profile/language
+  ├── /profile/locale-currency
+  ├── /profile/language (legacy redirect -> /profile/locale-currency)
+  ├── /profile/currency (legacy redirect -> /profile/locale-currency)
   ├── /profile/notifications
   ├── /profile/channels/new
   └── /profile/channels/:channelId
@@ -26,6 +28,7 @@
 |--------|------|-------------|------|
 | `GET` | `/api/v1/profile` | Profile details | Authenticated |
 | `PUT` | `/api/v1/profile/language` | Change language | Authenticated |
+| `PUT` | `/api/v1/profile/settings` | Change currency mode/currency and notifications | Authenticated |
 | `PUT` | `/api/v1/profile/onboarding` | Complete onboarding | Authenticated |
 | `GET` | `/api/v1/profile/notifications` | Notification settings | Authenticated |
 | `PUT` | `/api/v1/profile/notifications` | Update settings | Authenticated |
@@ -70,7 +73,7 @@ GET /api/v1/channels?owner=me
   - `chevron`
 - **GroupItem `t('profile.addChannel')`** — icon `+`
 - **Group `t('profile.settings')`**:
-  - GroupItem `t('profile.language')` — `chevron`, `after`: current language
+  - GroupItem `t('profile.localeCurrency.label')` — `chevron`, `after`: current language + currency mode/value
   - GroupItem `t('profile.notifications')` — `chevron`
 - **Group `t('profile.stats')`** (if there are transactions):
   - `t('profile.stats.totalDeals')`
@@ -83,7 +86,7 @@ GET /api/v1/channels?owner=me
 |----------|-----------|
 | Tap channel | → `/profile/channels/:channelId` |
 | "Add channel" | → `/profile/channels/new` |
-| "Language" | → `/profile/language` |
+| "Language & Currency" | → `/profile/locale-currency` |
 | "Notifications" | → `/profile/notifications` |
 
 ### Empty state (channels)
@@ -201,37 +204,48 @@ The bot `@AdMarketBot` must be added as admin to the channel. If not:
 
 ---
 
-## 5.3 Language
+## 5.3 Language & Currency
 
 | | |
 |---|---|
-| **Route** | `/profile/language` |
-| **Target** | Switching interface language |
+| **Route** | `/profile/locale-currency` |
+| **Legacy routes** | `/profile/language`, `/profile/currency` -> redirect |
+| **Target** | Manage interface language and display currency behavior |
 | **Who sees** | All |
 
 ### API
 
 ```
 PUT /api/v1/profile/language
+PUT /api/v1/profile/settings
 ```
 
 ### UI
 
-- **Group** with `RadioGroup`:
-  - `t('profile.language.ru')` (default from `Telegram.WebApp.initDataUnsafe.user.language_code`)
-  - `t('profile.language.en')`
+- Title/subtitle: `profile.localeCurrency.title`, `profile.localeCurrency.subtitle`
+- Two selector rows:
+  - Language (`ru`, `en`)
+  - Currency (`AUTO` by language or manual `USD/EUR/RUB`)
+- In `MANUAL` mode:
+  - microcopy `profile.localeCurrency.manualMicrocopy`
+  - action `profile.localeCurrency.resetAuto`
+- In `AUTO` mode after language change:
+  - derived currency is shown
+  - temporary undo banner (`profile.localeCurrency.autoUpdated`, `profile.localeCurrency.undo`)
 
 ### Actions
 
 | Action | Result |
 |----------|-----------|
-| Language selection | `i18n.changeLanguage()` + `PUT /api/v1/profile/language` + BackButton |
+| Language selection | `i18n.changeLanguage()` + `PUT /api/v1/profile/language` |
+| Select `AUTO` | `PUT /api/v1/profile/settings` with `currencyMode=AUTO` |
+| Select manual currency | `PUT /api/v1/profile/settings` with `currencyMode=MANUAL`, `displayCurrency=<ISO>` |
 
 ### Error states
 
 | Error | UI |
 |--------|----|
-| Error saving language | Toast `t('common.toast.saveFailed')` + rollback `i18n.changeLanguage()` |
+| Error saving language/currency | Toast `t('common.toast.saveFailed')` + rollback language if needed |
 
 ---
 

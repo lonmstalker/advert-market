@@ -2,6 +2,7 @@ package com.advertmarket.identity.mapper;
 
 import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.shared.json.JsonFacade;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -27,6 +28,8 @@ public interface UserProfileMapper {
             expression = "java(defaultLanguage(row.languageCode()))")
     @Mapping(target = "displayCurrency",
             expression = "java(defaultCurrency(row.displayCurrency()))")
+    @Mapping(target = "currencyMode",
+            expression = "java(defaultCurrencyMode(row.currencyMode()))")
     @Mapping(target = "notificationSettings",
             source = "notificationSettings")
     @Mapping(target = "onboardingCompleted",
@@ -54,6 +57,20 @@ public interface UserProfileMapper {
      */
     default String defaultCurrency(String currency) {
         return currency != null ? currency : "USD";
+    }
+
+    /**
+     * Returns currency mode or {@code AUTO} when absent/invalid.
+     */
+    default CurrencyMode defaultCurrencyMode(String mode) {
+        if (mode == null || mode.isBlank()) {
+            return CurrencyMode.AUTO;
+        }
+        try {
+            return CurrencyMode.valueOf(mode);
+        } catch (IllegalArgumentException ex) {
+            return CurrencyMode.AUTO;
+        }
     }
 
     /**

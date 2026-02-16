@@ -13,6 +13,7 @@ import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.UserPort;
 import com.advertmarket.shared.model.UserId;
@@ -41,7 +42,7 @@ class ProfileControllerTest {
 
     private static final UserId USER_ID = new UserId(42L);
     private static final UserProfile PROFILE = new UserProfile(
-            42L, "johndoe", "John Doe", "en", "USD",
+            42L, "johndoe", "John Doe", "en", "USD", CurrencyMode.AUTO,
             NotificationSettings.defaults(),
             true, List.of("tech"), Instant.parse("2026-01-01T00:00:00Z"));
 
@@ -75,7 +76,7 @@ class ProfileControllerTest {
     @DisplayName("PUT /profile/language should update language and return profile")
     void shouldUpdateLanguage() throws Exception {
         UserProfile updated = new UserProfile(
-                42L, "johndoe", "John Doe", "ru", "RUB",
+                42L, "johndoe", "John Doe", "ru", "RUB", CurrencyMode.AUTO,
                 NotificationSettings.defaults(),
                 true, List.of("tech"),
                 Instant.parse("2026-01-01T00:00:00Z"));
@@ -108,9 +109,19 @@ class ProfileControllerTest {
 
         mockMvc.perform(put("/api/v1/profile/settings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"displayCurrency\":\"EUR\"}"))
+                        .content("{\"currencyMode\":\"AUTO\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(42));
+                .andExpect(jsonPath("$.id").value(42))
+                .andExpect(jsonPath("$.currencyMode").value("AUTO"));
+    }
+
+    @Test
+    @DisplayName("PUT /profile/settings should return 400 when MANUAL mode has no currency")
+    void shouldReturn400WhenManualModeHasNoCurrency() throws Exception {
+        mockMvc.perform(put("/api/v1/profile/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currencyMode\":\"MANUAL\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     /**

@@ -5,12 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { FeatureCard } from '@/features/onboarding/components/feature-card';
 import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo';
-import { OnboardingSettingsSheet } from '@/features/onboarding/components/onboarding-settings-sheet';
+import { LocaleCurrencyStepSheet } from '@/features/onboarding/components/onboarding-settings-sheet';
 import { OnboardingShell } from '@/features/onboarding/components/onboarding-shell';
 import { useHaptic } from '@/shared/hooks';
 import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
-import { DocumentIcon, pressScale, SearchIcon, staggerChildren, Tappable, WalletIcon } from '@/shared/ui';
-import { GlobeIcon } from '@/shared/ui/icons';
+import { DocumentIcon, pressScale, SearchIcon, staggerChildren, WalletIcon } from '@/shared/ui';
 
 export default function OnboardingPage() {
   const { t } = useTranslation();
@@ -25,27 +24,6 @@ export default function OnboardingPage() {
   return (
     <OnboardingShell
       centerContent
-      topAction={
-        <Tappable
-          onClick={() => setShowSettings(true)}
-          style={{
-            width: 44,
-            height: 44,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 12,
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--color-foreground-secondary)',
-            cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-          aria-label={t('profile.language')}
-        >
-          <GlobeIcon size={20} />
-        </Tappable>
-      }
       footer={
         <>
           <motion.div {...pressScale}>
@@ -55,7 +33,7 @@ export default function OnboardingPage() {
               onClick={() => {
                 trackOnboardingEvent('onboarding_primary_click', { step: 'welcome' });
                 haptic.impactOccurred('light');
-                navigate('/onboarding/interest');
+                setShowSettings(true);
               }}
             />
           </motion.div>
@@ -145,7 +123,11 @@ export default function OnboardingPage() {
         </motion.div>
       </div>
 
-      <OnboardingSettingsSheet open={showSettings} onClose={() => setShowSettings(false)} />
+      <LocaleCurrencyStepSheet
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        onContinue={() => navigate('/onboarding/interest')}
+      />
     </OnboardingShell>
   );
 }

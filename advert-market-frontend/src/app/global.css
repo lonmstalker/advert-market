@@ -16,7 +16,7 @@ html, body, #root {
 }
 
 body {
-  background-color: var(--color-background-secondary);
+  background: var(--am-app-background);
 }
 
 :root {
@@ -42,6 +42,25 @@ body {
 
   /* Fixed bottom bar layout contract (see DESIGN_GUIDELINES.md). */
   --am-fixed-bottom-bar-base: 92px;
+  --am-bottom-tabs-height: 64px;
+
+  /* App surfaces (Telegram-native, wallet-like depth without hard shadows). */
+  --am-app-background:
+    radial-gradient(
+      120% 55% at 50% -10%,
+      color-mix(in srgb, var(--color-accent-primary) 12%, transparent) 0%,
+      transparent 65%
+    ),
+    var(--color-background-secondary);
+  --am-card-surface: color-mix(in srgb, var(--color-background-base) 90%, var(--color-background-section) 10%);
+  --am-card-border: color-mix(in srgb, var(--color-border-separator) 78%, transparent);
+  --am-card-shadow: 0 6px 18px color-mix(in srgb, var(--color-foreground-primary) 8%, transparent);
+  --am-tabbar-bg: color-mix(in srgb, var(--color-background-base) 88%, var(--color-background-section) 12%);
+  --am-tabbar-border: color-mix(in srgb, var(--color-border-separator) 72%, transparent);
+  --am-tabbar-active-bg: color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
+  --am-tabbar-active-color: var(--color-accent-primary);
+  --am-finance-page-max-width: 780px;
+  --am-finance-page-padding: 16px;
 
   /* Soft badge backgrounds ("pastel" tints). */
   --am-soft-accent-bg: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
@@ -141,5 +160,27 @@ body {
 @media (min-width: 900px) {
   :root {
     --am-onboarding-page-padding: 24px;
+    --am-finance-page-padding: 20px;
   }
+}
+
+/* Finance page shell */
+.am-finance-page {
+  width: min(100%, var(--am-finance-page-max-width));
+  margin: 0 auto;
+  padding: var(--am-finance-page-padding);
+  padding-bottom: calc(var(--am-bottom-tabs-height) + var(--am-safe-area-bottom) + 18px);
+}
+
+.am-finance-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.am-finance-card {
+  background: var(--am-card-surface);
+  border: 1px solid var(--am-card-border);
+  border-radius: 18px;
+  box-shadow: var(--am-card-shadow);
 }

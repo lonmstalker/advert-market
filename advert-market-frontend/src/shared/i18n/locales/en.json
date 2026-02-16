@@ -18,6 +18,11 @@
         "hint": "17-state pipeline"
       }
     },
+    "locale": {
+      "title": "Language & Currency",
+      "subtitle": "Needed for interface and price display. You can change it later.",
+      "continue": "Continue"
+    },
     "interest": {
       "title": "Who are you?",
       "subtitle": "This will personalize your experience",
@@ -588,6 +593,16 @@
     "language": "Language",
     "language.ru": "Русский",
     "language.en": "English",
+    "localeCurrency.label": "Language & Currency",
+    "localeCurrency.title": "Language & Currency",
+    "localeCurrency.subtitle": "You can change it later from profile settings.",
+    "localeCurrency.autoByLanguage": "Auto (by language)",
+    "localeCurrency.autoDescription": "Derived currency: {{currency}}",
+    "localeCurrency.manualMicrocopy": "Currency is selected manually.",
+    "localeCurrency.resetAuto": "Reset to auto",
+    "localeCurrency.autoUpdated": "Currency auto-updated to {{currency}}.",
+    "localeCurrency.undo": "Undo",
+    "localeCurrency.autoShort": "Auto",
     "currency": "Display Currency",
     "currency.title": "Choose currency",
     "currency.hint": "Prices will be shown in the selected currency (approximate conversion)",

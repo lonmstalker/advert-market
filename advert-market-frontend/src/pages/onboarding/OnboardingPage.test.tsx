@@ -1,3 +1,5 @@
+import { ToastProvider } from '@telegram-tools/ui-kit';
+import i18n from 'i18next';
 import { Route, Routes } from 'react-router';
 import { renderWithProviders, screen } from '@/test/test-utils';
 import OnboardingPage from './OnboardingPage';
@@ -5,13 +7,19 @@ import OnboardingPage from './OnboardingPage';
 describe('OnboardingPage', () => {
   function renderPage() {
     return renderWithProviders(
-      <Routes>
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/onboarding/interest" element={<div>interest-page</div>} />
-      </Routes>,
+      <ToastProvider>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/onboarding/interest" element={<div>interest-page</div>} />
+        </Routes>
+      </ToastProvider>,
       { initialEntries: ['/onboarding'] },
     );
   }
+
+  beforeEach(async () => {
+    await i18n.changeLanguage('en');
+  });
 
   it('renders product name', () => {
     renderPage();
@@ -43,9 +51,16 @@ describe('OnboardingPage', () => {
     expect(screen.getByRole('button', { name: 'Get Started' })).toBeInTheDocument();
   });
 
-  it('navigates to /onboarding/interest on button click', async () => {
+  it('opens locale step sheet on Get Started click', async () => {
     const { user } = renderPage();
     await user.click(screen.getByRole('button', { name: 'Get Started' }));
+    expect(screen.getByText('Language & Currency')).toBeInTheDocument();
+  });
+
+  it('navigates to /onboarding/interest after locale Continue', async () => {
+    const { user } = renderPage();
+    await user.click(screen.getByRole('button', { name: 'Get Started' }));
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.getByText('interest-page')).toBeInTheDocument();
   });
 });

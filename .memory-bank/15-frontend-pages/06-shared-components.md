@@ -43,11 +43,12 @@ common.* - general (save, cancel, confirm, back, loading, copied)
 errors.* — frontend-only errors (validation, offline, timeout)
 ```
 
-###Language Definition
+### Language Definition
 
 1. `Telegram.WebApp.initDataUnsafe.user.language_code` at first login
-2. `GET /api/v1/profile` → `preferredLanguage` on subsequent logins
-3. Fallback: `ru`
+2. `GET /api/v1/profile` → `languageCode` is source-of-truth on subsequent logins
+3. Frontend sync rule: `useAuth` applies `profile.languageCode` to both settings store and `i18n`
+4. Fallback: `ru`
 
 ---
 

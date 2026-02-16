@@ -1,7 +1,7 @@
 # Onboarding
 
 > Direct-replace onboarding flow for Telegram Mini App.  
-> Current UX contract: **welcome -> interest -> tour (3 slides)** with **soft-gated tasks**, **sticky primary CTA**, **skip confirm**, and **role-aware finish route**.
+> Current UX contract: **welcome (+ locale/currency sheet) -> interest -> tour (3 slides)** with **soft-gated tasks**, **sticky primary CTA**, **skip confirm** (tour only), and **role-aware finish route**.
 
 ## Routes
 
@@ -19,17 +19,52 @@ Guard entry remains unchanged:
 |---|---|
 | Route | `/onboarding` |
 | Goal | Explain value in <10s and start onboarding |
-| Primary action | `onboarding.welcome.start` |
-| Secondary action | Language action (settings sheet trigger) |
+| Primary action | `onboarding.welcome.start` (opens locale/currency sheet) |
+| Secondary action | None |
 
 ### UX Contract
 
 - Uses shared `OnboardingShell` with unified layout and sticky footer.
-- Language action has 44x44 tap target and explicit `aria-label`.
+- Top-right language icon/trigger is removed.
 - Primary CTA is rendered in sticky footer (not Telegram MainButton).
 - Tracks analytics:
   - `onboarding_view(step=welcome)`
   - `onboarding_primary_click(step=welcome)`
+
+## Step 1.1 — Locale & Currency (Bottom Sheet)
+
+| Field | Value |
+|---|---|
+| Surface | In-flow bottom sheet opened from Welcome CTA |
+| Goal | Make locale and currency explicit without adding a route |
+| Primary action | `onboarding.locale.continue` |
+| Secondary action | None (`Skip` is not available) |
+
+### UX Contract
+
+- Sheet is prefilled from profile settings.
+  - `languageCode` is seeded from Telegram `language_code` on first login only.
+  - `displayCurrency` + `currencyMode` come from profile state.
+  - Frontend source of truth is `settings-store.languageCode` (not raw `i18n.language`).
+- Two selector rows are shown:
+  - Language
+  - Currency (`AUTO` by language or manual currency selection)
+- `AUTO` behavior:
+  - language update may change effective currency from backend mapping.
+  - UI shows temporary undo banner when currency changes due to `AUTO`.
+- `MANUAL` behavior:
+  - language change does not overwrite selected currency.
+  - microcopy and `Reset to auto` action are shown.
+- Continue closes sheet and navigates to `/onboarding/interest`.
+- Continue is disabled while locale/currency mutation is pending.
+
+### Analytics
+
+- `locale_step_shown`
+- `locale_continue`
+- `language_changed`
+- `currency_mode_changed`
+- `currency_changed`
 
 ## Step 2 — Interest Selection
 
@@ -171,6 +206,7 @@ Tokens in `src/app/global.css`:
 Behavior:
 - Sticky footer always padded by safe area.
 - Desktop and mobile use the same shell contract with tokenized spacing.
+- Locale/currency sheet keeps bottom CTA within safe area constraints.
 
 ## Accessibility and Motion
 

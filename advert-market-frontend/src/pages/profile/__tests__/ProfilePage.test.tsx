@@ -9,6 +9,7 @@ let currentProfile = {
   displayName: 'Test User',
   languageCode: 'ru',
   displayCurrency: 'USD',
+  currencyMode: 'AUTO' as const,
   notificationSettings: {
     deals: { newOffers: true, acceptReject: true, deliveryStatus: true },
     financial: { deposits: true, payouts: true, escrow: true },
@@ -32,8 +33,7 @@ function renderPage() {
   return renderWithProviders(
     <Routes>
       <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/profile/language" element={<div>language-page</div>} />
-      <Route path="/profile/currency" element={<div>currency-page</div>} />
+      <Route path="/profile/locale-currency" element={<div>locale-currency-page</div>} />
       <Route path="/profile/notifications" element={<div>notifications-page</div>} />
       <Route path="/profile/channels/new" element={<div>add-channel-page</div>} />
     </Routes>,
@@ -50,6 +50,7 @@ describe('ProfilePage', () => {
       displayName: 'Test User',
       languageCode: 'ru',
       displayCurrency: 'USD',
+      currencyMode: 'AUTO',
       notificationSettings: {
         deals: { newOffers: true, acceptReject: true, deliveryStatus: true },
         financial: { deposits: true, payouts: true, escrow: true },
@@ -102,8 +103,7 @@ describe('ProfilePage', () => {
 
   it('shows settings items as SVG icons', () => {
     renderPage();
-    expect(screen.getByText('Language')).toBeInTheDocument();
-    expect(screen.getByText('Display Currency')).toBeInTheDocument();
+    expect(screen.getByText('Language & Currency')).toBeInTheDocument();
     expect(screen.getByText('Notifications')).toBeInTheDocument();
   });
 
@@ -120,24 +120,18 @@ describe('ProfilePage', () => {
   it('shows current language label from profile.languageCode', () => {
     renderPage();
     // ProfilePage uses LANGUAGE_LABELS map, 'ru' → 'Русский'
-    expect(screen.getByText('Русский')).toBeInTheDocument();
+    expect(screen.getByText(/Русский/)).toBeInTheDocument();
   });
 
   it('shows current currency from settings store', () => {
     renderPage();
-    expect(screen.getByText('$ USD')).toBeInTheDocument();
+    expect(screen.getByText(/Auto USD/)).toBeInTheDocument();
   });
 
-  it('navigates to /profile/language on Language click', async () => {
+  it('navigates to /profile/locale-currency on Language & Currency click', async () => {
     const { user } = renderPage();
-    await user.click(screen.getByText('Language'));
-    expect(screen.getByText('language-page')).toBeInTheDocument();
-  });
-
-  it('navigates to /profile/currency on Display Currency click', async () => {
-    const { user } = renderPage();
-    await user.click(screen.getByText('Display Currency'));
-    expect(screen.getByText('currency-page')).toBeInTheDocument();
+    await user.click(screen.getByText('Language & Currency'));
+    expect(screen.getByText('locale-currency-page')).toBeInTheDocument();
   });
 
   it('navigates to /profile/notifications on Notifications click', async () => {

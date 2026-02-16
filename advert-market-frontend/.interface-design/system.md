@@ -124,3 +124,48 @@ Stats displayed as compact icon-stat grid (not GroupItem list):
 - Filters in bottom Sheet
 - Empty state with "Reset filters" CTA
 - Channel cards: custom ChannelCatalogCard (not GroupItem) with avatar, title, stats row, price badge
+
+### Wallet Section (finance)
+
+**BalanceCard** — unified card combining TON Connect button and balance display:
+- Card surface: `background-base`, `border-separator`, `borderRadius: 14`, `overflow: hidden`
+- Contained gradient backdrop (80px height, role-aware: success/accent)
+- Header row: label (`caption1 bold secondary`) + `<TonConnectButton />` (or Spinner)
+- Balance: `largeTitle bold tabular-nums` centered
+- Fiat: `subheadline2 tertiary tabular-nums` centered
+- Cascade animation: card fadeIn → balance slideUp delay 0.1s → fiat opacity delay 0.25s
+
+**MetricRow** — horizontal 2-cell stat container (same pattern as ChannelDetailStats):
+- Flex container: `background-base`, `border-separator`, `borderRadius: 14`, `overflow: hidden`
+- 2 equal cells (`flex: 1`, `textAlign: center`, `padding: 14px 12px`)
+- 1px vertical divider (`alignSelf: stretch`, `background: border-separator`)
+- Value: `title3 bold tabular-nums`, Label: `caption1 secondary`
+
+**TransactionListItem** — 40px icon circle, 20px SVG, `callout bold` amount, haptic on tap
+
+**TransactionDetailPage** — hero contained in card (same surface as BalanceCard), 56px icon, blockchain addresses via `Text caption2` with monospace font, haptic on address copy
+
+### Finance Shell v2 (wallet parity)
+
+- Shared page shell class: `.am-finance-page`
+  - max width: `--am-finance-page-max-width`
+  - horizontal spacing: `--am-finance-page-padding`
+  - bottom spacing includes tab bar + safe area
+- Shared card class: `.am-finance-card`
+  - surface: `--am-card-surface`
+  - border: `--am-card-border`
+  - shadow: `--am-card-shadow`
+  - radius: `18px`
+- Shared stack rhythm: `.am-finance-stack` with consistent vertical gaps.
+- Applied to `/wallet`, `/wallet/history`, `/wallet/history/:txId`, including skeleton states.
+
+### Floating Bottom Tabs
+
+- Replaced edge-to-edge flat bar with floating capsule:
+  - `--am-tabbar-bg`, `--am-tabbar-border`
+  - 28px radius, subtle blur, detached bottom offset
+- Active tab uses shape + color (not color only):
+  - `--am-tabbar-active-bg`
+  - `--am-tabbar-active-color`
+- Layout contract updated:
+  - content bottom padding tied to `--am-bottom-tabs-height + safe area + offset`.

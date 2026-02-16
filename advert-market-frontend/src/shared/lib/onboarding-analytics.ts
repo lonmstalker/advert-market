@@ -1,6 +1,7 @@
 type OnboardingStep = 'welcome' | 'interest' | 'tour-1' | 'tour-2' | 'tour-3';
 type TourTask = 'open_channel_detail' | 'approve_creative' | 'open_escrow';
 type OnboardingPrimaryRole = 'advertiser' | 'owner' | 'both';
+type CurrencyModeEvent = 'auto' | 'manual';
 
 type OnboardingEventMap = {
   onboarding_view: { step: OnboardingStep };
@@ -9,6 +10,11 @@ type OnboardingEventMap = {
   role_selected: { role: OnboardingPrimaryRole };
   tour_task_complete: { task: TourTask };
   onboarding_complete: { role: OnboardingPrimaryRole; variant: 'direct_replace' };
+  locale_step_shown: { source: 'welcome' };
+  locale_continue: { language: string; currencyMode: CurrencyModeEvent; currency: string };
+  language_changed: { language: string };
+  currency_mode_changed: { mode: CurrencyModeEvent };
+  currency_changed: { currency: string };
 };
 
 type OnboardingEventName = keyof OnboardingEventMap;

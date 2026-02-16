@@ -177,6 +177,19 @@ views {
     adMarketplace.telegramBot.botNotifier -> telegramPlatform 'Send alert to operator'
   }
 
+  // Locale/Currency Preference Flow (AUTO/MANUAL)
+  dynamic view localeCurrencyPreferenceFlow {
+    title 'Locale/Currency Preference Flow'
+    description 'User updates language/currency settings → profile service applies AUTO/MANUAL rules → effective currency persisted'
+
+    advertiser -> adMarketplace.miniApp 'Opens Language & Currency settings'
+    adMarketplace.miniApp -> adMarketplace.backendApi.profileService 'PUT /api/v1/profile/settings (currencyMode/displayCurrency)'
+    adMarketplace.backendApi.profileService -> adMarketplace.backendApi.localeCurrencyResolver 'Resolve effective currency for AUTO mode'
+    adMarketplace.backendApi.profileService -> adMarketplace.primaryDb.users 'Persist language_code, display_currency, currency_mode'
+    adMarketplace.miniApp -> adMarketplace.backendApi.profileService 'GET /api/v1/profile'
+    adMarketplace.backendApi.profileService -> adMarketplace.primaryDb.users 'Return effective display currency + mode'
+  }
+
   // ── Additional Static Views ───────────────────────────────────────────────
 
   // Telegram Webhook Flow (Blue-Green + Canary)

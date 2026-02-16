@@ -56,6 +56,13 @@ function getAllChannels() {
   return [...mockChannels, ...registeredChannels];
 }
 
+function currencyForLanguage(languageCode: string): string {
+  const normalized = languageCode.toLowerCase();
+  if (normalized.startsWith('ru')) return 'RUB';
+  if (normalized.startsWith('en')) return 'USD';
+  return 'USD';
+}
+
 export function resetMockState(): void {
   profile = { ...mockProfile };
   deals = mockDeals.map((d) => ({ ...d }));
@@ -461,19 +468,44 @@ export const handlers = [
   http.put(`${API_BASE}/profile/language`, async ({ request }) => {
     const body = (await request.json()) as { languageCode: string };
     profile = { ...profile, languageCode: body.languageCode };
+    if (profile.currencyMode === 'AUTO') {
+      profile = {
+        ...profile,
+        displayCurrency: currencyForLanguage(body.languageCode),
+      };
+    }
     saveState(STORAGE_KEYS.profile, profile);
     return HttpResponse.json(profile);
   }),
 
-  // PUT /profile/settings — update display currency and notification settings
+  // PUT /profile/settings — update locale/currency and notification settings
   http.put(`${API_BASE}/profile/settings`, async ({ request }) => {
     const body = (await request.json()) as {
       displayCurrency?: string;
+      currencyMode?: 'AUTO' | 'MANUAL';
       notificationSettings?: typeof profile.notificationSettings;
     };
-    if (body.displayCurrency) {
-      profile = { ...profile, displayCurrency: body.displayCurrency };
+
+    if (body.currencyMode === 'AUTO') {
+      profile = {
+        ...profile,
+        currencyMode: 'AUTO',
+        displayCurrency: currencyForLanguage(profile.languageCode),
+      };
+    } else if (body.currencyMode === 'MANUAL') {
+      profile = { ...profile, currencyMode: 'MANUAL' };
+      if (body.displayCurrency) {
+        profile = { ...profile, displayCurrency: body.displayCurrency };
+      }
+    } else if (body.displayCurrency) {
+      // Backward compatibility: legacy clients update displayCurrency only.
+      profile = {
+        ...profile,
+        currencyMode: 'MANUAL',
+        displayCurrency: body.displayCurrency,
+      };
     }
+
     if (body.notificationSettings) {
       profile = { ...profile, notificationSettings: body.notificationSettings };
     }

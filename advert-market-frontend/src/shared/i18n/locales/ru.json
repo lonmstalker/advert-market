@@ -18,6 +18,11 @@
         "hint": "17 состояний пайплайна"
       }
     },
+    "locale": {
+      "title": "Язык и валюта",
+      "subtitle": "Нужно для интерфейса и отображения цен. Можно изменить позже.",
+      "continue": "Продолжить"
+    },
     "interest": {
       "title": "Кто вы?",
       "subtitle": "Это персонализирует ваш опыт",
@@ -592,6 +597,16 @@
     "language": "Язык",
     "language.ru": "Русский",
     "language.en": "English",
+    "localeCurrency.label": "Язык и валюта",
+    "localeCurrency.title": "Язык и валюта",
+    "localeCurrency.subtitle": "Можно изменить позже в настройках профиля.",
+    "localeCurrency.autoByLanguage": "Авто (по языку)",
+    "localeCurrency.autoDescription": "Текущая валюта: {{currency}}",
+    "localeCurrency.manualMicrocopy": "Валюта выбрана вручную.",
+    "localeCurrency.resetAuto": "Сбросить в авто",
+    "localeCurrency.autoUpdated": "Валюта обновлена автоматически: {{currency}}.",
+    "localeCurrency.undo": "Отменить",
+    "localeCurrency.autoShort": "Авто",
     "currency": "Валюта отображения",
     "currency.title": "Выберите валюту",
     "currency.hint": "Цены будут отображаться в выбранной валюте (приблизительный пересчёт)",

@@ -14,6 +14,7 @@ import com.advertmarket.identity.mapper.LoginResponseMapper;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.identity.service.AuthServiceImpl;
+import com.advertmarket.identity.service.LocaleCurrencyResolver;
 import com.advertmarket.identity.service.TelegramInitDataValidator;
 import com.advertmarket.identity.service.UserServiceImpl;
 import com.advertmarket.identity.web.AuthController;
@@ -282,9 +283,12 @@ class AuthHttpIntegrationTest {
         @Bean
         UserServiceImpl userService(
                 UserRepository userRepository,
-                MetricsFacade metricsFacade) {
+                MetricsFacade metricsFacade,
+                LocaleCurrencyResolver localeCurrencyResolver) {
             return new UserServiceImpl(
-                    userRepository, metricsFacade);
+                    userRepository,
+                    metricsFacade,
+                    localeCurrencyResolver);
         }
 
         @Bean

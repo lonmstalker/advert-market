@@ -71,6 +71,11 @@ app:
     rate-limiter:
       max-attempts: 10
       window-seconds: 60
+  locale-currency:
+    fallback-currency: USD
+    language-map:
+      ru: RUB
+      en: USD
   marketplace:
     team:
       max-managers: 10

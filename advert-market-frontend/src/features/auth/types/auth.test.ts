@@ -9,6 +9,7 @@ describe('userProfileSchema', () => {
       displayName: 'Alice',
       languageCode: 'en',
       displayCurrency: 'USD',
+      currencyMode: 'AUTO',
       notificationSettings: {
         deals: { newOffers: true, acceptReject: true, deliveryStatus: true },
         financial: { deposits: true, payouts: true, escrow: true },
