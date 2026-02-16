@@ -5,6 +5,7 @@ import com.advertmarket.financial.api.model.LedgerEntry;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.model.WalletSummary;
 import com.advertmarket.financial.api.model.WithdrawalResponse;
+import com.advertmarket.financial.api.model.WithdrawalStatus;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.WalletPort;
 import com.advertmarket.identity.api.port.UserRepository;
@@ -15,6 +16,7 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.model.Money;
+import com.advertmarket.shared.model.TonAddress;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.time.Instant;
@@ -34,7 +36,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 @Slf4j
 @RequiredArgsConstructor
-@SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class WalletService implements WalletPort {
 
     private static final long VELOCITY_WINDOW_SECONDS = 86_400L;
@@ -82,10 +83,25 @@ public class WalletService implements WalletPort {
                             + " nanoTON");
         }
 
-        var tonAddress = userRepository.findTonAddress(userId)
+        var tonAddressStr = userRepository.findTonAddress(userId)
                 .orElseThrow(() -> new DomainException(
                         ErrorCodes.WALLET_ADDRESS_REQUIRED,
                         "TON address required for withdrawal"));
+        var tonAddress = validateTonAddress(tonAddressStr);
+
+        var withdrawalKey = new IdempotencyKey(
+                "withdrawal:" + idempotencyKey);
+        var existingTxRef = ledgerPort.findTxRefByIdempotencyKey(
+                withdrawalKey);
+        if (existingTxRef.isPresent()) {
+            log.info("Duplicate withdrawal: user={}, key={}, txRef={}",
+                    userId.value(), idempotencyKey,
+                    existingTxRef.get());
+            return new WithdrawalResponse(
+                    existingTxRef.get().toString(),
+                    WithdrawalStatus.PENDING.name(),
+                    amountNano, tonAddress.value());
+        }
 
         var ownerAccount = AccountId.ownerPending(userId);
         long available = ledgerPort.getBalance(ownerAccount);
@@ -110,8 +126,6 @@ public class WalletService implements WalletPort {
         }
 
         var amount = Money.ofNano(amountNano);
-        var withdrawalKey = new IdempotencyKey(
-                "withdrawal:" + idempotencyKey);
         var transfer = new TransferRequest(
                 null,
                 withdrawalKey,
@@ -129,10 +143,20 @@ public class WalletService implements WalletPort {
 
         log.info("Withdrawal initiated: user={}, amount={}, "
                         + "address={}, txRef={}",
-                userId.value(), amountNano, tonAddress, txRef);
+                userId.value(), amountNano, tonAddress.value(), txRef);
 
         return new WithdrawalResponse(
-                txRef.toString(), "PENDING",
-                amountNano, tonAddress);
+                txRef.toString(), WithdrawalStatus.PENDING.name(),
+                amountNano, tonAddress.value());
+    }
+
+    private static TonAddress validateTonAddress(String raw) {
+        try {
+            return new TonAddress(raw);
+        } catch (IllegalArgumentException ex) {
+            throw new DomainException(
+                    ErrorCodes.INVALID_TON_ADDRESS,
+                    "Invalid TON address: " + ex.getMessage());
+        }
     }
 }

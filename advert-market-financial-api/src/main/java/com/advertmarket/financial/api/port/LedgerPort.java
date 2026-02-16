@@ -6,8 +6,10 @@ import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
+import com.advertmarket.shared.util.IdempotencyKey;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -69,4 +71,13 @@ public interface LedgerPort {
             @NonNull AccountId accountId,
             @NonNull EntryType entryType,
             @NonNull Instant since);
+
+    /**
+     * Finds an existing transaction reference by idempotency key.
+     *
+     * @param key the idempotency key to look up
+     * @return transaction reference if the key was already used, empty otherwise
+     */
+    @NonNull Optional<UUID> findTxRefByIdempotencyKey(
+            @NonNull IdempotencyKey key);
 }

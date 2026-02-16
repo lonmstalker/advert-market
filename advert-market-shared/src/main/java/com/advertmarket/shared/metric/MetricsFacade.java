@@ -22,14 +22,19 @@ public class MetricsFacade {
     private final Map<String, Counter> counters = new ConcurrentHashMap<>();
     private final Map<String, Timer> timers = new ConcurrentHashMap<>();
 
-    /** Increments a named counter with optional tags. */
+    /** Increments a named counter by 1 with optional tags. */
     public void incrementCounter(
             @Fenum(FenumGroup.METRIC_NAME) @NonNull String name,
             String... tags) {
-        counters.computeIfAbsent(
-                cacheKey(name, tags),
-                _ -> Counter.builder(name).tags(tags).register(registry)
-        ).increment();
+        getOrCreateCounter(name, tags).increment();
+    }
+
+    /** Increments a named counter by the given amount with optional tags. */
+    public void incrementCounter(
+            @Fenum(FenumGroup.METRIC_NAME) @NonNull String name,
+            double amount,
+            String... tags) {
+        getOrCreateCounter(name, tags).increment(amount);
     }
 
     /** Records timer around a supplier with optional tags. */
@@ -59,6 +64,13 @@ public class MetricsFacade {
     @NonNull
     public MeterRegistry registry() {
         return registry;
+    }
+
+    private Counter getOrCreateCounter(String name, String... tags) {
+        return counters.computeIfAbsent(
+                cacheKey(name, tags),
+                _ -> Counter.builder(name).tags(tags).register(registry)
+        );
     }
 
     private Timer getOrCreateTimer(String name, String... tags) {

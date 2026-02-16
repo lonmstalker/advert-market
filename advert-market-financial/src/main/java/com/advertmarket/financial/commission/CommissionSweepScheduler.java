@@ -6,6 +6,7 @@ import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.config.CommissionSweepProperties;
 import com.advertmarket.financial.ledger.repository.JooqAccountBalanceRepository;
 import com.advertmarket.shared.lock.DistributedLockPort;
+import com.advertmarket.shared.lock.LockKeys;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
@@ -31,7 +32,7 @@ import org.springframework.stereotype.Component;
 @SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class CommissionSweepScheduler {
 
-    private static final String LOCK_KEY = "scheduler:commission-sweep";
+    private static final String LOCK_KEY = LockKeys.COMMISSION_SWEEP;
 
     private final JooqAccountBalanceRepository balanceRepository;
     private final LedgerPort ledgerPort;
@@ -74,13 +75,18 @@ public class CommissionSweepScheduler {
         for (var accountId : accounts) {
             long swept = sweepAccount(accountId, today);
             if (swept > 0) {
-                totalSwept += swept;
+                totalSwept = Math.addExact(totalSwept, swept);
                 count++;
             }
         }
 
         metrics.incrementCounter(MetricNames.COMMISSION_SWEEP_COUNT,
                 "count", String.valueOf(count));
+        if (totalSwept > 0) {
+            metrics.incrementCounter(
+                    MetricNames.COMMISSION_SWEEP_TOTAL_NANO,
+                    totalSwept);
+        }
 
         log.info("Commission sweep completed: swept {} nanoTON "
                         + "from {} accounts",

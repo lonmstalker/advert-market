@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +19,7 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.model.UserId;
+import com.advertmarket.shared.util.IdempotencyKey;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.time.Instant;
 import java.util.List;
@@ -151,7 +153,7 @@ class WalletServiceTest {
             var ownerPending = AccountId.ownerPending(userId);
 
             when(userRepository.findTonAddress(userId))
-                    .thenReturn(Optional.of("UQ-test-address"));
+                    .thenReturn(Optional.of("UQBvW8Z5huBkMJYdnJxrERhVfeLsvKVbcjOx0Z3KPnEr0Xgd"));
             when(ledgerPort.getBalance(ownerPending))
                     .thenReturn(500_000_000_000L);
             when(ledgerPort.sumDebitsSince(
@@ -177,7 +179,7 @@ class WalletServiceTest {
             var ownerPending = AccountId.ownerPending(userId);
 
             when(userRepository.findTonAddress(userId))
-                    .thenReturn(Optional.of("UQ-test-address"));
+                    .thenReturn(Optional.of("UQBvW8Z5huBkMJYdnJxrERhVfeLsvKVbcjOx0Z3KPnEr0Xgd"));
             when(ledgerPort.getBalance(ownerPending))
                     .thenReturn(500_000_000_000L);
             when(ledgerPort.sumDebitsSince(
@@ -194,6 +196,87 @@ class WalletServiceTest {
             verify(ledgerPort).transfer(captor.capture());
             assertThat(captor.getValue().idempotencyKey().value())
                     .isEqualTo("withdrawal:idem-3");
+        }
+
+        @Test
+        @DisplayName("Should return existing result for duplicate idempotency key without re-checking balance")
+        void shouldReturnExistingForDuplicateIdempotencyKey() {
+            var userId = new UserId(42L);
+            var existingTxRef = UUID.randomUUID();
+
+            when(userRepository.findTonAddress(userId))
+                    .thenReturn(Optional.of("UQBvW8Z5huBkMJYdnJxrERhVfeLsvKVbcjOx0Z3KPnEr0Xgd"));
+            when(ledgerPort.findTxRefByIdempotencyKey(
+                    new IdempotencyKey("withdrawal:idem-dup")))
+                    .thenReturn(Optional.of(existingTxRef));
+
+            var result = walletService.withdraw(userId, 2_000_000_000L, "idem-dup");
+
+            assertThat(result.withdrawalId()).isEqualTo(existingTxRef.toString());
+            verify(ledgerPort, never()).getBalance(any(AccountId.class));
+            verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        }
+
+        @Test
+        @DisplayName("Should reject withdrawal below minimum amount")
+        void shouldRejectBelowMinimumAmount() {
+            var userId = new UserId(42L);
+
+            assertThatThrownBy(() ->
+                    walletService.withdraw(userId, 999_999_999L, "idem-min"))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.WITHDRAWAL_MIN_AMOUNT);
+        }
+
+        @Test
+        @DisplayName("Should reject withdrawal when balance is insufficient")
+        void shouldRejectWhenInsufficientBalance() {
+            var userId = new UserId(42L);
+            var ownerPending = AccountId.ownerPending(userId);
+
+            when(userRepository.findTonAddress(userId))
+                    .thenReturn(Optional.of("UQBvW8Z5huBkMJYdnJxrERhVfeLsvKVbcjOx0Z3KPnEr0Xgd"));
+            when(ledgerPort.findTxRefByIdempotencyKey(any()))
+                    .thenReturn(Optional.empty());
+            when(ledgerPort.getBalance(ownerPending))
+                    .thenReturn(1_000_000_000L);
+
+            assertThatThrownBy(() ->
+                    walletService.withdraw(userId, 2_000_000_000L, "idem-bal"))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.INSUFFICIENT_BALANCE);
+        }
+
+        @Test
+        @DisplayName("Should reject withdrawal when user has no TON address")
+        void shouldRejectWhenNoTonAddress() {
+            var userId = new UserId(42L);
+
+            when(userRepository.findTonAddress(userId))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() ->
+                    walletService.withdraw(userId, 2_000_000_000L, "idem-addr"))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.WALLET_ADDRESS_REQUIRED);
+        }
+
+        @Test
+        @DisplayName("Should reject withdrawal when TON address has invalid CRC")
+        void shouldRejectWhenTonAddressInvalid() {
+            var userId = new UserId(42L);
+
+            when(userRepository.findTonAddress(userId))
+                    .thenReturn(Optional.of("UQBvW8Z5huBkMJYdnJxrERhVfeLsvKVbcjOx0Z3KPnEr0dSx"));
+
+            assertThatThrownBy(() ->
+                    walletService.withdraw(userId, 2_000_000_000L, "idem-crc"))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.INVALID_TON_ADDRESS);
         }
     }
 }

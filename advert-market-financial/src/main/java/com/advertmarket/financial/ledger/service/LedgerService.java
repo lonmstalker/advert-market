@@ -15,11 +15,13 @@ import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
+import com.advertmarket.shared.util.IdempotencyKey;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -165,6 +167,13 @@ public class LedgerService implements LedgerPort {
             @NonNull EntryType entryType,
             @NonNull Instant since) {
         return ledgerRepository.sumDebitsSince(accountId, entryType, since);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public @NonNull Optional<UUID> findTxRefByIdempotencyKey(
+            @NonNull IdempotencyKey key) {
+        return ledgerRepository.findTxRefByIdempotencyKey(key.value());
     }
 
     private void validateBalance(List<Leg> legs) {

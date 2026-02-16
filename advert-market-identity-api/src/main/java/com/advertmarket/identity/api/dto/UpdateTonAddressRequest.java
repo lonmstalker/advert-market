@@ -3,6 +3,7 @@ package com.advertmarket.identity.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Request to update the user's TON wallet address.
@@ -16,6 +17,6 @@ public record UpdateTonAddressRequest(
         @NotBlank
         @Pattern(regexp = "[EU]Q[A-Za-z0-9_-]{46}",
                 message = "Invalid TON address format")
-        String tonAddress
+        @NonNull String tonAddress
 ) {
 }

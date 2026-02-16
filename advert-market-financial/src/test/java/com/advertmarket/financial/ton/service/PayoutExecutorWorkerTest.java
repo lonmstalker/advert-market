@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.financial.api.event.ExecutePayoutCommand;
+import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
@@ -24,9 +25,12 @@ import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.UserId;
+import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -92,5 +96,85 @@ class PayoutExecutorWorkerTest {
 
         verify(tonWalletPort, never())
                 .submitTransaction(anyInt(), anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("should submit TX, record ledger, and publish PayoutCompletedEvent on success")
+    void shouldCompletePayoutSuccessfully() {
+        var dealId = DealId.generate();
+        var command = new ExecutePayoutCommand(42L, 1_000_000_000L, 100_000_000L, 11);
+        var envelope = EventEnvelope.create(EventTypes.EXECUTE_PAYOUT, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+        when(userRepository.findTonAddress(new UserId(42L)))
+                .thenReturn(Optional.of("UQ-owner-address"));
+        when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "PAYOUT"))
+                .thenReturn(Optional.empty());
+        when(txRepository.createOutbound(
+                dealId.value(), "PAYOUT", 1_000_000_000L, "UQ-owner-address", 11))
+                .thenReturn(100L);
+        when(txRepository.markSubmitted(100L, "txhash123", 0))
+                .thenReturn(true);
+        when(tonWalletPort.submitTransaction(11, "UQ-owner-address", 1_000_000_000L))
+                .thenReturn("txhash123");
+        when(ledgerPort.transfer(any(TransferRequest.class)))
+                .thenReturn(UUID.randomUUID());
+        when(jsonFacade.toJson(any())).thenReturn("{}");
+
+        worker.executePayout(envelope);
+
+        verify(tonWalletPort).submitTransaction(11, "UQ-owner-address", 1_000_000_000L);
+        verify(ledgerPort).transfer(any(TransferRequest.class));
+        verify(outboxRepository).save(any(OutboxEntry.class));
+    }
+
+    @Test
+    @DisplayName("should publish PayoutDeferredEvent when owner has no TON address")
+    void shouldDeferWhenNoTonAddress() {
+        var dealId = DealId.generate();
+        var command = new ExecutePayoutCommand(99L, 1_000_000_000L, 100_000_000L, 11);
+        var envelope = EventEnvelope.create(EventTypes.EXECUTE_PAYOUT, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+        when(userRepository.findTonAddress(new UserId(99L)))
+                .thenReturn(Optional.empty());
+        when(jsonFacade.toJson(any())).thenReturn("{}");
+
+        worker.executePayout(envelope);
+
+        verify(tonWalletPort, never()).submitTransaction(anyInt(), anyString(), anyLong());
+        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(outboxRepository).save(any(OutboxEntry.class));
+    }
+
+    @Test
+    @DisplayName("should propagate exception when submitTransaction fails")
+    void shouldPropagateExceptionOnSubmitFailure() {
+        var dealId = DealId.generate();
+        var command = new ExecutePayoutCommand(42L, 1_000_000_000L, 100_000_000L, 11);
+        var envelope = EventEnvelope.create(EventTypes.EXECUTE_PAYOUT, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+        when(userRepository.findTonAddress(new UserId(42L)))
+                .thenReturn(Optional.of("UQ-owner-address"));
+        when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "PAYOUT"))
+                .thenReturn(Optional.empty());
+        when(txRepository.createOutbound(
+                dealId.value(), "PAYOUT", 1_000_000_000L, "UQ-owner-address", 11))
+                .thenReturn(100L);
+        when(tonWalletPort.submitTransaction(11, "UQ-owner-address", 1_000_000_000L))
+                .thenThrow(new DomainException(ErrorCodes.TON_TX_FAILED, "Send failed"));
+
+        assertThatThrownBy(() -> worker.executePayout(envelope))
+                .isInstanceOf(DomainException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCodes.TON_TX_FAILED);
+
+        verify(txRepository).updateStatus(100L, "ABANDONED", 0, 0);
+        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(outboxRepository, never()).save(any(OutboxEntry.class));
     }
 }

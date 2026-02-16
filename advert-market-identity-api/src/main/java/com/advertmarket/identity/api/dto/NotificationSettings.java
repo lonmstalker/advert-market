@@ -1,6 +1,7 @@
 package com.advertmarket.identity.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * User notification preferences.
@@ -12,11 +13,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Notification settings")
 public record NotificationSettings(
         @Schema(description = "Deal notifications")
-        DealNotifications deals,
+        @NonNull DealNotifications deals,
         @Schema(description = "Financial notifications")
-        FinancialNotifications financial,
+        @NonNull FinancialNotifications financial,
         @Schema(description = "Dispute notifications")
-        DisputeNotifications disputes
+        @NonNull DisputeNotifications disputes
 ) {
 
     /**
