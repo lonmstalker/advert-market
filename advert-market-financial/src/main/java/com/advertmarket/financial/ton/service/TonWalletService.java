@@ -45,8 +45,7 @@ public class TonWalletService implements TonWalletPort {
     private final SequenceAllocator sequenceAllocator;
     private final MetricsFacade metrics;
     private final boolean isTestnet;
-    private final String mnemonic;
-    private volatile TweetNaclFast.Signature.KeyPair keyPair;
+    private final TweetNaclFast.Signature.KeyPair keyPair;
 
     /**
      * Creates a new wallet service.
@@ -70,7 +69,7 @@ public class TonWalletService implements TonWalletPort {
         this.sequenceAllocator = sequenceAllocator;
         this.metrics = metrics;
         this.isTestnet = "testnet".equalsIgnoreCase(props.network());
-        this.mnemonic = props.wallet().mnemonic();
+        this.keyPair = deriveKeyPair(props.wallet().mnemonic());
     }
 
     @Override
@@ -78,7 +77,7 @@ public class TonWalletService implements TonWalletPort {
         long subwalletId = sequenceAllocator.next();
 
         WalletV4R2 wallet = WalletV4R2.builder()
-                .keyPair(getKeyPair())
+                .keyPair(keyPair)
                 .walletId(subwalletId)
                 .build();
 
@@ -104,7 +103,7 @@ public class TonWalletService implements TonWalletPort {
     private String doSubmitTransaction(int subwalletId, String destinationAddress,
                                        long amountNano) {
         WalletV4R2 wallet = WalletV4R2.builder()
-                .keyPair(getKeyPair())
+                .keyPair(keyPair)
                 .walletId(subwalletId)
                 .build();
 
@@ -140,20 +139,6 @@ public class TonWalletService implements TonWalletPort {
                 txHash, subwalletId, destinationAddress, amountNano);
 
         return txHash;
-    }
-
-    private TweetNaclFast.Signature.KeyPair getKeyPair() {
-        var kp = keyPair;
-        if (kp == null) {
-            synchronized (this) {
-                kp = keyPair;
-                if (kp == null) {
-                    kp = deriveKeyPair(mnemonic);
-                    keyPair = kp;
-                }
-            }
-        }
-        return kp;
     }
 
     private static TweetNaclFast.Signature.KeyPair deriveKeyPair(String mnemonic) {

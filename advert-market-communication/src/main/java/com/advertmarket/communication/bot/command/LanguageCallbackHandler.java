@@ -51,6 +51,5 @@ public class LanguageCallbackHandler implements CallbackHandler {
                 .callbackText(i18n.msg("bot.language.selected",
                         lang, langName))
                 .send(sender);
-        // TODO: save language preference via identity-api
     }
 }

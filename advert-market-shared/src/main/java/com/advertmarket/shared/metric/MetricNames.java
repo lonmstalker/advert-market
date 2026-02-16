@@ -91,6 +91,12 @@ public final class MetricNames {
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_DEACTIVATED_TOTAL =
             "channel.deactivated.total";
 
+    // --- Deal Timeout ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String DEAL_TIMEOUT_PROCESSED =
+            "deal.timeout.processed";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String DEAL_TIMEOUT_REFUND_EMITTED =
+            "deal.timeout.refund.emitted";
+
     // --- Delivery ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String DELIVERY_VERIFIED =
             "delivery.verified";

@@ -177,6 +177,93 @@ public class JooqDealRepository implements DealRepository {
                 .toList();
     }
 
+    @Override
+    public boolean reassignOwnerIfNonTerminal(
+            @NonNull DealId dealId,
+            long newOwnerId) {
+        int updated = dsl.update(DEALS)
+                .set(DEALS.OWNER_ID, newOwnerId)
+                .set(DEALS.VERSION, DEALS.VERSION.plus(1))
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .and(DEALS.OWNER_ID.ne(newOwnerId))
+                .and(DEALS.STATUS.notIn(
+                        DealStatus.COMPLETED_RELEASED.name(),
+                        DealStatus.CANCELLED.name(),
+                        DealStatus.REFUNDED.name(),
+                        DealStatus.PARTIALLY_REFUNDED.name(),
+                        DealStatus.EXPIRED.name()))
+                .execute();
+        return updated > 0;
+    }
+
+    @Override
+    @NonNull
+    public List<DealRecord> findExpiredDeals(int batchSize) {
+        var terminalStatuses = List.of(
+                DealStatus.COMPLETED_RELEASED.name(),
+                DealStatus.CANCELLED.name(),
+                DealStatus.REFUNDED.name(),
+                DealStatus.PARTIALLY_REFUNDED.name(),
+                DealStatus.EXPIRED.name());
+
+        return dsl.select(
+                        DEALS.ID.as("id"),
+                        DEALS.CHANNEL_ID.as("channelId"),
+                        DEALS.ADVERTISER_ID.as("advertiserId"),
+                        DEALS.OWNER_ID.as("ownerId"),
+                        DEALS.PRICING_RULE_ID.as("pricingRuleId"),
+                        DEALS.STATUS.as("status"),
+                        DEALS.AMOUNT_NANO.as("amountNano"),
+                        DEALS.COMMISSION_RATE_BP.as("commissionRateBp"),
+                        DEALS.COMMISSION_NANO.as("commissionNano"),
+                        DEALS.DEPOSIT_ADDRESS.as("depositAddress"),
+                        DEALS.SUBWALLET_ID.as("subwalletId"),
+                        DEALS.CREATIVE_BRIEF.as("creativeBrief"),
+                        DEALS.CREATIVE_DRAFT.as("creativeDraft"),
+                        DEALS.MESSAGE_ID.as("messageId"),
+                        DEALS.CONTENT_HASH.as("contentHash"),
+                        DEALS.DEADLINE_AT.as("deadlineAt"),
+                        DEALS.PUBLISHED_AT.as("publishedAt"),
+                        DEALS.COMPLETED_AT.as("completedAt"),
+                        DEALS.FUNDED_AT.as("fundedAt"),
+                        DEALS.CANCELLATION_REASON.as("cancellationReason"),
+                        DEALS.DEPOSIT_TX_HASH.as("depositTxHash"),
+                        DEALS.PAYOUT_TX_HASH.as("payoutTxHash"),
+                        DEALS.REFUNDED_TX_HASH.as("refundedTxHash"),
+                        DEALS.VERSION.as("version"),
+                        DEALS.CREATED_AT.as("createdAt"),
+                        DEALS.UPDATED_AT.as("updatedAt"))
+                .from(DEALS)
+                .where(DEALS.DEADLINE_AT.le(OffsetDateTime.now()))
+                .and(DEALS.STATUS.notIn(terminalStatuses))
+                .orderBy(DEALS.DEADLINE_AT.asc())
+                .limit(batchSize)
+                .forUpdate().skipLocked()
+                .fetchInto(DealRow.class)
+                .stream()
+                .map(dealRecordMapper::toRecord)
+                .toList();
+    }
+
+    @Override
+    public void setDeadline(@NonNull DealId dealId, @NonNull Instant deadlineAt) {
+        dsl.update(DEALS)
+                .set(DEALS.DEADLINE_AT, OffsetDateTime.ofInstant(deadlineAt, ZoneOffset.UTC))
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
+    @Override
+    public void clearDeadline(@NonNull DealId dealId) {
+        dsl.update(DEALS)
+                .setNull(DEALS.DEADLINE_AT)
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
     /**
      * Encodes a composite cursor from the last record's created_at and id.
      */

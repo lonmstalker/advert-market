@@ -112,7 +112,6 @@ async function enableMocking() {
 }
 
 async function startApp() {
-  // TODO: Replace with real API — remove enableMocking when backend is ready
   await enableMocking();
 
   const { initI18n } = await import('@/shared/i18n');

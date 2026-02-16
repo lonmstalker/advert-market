@@ -5,6 +5,7 @@ import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.service.DealTransitionService;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.outbox.OutboxRepository;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
  * Wires deal domain beans that are not Spring-managed components.
  */
 @Configuration
+@EnableConfigurationProperties(DealTimeoutProperties.class)
 public class DealConfig {
 
     @Bean

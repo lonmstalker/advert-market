@@ -63,7 +63,6 @@ public class StartCommand implements BotCommand {
         } else {
             handleWelcome(ctx, sender);
         }
-        // TODO: upsert user via identity-api
     }
 
     private void handleWelcome(UpdateContext ctx,
