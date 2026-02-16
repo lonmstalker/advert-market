@@ -1,12 +1,19 @@
 package com.advertmarket.financial.wallet.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.financial.api.model.LedgerEntry;
+import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.EntryType;
@@ -14,24 +21,33 @@ import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("WalletService — user wallet operations")
 class WalletServiceTest {
 
     private LedgerPort ledgerPort;
+    private UserRepository userRepository;
     private WalletService walletService;
 
     @BeforeEach
     void setUp() {
         ledgerPort = mock(LedgerPort.class);
-        var userRepository = mock(UserRepository.class);
+        userRepository = mock(UserRepository.class);
         var metrics = mock(MetricsFacade.class);
-        walletService = new WalletService(ledgerPort, userRepository, metrics, 1_000_000_000L);
+        walletService = new WalletService(
+                ledgerPort,
+                userRepository,
+                metrics,
+                1_000_000_000L,
+                1_000_000_000_000L,
+                1_000_000_000_000L);
     }
 
     @Nested
@@ -106,6 +122,78 @@ class WalletServiceTest {
             var result = walletService.getTransactions(userId, "cursor123", 10);
 
             assertThat(result.items()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("withdraw")
+    class Withdraw {
+
+        @Test
+        @DisplayName("Should reject withdrawal above manual approval threshold")
+        void shouldRejectAboveManualApprovalThreshold() {
+            var userId = new UserId(42L);
+
+            assertThatThrownBy(() ->
+                    walletService.withdraw(
+                            userId,
+                            1_000_000_000_001L,
+                            "idem-1"))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.WITHDRAWAL_REQUIRES_MANUAL_REVIEW);
+        }
+
+        @Test
+        @DisplayName("Should reject withdrawal when daily velocity limit is exceeded")
+        void shouldRejectWhenDailyVelocityLimitExceeded() {
+            var userId = new UserId(42L);
+            var ownerPending = AccountId.ownerPending(userId);
+
+            when(userRepository.findTonAddress(userId))
+                    .thenReturn(Optional.of("UQ-test-address"));
+            when(ledgerPort.getBalance(ownerPending))
+                    .thenReturn(500_000_000_000L);
+            when(ledgerPort.sumDebitsSince(
+                    eq(ownerPending),
+                    eq(EntryType.OWNER_WITHDRAWAL),
+                    any(Instant.class)))
+                    .thenReturn(999_000_000_000L);
+
+            assertThatThrownBy(() ->
+                    walletService.withdraw(
+                            userId,
+                            2_000_000_000L,
+                            "idem-2"))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.WITHDRAWAL_VELOCITY_LIMIT_EXCEEDED);
+        }
+
+        @Test
+        @DisplayName("Should create transfer when withdrawal is within limits")
+        void shouldCreateTransferWhenWithinLimits() {
+            var userId = new UserId(42L);
+            var ownerPending = AccountId.ownerPending(userId);
+
+            when(userRepository.findTonAddress(userId))
+                    .thenReturn(Optional.of("UQ-test-address"));
+            when(ledgerPort.getBalance(ownerPending))
+                    .thenReturn(500_000_000_000L);
+            when(ledgerPort.sumDebitsSince(
+                    eq(ownerPending),
+                    eq(EntryType.OWNER_WITHDRAWAL),
+                    any(Instant.class)))
+                    .thenReturn(100_000_000_000L);
+            when(ledgerPort.transfer(org.mockito.ArgumentMatchers.any(TransferRequest.class)))
+                    .thenReturn(UUID.randomUUID());
+
+            walletService.withdraw(userId, 2_000_000_000L, "idem-3");
+
+            var captor = ArgumentCaptor.forClass(TransferRequest.class);
+            verify(ledgerPort).transfer(captor.capture());
+            assertThat(captor.getValue().idempotencyKey().value())
+                    .isEqualTo("withdrawal:idem-3");
         }
     }
 }

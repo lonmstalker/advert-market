@@ -9,7 +9,9 @@ import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.ledger.mapper.LedgerEntryMapper;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -133,5 +136,23 @@ public class JooqLedgerRepository {
             return new CursorPage<>(new ArrayList<>(page), nextCursor);
         }
         return new CursorPage<>(items, null);
+    }
+
+    /**
+     * Returns sum(debit_nano) for the given account and entry type since instant.
+     */
+    public long sumDebitsSince(
+            @NonNull AccountId accountId,
+            @NonNull EntryType entryType,
+            @NonNull Instant since) {
+        return dsl.select(DSL.coalesce(
+                        DSL.sum(LEDGER_ENTRIES.DEBIT_NANO),
+                        0L))
+                .from(LEDGER_ENTRIES)
+                .where(LEDGER_ENTRIES.ACCOUNT_ID.eq(accountId.value()))
+                .and(LEDGER_ENTRIES.ENTRY_TYPE.eq(entryType.name()))
+                .and(LEDGER_ENTRIES.CREATED_AT.ge(since.atOffset(
+                        java.time.ZoneOffset.UTC)))
+                .fetchSingle(0, long.class);
     }
 }

@@ -24,6 +24,8 @@ public class WalletConfig {
             WalletProperties walletProperties) {
         return new WalletService(
                 ledgerPort, userRepository, metrics,
-                walletProperties.minWithdrawalNano());
+                walletProperties.minWithdrawalNano(),
+                walletProperties.dailyVelocityLimitNano(),
+                walletProperties.manualApprovalThresholdNano());
     }
 }

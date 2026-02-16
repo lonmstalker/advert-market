@@ -4,7 +4,9 @@ import com.advertmarket.financial.api.model.LedgerEntry;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -54,4 +56,17 @@ public interface LedgerPort {
             @NonNull AccountId accountId,
             @Nullable String cursor,
             int limit);
+
+    /**
+     * Returns total debits for an account and entry type since the given instant.
+     *
+     * @param accountId account to aggregate
+     * @param entryType business operation type
+     * @param since inclusive lower bound for created_at
+     * @return total debit amount in nanoTON
+     */
+    long sumDebitsSince(
+            @NonNull AccountId accountId,
+            @NonNull EntryType entryType,
+            @NonNull Instant since);
 }

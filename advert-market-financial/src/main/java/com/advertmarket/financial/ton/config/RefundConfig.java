@@ -2,6 +2,7 @@ package com.advertmarket.financial.ton.config;
 
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
+import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.financial.ton.service.RefundExecutorWorker;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
@@ -23,9 +24,11 @@ public class RefundConfig {
             OutboxRepository outboxRepository,
             DistributedLockPort lockPort,
             JsonFacade jsonFacade,
-            MetricsFacade metrics) {
+            MetricsFacade metrics,
+            JooqTonTransactionRepository txRepository) {
         return new RefundExecutorWorker(
                 tonWalletPort, ledgerPort,
-                outboxRepository, lockPort, jsonFacade, metrics);
+                outboxRepository, lockPort, jsonFacade, metrics,
+                txRepository);
     }
 }

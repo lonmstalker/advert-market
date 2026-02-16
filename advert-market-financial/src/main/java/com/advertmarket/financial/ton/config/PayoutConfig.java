@@ -2,6 +2,7 @@ package com.advertmarket.financial.ton.config;
 
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
+import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.financial.ton.service.PayoutExecutorWorker;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.json.JsonFacade;
@@ -25,9 +26,11 @@ public class PayoutConfig {
             OutboxRepository outboxRepository,
             DistributedLockPort lockPort,
             JsonFacade jsonFacade,
-            MetricsFacade metrics) {
+            MetricsFacade metrics,
+            JooqTonTransactionRepository txRepository) {
         return new PayoutExecutorWorker(
                 tonWalletPort, ledgerPort, userRepository,
-                outboxRepository, lockPort, jsonFacade, metrics);
+                outboxRepository, lockPort, jsonFacade, metrics,
+                txRepository);
     }
 }

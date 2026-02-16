@@ -42,6 +42,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class DealService implements DealPort {
 
     private static final int DEFAULT_COMMISSION_RATE_BP = 1000;
+    private static final long MIN_DEAL_AMOUNT_NANO =
+            Money.NANO_PER_TON / 2;
 
     private final DealRepository dealRepository;
     private final DealEventRepository dealEventRepository;
@@ -72,6 +74,12 @@ public class DealService implements DealPort {
         if (!channel.isActive()) {
             throw new DomainException(ErrorCodes.CHANNEL_NOT_ACTIVE,
                     "Channel is not active: " + command.channelId());
+        }
+        if (command.amountNano() < MIN_DEAL_AMOUNT_NANO) {
+            throw new DomainException(
+                    ErrorCodes.INVALID_PARAMETER,
+                    "Deal amount must be at least "
+                            + MIN_DEAL_AMOUNT_NANO + " nanoTON");
         }
 
         var amount = Money.ofNano(command.amountNano());

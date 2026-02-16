@@ -17,6 +17,7 @@ import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.model.Money;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
+import java.time.Instant;
 import com.advertmarket.shared.util.IdempotencyKey;
 import java.util.List;
 import java.util.UUID;
@@ -36,10 +37,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class WalletService implements WalletPort {
 
+    private static final long VELOCITY_WINDOW_SECONDS = 86_400L;
+
     private final LedgerPort ledgerPort;
     private final UserRepository userRepository;
     private final MetricsFacade metrics;
     private final long minWithdrawalNano;
+    private final long dailyVelocityLimitNano;
+    private final long manualApprovalThresholdNano;
 
     @Override
     public @NonNull WalletSummary getSummary(@NonNull UserId userId) {
@@ -69,6 +74,13 @@ public class WalletService implements WalletPort {
                     "Minimum withdrawal is " + minWithdrawalNano
                             + " nanoTON");
         }
+        if (amountNano > manualApprovalThresholdNano) {
+            throw new DomainException(
+                    ErrorCodes.WITHDRAWAL_REQUIRES_MANUAL_REVIEW,
+                    "Withdrawal requires manual review above "
+                            + manualApprovalThresholdNano
+                            + " nanoTON");
+        }
 
         var tonAddress = userRepository.findTonAddress(userId)
                 .orElseThrow(() -> new DomainException(
@@ -82,6 +94,19 @@ public class WalletService implements WalletPort {
                     ErrorCodes.INSUFFICIENT_BALANCE,
                     "Available: " + available
                             + ", requested: " + amountNano);
+        }
+        long withdrawn24h = ledgerPort.sumDebitsSince(
+                ownerAccount,
+                EntryType.OWNER_WITHDRAWAL,
+                Instant.now().minusSeconds(VELOCITY_WINDOW_SECONDS));
+        long projected = Math.addExact(withdrawn24h, amountNano);
+        if (projected > dailyVelocityLimitNano) {
+            throw new DomainException(
+                    ErrorCodes.WITHDRAWAL_VELOCITY_LIMIT_EXCEEDED,
+                    "24h withdrawal velocity exceeded: used="
+                            + withdrawn24h + ", requested="
+                            + amountNano + ", limit="
+                            + dailyVelocityLimitNano);
         }
 
         var amount = Money.ofNano(amountNano);

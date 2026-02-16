@@ -13,7 +13,9 @@ import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -154,6 +156,15 @@ public class LedgerService implements LedgerPort {
                 : DEFAULT_PAGE_SIZE;
         return ledgerRepository.findByAccountId(
                 accountId, cursor, effectiveLimit);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long sumDebitsSince(
+            @NonNull AccountId accountId,
+            @NonNull EntryType entryType,
+            @NonNull Instant since) {
+        return ledgerRepository.sumDebitsSince(accountId, entryType, since);
     }
 
     private void validateBalance(List<Leg> legs) {

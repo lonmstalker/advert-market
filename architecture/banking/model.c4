@@ -8,11 +8,11 @@ model {
   // ── Actors ────────────────────────────────────────────────────────────────
 
   advertiser = actor 'Advertiser' {
-    description 'Pays escrow, approves creative, manages ad requests'
+    description 'Creates offers, negotiates terms, pays escrow after owner acceptance, manages ad requests'
   }
 
   channelOwner = actor 'Channel Owner' {
-    description 'Owns Telegram channel, delivers creative, receives payout, manages team rights'
+    description 'Owns Telegram channel, accepts final terms before payment, publishes ad, receives payout'
   }
 
   channelAdmin = actor 'Channel Admin' {
@@ -43,6 +43,10 @@ model {
     description 'Managed Kafka cluster — event streaming, worker queues, Schema Registry'
   }
 
+  s3Storage = externalSystem 'S3-Compatible Storage' {
+    description 'Media object storage for creative uploads (AWS S3 / MinIO in dev)'
+  }
+
   // ── System: Ad Marketplace ────────────────────────────────────────────────
 
   adMarketplace = system 'Ad Marketplace' {
@@ -60,7 +64,7 @@ model {
       }
 
       dealFlowUi = component 'Deal Flow UI' {
-        description 'Deal timeline, status transitions via MainButton, negotiation screens'
+        description 'Deal timeline with Approve -> Pay progression, status transitions via MainButton'
       }
 
       disputeUi = component 'Dispute UI' {
@@ -69,6 +73,10 @@ model {
 
       teamManagementUi = component 'Team Management UI' {
         description 'Channel team: invite admins, assign granular rights, revoke access'
+      }
+
+      creativeEditorUi = component 'Creative Editor UI' {
+        description 'Template editor with Telegram 1:1 preview, media upload, inline keyboard rows'
       }
     }
 
@@ -94,6 +102,18 @@ model {
 
       disputeService = service 'Dispute Service' {
         description 'Hybrid dispute resolution: auto rules engine + operator escalation. Supports partial refund'
+      }
+
+      creativeController = component 'Creative Controller' {
+        description 'REST endpoints: /api/v1/creatives* — CRUD, versions, media upload/delete'
+      }
+
+      creativeService = service 'Creative Service' {
+        description 'Creative template lifecycle: text+entities canonical model, versioning, soft-delete'
+      }
+
+      creativeMediaStorage = service 'Creative Media Storage Adapter' {
+        description 'S3-compatible media storage adapter with MIME/type/size validation contract'
       }
 
       // Financial Core (financial module — strict isolation: NO deps on deal/marketplace/delivery/communication)
@@ -274,6 +294,18 @@ model {
         description 'Deal aggregate: status (16 states), version (optimistic locking), escrow fields, creative_brief/draft JSONB, deadline_at'
       }
 
+      creativeTemplates = component 'creative_templates' {
+        description 'Creative template aggregate: owner-scoped title + canonical draft payload, soft-delete fields'
+      }
+
+      creativeTemplateVersions = component 'creative_template_versions' {
+        description 'Immutable template snapshot history per version number'
+      }
+
+      creativeMediaAssets = component 'creative_media_assets' {
+        description 'Uploaded media metadata (MIME, size, URL, type) linked to owner/template; soft-delete'
+      }
+
       channelMemberships = component 'channel_memberships' {
         description 'Team ABAC: PK(channel_id, user_id), role (OWNER/MANAGER), rights JSONB (NULL for OWNER = all)'
       }
@@ -418,6 +450,7 @@ model {
   adMarketplace.miniApp.dealFlowUi -[sync]-> adMarketplace.backendApi.dealController 'POST transitions, GET timeline'
   adMarketplace.miniApp.disputeUi -[sync]-> adMarketplace.backendApi.disputeService 'POST dispute, upload evidence'
   adMarketplace.miniApp.teamManagementUi -[sync]-> adMarketplace.backendApi.channelTeamService 'Invite, assign rights, revoke'
+  adMarketplace.miniApp.creativeEditorUi -[sync]-> adMarketplace.backendApi.creativeController 'GET/POST/PUT/DELETE creatives + media upload'
   adMarketplace.miniApp -[sync]-> adMarketplace.backendApi.authService 'Validate initData, get session'
   adMarketplace.miniApp -[sync]-> adMarketplace.backendApi.profileService 'GET/PUT profile, language, locale-currency settings'
 
@@ -451,6 +484,12 @@ model {
   adMarketplace.backendApi.abacService -[reads]-> adMarketplace.primaryDb.channelMemberships 'Evaluate ownership/membership'
   adMarketplace.backendApi.channelTeamService -[stores]-> adMarketplace.primaryDb.channelMemberships 'Manage team memberships'
   adMarketplace.backendApi.piiVault -[stores]-> adMarketplace.primaryDb.piiStore 'Encrypt and store PII'
+  adMarketplace.backendApi.creativeController -[sync]-> adMarketplace.backendApi.creativeService 'Validate request + execute creative use case'
+  adMarketplace.backendApi.creativeService -[stores]-> adMarketplace.primaryDb.creativeTemplates 'Create/update/delete template aggregate'
+  adMarketplace.backendApi.creativeService -[stores]-> adMarketplace.primaryDb.creativeTemplateVersions 'Append template snapshot per update'
+  adMarketplace.backendApi.creativeService -[stores]-> adMarketplace.primaryDb.creativeMediaAssets 'Persist uploaded media metadata + lifecycle'
+  adMarketplace.backendApi.creativeService -[sync]-> adMarketplace.backendApi.creativeMediaStorage 'Upload/delete media objects'
+  adMarketplace.backendApi.creativeMediaStorage -[sync]-> s3Storage 'PUT/DELETE objects in creative media bucket'
 
   // Backend API -> Data Stores (stores/reads)
   adMarketplace.backendApi.dealTransitionService -[stores]-> adMarketplace.primaryDb.deals 'Update deal status + version (optimistic lock)'

@@ -112,6 +112,61 @@ public class JooqTonTransactionRepository {
     }
 
     /**
+     * Finds the latest outbound transaction for deal and type.
+     */
+    public @NonNull Optional<TonTransactionsRecord> findLatestOutboundByDealIdAndType(
+            @NonNull UUID dealId,
+            @NonNull String txType) {
+        return dsl.selectFrom(TON_TRANSACTIONS)
+                .where(TON_TRANSACTIONS.DEAL_ID.eq(dealId))
+                .and(TON_TRANSACTIONS.DIRECTION.eq("OUT"))
+                .and(TON_TRANSACTIONS.TX_TYPE.eq(txType))
+                .orderBy(TON_TRANSACTIONS.ID.desc())
+                .limit(1)
+                .fetchOptionalInto(TonTransactionsRecord.class);
+    }
+
+    /**
+     * Creates an outbound transaction record in CREATED status before sendBoc.
+     */
+    public long createOutbound(
+            @NonNull UUID dealId,
+            @NonNull String txType,
+            long amountNano,
+            @NonNull String toAddress,
+            int subwalletId) {
+        return Objects.requireNonNull(
+                dsl.insertInto(TON_TRANSACTIONS)
+                        .set(TON_TRANSACTIONS.DEAL_ID, dealId)
+                        .set(TON_TRANSACTIONS.DIRECTION, "OUT")
+                        .set(TON_TRANSACTIONS.TX_TYPE, txType)
+                        .set(TON_TRANSACTIONS.AMOUNT_NANO, amountNano)
+                        .set(TON_TRANSACTIONS.TO_ADDRESS, toAddress)
+                        .set(TON_TRANSACTIONS.SUBWALLET_ID, subwalletId)
+                        .set(TON_TRANSACTIONS.STATUS, "CREATED")
+                        .set(TON_TRANSACTIONS.CONFIRMATIONS, 0)
+                        .set(TON_TRANSACTIONS.VERSION, 0)
+                        .returning(TON_TRANSACTIONS.ID)
+                        .fetchSingle(TON_TRANSACTIONS.ID));
+    }
+
+    /**
+     * CAS update setting tx hash and SUBMITTED status.
+     */
+    public boolean markSubmitted(
+            long id,
+            @NonNull String txHash,
+            int expectedVersion) {
+        return dsl.update(TON_TRANSACTIONS)
+                .set(TON_TRANSACTIONS.TX_HASH, txHash)
+                .set(TON_TRANSACTIONS.STATUS, "SUBMITTED")
+                .set(TON_TRANSACTIONS.VERSION, expectedVersion + 1)
+                .where(TON_TRANSACTIONS.ID.eq(id))
+                .and(TON_TRANSACTIONS.VERSION.eq(expectedVersion))
+                .execute() == 1;
+    }
+
+    /**
      * Saves the masterchain seqno as reference point for confirmation tracking.
      *
      * @return true if exactly one row was updated

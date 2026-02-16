@@ -67,7 +67,7 @@ app:
     jwt:
       secret: ${JWT_SECRET}
       expiration: 3600
-    anti-replay-window-seconds: 300
+    anti-replay-window-seconds: 30
     rate-limiter:
       max-attempts: 10
       window-seconds: 60
@@ -79,6 +79,16 @@ app:
   marketplace:
     team:
       max-managers: 10
+    creatives:
+      storage:
+        enabled: ${CREATIVES_STORAGE_ENABLED:false}
+        endpoint: ${CREATIVES_STORAGE_ENDPOINT:http://localhost:9000}
+        region: ${CREATIVES_STORAGE_REGION:us-east-1}
+        bucket: ${CREATIVES_STORAGE_BUCKET:creative-media}
+        access-key: ${CREATIVES_STORAGE_ACCESS_KEY:minio}
+        secret-key: ${CREATIVES_STORAGE_SECRET_KEY:minio123}
+        public-base-url: ${CREATIVES_STORAGE_PUBLIC_BASE_URL:http://localhost:9000/creative-media}
+        key-prefix: ${CREATIVES_STORAGE_KEY_PREFIX:creatives}
   telegram:
     bot-token: ${TELEGRAM_BOT_TOKEN:}
     bot-username: ${TELEGRAM_BOT_USERNAME:AdvertMarketBot}
@@ -124,6 +134,10 @@ app:
       is-testnet: ${TON_IS_TESTNET:true}
     wallet:
       mnemonic: ${TON_WALLET_MNEMONIC:}
+  wallet:
+    min-withdrawal-nano: ${WALLET_MIN_WITHDRAWAL_NANO:100000000}
+    daily-velocity-limit-nano: ${WALLET_DAILY_VELOCITY_LIMIT_NANO:1000000000000}
+    manual-approval-threshold-nano: ${WALLET_MANUAL_APPROVAL_THRESHOLD_NANO:1000000000000}
   canary:
     admin-token: ${CANARY_ADMIN_TOKEN:}
   internal-api:

@@ -21,5 +21,17 @@ public record WalletProperties(
                 description = "Minimum withdrawal amount in nanoTON",
                 required = Requirement.OPTIONAL
         )
-        @DefaultValue("100000000") long minWithdrawalNano
+        @DefaultValue("100000000") long minWithdrawalNano,
+
+        @PropertyDoc(
+                description = "Maximum cumulative auto-withdraw amount per 24h in nanoTON",
+                required = Requirement.OPTIONAL
+        )
+        @DefaultValue("1000000000000") long dailyVelocityLimitNano,
+
+        @PropertyDoc(
+                description = "Single withdrawal threshold that requires manual review, nanoTON",
+                required = Requirement.OPTIONAL
+        )
+        @DefaultValue("1000000000000") long manualApprovalThresholdNano
 ) {}

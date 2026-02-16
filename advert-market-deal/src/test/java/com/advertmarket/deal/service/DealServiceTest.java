@@ -126,6 +126,19 @@ class DealServiceTest {
             assertThatThrownBy(() -> service.create(cmd, 100L))
                     .isInstanceOf(EntityNotFoundException.class);
         }
+
+        @Test
+        @DisplayName("should reject deal amount below minimum anti-dust threshold")
+        void create_amountBelowMinimum_shouldThrow() {
+            var cmd = new CreateDealCommand(1L, 499_999_999L, null, null);
+            when(channelRepository.findDetailById(1L))
+                    .thenReturn(Optional.of(channelDetail(1L, 200L)));
+
+            assertThatThrownBy(() -> service.create(cmd, 100L))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.INVALID_PARAMETER);
+        }
     }
 
     @Nested

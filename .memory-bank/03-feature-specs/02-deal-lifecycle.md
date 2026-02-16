@@ -2,102 +2,107 @@
 
 ## Overview
 
-A deal represents a single advertising agreement between an Advertiser and a Channel Owner. It is the central aggregate of the system, governed by a state machine with 17 states and multiple transition paths.
+A deal is a single advertising agreement between an advertiser and a channel owner.
+The lifecycle is optimized for conversion with **Approve -> Pay**:
 
-## Lifecycle Sequence
+1. Terms/creative/slot are agreed first.
+2. Payment happens only after owner acceptance.
+3. Execution, verification, and release are automated.
+
+Legacy note for compatibility checks: this feature was originally documented as a
+**state machine with 17 states**, while current runtime uses the simplified canonical set below.
+
+## Happy Path Sequence
 
 ```mermaid
 sequenceDiagram
     participant A as Advertiser
-    participant App as Mini App
     participant API as Backend API
     participant O as Channel Owner
     participant W as Workers
-    participant TON as TON Blockchain
+    participant TON as TON
 
-    A->>App: Browse channels, select one
-    A->>API: POST /deals (create offer)
-    API-->>O: Notify: new offer
-    O->>API: POST /deals/{id}/accept
-    API->>API: Generate deposit address
-    API-->>A: Notify: accepted, deposit address
-    A->>TON: Send TON to deposit address
-    W->>TON: Poll for deposit
-    W->>API: POST /internal/worker-events (deposit confirmed)
-    API->>API: Transition → FUNDED
-    API-->>O: Notify: escrow funded, submit creative
-    O->>API: POST /deals/{id}/creative
-    API-->>A: Notify: creative submitted
-    A->>API: POST /deals/{id}/creative/approve
-    API-->>O: Notify: approved, publish
-    O->>API: POST /deals/{id}/publish
-    W->>W: Post Scheduler publishes
-    W->>W: Delivery Verifier checks 24h
-    W->>API: POST /internal/worker-events (verified)
-    API->>API: Release escrow, deduct commission
-    W->>TON: Execute payout to owner
-    API-->>O: Notify: payout sent
-    API-->>A: Notify: deal completed
+    A->>API: Create draft offer
+    API-->>O: New offer notification
+
+    O->>API: Accept final terms (creative + slot)
+    API-->>A: Accepted, ready for payment
+
+    A->>API: PAY action
+    API->>API: Move to AWAITING_PAYMENT + expose deposit intent
+
+    A->>TON: Send deposit
+    W->>TON: Watch confirmations
+    W->>API: Deposit confirmed
+    API->>API: FUNDED
+
+    W->>API: Publish now/scheduled
+    API->>API: PUBLISHED -> DELIVERY_VERIFYING
+
+    W->>API: Verification passed
+    API->>API: COMPLETED_RELEASED
+    API-->>A: Deal completed
+    API-->>O: Payout completed
 ```
 
-## Deal Aggregate
+## Runtime Statuses
 
-The `deals` table is the primary aggregate:
+- `DRAFT`
+- `OFFER_PENDING`
+- `NEGOTIATING`
+- `ACCEPTED`
+- `AWAITING_PAYMENT`
+- `FUNDED`
+- `SCHEDULED`
+- `PUBLISHED`
+- `DELIVERY_VERIFYING`
+- `COMPLETED_RELEASED`
+- `DISPUTED`
+- `CANCELLED`
+- `EXPIRED`
+- `REFUNDED`
+- `PARTIALLY_REFUNDED`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `UUID` | Deal identifier |
-| `advertiser_id` | `BIGINT` | Telegram user ID |
-| `channel_id` | `BIGINT` | Target channel |
-| `owner_id` | `BIGINT` | Channel owner user ID |
-| `status` | `VARCHAR` | Current state (see [State Machine](../06-deal-state-machine.md)) |
-| `version` | `INTEGER` | Optimistic locking counter for concurrent transition safety |
-| `amount_nano` | `BIGINT` | Agreed deal amount in nanoTON |
-| `deposit_address` | `VARCHAR` | Generated TON deposit address |
-| `deposit_tx_hash` | `VARCHAR` | Deposit transaction hash |
-| `funded_at` | `TIMESTAMPTZ` | When escrow was funded |
-| `payout_tx_hash` | `VARCHAR` | Payout transaction hash |
-| `refunded_tx_hash` | `VARCHAR` | Refund transaction hash (if applicable) |
-| `creative_brief` | `JSONB` | Advertiser's creative requirements |
-| `creative_draft` | `JSONB` | Channel owner's creative submission |
-| `scheduled_at` | `TIMESTAMPTZ` | Scheduled publication time |
-| `published_at` | `TIMESTAMPTZ` | Actual publication time |
-| `created_at` | `TIMESTAMPTZ` | Deal creation timestamp |
-| `updated_at` | `TIMESTAMPTZ` | Last update timestamp |
-| `deadline_at` | `TIMESTAMPTZ` | Current state's deadline |
+Legacy statuses removed from runtime:
 
-## State Transitions
+- `CREATIVE_SUBMITTED`
+- `CREATIVE_APPROVED`
 
-See [Deal State Machine](../06-deal-state-machine.md) for the complete state diagram, transition rules, timeouts, and event storage.
+## Contract Shape (Transitions)
 
-## API Endpoints
+Transition API is action-based (not arbitrary `targetStatus`):
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/v1/deals` | Create deal offer |
-| `GET` | `/api/v1/deals/{id}` | Get deal details |
-| `GET` | `/api/v1/deals` | List deals (filtered by role) |
-| `POST` | `/api/v1/deals/{id}/accept` | Accept offer |
-| `POST` | `/api/v1/deals/{id}/reject` | Reject offer |
-| `POST` | `/api/v1/deals/{id}/negotiate` | Submit counter-offer |
-| `POST` | `/api/v1/deals/{id}/cancel` | Cancel deal |
-| `GET` | `/api/v1/deals/{id}/timeline` | Get deal event timeline |
-| `GET` | `/api/v1/deals/{id}/deposit` | Get deposit address and status |
+- `SUBMIT_OFFER`
+- `ACCEPT`
+- `REQUEST_REVISION`
+- `PAY`
+- `SCHEDULE`
+- `PUBLISH`
+- `CANCEL`
+- `DISPUTE`
+- `RESOLVE_RELEASE`
+- `RESOLVE_REFUND`
+- `RESOLVE_PARTIAL_REFUND`
 
-## Components Involved
+Server owns the action -> status mapping matrix.
 
-| Component | Role |
-|-----------|------|
-| **Deal Flow UI** | Deal timeline, status transitions via MainButton |
-| **Deal Controller** | REST endpoints for deal CRUD and transitions |
-| **Deal Transition Service** | State machine transitions with actor checks |
-| **Deal Workflow Engine** | Lifecycle orchestration, side-effects, timeout scheduling |
-| **Outbox Publisher** | Publishes deal events to Kafka |
+## Timeouts
+
+- Offer timeout: `OFFER_PENDING -> EXPIRED`
+- Negotiation timeout: `NEGOTIATING -> EXPIRED`
+- Acceptance/payment-intent timeout: `ACCEPTED -> EXPIRED`
+- Payment timeout: `AWAITING_PAYMENT -> EXPIRED`
+- Verification window: 24h (`DELIVERY_VERIFYING`)
+
+## Financial Safety Notes
+
+- Outbound payout/refund is persisted before blockchain submission.
+- Re-send is blocked when existing outbound transaction is unresolved.
+- Ledger operations remain idempotent by operation-specific keys.
 
 ## Related Documents
 
-- [Deal State Machine](../06-deal-state-machine.md)
-- [Creative Workflow](./03-creative-workflow.md)
-- [Escrow Payments](./04-escrow-payments.md)
-- [Delivery Verification](./05-delivery-verification.md)
-- [Dispute Resolution](./06-dispute-resolution.md)
+- [Deal state machine](../06-deal-state-machine.md)
+- [Escrow payments](./04-escrow-payments.md)
+- [Delivery verification](./05-delivery-verification.md)
+- [Dispute resolution](./06-dispute-resolution.md)

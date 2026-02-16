@@ -70,6 +70,12 @@ public final class ErrorCodes {
             "TON_TX_FAILED";
     public static final @Fenum(FenumGroup.ERROR_CODE) String TON_INSUFFICIENT_GAS =
             "TON_INSUFFICIENT_GAS";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String
+            WITHDRAWAL_VELOCITY_LIMIT_EXCEEDED =
+            "WITHDRAWAL_VELOCITY_LIMIT_EXCEEDED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String
+            WITHDRAWAL_REQUIRES_MANUAL_REVIEW =
+            "WITHDRAWAL_REQUIRES_MANUAL_REVIEW";
 
     // --- Channel ---
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_NOT_FOUND =

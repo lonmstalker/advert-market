@@ -2,62 +2,54 @@
 
 ## Overview
 
-The deal lifecycle is governed by a deterministic state machine. Every transition is:
+The deal lifecycle is governed by a deterministic state machine with an **Approve -> Pay** flow.
+Creative approval is part of pre-payment negotiation, not a post-funding loop.
 
-- **Actor-checked** — only authorized actors can trigger specific transitions
-- **Idempotent** — duplicate transition attempts are safely ignored
-- **Event-emitting** — each transition appends to `deal_events` and publishes to `deal.events` Kafka topic
+Every transition is:
 
-The state machine is implemented in the **Deal Transition Service** with side-effects orchestrated by the **Deal Workflow Engine**.
+- Actor-checked: only allowed actor(s) can trigger a transition
+- Idempotent: duplicate commands do not produce duplicate side effects
+- Event-backed: every transition is appended to `deal_events`
 
-## State Diagram
+## Canonical Runtime Flow
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DRAFT : Advertiser creates deal
+    [*] --> DRAFT : Create deal
 
     DRAFT --> OFFER_PENDING : Submit offer
-    DRAFT --> CANCELLED : Advertiser cancels
+    DRAFT --> CANCELLED : Cancel
 
-    OFFER_PENDING --> NEGOTIATING : Owner counter-offers
-    OFFER_PENDING --> ACCEPTED : Owner accepts
-    OFFER_PENDING --> CANCELLED : Owner rejects / Advertiser withdraws
-    OFFER_PENDING --> EXPIRED : Offer timeout
+    OFFER_PENDING --> NEGOTIATING : Counter-offer / revision request
+    OFFER_PENDING --> ACCEPTED : Owner accepts final terms
+    OFFER_PENDING --> CANCELLED : Reject / withdraw
+    OFFER_PENDING --> EXPIRED : Timeout
 
-    NEGOTIATING --> ACCEPTED : Parties agree
-    NEGOTIATING --> CANCELLED : Either party cancels
-    NEGOTIATING --> EXPIRED : Negotiation timeout
+    NEGOTIATING --> ACCEPTED : Terms agreed
+    NEGOTIATING --> CANCELLED : Cancel
+    NEGOTIATING --> EXPIRED : Timeout
 
-    ACCEPTED --> AWAITING_PAYMENT : System generates deposit address
-    ACCEPTED --> CANCELLED : Either party cancels before payment
+    ACCEPTED --> AWAITING_PAYMENT : Advertiser confirms payment intent
+    ACCEPTED --> CANCELLED : Cancel before payment
+    ACCEPTED --> EXPIRED : Timeout
 
-    AWAITING_PAYMENT --> FUNDED : Deposit confirmed (via TON Deposit Watcher)
-    AWAITING_PAYMENT --> CANCELLED : Advertiser cancels
+    AWAITING_PAYMENT --> FUNDED : Deposit confirmed
+    AWAITING_PAYMENT --> CANCELLED : Cancel
     AWAITING_PAYMENT --> EXPIRED : Payment timeout
 
-    FUNDED --> CREATIVE_SUBMITTED : Owner submits creative draft
-    FUNDED --> CANCELLED : Mutual cancellation (triggers refund)
-    FUNDED --> EXPIRED : Creative submission timeout
+    FUNDED --> SCHEDULED : Scheduled publish
+    FUNDED --> PUBLISHED : Immediate publish
 
-    CREATIVE_SUBMITTED --> CREATIVE_APPROVED : Advertiser approves
-    CREATIVE_SUBMITTED --> FUNDED : Advertiser requests revision
-    CREATIVE_SUBMITTED --> DISPUTED : Advertiser disputes quality
+    SCHEDULED --> PUBLISHED : Auto publish
 
-    CREATIVE_APPROVED --> SCHEDULED : Publication time set
-    CREATIVE_APPROVED --> PUBLISHED : Immediate publication
-    CREATIVE_APPROVED --> EXPIRED : Publication timeout
+    PUBLISHED --> DELIVERY_VERIFYING : Verification started
 
-    SCHEDULED --> PUBLISHED : Post Scheduler publishes
-    SCHEDULED --> EXPIRED : Schedule timeout
+    DELIVERY_VERIFYING --> COMPLETED_RELEASED : Verification passed
+    DELIVERY_VERIFYING --> DISPUTED : Verification failed / dispute opened
 
-    PUBLISHED --> DELIVERY_VERIFYING : Verification starts (automatic)
-
-    DELIVERY_VERIFYING --> COMPLETED_RELEASED : Verification passed (24h retention OK)
-    DELIVERY_VERIFYING --> DISPUTED : Verification failed (post deleted/edited)
-
-    DISPUTED --> COMPLETED_RELEASED : Resolved in owner's favor (release)
-    DISPUTED --> REFUNDED : Resolved in advertiser's favor (refund)
-    DISPUTED --> PARTIALLY_REFUNDED : Resolved with partial refund (time-based split)
+    DISPUTED --> COMPLETED_RELEASED : Resolution: release
+    DISPUTED --> REFUNDED : Resolution: full refund
+    DISPUTED --> PARTIALLY_REFUNDED : Resolution: split
 
     CANCELLED --> [*]
     EXPIRED --> [*]
@@ -66,220 +58,74 @@ stateDiagram-v2
     PARTIALLY_REFUNDED --> [*]
 ```
 
-## States
+## Statuses
 
-| State | Description | Financial Implication |
-|-------|-------------|---------------------|
-| `DRAFT` | Deal created, not yet submitted | None |
-| `OFFER_PENDING` | Offer sent to channel owner | None |
-| `NEGOTIATING` | Parties negotiating terms | None |
-| `ACCEPTED` | Terms agreed, awaiting payment setup | None |
-| `AWAITING_PAYMENT` | Deposit address generated, waiting for TON | None |
-| `FUNDED` | Escrow funded, creative workflow begins | `ESCROW:{deal_id}` credited |
-| `CREATIVE_SUBMITTED` | Creative draft submitted for review | Escrow held |
-| `CREATIVE_APPROVED` | Creative approved by advertiser | Escrow held |
-| `SCHEDULED` | Publication scheduled at specific time | Escrow held |
-| `PUBLISHED` | Creative published to channel | Escrow held |
-| `DELIVERY_VERIFYING` | 24h retention verification in progress | Escrow held |
-| `COMPLETED_RELEASED` | Delivery verified, payout sent | Escrow released, commission deducted |
-| `DISPUTED` | Dispute opened, under review | Escrow frozen |
-| `CANCELLED` | Deal cancelled | Refund if previously funded |
-| `REFUNDED` | Escrow refunded after dispute | Escrow returned to advertiser |
-| `PARTIALLY_REFUNDED` | Partial refund after dispute (time-based split) | Split: partial payout to owner + partial refund to advertiser |
-| `EXPIRED` | Deal expired due to timeout | Refund if previously funded |
+| Status | Meaning |
+|---|---|
+| `DRAFT` | Draft offer created by advertiser |
+| `OFFER_PENDING` | Offer sent to owner |
+| `NEGOTIATING` | Terms/creative/slot negotiation |
+| `ACCEPTED` | Owner accepted final terms |
+| `AWAITING_PAYMENT` | Payment intent active, waiting for deposit |
+| `FUNDED` | Escrow funded |
+| `SCHEDULED` | Post scheduled |
+| `PUBLISHED` | Post published |
+| `DELIVERY_VERIFYING` | Delivery verification window active |
+| `DISPUTED` | Dispute in progress |
+| `COMPLETED_RELEASED` | Escrow released |
+| `CANCELLED` | Deal cancelled |
+| `EXPIRED` | Deal expired by timeout |
+| `REFUNDED` | Full refund completed |
+| `PARTIALLY_REFUNDED` | Partial refund completed |
 
-## Transitions
+Removed from runtime flow:
 
-### Pre-Payment Transitions
+- `CREATIVE_SUBMITTED`
+- `CREATIVE_APPROVED`
 
-| From | To | Trigger | Actor | Side Effects |
-|------|----|---------|-------|-------------|
-| `DRAFT` | `OFFER_PENDING` | Submit offer | Advertiser | Notify channel owner |
-| `DRAFT` | `CANCELLED` | Cancel | Advertiser | None |
-| `OFFER_PENDING` | `NEGOTIATING` | Counter-offer | Channel Owner | Notify advertiser |
-| `OFFER_PENDING` | `ACCEPTED` | Accept | Channel Owner | Generate deposit address, notify advertiser |
-| `OFFER_PENDING` | `CANCELLED` | Reject/Withdraw | Owner/Advertiser | Notify other party |
-| `OFFER_PENDING` | `EXPIRED` | Timeout | System (Deal Timeout Worker) | Notify both parties |
-| `NEGOTIATING` | `ACCEPTED` | Agree | Either | Generate deposit address |
-| `NEGOTIATING` | `CANCELLED` | Cancel | Either | Notify other party |
-| `NEGOTIATING` | `EXPIRED` | Timeout | System | Notify both parties |
-| `ACCEPTED` | `AWAITING_PAYMENT` | System auto | System | Deposit address ready |
-| `ACCEPTED` | `CANCELLED` | Cancel | Either | Notify other party |
+## Transition Ownership (high-level)
 
-### Payment Transitions
+| Transition | Actor |
+|---|---|
+| `DRAFT -> OFFER_PENDING` | Advertiser |
+| `OFFER_PENDING -> ACCEPTED` | Channel owner |
+| `OFFER_PENDING -> NEGOTIATING` | Advertiser or owner |
+| `NEGOTIATING -> ACCEPTED` | Advertiser or owner |
+| `ACCEPTED -> AWAITING_PAYMENT` | Advertiser |
+| `AWAITING_PAYMENT -> FUNDED` | System (deposit watcher) |
+| `FUNDED -> SCHEDULED/PUBLISHED` | Owner or system scheduler |
+| `PUBLISHED -> DELIVERY_VERIFYING` | System |
+| `DELIVERY_VERIFYING -> COMPLETED_RELEASED` | System |
+| `DELIVERY_VERIFYING -> DISPUTED` | Participants or system verifier |
+| `DISPUTED -> *` | Operator |
 
-| From | To | Trigger | Actor | Side Effects |
-|------|----|---------|-------|-------------|
-| `AWAITING_PAYMENT` | `FUNDED` | Deposit confirmed | System (TON Deposit Watcher) | Ledger: debit `EXTERNAL_TON`, credit `ESCROW:{deal_id}` |
-| `AWAITING_PAYMENT` | `CANCELLED` | Cancel | Advertiser | Notify owner |
-| `AWAITING_PAYMENT` | `EXPIRED` | Payment timeout | System | Notify both parties |
+## Timeout Policy
 
-### Creative & Delivery Transitions
+| Status | Default timeout | Action |
+|---|---|---|
+| `OFFER_PENDING` | 48h | `EXPIRED` |
+| `NEGOTIATING` | 72h | `EXPIRED` |
+| `ACCEPTED` | 24h | `EXPIRED` |
+| `AWAITING_PAYMENT` | 24h | `EXPIRED` |
+| `DELIVERY_VERIFYING` | 24h | Auto release/dispute by verifier outcome |
 
-| From | To | Trigger | Actor | Side Effects |
-|------|----|---------|-------|-------------|
-| `FUNDED` | `CREATIVE_SUBMITTED` | Submit draft | Channel Owner/Admin | Notify advertiser |
-| `FUNDED` | `CANCELLED` | Mutual cancel | Both | Trigger refund |
-| `FUNDED` | `EXPIRED` | Creative timeout | System | Trigger refund |
-| `CREATIVE_SUBMITTED` | `CREATIVE_APPROVED` | Approve | Advertiser | Notify owner, enable publishing |
-| `CREATIVE_SUBMITTED` | `FUNDED` | Request revision | Advertiser | Notify owner |
-| `CREATIVE_SUBMITTED` | `DISPUTED` | Dispute quality | Advertiser | Freeze escrow |
-| `CREATIVE_APPROVED` | `SCHEDULED` | Set publish time | Owner/Admin | Schedule via Post Scheduler |
-| `CREATIVE_APPROVED` | `PUBLISHED` | Publish now | Owner/Admin | Post Scheduler publishes |
-| `CREATIVE_APPROVED` | `EXPIRED` | Publication timeout | System (Deal Timeout Worker) | Trigger refund, notify both |
-| `SCHEDULED` | `PUBLISHED` | Auto-publish | System (Post Scheduler) | Verify via callback |
-| `SCHEDULED` | `EXPIRED` | Schedule timeout | System (Deal Timeout Worker) | Trigger refund, notify both |
-| `PUBLISHED` | `DELIVERY_VERIFYING` | Auto-start | System | Start 24h verification |
+## Financial Invariants
 
-### Completion Transitions
+1. No payment before owner approval (`ACCEPTED`).
+2. All outbound TON transfers must be persisted before `sendBoc`.
+3. Retry of outbound transfer is forbidden when previous attempt is unresolved.
+4. Ledger write path remains idempotent by idempotency keys.
 
-| From | To | Trigger | Actor | Side Effects |
-|------|----|---------|-------|-------------|
-| `DELIVERY_VERIFYING` | `COMPLETED_RELEASED` | Verification passed | System (Delivery Verifier) | Release escrow, deduct commission, execute payout |
-| `DELIVERY_VERIFYING` | `DISPUTED` | Verification failed | System | Freeze escrow, notify both |
-| `DISPUTED` | `COMPLETED_RELEASED` | Resolve for owner | Platform Operator | Release escrow, execute payout |
-| `DISPUTED` | `REFUNDED` | Resolve for advertiser | Platform Operator | Execute refund |
-| `DISPUTED` | `PARTIALLY_REFUNDED` | Resolve with partial refund | Platform Operator | Time-based split: partial payout + partial refund + commission on owner's share |
+## Concurrency and Races
 
-## Timeouts
+- State transitions use optimistic locking (`status + version`).
+- Financial side effects use distributed lock per deal.
+- Typical race handling:
+  - `CANCELLED` vs deposit confirm: first successful commit wins.
+  - double dispute resolve: second actor gets stale-version failure.
 
-Each state has a configurable deadline. The **Deal Timeout Worker** consumes `deal.deadlines` Kafka topic and auto-transitions expired deals.
+## Related Docs
 
-| State | Default Timeout | Action on Expiry |
-|-------|----------------|-----------------|
-| `OFFER_PENDING` | 48 hours | → `EXPIRED` |
-| `NEGOTIATING` | 72 hours | → `EXPIRED` |
-| `AWAITING_PAYMENT` | 24 hours | → `EXPIRED` |
-| `FUNDED` | 72 hours | → `EXPIRED` + refund |
-| `CREATIVE_SUBMITTED` | 48 hours | → `EXPIRED` + refund |
-| `CREATIVE_APPROVED` | 48 hours | → `EXPIRED` + refund |
-| `SCHEDULED` | 24 hours | → `EXPIRED` + refund |
-| `DELIVERY_VERIFYING` | 24 hours | → `COMPLETED_RELEASED` (if verified) / `DISPUTED` (if API error) |
-
-## Event Storage
-
-Every transition is recorded in `deal_events`:
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `event_id` | `UUID` | Unique event identifier |
-| `deal_id` | `UUID` | Deal aggregate reference |
-| `event_type` | `VARCHAR` | Transition type (e.g., `FUNDED`, `DISPUTED`) |
-| `from_status` | `VARCHAR` | Previous state |
-| `to_status` | `VARCHAR` | New state |
-| `actor_id` | `BIGINT` | User who triggered (NULL for system) |
-| `payload` | `JSONB` | Additional event data |
-| `created_at` | `TIMESTAMPTZ` | Event timestamp |
-
-Table is **partitioned by `created_at`** for efficient range queries and archival.
-
-## Concurrency Control & Race Conditions
-
-### Problem
-
-Concurrent state transitions can lead to invalid states:
-- Two workers simultaneously try to transfer the deal to different states
-- Advertiser cancels the deal simultaneously with confirmation of the deposit
-- Two operators simultaneously resolve disputes in different directions
-
-### Strategy: Optimistic Locking + Status Guard
-
-**Level 1: Optimistic Locking (DB)**
-
-```sql
--- deals table has version column for optimistic locking
-ALTER TABLE deals ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
-
--- Transition query:
-UPDATE deals
-SET status = :newStatus,
-    version = version + 1,
-    updated_at = NOW()
-WHERE id = :dealId
-  AND status = :expectedCurrentStatus
-  AND version = :expectedVersion;
--- If rows_updated == 0: concurrent modification detected
-```
-
-```java
-public DealTransitionResult transition(UUID dealId, DealStatus expectedFrom,
-                                        DealStatus to, Long actorId) {
-    int updated = dsl.update(DEALS)
-        .set(DEALS.STATUS, to.name())
-        .set(DEALS.VERSION, DEALS.VERSION.plus(1))
-        .set(DEALS.UPDATED_AT, DSL.now())
-        .where(DEALS.ID.eq(dealId))
-        .and(DEALS.STATUS.eq(expectedFrom.name()))
-        .and(DEALS.VERSION.eq(expectedVersion))
-        .execute();
-
-    if (updated == 0) {
-        // Reload and check
-        var current = dsl.select(DEALS.STATUS, DEALS.VERSION)
-            .from(DEALS).where(DEALS.ID.eq(dealId)).fetchOne();
-        if (current.get(DEALS.STATUS).equals(to.name())) {
-            return DealTransitionResult.ALREADY_IN_TARGET_STATE; // idempotent
-        }
-        throw new ConcurrentModificationException("Deal " + dealId);
-    }
-    return DealTransitionResult.SUCCESS;
-}
-```
-
-**Level 2: Redis Distributed Lock (for long-running operations)**
-
-For operations with side effects (payout, refund), where you need to ensure that only one process performs the operation:
-
-```
-Lock key: lock:deal:{dealId}:transition
-TTL: 30 seconds
-```
-
-Used for:
-- Payout execution (TX build + submit)
-- Refund execution
-- Deposit confirmation + ledger entry creation
-
-NOT used for:
-- Simple status transitions (optimistic locking is enough)
-- Read operations
-
-**Level 3: Database Transaction Isolation**
-
-```yaml
-spring:
-  jpa:
-    properties:
-      hibernate:
-        default_batch_fetch_size: 10
-  datasource:
-    hikari:
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-```
-
-`READ COMMITTED` - enough for optimistic locking. `SERIALIZABLE` is redundant and creates contention.
-
-### Race Condition Scenarios & Resolutions
-
-| Scenario | Detection | Resolution |
-|----------|-----------|------------|
-| Advertiser cancels + deposit confirms simultaneously | Optimistic lock conflict | Whoever commits first wins. If CANCELLED first — deposit triggers refund. If FUNDED first — cancel rejected (already funded). |
-| Two operators resolve dispute differently | Optimistic lock on version | Second update gets 0 rows, returns ConcurrentModificationException |
-| Duplicate deposit confirmation (Kafka retry) | Idempotency key `deposit:{tx_hash}` | Second processing skipped |
-| Timeout worker fires during manual transition | Status guard in UPDATE WHERE | Timeout sees wrong status, no-op |
-| Multiple outbox pollers pick same record | `FOR UPDATE SKIP LOCKED` | Only one poller processes each record |
-
-### Idempotency at Transition Level
-
-Each transition checks: if the deal is already in the target state, it returns success (idempotent), not an error. This is critical for Kafka consumer retries.
-
----
-
-## Related Documents
-
-- [Deal Lifecycle Feature Spec](./03-feature-specs/02-deal-lifecycle.md)
-- [State Machine Pattern](./05-patterns-and-decisions/04-state-machine.md)
-- [Escrow Payments](./03-feature-specs/04-escrow-payments.md)
-- [Dispute Resolution](./03-feature-specs/06-dispute-resolution.md)
-- [Workers](./04-architecture/04-workers.md)
-- [Redis Distributed Locks](./14-implementation-specs/09-redis-distributed-locks.md)
+- [Deal lifecycle feature](./03-feature-specs/02-deal-lifecycle.md)
+- [Security and compliance](./10-security-and-compliance.md)
+- [Deal workflow engine](./14-implementation-specs/35-deal-workflow-engine.md)
