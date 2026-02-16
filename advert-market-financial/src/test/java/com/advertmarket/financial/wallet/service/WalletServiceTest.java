@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 
 import com.advertmarket.financial.api.model.LedgerEntry;
 import com.advertmarket.financial.api.port.LedgerPort;
+import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.model.UserId;
@@ -27,7 +29,9 @@ class WalletServiceTest {
     @BeforeEach
     void setUp() {
         ledgerPort = mock(LedgerPort.class);
-        walletService = new WalletService(ledgerPort);
+        var userRepository = mock(UserRepository.class);
+        var metrics = mock(MetricsFacade.class);
+        walletService = new WalletService(ledgerPort, userRepository, metrics, 1_000_000_000L);
     }
 
     @Nested
