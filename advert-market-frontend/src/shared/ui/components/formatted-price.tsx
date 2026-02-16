@@ -22,11 +22,11 @@ export function FormattedPrice({ nanoTon, showFiat = true, size = 'md' }: Format
   return (
     <>
       <Text type={config.tonType as 'callout'} weight={size === 'lg' ? 'bold' : 'bold'}>
-        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(nanoTon)}</span>
+        <span className="am-tabnum">{formatTon(nanoTon)}</span>
       </Text>
       {showFiat && (
         <Text type={config.fiatType as 'caption1'} color={config.fiatColor as 'tertiary'}>
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(nanoTon)}</span>
+          <span className="am-tabnum">{formatFiat(nanoTon)}</span>
         </Text>
       )}
     </>

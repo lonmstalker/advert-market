@@ -24,7 +24,7 @@ export function ChannelListItem({ channel, onClick }: ChannelListItemProps) {
         after={
           channel.pricePerPostNano ? (
             <Text type="callout" weight="medium">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(channel.pricePerPostNano)}</span>
+              <span className="am-tabnum">{formatTon(channel.pricePerPostNano)}</span>
             </Text>
           ) : null
         }

@@ -3,6 +3,7 @@ import { TonConnectButton } from '@tonconnect/ui-react';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { formatTon } from '@/shared/lib/ton-format';
 import {
@@ -40,6 +41,7 @@ function getDepositStatusLabelKey(status: string): string | null {
 
 export function PaymentSheetContent() {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const { showSuccess, showError, showInfo } = useToast();
   const { dealId, onClose } = usePaymentContext();
 
@@ -85,6 +87,7 @@ export function PaymentSheetContent() {
 
   const handlePay = async () => {
     if (!escrowAddress || !amountNano) return;
+    haptic.impactOccurred('medium');
 
     savePendingIntent({
       type: 'escrow_deposit',
@@ -163,7 +166,7 @@ export function PaymentSheetContent() {
         <>
           <div style={{ textAlign: 'center' }}>
             <Text type="hero" weight="bold">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(amountNano)}</span>
+              <span className="am-tabnum">{formatTon(amountNano)}</span>
             </Text>
             <div style={{ marginTop: 6 }}>
               <Text type="caption1" color="secondary">

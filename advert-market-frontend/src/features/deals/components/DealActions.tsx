@@ -24,14 +24,14 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
     if (action.requiresConfirm) {
       setConfirmAction(action);
     } else {
-      haptic.notificationOccurred('success');
+      haptic.impactOccurred('medium');
       onAction(action.type);
     }
   };
 
   const handleConfirm = () => {
     if (confirmAction) {
-      haptic.notificationOccurred('success');
+      haptic.impactOccurred('medium');
       onAction(confirmAction.type);
       setConfirmAction(null);
     }

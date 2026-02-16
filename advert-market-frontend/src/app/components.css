@@ -96,8 +96,8 @@
 
   .am-finance-card {
     @apply bg-card-surface border border-card-border rounded-card shadow-card;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .am-wallet-top {

@@ -31,8 +31,8 @@ describe('FormattedPrice', () => {
     const { container } = render(<FormattedPrice nanoTon={2_000_000_000} size="sm" />);
     expect(screen.getByText('2.00 TON')).toBeInTheDocument();
     expect(screen.getByText('~$11.00')).toBeInTheDocument();
-    // Both TON and fiat should have tabular-nums
-    const spans = container.querySelectorAll('span[style*="tabular-nums"]');
+    // Both TON and fiat should have am-tabnum class
+    const spans = container.querySelectorAll('span.am-tabnum');
     expect(spans.length).toBe(2);
   });
 
@@ -48,16 +48,16 @@ describe('FormattedPrice', () => {
     expect(screen.getByText('~$55.00')).toBeInTheDocument();
   });
 
-  it('applies tabular-nums style to TON price', () => {
+  it('applies am-tabnum class to TON price', () => {
     const { container } = render(<FormattedPrice nanoTon={1_000_000_000} showFiat={false} />);
-    const tonSpan = container.querySelector('span[style*="tabular-nums"]');
+    const tonSpan = container.querySelector('span.am-tabnum');
     expect(tonSpan).toBeInTheDocument();
     expect(tonSpan?.textContent).toBe('1.00 TON');
   });
 
-  it('applies tabular-nums style to fiat price', () => {
+  it('applies am-tabnum class to fiat price', () => {
     const { container } = render(<FormattedPrice nanoTon={1_000_000_000} />);
-    const spans = container.querySelectorAll('span[style*="tabular-nums"]');
+    const spans = container.querySelectorAll('span.am-tabnum');
     expect(spans.length).toBe(2);
     expect(spans[1]?.textContent).toBe('~$5.50');
   });

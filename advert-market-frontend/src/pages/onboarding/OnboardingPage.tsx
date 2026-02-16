@@ -68,7 +68,7 @@ export default function OnboardingPage() {
               type="primary"
               onClick={() => {
                 trackOnboardingEvent('onboarding_primary_click', { step: 'welcome' });
-                haptic.impactOccurred('light');
+                haptic.impactOccurred('medium');
                 navigate('/onboarding/interest');
               }}
             />

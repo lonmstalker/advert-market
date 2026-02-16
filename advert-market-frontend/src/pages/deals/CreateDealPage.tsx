@@ -122,7 +122,7 @@ export default function CreateDealPage() {
                     {t('deals.create.price')}
                   </Text>
                   <Text type="title1" weight="bold">
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(selectedRule.priceNano)}</span>
+                    <span className="am-tabnum">{formatTon(selectedRule.priceNano)}</span>
                   </Text>
                 </div>
               </AppSurfaceCard>

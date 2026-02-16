@@ -101,6 +101,7 @@ export default function RegisterChannelPage() {
   const handleVerify = () => {
     const normalized = normalizeUsername(username);
     if (!normalized) return;
+    haptic.impactOccurred('medium');
     setInlineError(null);
     verifyMutation.mutate(normalized);
   };
@@ -130,6 +131,7 @@ export default function RegisterChannelPage() {
 
   const handleRegister = () => {
     if (!verifyData) return;
+    haptic.impactOccurred('medium');
 
     let priceNano: number | undefined;
     if (price.trim()) {

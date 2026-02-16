@@ -30,7 +30,7 @@ export function TextareaField({
           )}
           {showCharCount && (
             <Text type="caption1" color="tertiary">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              <span className="am-tabnum">
                 {value.length}/{maxLength}
               </span>
             </Text>

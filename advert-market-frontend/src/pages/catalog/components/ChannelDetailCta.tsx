@@ -38,7 +38,7 @@ export function ChannelDetailCta({ channelId, minPrice }: ChannelDetailCtaProps)
             text={t('catalog.channel.createDeal')}
             type="primary"
             onClick={() => {
-              haptic.impactOccurred('light');
+              haptic.impactOccurred('medium');
               navigate(`/deals/new?channelId=${channelId}`);
             }}
           />

@@ -47,12 +47,12 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
       {/* Centered price */}
       <div style={{ textAlign: 'center' }}>
         <Text type="title1" weight="bold">
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
+          <span className="am-tabnum">{formatTon(deal.priceNano)}</span>
         </Text>
       </div>
       <div style={{ textAlign: 'center', marginTop: 2 }}>
         <Text type="caption1" color="secondary">
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
+          <span className="am-tabnum">{formatFiat(deal.priceNano)}</span>
         </Text>
       </div>
 

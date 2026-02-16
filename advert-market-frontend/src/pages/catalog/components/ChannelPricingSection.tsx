@@ -34,18 +34,18 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
         <Text type="title1" weight="bold">
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+          <span className="am-tabnum">
             {t('catalog.channel.from', { price: formatTon(minPrice) })}
           </span>
         </Text>
         <Text type="caption1" color="secondary">
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(minPrice)}</span>
+          <span className="am-tabnum">{formatFiat(minPrice)}</span>
         </Text>
       </div>
       {heroCpm != null && (
         <div style={{ marginTop: 4 }}>
           <Text type="subheadline2" color="secondary">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <span className="am-tabnum">
               {'\u2248 '}
               {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
             </span>
@@ -117,19 +117,19 @@ export function ChannelPricingSection({ channel, minPrice, heroCpm }: ChannelPri
             {minPrice != null && (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                 <Text type="title1" weight="bold">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  <span className="am-tabnum">
                     {t('catalog.channel.from', { price: formatTon(minPrice) })}
                   </span>
                 </Text>
                 <Text type="caption1" color="secondary">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(minPrice)}</span>
+                  <span className="am-tabnum">{formatFiat(minPrice)}</span>
                 </Text>
               </div>
             )}
             {heroCpm != null && (
               <div style={{ marginTop: 4 }}>
                 <Text type="subheadline2" color="secondary">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  <span className="am-tabnum">
                     {'\u2248 '}
                     {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
                   </span>
@@ -236,10 +236,10 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
               </div>
               <div style={{ flexShrink: 0, textAlign: 'right' }}>
                 <Text type="callout" weight="bold">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+                  <span className="am-tabnum">{formatTon(rule.priceNano)}</span>
                 </Text>
                 <Text type="caption1" color="tertiary">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(rule.priceNano)}</span>
+                  <span className="am-tabnum">{formatFiat(rule.priceNano)}</span>
                 </Text>
               </div>
             </div>
@@ -278,7 +278,6 @@ const overlapBadgeStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   color: 'var(--color-foreground-secondary)',
-  fontVariantNumeric: 'tabular-nums',
 };
 
 const cpmBadgeStyle: React.CSSProperties = {
@@ -286,5 +285,4 @@ const cpmBadgeStyle: React.CSSProperties = {
   padding: '2px 8px',
   borderRadius: 6,
   background: 'var(--color-background-secondary)',
-  fontVariantNumeric: 'tabular-nums',
 };

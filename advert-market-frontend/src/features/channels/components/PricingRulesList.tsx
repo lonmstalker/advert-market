@@ -18,7 +18,7 @@ export function PricingRulesList({ pricingRules }: PricingRulesListProps) {
           text={rule.name}
           after={
             <Text type="callout" weight="medium">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+              <span className="am-tabnum">{formatTon(rule.priceNano)}</span>
             </Text>
           }
         />

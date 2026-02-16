@@ -16,7 +16,7 @@ export function ChannelStats({ channel }: ChannelStatsProps) {
         text={t('catalog.channel.subscribersStat')}
         after={
           <Text type="body" weight="medium">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatLocaleNumber(channel.subscriberCount)}</span>
+            <span className="am-tabnum">{formatLocaleNumber(channel.subscriberCount)}</span>
           </Text>
         }
       />
@@ -25,7 +25,7 @@ export function ChannelStats({ channel }: ChannelStatsProps) {
           text={t('catalog.channel.avgReach')}
           after={
             <Text type="body" weight="medium">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatLocaleNumber(channel.avgReach)}</span>
+              <span className="am-tabnum">{formatLocaleNumber(channel.avgReach)}</span>
             </Text>
           }
         />
@@ -35,7 +35,7 @@ export function ChannelStats({ channel }: ChannelStatsProps) {
           text={t('catalog.channel.er')}
           after={
             <Text type="body" weight="medium">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{channel.engagementRate.toFixed(1)}%</span>
+              <span className="am-tabnum">{channel.engagementRate.toFixed(1)}%</span>
             </Text>
           }
         />

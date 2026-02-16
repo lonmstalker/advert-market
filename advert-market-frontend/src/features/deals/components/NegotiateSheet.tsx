@@ -20,7 +20,7 @@ export function NegotiateSheetContent() {
     const priceNum = Number.parseFloat(price);
     if (Number.isNaN(priceNum) || priceNum <= 0) return;
     const priceNano = Math.round(priceNum * 1_000_000_000);
-    haptic.notificationOccurred('success');
+    haptic.impactOccurred('medium');
     onSubmit(priceNano, message.trim() || undefined);
   };
 
@@ -39,7 +39,7 @@ export function NegotiateSheetContent() {
           </Text>
         </div>
         <Text type="body" weight="medium">
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(currentPriceNano)}</span>
+          <span className="am-tabnum">{formatTon(currentPriceNano)}</span>
         </Text>
       </div>
 
