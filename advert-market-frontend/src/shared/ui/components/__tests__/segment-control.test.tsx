@@ -30,18 +30,18 @@ describe('SegmentControl', () => {
     expect(screen.getAllByRole('button')).toHaveLength(3);
   });
 
-  it('applies data-active to the selected tab', () => {
+  it('applies active modifier class to the selected tab', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
     const activeButton = screen.getByText('Second');
-    expect(activeButton).toHaveAttribute('data-active', 'true');
     expect(activeButton).toHaveClass('am-segment__tab');
+    expect(activeButton).toHaveClass('am-segment__tab--active');
   });
 
-  it('applies data-active=false to non-selected tabs', () => {
+  it('does not apply active modifier to non-selected tabs', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
     const inactiveButton = screen.getByText('First');
-    expect(inactiveButton).toHaveAttribute('data-active', 'false');
     expect(inactiveButton).toHaveClass('am-segment__tab');
+    expect(inactiveButton).not.toHaveClass('am-segment__tab--active');
   });
 
   it('calls onChange with the tab value when a tab is clicked', async () => {

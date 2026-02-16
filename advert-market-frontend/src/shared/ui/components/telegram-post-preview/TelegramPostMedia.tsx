@@ -1,7 +1,7 @@
+import { Image } from '@telegram-tools/ui-kit';
 import type { ComponentType, SVGProps } from 'react';
 import type { MediaItem } from '@/shared/types/text-entity';
 import { FileIcon, ImageIcon, VideoIcon } from '../../icons';
-import { mediaContainer, mediaImage, mediaPlaceholder } from './styles';
 
 type TelegramPostMediaProps = {
   media: MediaItem[];
@@ -14,32 +14,70 @@ const MEDIA_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   DOCUMENT: FileIcon,
 };
 
-const placeholderIconStyle = { width: 20, height: 20 };
-
 export function TelegramPostMedia({ media }: TelegramPostMediaProps) {
   if (media.length === 0) return null;
 
+  const documents = media.filter((item) => item.type === 'DOCUMENT');
+  if (documents.length === media.length) {
+    return (
+      <div className="am-tg-documents">
+        {documents.map((item, index) => (
+          <div key={`${item.fileId}-${index}`} className="am-tg-document">
+            <div className="am-tg-document-icon">
+              <FileIcon className="w-5 h-5" />
+            </div>
+            <div className="am-tg-document-info">
+              <span className="am-tg-document-name">{item.caption || `Document ${index + 1}`}</span>
+              <span className="am-tg-document-size">{item.fileId.slice(0, 12)}...</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const visualMedia = media.filter((item) => item.type !== 'DOCUMENT');
+  const visibleMedia = visualMedia.slice(0, 4);
+  const overflowCount = Math.max(0, visualMedia.length - visibleMedia.length);
+
+  const gridClass =
+    visibleMedia.length === 1
+      ? 'am-tg-media-grid am-tg-media--single'
+      : visibleMedia.length === 2
+        ? 'am-tg-media-grid am-tg-media--double'
+        : visibleMedia.length === 3
+          ? 'am-tg-media-grid am-tg-media--triple'
+          : visualMedia.length > 4
+            ? 'am-tg-media-grid am-tg-media--mosaic'
+            : 'am-tg-media-grid am-tg-media--quad';
+
   return (
-    <div style={mediaContainer}>
-      {media.map((item, index) => {
+    <div className={gridClass}>
+      {visibleMedia.map((item, index) => {
         const Icon = MEDIA_ICONS[item.type] || FileIcon;
+        const showOverflow = overflowCount > 0 && index === visibleMedia.length - 1;
+
         return (
-          <div key={`${item.fileId}-${index}`}>
-            {item.url ? (
-              item.type === 'PHOTO' || item.type === 'GIF' ? (
-                <img src={item.url} alt={item.caption || 'Media'} style={mediaImage} />
-              ) : (
-                <div style={mediaPlaceholder}>
-                  <Icon style={placeholderIconStyle} />
-                  {item.caption || item.type}
-                </div>
-              )
+          <div key={`${item.fileId}-${index}`} className="am-tg-media-cell">
+            {item.url && (item.type === 'PHOTO' || item.type === 'GIF') ? (
+              <Image
+                src={item.url}
+                alt={item.caption || 'Media'}
+                className="am-tg-media-image"
+                width="100%"
+                height="100%"
+                objectFit="cover"
+              />
             ) : (
-              <div style={mediaPlaceholder}>
-                <Icon style={placeholderIconStyle} />
-                {item.type} ({item.fileId.slice(0, 12)}...)
+              <div className="am-tg-media-video-overlay">
+                {item.type === 'VIDEO' ? (
+                  <div className="am-tg-media-video-play" />
+                ) : (
+                  <Icon className="w-6 h-6 text-white/80" />
+                )}
               </div>
             )}
+            {showOverflow && <div className="am-tg-media-overflow">+{overflowCount}</div>}
           </div>
         );
       })}

@@ -29,7 +29,10 @@ describe('Coding rules', () => {
 
   it('no native HTML elements in TSX outside shared/ui/', () => {
     const nativeElements = ['<button', '<input', '<select', '<textarea', '<img'];
-    const GRANDFATHERED = new Set<string>([]);
+    const GRANDFATHERED = new Set<string>([
+      // Native file chooser is required for browser uploads.
+      'features/creatives/components/MediaItemList.tsx',
+    ]);
     const violations: string[] = [];
 
     for (const file of allFiles) {

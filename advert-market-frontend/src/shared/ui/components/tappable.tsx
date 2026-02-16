@@ -14,6 +14,7 @@ type TappableProps = {
   'aria-pressed'?: boolean;
   'aria-expanded'?: boolean;
   'data-testid'?: string;
+  'data-active'?: 'true' | 'false';
 };
 
 export function Tappable({

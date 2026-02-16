@@ -1,3 +1,4 @@
+import { Button } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -11,7 +12,7 @@ type PopoverProps = {
 export function Popover({ content, children }: PopoverProps) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLSpanElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -70,26 +71,14 @@ export function Popover({ content, children }: PopoverProps) {
 
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggle();
-        }}
-        style={{
-          cursor: 'pointer',
-          display: 'inline-flex',
-          alignItems: 'center',
-          background: 'none',
-          border: 'none',
-          padding: 0,
-          font: 'inherit',
-          color: 'inherit',
-        }}
-      >
-        {children}
-      </button>
+      <span ref={triggerRef} className="am-popover-trigger">
+        <Button
+          type="secondary"
+          className="am-popover-trigger__button"
+          icon={<span className="am-popover-trigger__content">{children}</span>}
+          onClick={toggle}
+        />
+      </span>
       {createPortal(
         <AnimatePresence>
           {open && (

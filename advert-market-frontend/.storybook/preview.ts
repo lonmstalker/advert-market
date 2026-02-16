@@ -1,8 +1,6 @@
 import type { Preview } from '@storybook/react-vite';
 import '@telegram-tools/ui-kit/dist/index.css';
-import '../src/app/tailwind.css';
-import '../src/app/components.css';
-import '../src/app/global.css';
+import '../src/app/app.css';
 import { withTheme } from './decorators';
 
 const preview: Preview = {
@@ -17,7 +15,7 @@ const preview: Preview = {
     a11y: {
       test: 'todo',
     },
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   globalTypes: {
     theme: {

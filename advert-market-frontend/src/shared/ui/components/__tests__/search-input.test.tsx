@@ -14,7 +14,7 @@ describe('SearchInput', () => {
   it('calls onChange when input changes', async () => {
     const onChange = vi.fn();
     render(<SearchInput value="" onChange={onChange} placeholder="Search" />);
-    await userEvent.type(screen.getByRole('textbox', { name: 'Search' }), 'ton');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search' }), 'ton');
     expect(onChange).toHaveBeenCalled();
   });
 });

@@ -135,15 +135,7 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
   }, [currencyMode, displayCurrency, t]);
 
   const isPending = languageMutation.isPending || settingsMutation.isPending || isSavingLanguage;
-  const secondaryButtonStyle = {
-    border: 'none',
-    background: 'transparent',
-    color: 'var(--color-accent-primary)',
-    font: 'inherit',
-    padding: 0,
-    cursor: 'pointer',
-    textAlign: 'left' as const,
-  };
+  const rootClassName = mode === 'onboarding' ? 'am-locale-editor am-locale-editor--onboarding' : 'am-locale-editor';
 
   const handleLanguageSelect = (nextLanguage: string) => {
     if (nextLanguage === languageCode || isPending) {
@@ -224,11 +216,7 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
 
   if (view === 'language') {
     return (
-      <div style={{ padding: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button type="button" style={secondaryButtonStyle} onClick={() => setView('main')}>
-          {t('common.back')}
-        </button>
-
+      <div data-testid="locale-currency-editor" className={rootClassName}>
         <Group header={t('profile.language')}>
           {LANGUAGES.map(({ code }) => (
             <GroupItem
@@ -245,11 +233,7 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
 
   if (view === 'currency') {
     return (
-      <div style={{ padding: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button type="button" style={secondaryButtonStyle} onClick={() => setView('main')}>
-          {t('common.back')}
-        </button>
-
+      <div data-testid="locale-currency-editor" className={rootClassName}>
         <Group header={t('profile.currency')}>
           <GroupItem
             text={t('profile.localeCurrency.autoByLanguage')}
@@ -275,13 +259,13 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
   }
 
   return (
-    <div style={{ padding: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div data-testid="locale-currency-editor" className={rootClassName}>
       {mode === 'onboarding' && (
-        <div style={{ padding: '0 16px' }}>
+        <div className="am-locale-editor__intro">
           <Text type="title2" weight="bold">
             {t('onboarding.locale.title')}
           </Text>
-          <div style={{ marginTop: 6 }}>
+          <div className="am-locale-editor__intro-subtitle">
             <Text type="caption1" color="secondary">
               {t('onboarding.locale.subtitle')}
             </Text>
@@ -313,43 +297,39 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
       </Group>
 
       {currencyMode === 'MANUAL' && (
-        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="am-locale-editor__manual">
           <Text type="caption1" color="secondary">
             {t('profile.localeCurrency.manualMicrocopy')}
           </Text>
-          <button type="button" style={secondaryButtonStyle} disabled={isPending} onClick={handleSelectAutoMode}>
-            {t('profile.localeCurrency.resetAuto')}
-          </button>
+          <Button
+            type="secondary"
+            className="am-locale-editor__link"
+            disabled={isPending}
+            onClick={handleSelectAutoMode}
+            text={t('profile.localeCurrency.resetAuto')}
+          />
         </div>
       )}
 
       {undoState && (
-        <div
-          style={{
-            margin: '0 16px',
-            padding: '10px 12px',
-            borderRadius: 12,
-            background: 'var(--color-background-section)',
-            border: '1px solid var(--color-stroke-primary)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 10,
-          }}
-        >
+        <div className="am-locale-editor__undo">
           <Text type="caption1" color="secondary">
             {t('profile.localeCurrency.autoUpdated', {
               currency: undoState.nextCurrency,
             })}
           </Text>
-          <button type="button" style={secondaryButtonStyle} onClick={handleUndo} disabled={isPending}>
-            {t('profile.localeCurrency.undo')}
-          </button>
+          <Button
+            type="secondary"
+            className="am-locale-editor__link"
+            onClick={handleUndo}
+            disabled={isPending}
+            text={t('profile.localeCurrency.undo')}
+          />
         </div>
       )}
 
       {mode === 'onboarding' && (
-        <div style={{ padding: '0 16px' }}>
+        <div className="am-locale-editor__cta">
           <Button
             text={t('onboarding.locale.continue')}
             type="primary"

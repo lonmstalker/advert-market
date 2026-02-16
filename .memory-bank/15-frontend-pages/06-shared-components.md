@@ -387,6 +387,18 @@ Badge on the "Transactions" tab - the number of transactions where the current u
 
 ---
 
+## Telegram Native Illusion Contract (2026)
+
+- Fullscreen-first for immersive pages (`requestFullscreen` when available).
+- If fullscreen is unavailable, synchronize Telegram chrome colors via header/bottom bar APIs.
+- Safe-area padding is mandatory through Telegram-safe CSS variables with `env()` fallback.
+- Primary CTA should use native Telegram bottom controls (`BottomButton`/`MainButton`, `SecondaryButton`) when API is available.
+- No custom in-DOM back arrows; use Telegram `BackButton` only.
+- Disable vertical swipe-to-close behavior on screens with internal vertical scroll.
+- Haptics, skeleton loading, and transform/opacity-only animations are baseline UX requirements.
+
+---
+
 ## Routing
 
 ### Full routes table
@@ -516,13 +528,12 @@ Project migrated to Tailwind CSS v4 (commit `dfc1a73`). No `tailwind.config.ts`.
 
 | File | Purpose |
 |------|---------|
-| `src/styles/tailwind.css` | `@import "tailwindcss"` + `@theme {}` bridge |
-| `src/styles/components.css` | `@layer components {}` |
-| `src/styles/global.css` | Design tokens, `.am-*` classes |
+| `src/app/app.css` | Single source of truth: `@import "tailwindcss"`, `@theme {}` bridge, `@layer base/components`, design tokens, `.am-*` classes, keyframes |
+| `@telegram-tools/ui-kit/dist/index.css` | UI Kit base styles |
 
-CSS import order: `ui-kit.css` → `tailwind.css` → `components.css` → `global.css`
+CSS import order: `ui-kit.css` → `app.css`
 
-Rules: utility-first, `@theme` for tokens, `@apply` only in components.css, `joinClasses()` for merging.
+Rules: utility-first, `@theme` for tokens, `@apply` only in `@layer components` inside `app.css`, `joinClasses()` for merging.
 
 ---
 
@@ -571,3 +582,62 @@ Rules: utility-first, `@theme` for tokens, `@apply` only in components.css, `joi
 ### 5. Localization - ZERO hardcoded strings, namespace structure in 6.1
 
 ### 6. Error states - global table in 6.2 + per-page errors in all files (01-06)
+
+---
+
+## 6.5 UI Contract Updates (2026-02-16)
+
+### Shell geometry (desktop + mobile)
+
+- `--am-page-max-width` moved to a wide-shell contract (`1880px`) to avoid "tiny-column" rendering on desktop.
+- `.am-page-stack`, `.am-bottom-tabs`, and `.am-fixed-bottom-bar__inner` now share the same outer width formula: `min(100%, var(--am-page-max-width))`.
+- This keeps stack/tabs/fixed-bar edges aligned across `1024 / 1440 / 1920` while preserving full-width behavior on modern desktop screens.
+
+### Onboarding layout behavior
+
+- Onboarding now uses a single centered container (`.am-onboarding-shell__container`) for top/content/footer, instead of separate max-width wrappers.
+- Desktop onboarding width is controlled by `--am-onboarding-max-width` (`1080px` at `>=900`, `1320px` at `>=1440`).
+- Inline "Back" button in onboarding locale subviews was removed (non-native TMA behavior); only profile mode keeps local back inside locale editor.
+
+### Catalog card information hierarchy
+
+`ChannelCatalogCard` now follows a Telegram-like compact information order:
+
+1. Identity row: avatar, name, verification, language badge, price chip.
+2. Category chips: visible and mandatory (fallback to `topicAll`).
+3. Metric row: subscribers, views, ER (ER is visually secondary).
+
+Design intent:
+
+- More readable mobile cards with clear spacing and immediate decision data.
+- Keep pricing and trust signals in the header.
+- Move performance metrics into a dedicated dense but scannable row.
+
+### Storybook coverage contract (2026-02-16)
+
+- Storybook catalog includes infrastructure UI wrappers with dedicated stories:
+  - `src/shared/ui/stories/AuthGuard.stories.tsx`
+  - `src/shared/ui/stories/BackButtonHandler.stories.tsx`
+  - `src/shared/ui/stories/ErrorBoundary.stories.tsx`
+- Coverage is protected by `src/shared/ui/stories/storybook-coverage.test.ts`.
+- Theme toolbar in `.storybook/preview.ts` must keep both options:
+  - `light`
+  - `dark`
+
+### UI Kit adoption guardrail (2026-02-17)
+
+- Added architecture contract test: `advert-market-frontend/src/test/arch/ui-kit-usage.test.ts`.
+- Enforced UI Kit imports for target ad-market shared controls:
+  - `search-input`, `chip`, `filter-button`, `segment-control`,
+  - `locale-currency-editor`,
+  - Telegram preview parts (`TelegramChatSimulator`, `TelegramPostHeader`, `TelegramPostMedia`, `TelegramSpoiler`).
+- Enforced "no raw HTML controls" contract for source TSX files with explicit native-only allowlist:
+  - `shared/ui/components/textarea.tsx`,
+  - `shared/ui/components/textarea-field.tsx`,
+  - `features/creatives/components/MediaItemList.tsx` (native file picker).
+- Enforced centralized press-animation boundary:
+  - direct `motion.button` is allowed only in `shared/ui/components/tappable.tsx`,
+  - all feature/page components must use `Tappable` instead of creating ad-hoc animated buttons.
+- Updated baseline story compositions:
+  - improved secondary button readability in `DealCard`,
+  - made `ChannelListing` data closer to production-like cards (reach/overlap/CPM).

@@ -56,7 +56,7 @@ describe('HistoryPage', () => {
   it('shows filter icon button', async () => {
     renderPage();
     await screen.findByText('Transaction history');
-    const filterButtons = document.querySelectorAll('button[type="button"]');
+    const filterButtons = document.querySelectorAll('button.am-filter-btn');
     expect(filterButtons.length).toBeGreaterThanOrEqual(1);
   });
 

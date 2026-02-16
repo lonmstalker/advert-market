@@ -1,6 +1,8 @@
+import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { pressScale, slideUp } from '@/shared/ui/animations';
+import { slideUp } from '@/shared/ui/animations';
+import { Tappable } from '@/shared/ui/components/tappable';
 import { ArrowRightIcon, TelegramIcon } from '@/shared/ui/icons';
 
 type ChannelOpenTelegramProps = {
@@ -13,10 +15,9 @@ export function ChannelOpenTelegram({ link, username }: ChannelOpenTelegramProps
 
   return (
     <motion.div {...slideUp} style={{ padding: '0 16px 8px' }}>
-      <motion.button
-        {...pressScale}
-        type="button"
+      <Tappable
         onClick={() => window.open(link, '_blank')}
+        aria-label={username ? t('catalog.channel.openInTelegram') : t('catalog.channel.joinChannel')}
         style={{
           width: '100%',
           background: 'var(--color-background-base)',
@@ -45,17 +46,17 @@ export function ChannelOpenTelegram({ link, username }: ChannelOpenTelegramProps
           <TelegramIcon style={{ width: 18, height: 18, color: 'var(--color-link)' }} />
         </div>
         <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-          <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--color-link)' }}>
+          <Text type="subheadline1" color="accent" weight="medium">
             {username ? t('catalog.channel.openInTelegram') : t('catalog.channel.joinChannel')}
-          </span>
+          </Text>
           {username && (
-            <span style={{ display: 'block', fontSize: 12, color: 'var(--color-foreground-tertiary)', marginTop: 2 }}>
-              @{username}
-            </span>
+            <Text type="caption1" color="tertiary">
+              <span style={{ display: 'block', marginTop: 2 }}>@{username}</span>
+            </Text>
           )}
         </div>
         <ArrowRightIcon style={{ width: 16, height: 16, color: 'var(--color-link)', opacity: 0.5, flexShrink: 0 }} />
-      </motion.button>
+      </Tappable>
     </motion.div>
   );
 }

@@ -1,3 +1,6 @@
+import { Text } from '@telegram-tools/ui-kit';
+import { Tappable } from './tappable';
+
 type ChipProps = {
   label: string;
   active: boolean;
@@ -6,15 +9,15 @@ type ChipProps = {
 };
 
 export function Chip({ label, active, onClick, variant = 'pill' }: ChipProps) {
+  const className = ['am-chip', variant === 'rounded' ? 'am-chip--rounded' : '', active ? 'am-chip--active' : '']
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      data-active={active}
-      className={variant === 'rounded' ? 'am-chip am-chip--rounded' : 'am-chip'}
-    >
-      {label}
-    </button>
+    <Tappable aria-pressed={active} data-active={active ? 'true' : 'false'} onClick={onClick} className={className}>
+      <Text type="caption1" color={active ? 'white' : 'secondary'}>
+        {label}
+      </Text>
+    </Tappable>
   );
 }

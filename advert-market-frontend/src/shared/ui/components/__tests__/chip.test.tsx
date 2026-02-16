@@ -3,17 +3,17 @@ import { render, screen, userEvent } from '@/test/test-utils';
 import { Chip } from '../chip';
 
 describe('Chip', () => {
-  it('uses am-chip class with data-active when active', () => {
+  it('uses am-chip class and active modifier when active', () => {
     render(<Chip label="Crypto" active onClick={vi.fn()} />);
     const chip = screen.getByRole('button', { name: 'Crypto' });
     expect(chip).toHaveClass('am-chip');
-    expect(chip).toHaveAttribute('data-active', 'true');
+    expect(chip).toHaveClass('am-chip--active');
   });
 
-  it('has data-active false when inactive', () => {
+  it('does not have active modifier when inactive', () => {
     render(<Chip label="Crypto" active={false} onClick={vi.fn()} />);
     const chip = screen.getByRole('button', { name: 'Crypto' });
-    expect(chip).toHaveAttribute('data-active', 'false');
+    expect(chip).not.toHaveClass('am-chip--active');
   });
 
   it('calls onClick', async () => {

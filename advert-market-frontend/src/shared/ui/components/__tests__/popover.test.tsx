@@ -57,7 +57,7 @@ describe('Popover', () => {
     });
   });
 
-  it('renders the trigger as a button element', () => {
+  it('renders the trigger through a UI kit button', () => {
     render(
       <Popover content={<span>Info</span>}>
         <span>Icon</span>
@@ -65,6 +65,6 @@ describe('Popover', () => {
     );
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
-    expect(button).toHaveAttribute('type', 'button');
+    expect(button).toHaveClass('am-popover-trigger__button');
   });
 });

@@ -63,7 +63,7 @@ export const DealCard: Story = {
       </Group>
       <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
         <motion.div {...pressScale} style={{ flex: 1 }}>
-          <Button text="Decline" type="secondary" />
+          <Button text="Decline" type="secondary" className="am-story-secondary-readable" />
         </motion.div>
         <motion.div {...pressScale} style={{ flex: 1 }}>
           <Button text="Accept" type="primary" />
@@ -77,10 +77,42 @@ export const ChannelListing: Story = {
   name: 'Channel Listing',
   render: () => {
     const channels = [
-      { name: 'Crypto News', subs: '125K', price: '50 TON', color: '4A90D9' },
-      { name: 'Tech Daily', subs: '89K', price: '30 TON', color: '7B61FF' },
-      { name: 'Finance Hub', subs: '210K', price: '80 TON', color: '34C759' },
-      { name: 'AI Digest', subs: '67K', price: '25 TON', color: 'FF6B35' },
+      {
+        name: 'Crypto News',
+        subs: '125K',
+        avgReach: '38K',
+        overlap: '24h',
+        price: '50 TON',
+        cpm: '1.32 TON',
+        color: '4A90D9',
+      },
+      {
+        name: 'Tech Daily',
+        subs: '89K',
+        avgReach: '27K',
+        overlap: '36h',
+        price: '30 TON',
+        cpm: '1.11 TON',
+        color: '7B61FF',
+      },
+      {
+        name: 'Finance Hub',
+        subs: '210K',
+        avgReach: '62K',
+        overlap: '48h',
+        price: '80 TON',
+        cpm: '1.29 TON',
+        color: '34C759',
+      },
+      {
+        name: 'AI Digest',
+        subs: '67K',
+        avgReach: '19K',
+        overlap: '24h',
+        price: '25 TON',
+        cpm: '1.31 TON',
+        color: 'FF6B35',
+      },
     ];
     return (
       <motion.div {...staggerChildren} initial="initial" animate="animate" style={{ width: '360px' }}>
@@ -89,7 +121,7 @@ export const ChannelListing: Story = {
             <motion.div key={ch.name} {...listItem}>
               <GroupItem
                 text={ch.name}
-                description={`${ch.subs} subscribers`}
+                description={`${ch.subs} subscribers · reach ${ch.avgReach} · overlap ${ch.overlap}`}
                 before={
                   <Image
                     src={`https://placehold.co/40/${ch.color}/white?text=${ch.name[0]}`}
@@ -99,9 +131,14 @@ export const ChannelListing: Story = {
                   />
                 }
                 after={
-                  <Text type="callout" color="accent">
-                    {ch.price}
-                  </Text>
+                  <div style={{ display: 'grid', gap: 2, justifyItems: 'end' }}>
+                    <Text type="callout" color="accent">
+                      {ch.price}
+                    </Text>
+                    <Text type="caption1" color="secondary">
+                      CPM {ch.cpm}
+                    </Text>
+                  </div>
                 }
                 chevron
               />

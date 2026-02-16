@@ -1,5 +1,5 @@
 import { Text } from '@telegram-tools/ui-kit';
-import { motion } from 'motion/react';
+import { Tappable } from '@/shared/ui';
 
 type MockupTextButtonProps = {
   text: string;
@@ -9,25 +9,14 @@ type MockupTextButtonProps = {
 
 export function MockupTextButton({ text, color = 'secondary', onClick }: MockupTextButtonProps) {
   return (
-    <motion.button
-      type="button"
-      className="focusable"
-      whileTap={{ scale: 0.97 }}
+    <Tappable
+      data-testid="onboarding-mockup-text-button"
+      className="am-onboarding-mockup-text-button focusable"
       onClick={onClick}
-      style={{
-        display: 'block',
-        width: '100%',
-        textAlign: 'center',
-        padding: '8px',
-        cursor: 'pointer',
-        WebkitTapHighlightColor: 'transparent',
-        background: 'none',
-        border: 'none',
-      }}
     >
       <Text type="caption1" color={color}>
         {text}
       </Text>
-    </motion.button>
+    </Tappable>
   );
 }

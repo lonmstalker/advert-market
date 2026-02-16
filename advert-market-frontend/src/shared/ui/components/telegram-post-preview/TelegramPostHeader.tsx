@@ -1,4 +1,4 @@
-import { headerAvatar, headerInfo, headerTitle, postHeader } from './styles';
+import { Image } from '@telegram-tools/ui-kit';
 
 type TelegramPostHeaderProps = {
   channelTitle?: string;
@@ -10,15 +10,20 @@ export function TelegramPostHeader({ channelTitle, channelAvatar }: TelegramPost
   const initial = title.charAt(0).toUpperCase();
 
   return (
-    <div style={postHeader}>
+    <div className="am-tg-channel-header">
       {channelAvatar ? (
-        <img src={channelAvatar} alt={title} style={{ ...headerAvatar, objectFit: 'cover' }} />
+        <Image
+          src={channelAvatar}
+          alt={title}
+          className="am-tg-channel-avatar"
+          width="24px"
+          height="24px"
+          borderRadius="999px"
+        />
       ) : (
-        <div style={headerAvatar}>{initial}</div>
+        <div className="am-tg-channel-avatar am-tg-channel-avatar--fallback">{initial}</div>
       )}
-      <div style={headerInfo}>
-        <span style={headerTitle}>{title}</span>
-      </div>
+      <span className="am-tg-channel-name">{title}</span>
     </div>
   );
 }

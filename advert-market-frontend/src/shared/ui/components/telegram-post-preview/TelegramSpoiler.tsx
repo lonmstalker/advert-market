@@ -1,5 +1,5 @@
+import { Button } from '@telegram-tools/ui-kit';
 import { type ReactNode, useCallback, useState } from 'react';
-import { spoilerHidden, spoilerRevealed } from './styles';
 
 type TelegramSpoilerProps = {
   children: ReactNode;
@@ -13,13 +13,11 @@ export function TelegramSpoiler({ children }: TelegramSpoilerProps) {
   }, []);
 
   return (
-    <button
-      type="button"
-      style={revealed ? spoilerRevealed : spoilerHidden}
+    <Button
+      type="secondary"
+      className={revealed ? 'am-tg-spoiler am-tg-spoiler--revealed' : 'am-tg-spoiler'}
       onClick={handleClick}
-      aria-label={revealed ? undefined : 'Spoiler (click to reveal)'}
-    >
-      {children}
-    </button>
+      icon={<span className="am-tg-spoiler__content">{children}</span>}
+    />
   );
 }

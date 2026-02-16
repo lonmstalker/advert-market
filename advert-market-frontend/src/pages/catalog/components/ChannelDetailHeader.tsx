@@ -6,8 +6,9 @@ import type { ChannelDetail } from '@/features/channels';
 import { getChannelLanguages } from '@/shared/lib/channel-utils';
 import { formatChannelAge } from '@/shared/lib/time-utils';
 import { LanguageBadge } from '@/shared/ui';
-import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { fadeIn } from '@/shared/ui/animations';
 import { ChannelAvatar } from '@/shared/ui/components/channel-avatar';
+import { Tappable } from '@/shared/ui/components/tappable';
 import { EditIcon, ShareIcon, VerifiedIcon } from '@/shared/ui/icons';
 
 type ChannelDetailHeaderProps = {
@@ -52,24 +53,21 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
             </Text>
           </div>
           <div className="flex gap-1.5 shrink-0">
-            <motion.button
-              {...pressScale}
+            <Tappable
               onClick={onShare}
               className="am-icon-button"
               aria-label={t('catalog.channel.share')}
             >
               <ShareIcon className="w-4 h-4 text-fg-secondary" />
-            </motion.button>
+            </Tappable>
             {isOwner && (
-              <motion.button
-                {...pressScale}
-                type="button"
+              <Tappable
                 onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
                 className="am-icon-button"
                 aria-label={t('catalog.channel.edit')}
               >
                 <EditIcon className="w-4 h-4 text-fg-secondary" />
-              </motion.button>
+              </Tappable>
             )}
           </div>
         </div>

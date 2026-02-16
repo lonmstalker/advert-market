@@ -11,6 +11,18 @@ export default defineConfig({
       '@': resolve(process.cwd(), 'src')
     }
   },
+  optimizeDeps: {
+    include: [
+      '@tanstack/react-query',
+      '@telegram-apps/sdk-react',
+      '@telegram-tools/ui-kit',
+      'i18next',
+      'react-i18next',
+      'react-router',
+      'zustand',
+      'zod/v4',
+    ],
+  },
   test: {
     projects: [
       {

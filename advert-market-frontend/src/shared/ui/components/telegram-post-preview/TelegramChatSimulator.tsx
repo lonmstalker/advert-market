@@ -1,20 +1,7 @@
-import { motion } from 'motion/react';
+import { Image } from '@telegram-tools/ui-kit';
 import type { InlineButton, MediaItem, TextEntity } from '@/shared/types/text-entity';
-import { slideUp } from '../../animations';
 import { ArrowRightIcon, EyeIcon } from '../../icons';
-import {
-  chatArea,
-  chatTopBar,
-  chatTopBarAvatar,
-  chatTopBarSubtitle,
-  chatTopBarTitle,
-  postContent,
-  viewCounter,
-} from './styles';
-import { TelegramPostBody } from './TelegramPostBody';
-import { TelegramPostButtons } from './TelegramPostButtons';
-import { TelegramPostHeader } from './TelegramPostHeader';
-import { TelegramPostMedia } from './TelegramPostMedia';
+import { TelegramPostPreview } from './TelegramPostPreview';
 
 type TelegramChatSimulatorProps = {
   text: string;
@@ -45,41 +32,43 @@ export function TelegramChatSimulator({
   const time = formatTime();
 
   return (
-    <div style={chatArea}>
-      <div style={chatTopBar}>
-        <ArrowRightIcon
-          style={{
-            width: 18,
-            height: 18,
-            color: 'var(--color-accent-primary)',
-            transform: 'rotate(180deg)',
-            flexShrink: 0,
-          }}
+    <div className="am-tg-chat-window">
+      <div className="am-tg-chat-pattern" />
+      <div className="am-tg-chat-content">
+        <div className="am-tg-sim-header">
+          <ArrowRightIcon className="am-tg-sim-back" />
+          {channelAvatar ? (
+            <Image
+              src={channelAvatar}
+              alt={title}
+              className="am-tg-sim-avatar"
+              width="28px"
+              height="28px"
+              borderRadius="999px"
+            />
+          ) : (
+            <div className="am-tg-sim-avatar am-tg-sim-avatar--fallback">{initial}</div>
+          )}
+          <div className="am-tg-sim-header-copy">
+            <span className="am-tg-sim-title">{title}</span>
+            <span className="am-tg-sim-subtitle">{subscriberCount} subscribers</span>
+          </div>
+          <EyeIcon className="am-tg-sim-eye" />
+        </div>
+
+        <div className="am-tg-day-divider">Today</div>
+
+        <TelegramPostPreview
+          text={text}
+          entities={entities}
+          media={media}
+          buttons={buttons}
+          channelTitle={channelTitle}
+          channelAvatar={channelAvatar}
+          time={time}
+          views="1.2K"
         />
-        {channelAvatar ? (
-          <img src={channelAvatar} alt={title} style={{ ...chatTopBarAvatar, objectFit: 'cover' }} />
-        ) : (
-          <div style={chatTopBarAvatar}>{initial}</div>
-        )}
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={chatTopBarTitle}>{title}</span>
-          <span style={chatTopBarSubtitle}>{subscriberCount} subscribers</span>
-        </div>
       </div>
-
-      <motion.div {...slideUp} style={postContent}>
-        <TelegramPostHeader channelTitle={channelTitle} channelAvatar={channelAvatar} />
-        <TelegramPostMedia media={media} />
-        <TelegramPostBody text={text} entities={entities} />
-
-        <div style={viewCounter}>
-          <EyeIcon style={{ width: 13, height: 13 }} />
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>1.2K</span>
-          <span style={{ marginLeft: 4 }}>{time}</span>
-        </div>
-
-        <TelegramPostButtons buttons={buttons} />
-      </motion.div>
     </div>
   );
 }

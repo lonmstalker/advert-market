@@ -40,7 +40,15 @@ function renderEditor() {
   );
 }
 
-describe('LocaleCurrencyEditor onboarding back behavior', () => {
+function renderProfileEditor() {
+  return renderWithProviders(
+    <ToastProvider>
+      <LocaleCurrencyEditor mode="profile" />
+    </ToastProvider>,
+  );
+}
+
+describe('LocaleCurrencyEditor onboarding navigation behavior', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en');
     vi.mocked(updateLanguage).mockReset();
@@ -61,15 +69,33 @@ describe('LocaleCurrencyEditor onboarding back behavior', () => {
     });
   });
 
-  it('shows Back button in onboarding language view', async () => {
+  it('does not render inline Back button in onboarding language view', async () => {
     const { user } = renderEditor();
     await user.click(screen.getByText('Language'));
-    expect(screen.getByText('Back')).toBeInTheDocument();
+    expect(screen.queryByText('Back')).not.toBeInTheDocument();
   });
 
-  it('shows Back button in onboarding currency view', async () => {
+  it('does not render inline Back button in onboarding currency view', async () => {
     const { user } = renderEditor();
     await user.click(screen.getByText('Display Currency'));
-    expect(screen.getByText('Back')).toBeInTheDocument();
+    expect(screen.queryByText('Back')).not.toBeInTheDocument();
+  });
+
+  it('does not render inline Back button in profile language view', async () => {
+    const { user } = renderProfileEditor();
+    await user.click(screen.getByText('Language'));
+    expect(screen.queryByText('Back')).not.toBeInTheDocument();
+  });
+
+  it('does not render inline Back button in profile currency view', async () => {
+    const { user } = renderProfileEditor();
+    await user.click(screen.getByText('Display Currency'));
+    expect(screen.queryByText('Back')).not.toBeInTheDocument();
+  });
+
+  it('renders locale editor with class-based layout contract', () => {
+    renderEditor();
+    const root = screen.getByTestId('locale-currency-editor');
+    expect(root.className).toContain('am-locale-editor');
   });
 });

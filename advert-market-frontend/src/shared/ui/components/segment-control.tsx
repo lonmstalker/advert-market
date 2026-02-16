@@ -1,5 +1,4 @@
-import { motion } from 'motion/react';
-import { useId } from 'react';
+import { Button } from '@telegram-tools/ui-kit';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 
 type Tab<T extends string> = {
@@ -14,32 +13,24 @@ type SegmentControlProps<T extends string> = {
 };
 
 export function SegmentControl<T extends string>({ tabs, active, onChange }: SegmentControlProps<T>) {
-  const id = useId();
   const haptic = useHaptic();
   return (
     <div className="am-segment">
       {tabs.map((tab) => {
         const isActive = active === tab.value;
+        const className = isActive ? 'am-segment__tab am-segment__tab--active' : 'am-segment__tab';
+
         return (
-          <button
+          <Button
             key={tab.value}
-            type="button"
+            type={isActive ? 'primary' : 'secondary'}
             onClick={() => {
               haptic.selectionChanged();
               onChange(tab.value);
             }}
-            data-active={isActive}
-            className="am-segment__tab"
-          >
-            {isActive && (
-              <motion.div
-                layoutId={`segment-pill-${id}`}
-                className="am-segment__pill"
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-              />
-            )}
-            {tab.label}
-          </button>
+            className={className}
+            text={tab.label}
+          />
         );
       })}
     </div>

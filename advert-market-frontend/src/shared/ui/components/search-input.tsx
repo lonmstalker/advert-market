@@ -1,3 +1,4 @@
+import { Input } from '@telegram-tools/ui-kit';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { SearchIcon } from '../icons';
 
@@ -17,10 +18,10 @@ export function SearchInput({ value, onChange, onFocus, onBlur, placeholder, foc
   return (
     <div className={className ? `am-search-input ${className}` : 'am-search-input'} data-focused={focused}>
       <SearchIcon className="am-search-input__icon" />
-      <input
-        type="text"
+      <Input
+        type="search"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(nextValue) => onChange(nextValue)}
         aria-label={placeholder}
         onFocus={() => {
           haptic.impactOccurred('light');
