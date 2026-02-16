@@ -5,7 +5,7 @@ export function TabLayout() {
   return (
     <>
       <BackButtonHandler />
-      <div style={{ paddingBottom: 'calc(var(--am-bottom-tabs-height) + var(--am-safe-area-bottom) + 20px)' }}>
+      <div className="am-tab-layout">
         <Outlet />
       </div>
       <BottomTabs />

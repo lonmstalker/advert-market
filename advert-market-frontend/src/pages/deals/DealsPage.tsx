@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Spinner, Text } from '@telegram-tools/ui-kit';
+import { Spinner } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,7 @@ import { DealListSkeleton } from '@/features/deals/components/DealListSkeleton';
 import type { DealRole } from '@/features/deals/types/deal';
 import { dealKeys } from '@/shared/api/query-keys';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
-import { EmptyState, EndOfList, FilterButton, SegmentControl } from '@/shared/ui';
+import { AppPageShell, AppSectionHeader, EmptyState, EndOfList, FilterButton, SegmentControl } from '@/shared/ui';
 import { staggerChildren } from '@/shared/ui/animations';
 import { MailboxIcon } from '@/shared/ui/icons';
 
@@ -52,15 +52,13 @@ export default function DealsPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-        <div style={{ padding: '16px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text type="title1" weight="bold">
-            {t('deals.title')}
-          </Text>
-          <FilterButton activeCount={activeFilterCount} onClick={() => setSheetOpen(true)} />
-        </div>
+      <AppPageShell testId="deals-page-shell">
+        <AppSectionHeader
+          title={t('deals.title')}
+          action={<FilterButton activeCount={activeFilterCount} onClick={() => setSheetOpen(true)} />}
+        />
 
-        <div style={{ padding: '12px 16px' }}>
+        <div className="am-surface-row" style={{ padding: 6 }}>
           <SegmentControl tabs={translatedTabs} active={activeRole} onChange={setActiveRole} />
         </div>
 
@@ -82,7 +80,7 @@ export default function DealsPage() {
               {...staggerChildren}
               initial="initial"
               animate="animate"
-              style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
             >
               {deals.map((deal) => (
                 <DealListItem key={deal.id} deal={deal} onClick={() => navigate(`/deals/${deal.id}`)} />
@@ -100,7 +98,7 @@ export default function DealsPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </AppPageShell>
 
       <DealFilterSheet
         open={sheetOpen}

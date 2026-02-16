@@ -53,9 +53,7 @@ test.describe('Theme mode', () => {
 
   test('html[theme-mode] matches VITE_FORCE_THEME and base background is consistent', async ({ page }) => {
     const forced = process.env.VITE_FORCE_THEME;
-    if (forced !== 'light' && forced !== 'dark') {
-      throw new Error('VITE_FORCE_THEME must be set to "light" or "dark" for this test.');
-    }
+    test.skip(forced !== 'light' && forced !== 'dark', 'Set VITE_FORCE_THEME=light|dark.');
 
     await page.goto('/catalog', { waitUntil: 'domcontentloaded' });
 
@@ -78,4 +76,3 @@ test.describe('Theme mode', () => {
     }
   });
 });
-

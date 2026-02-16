@@ -13,6 +13,7 @@ type TappableProps = {
   'aria-label'?: string;
   'aria-pressed'?: boolean;
   'aria-expanded'?: boolean;
+  'data-testid'?: string;
 };
 
 export function Tappable({

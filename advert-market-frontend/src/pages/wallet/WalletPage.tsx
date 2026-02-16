@@ -63,7 +63,7 @@ export default function WalletPage() {
   ] as const;
 
   return (
-    <motion.div {...fadeIn} className="am-finance-page">
+    <motion.div {...fadeIn} className="am-finance-page" data-testid="wallet-page-shell">
       <div className="am-finance-stack">
         <div className="am-wallet-top">
           <div className="am-wallet-pill">

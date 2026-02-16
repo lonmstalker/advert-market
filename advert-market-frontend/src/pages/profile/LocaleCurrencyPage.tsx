@@ -1,28 +1,21 @@
-import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { BackButtonHandler, LocaleCurrencyEditor } from '@/shared/ui';
+import { AppPageShell, AppSectionHeader, AppSurfaceCard, BackButtonHandler, LocaleCurrencyEditor } from '@/shared/ui';
 import { slideFromRight } from '@/shared/ui/animations';
 
 export default function LocaleCurrencyPage() {
   const { t } = useTranslation();
 
   return (
-    <motion.div {...slideFromRight} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <AppPageShell withTabsPadding={false} testId="profile-locale-currency-page">
       <BackButtonHandler />
 
-      <div>
-        <Text type="title1" weight="bold">
-          {t('profile.localeCurrency.title')}
-        </Text>
-        <div style={{ marginTop: 6 }}>
-          <Text type="caption1" color="secondary">
-            {t('profile.localeCurrency.subtitle')}
-          </Text>
-        </div>
-      </div>
-
-      <LocaleCurrencyEditor mode="profile" />
-    </motion.div>
+      <motion.div {...slideFromRight} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <AppSectionHeader title={t('profile.localeCurrency.title')} subtitle={t('profile.localeCurrency.subtitle')} />
+        <AppSurfaceCard>
+          <LocaleCurrencyEditor mode="profile" />
+        </AppSurfaceCard>
+      </motion.div>
+    </AppPageShell>
   );
 }

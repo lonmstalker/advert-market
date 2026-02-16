@@ -136,6 +136,7 @@ test.describe('Design quality (TG-native / iOS-like)', () => {
 
   test('feature card icon box is 56px', async ({ page }, testInfo) => {
     await page.goto('/onboarding', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Channel Catalog')).toBeVisible();
 
     const iconBox = page.getByTestId('feature-icon-box').first();

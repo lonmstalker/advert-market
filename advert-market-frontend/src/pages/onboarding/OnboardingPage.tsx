@@ -8,7 +8,15 @@ import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo
 import { OnboardingShell } from '@/features/onboarding/components/onboarding-shell';
 import { useHaptic } from '@/shared/hooks';
 import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
-import { DocumentIcon, LocaleCurrencyEditor, pressScale, SearchIcon, staggerChildren, WalletIcon } from '@/shared/ui';
+import {
+  AppSurfaceCard,
+  DocumentIcon,
+  LocaleCurrencyEditor,
+  pressScale,
+  SearchIcon,
+  staggerChildren,
+  WalletIcon,
+} from '@/shared/ui';
 
 export default function OnboardingPage() {
   const { t } = useTranslation();
@@ -28,24 +36,32 @@ export default function OnboardingPage() {
   if (stage === 'locale') {
     return (
       <OnboardingShell
+        testId="onboarding-locale-step"
         centerContent
         footer={null}
         contentStyle={{
           justifyContent: 'center',
+          gap: '16px',
         }}
       >
-        <LocaleCurrencyEditor
-          mode="onboarding"
-          onContinue={() => {
-            setStage('welcome');
-          }}
-        />
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <OnboardingLogo testId="onboarding-locale-logo" />
+        </div>
+        <AppSurfaceCard>
+          <LocaleCurrencyEditor
+            mode="onboarding"
+            onContinue={() => {
+              setStage('welcome');
+            }}
+          />
+        </AppSurfaceCard>
       </OnboardingShell>
     );
   }
 
   return (
     <OnboardingShell
+      testId="onboarding-welcome-step"
       centerContent
       footer={
         <>

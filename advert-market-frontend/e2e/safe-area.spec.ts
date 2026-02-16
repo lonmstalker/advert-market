@@ -41,7 +41,7 @@ test.describe('Safe area (fixed-bottom bars)', () => {
   test('S4: channel detail CTA respects safe area', async ({ page }) => {
     await page.goto('/catalog/channels/5', { waitUntil: 'domcontentloaded' });
     await setSafeAreaBottom(page, 34);
-    const cta = page.getByRole('button', { name: 'Create deal' });
+    const cta = page.getByRole('button', { name: /^(Create deal|Создать сделку)$/ });
     await expect(cta).toBeVisible();
 
     const d = await distanceFromViewportBottom(cta);
@@ -51,7 +51,7 @@ test.describe('Safe area (fixed-bottom bars)', () => {
   test('S7: deal detail actions respect safe area and do not overlap timeline', async ({ page }) => {
     await page.goto('/deals/deal-1', { waitUntil: 'domcontentloaded' });
     await setSafeAreaBottom(page, 34);
-    const action = page.getByRole('button', { name: 'Cancel' });
+    const action = page.getByRole('button', { name: /^(Cancel|Отменить)$/ });
     await expect(action).toBeVisible();
 
     const d = await distanceFromViewportBottom(action);
@@ -60,7 +60,7 @@ test.describe('Safe area (fixed-bottom bars)', () => {
     // Scroll to the bottom and ensure the last timeline step isn't behind the fixed actions bar.
     await scrollToBottom(page);
 
-    const timeline = page.getByRole('list', { name: 'Timeline' });
+    const timeline = page.getByRole('list', { name: /^(Timeline|Таймлайн|Хронология)$/ });
     await expect(timeline).toBeVisible();
 
     const lastStep = timeline.locator('li').last();
@@ -76,7 +76,7 @@ test.describe('Safe area (fixed-bottom bars)', () => {
   test('S10: creative editor save respects safe area and does not overlap form', async ({ page }) => {
     await page.goto('/profile/creatives/new', { waitUntil: 'domcontentloaded' });
     await setSafeAreaBottom(page, 34);
-    const save = page.getByRole('button', { name: 'Save' });
+    const save = page.getByRole('button', { name: /^(Save|Сохранить)$/ });
     await expect(save).toBeVisible();
 
     const d = await distanceFromViewportBottom(save);
@@ -85,9 +85,9 @@ test.describe('Safe area (fixed-bottom bars)', () => {
     await scrollToBottom(page);
 
     // The last row in the form (toggle + label) should remain above the save bar.
-    const textarea = page.locator('textarea[placeholder="Enter ad post text..."]:visible');
+    const textarea = page.locator('textarea[placeholder="Enter ad post text..."]:visible, textarea[placeholder="Введите текст рекламного поста..."]:visible');
     const form = page.locator('.creative-editor-mobile, .creative-editor-desktop').filter({ has: textarea }).first();
-    const disablePreviewLabel = form.getByText('Disable link previews');
+    const disablePreviewLabel = form.getByText(/^(Disable link previews|Отключить превью ссылок)$/);
     await expect(disablePreviewLabel).toBeVisible();
 
     const labelBox = await disablePreviewLabel.boundingBox();

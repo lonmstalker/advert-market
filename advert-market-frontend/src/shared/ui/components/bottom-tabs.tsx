@@ -16,30 +16,7 @@ export function BottomTabs() {
   const haptic = useHaptic();
 
   return (
-    <nav
-      aria-label="Main navigation"
-      style={{
-        position: 'fixed',
-        bottom: 'calc(10px + var(--am-safe-area-bottom))',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: 'min(100%, 760px)',
-        maxWidth: 'calc(100% - 16px)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 4,
-        height: 'var(--am-bottom-tabs-height)',
-        background: 'var(--am-tabbar-bg)',
-        border: '1px solid var(--am-tabbar-border)',
-        borderRadius: 30,
-        boxShadow: '0 14px 32px color-mix(in srgb, var(--color-foreground-primary) 18%, transparent)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        padding: '7px',
-        zIndex: 100,
-      }}
-    >
+    <nav aria-label="Main navigation" className="am-bottom-tabs">
       {tabs.map(({ to, icon: Icon, labelKey }) => (
         <NavLink
           key={to}

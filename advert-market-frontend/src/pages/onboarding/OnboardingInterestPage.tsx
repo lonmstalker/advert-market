@@ -47,6 +47,7 @@ export default function OnboardingInterestPage() {
 
   return (
     <OnboardingShell
+      testId="onboarding-interest-step"
       centerContent={false}
       contentStyle={{
         paddingTop: 8,

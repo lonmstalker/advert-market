@@ -56,6 +56,10 @@ function getAllChannels() {
   return [...mockChannels, ...registeredChannels];
 }
 
+function syncProfileFromStorage(): void {
+  profile = loadState<typeof mockProfile>(STORAGE_KEYS.profile, profile);
+}
+
 function currencyForLanguage(languageCode: string): string {
   const normalized = languageCode.toLowerCase();
   if (normalized.startsWith('ru')) return 'RUB';
@@ -98,11 +102,13 @@ export const handlers = [
 
   // GET /profile — current user profile
   http.get(`${API_BASE}/profile`, () => {
+    syncProfileFromStorage();
     return HttpResponse.json(profile);
   }),
 
   // PUT /profile/onboarding — complete onboarding
   http.put(`${API_BASE}/profile/onboarding`, async ({ request }) => {
+    syncProfileFromStorage();
     const body = (await request.json()) as { interests: string[] };
     profile = {
       ...profile,

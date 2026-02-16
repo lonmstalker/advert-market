@@ -10,7 +10,7 @@ import { ApiError } from '@/shared/api/types';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { formatTon } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState, PageLoader, TextareaField } from '@/shared/ui';
+import { AppPageShell, AppSurfaceCard, BackButtonHandler, EmptyState, PageLoader, TextareaField } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
 import { SadFaceIcon } from '@/shared/ui/icons';
 
@@ -96,78 +96,66 @@ export default function CreateDealPage() {
   return (
     <>
       <BackButtonHandler />
-      <motion.div
-        {...fadeIn}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: 'calc(100vh - 40px)',
-          padding: '0 16px',
-        }}
-      >
-        {/* Form content */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16 }}>
-          <Text type="title1" weight="bold">
-            {t('deals.create.title')}
-          </Text>
+      <AppPageShell withTabsPadding={false} testId="deal-create-page-shell">
+        <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 40px)' }}>
+          {/* Form content */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Text type="title1" weight="bold">
+              {t('deals.create.title')}
+            </Text>
 
-          <ChannelCard channel={channel} />
+            <ChannelCard channel={channel} />
 
-          <div>
-            <div style={{ marginBottom: 8 }}>
-              <Text type="subheadline2" color="secondary">
-                {t('deals.create.postType')}
-              </Text>
+            <div>
+              <div style={{ marginBottom: 8 }}>
+                <Text type="subheadline2" color="secondary">
+                  {t('deals.create.postType')}
+                </Text>
+              </div>
+              <Select options={ruleOptions} value={selectedRuleId} onChange={setSelectedRuleId} />
             </div>
-            <Select options={ruleOptions} value={selectedRuleId} onChange={setSelectedRuleId} />
+
+            {selectedRule && (
+              <AppSurfaceCard>
+                <div style={{ textAlign: 'center', padding: 16 }}>
+                  <Text type="subheadline2" color="secondary">
+                    {t('deals.create.price')}
+                  </Text>
+                  <Text type="title1" weight="bold">
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(selectedRule.priceNano)}</span>
+                  </Text>
+                </div>
+              </AppSurfaceCard>
+            )}
+
+            <TextareaField
+              value={message}
+              onChange={setMessage}
+              label={t('deals.create.message')}
+              placeholder={t('deals.create.messagePlaceholder')}
+              maxLength={2000}
+              rows={4}
+            />
           </div>
 
-          {selectedRule && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 16,
-                borderRadius: 12,
-                background: 'var(--color-background-base)',
-                border: '1px solid var(--color-border-separator)',
-              }}
-            >
-              <Text type="subheadline2" color="secondary">
-                {t('deals.create.price')}
-              </Text>
-              <Text type="title1" weight="bold">
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(selectedRule.priceNano)}</span>
-              </Text>
-            </div>
-          )}
-
-          <TextareaField
-            value={message}
-            onChange={setMessage}
-            label={t('deals.create.message')}
-            placeholder={t('deals.create.messagePlaceholder')}
-            maxLength={2000}
-            rows={4}
-          />
-        </div>
-
-        {/* Bottom CTA */}
-        <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
-          <motion.div {...pressScale}>
-            <Button
-              text={
-                selectedRule
-                  ? `${t('deals.create.submit')} · ${formatTon(selectedRule.priceNano)}`
-                  : t('deals.create.submit')
-              }
-              type="primary"
-              onClick={handleSubmit}
-              disabled={!selectedRuleId}
-              loading={mutation.isPending}
-            />
-          </motion.div>
-        </div>
-      </motion.div>
+          {/* Bottom CTA */}
+          <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
+            <motion.div {...pressScale}>
+              <Button
+                text={
+                  selectedRule
+                    ? `${t('deals.create.submit')} · ${formatTon(selectedRule.priceNano)}`
+                    : t('deals.create.submit')
+                }
+                type="primary"
+                onClick={handleSubmit}
+                disabled={!selectedRuleId}
+                loading={mutation.isPending}
+              />
+            </motion.div>
+          </div>
+        </motion.div>
+      </AppPageShell>
     </>
   );
 }

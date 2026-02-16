@@ -98,6 +98,7 @@ export default function OnboardingTourPage() {
   return (
     <>
       <OnboardingShell
+        testId="onboarding-tour-step"
         topAction={
           <Tappable
             onClick={() => setShowSkipConfirm(true)}

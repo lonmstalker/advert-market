@@ -39,7 +39,7 @@ export default function HistoryPage() {
   return (
     <>
       <BackButtonHandler />
-      <motion.div {...fadeIn} className="am-finance-page">
+      <motion.div {...fadeIn} className="am-finance-page" data-testid="wallet-history-page-shell">
         <div className="am-finance-stack">
           <div className="am-history-header">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

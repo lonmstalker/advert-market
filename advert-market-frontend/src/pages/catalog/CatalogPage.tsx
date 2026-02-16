@@ -18,7 +18,7 @@ import { useDebounce } from '@/shared/hooks/use-debounce';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
 import { formatCompactNumber } from '@/shared/lib/format-number';
 import { computeCpm, formatCpm } from '@/shared/lib/ton-format';
-import { EmptyState, EndOfList } from '@/shared/ui';
+import { AppPageShell, EmptyState, EndOfList } from '@/shared/ui';
 import { fadeIn, staggerChildren } from '@/shared/ui/animations';
 import { SearchOffIcon } from '@/shared/ui/icons';
 import { CatalogSearchBar } from './components/CatalogSearchBar';
@@ -119,7 +119,7 @@ export default function CatalogPage() {
   const sheets = { filters: ChannelFiltersContent };
 
   return (
-    <div style={{ paddingBottom: 24 }}>
+    <AppPageShell testId="catalog-page-shell">
       <CatalogSearchBar
         searchInput={searchInput}
         onSearchChange={setSearchInput}
@@ -137,11 +137,7 @@ export default function CatalogPage() {
 
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <motion.div
-            key="skeleton"
-            {...fadeIn}
-            style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
-          >
+          <motion.div key="skeleton" {...fadeIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[1, 2, 3].map((i) => (
               <ChannelCardSkeleton key={i} />
             ))}
@@ -171,7 +167,7 @@ export default function CatalogPage() {
         ) : (
           <motion.div key="list" {...staggerChildren} initial="initial" animate="animate">
             {summary && (
-              <div style={{ padding: '8px 16px 4px' }}>
+              <div style={{ padding: '4px 0' }}>
                 <Text type="footnote" color="secondary">
                   {summary.avgCpm != null
                     ? t('catalog.summary', {
@@ -185,7 +181,7 @@ export default function CatalogPage() {
               </div>
             )}
 
-            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {channels.map((channel) => (
                 <ChannelCatalogCard
                   key={channel.id}
@@ -196,7 +192,7 @@ export default function CatalogPage() {
             </div>
 
             {isFetchingNextPage && (
-              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <ChannelCardSkeleton />
               </div>
             )}
@@ -226,6 +222,6 @@ export default function CatalogPage() {
       >
         <Sheet sheets={sheets} activeSheet="filters" opened={sheetOpened} onClose={() => setSheetOpened(false)} />
       </ChannelFiltersProvider>
-    </div>
+    </AppPageShell>
   );
 }

@@ -26,15 +26,7 @@ export function CatalogSearchBar({
   const { t } = useTranslation();
 
   return (
-    <div
-      style={{
-        padding: '16px 16px 12px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 5,
-        background: 'var(--color-background-secondary)',
-      }}
-    >
+    <div className="am-toolbar">
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <motion.div
           style={{ flex: 1 }}
@@ -59,15 +51,14 @@ export function CatalogSearchBar({
             justifyContent: 'center',
             width: 42,
             height: 42,
-            borderRadius: 12,
+            borderRadius: 'var(--am-radius-control)',
             border:
-              activeFilterCount > 0
-                ? '1.5px solid var(--color-accent-primary)'
-                : '1.5px solid var(--color-border-separator)',
+              activeFilterCount > 0 ? '1.5px solid var(--color-accent-primary)' : '1.5px solid var(--am-card-border)',
             background:
               activeFilterCount > 0
-                ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)'
-                : 'var(--color-background-base)',
+                ? 'color-mix(in srgb, var(--color-accent-primary) 14%, transparent)'
+                : 'var(--am-control-surface)',
+            boxShadow: 'var(--am-card-shadow)',
             cursor: 'pointer',
             WebkitTapHighlightColor: 'transparent',
             flexShrink: 0,

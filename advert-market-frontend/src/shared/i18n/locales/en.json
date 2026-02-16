@@ -639,6 +639,7 @@
       "channelLink": "Channel link",
       "channelPlaceholder": "@username",
       "addBotInstruction": "Add @AdvertMarketBot as an admin to your channel",
+      "autosyncHint": "After bot promotion the channel is synced automatically. \"Verify\" is a fallback sync trigger.",
       "copyBot": "Copy",
       "openBot": "Open bot",
       "verify": "Verify",
@@ -655,7 +656,8 @@
       "success": "Channel registered",
       "botNotAdmin": "Bot is not added as a channel admin",
       "channelNotFound": "Channel not found",
-      "alreadyRegistered": "This channel is already registered"
+      "alreadyRegistered": "This channel is already registered",
+      "alreadySynced": "Channel is already synchronized"
     }
   },
   "creatives": {

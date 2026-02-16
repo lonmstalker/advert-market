@@ -6,6 +6,7 @@ type OnboardingShellProps = {
   topAction?: ReactNode;
   contentStyle?: CSSProperties;
   centerContent?: boolean;
+  testId?: string;
 };
 
 export function OnboardingShell({
@@ -14,9 +15,11 @@ export function OnboardingShell({
   topAction,
   contentStyle,
   centerContent = false,
+  testId,
 }: OnboardingShellProps) {
   return (
     <div
+      data-testid={testId}
       style={{
         display: 'flex',
         flexDirection: 'column',

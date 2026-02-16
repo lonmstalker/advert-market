@@ -44,10 +44,37 @@ body {
   --am-fixed-bottom-bar-base: 92px;
   --am-bottom-tabs-height: 64px;
 
+  /* Unified 2026 UI contract (Liquid Ledger Minimalism). */
+  --am-space-4: 4px;
+  --am-space-8: 8px;
+  --am-space-12: 12px;
+  --am-space-16: 16px;
+  --am-space-20: 20px;
+  --am-space-24: 24px;
+
+  --am-radius-control: 14px;
+  --am-radius-row: 14px;
+  --am-radius-card: 18px;
+  --am-radius-hero: 22px;
+  --am-radius-chip: 999px;
+
+  --am-motion-fast: 120ms;
+  --am-motion-base: 180ms;
+  --am-motion-slow: 240ms;
+  --am-motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --am-page-max-width: 760px;
+  --am-page-padding: 16px;
+
   /* App surfaces (Telegram wallet-inspired). */
   --am-app-background: linear-gradient(180deg, #f5f6fa 0%, #eef0f5 100%);
+  --am-page-background: linear-gradient(180deg, #f3f5fa 0%, #eceff5 100%);
+  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(29, 125, 255, 0.16) 0%, transparent 72%);
   --am-card-surface: rgba(255, 255, 255, 0.94);
+  --am-row-surface: rgba(255, 255, 255, 0.9);
+  --am-control-surface: rgba(255, 255, 255, 0.78);
   --am-card-border: rgba(12, 26, 42, 0.08);
+  --am-border-strong: rgba(12, 26, 42, 0.14);
   --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.08);
   --am-tabbar-bg: rgba(244, 247, 252, 0.92);
   --am-tabbar-border: rgba(255, 255, 255, 0.82);
@@ -94,8 +121,15 @@ body {
   --am-app-background:
     radial-gradient(130% 55% at 50% -12%, rgba(16, 132, 255, 0.24) 0%, transparent 72%),
     linear-gradient(180deg, #0a1118 0%, #080d14 100%);
+  --am-page-background:
+    radial-gradient(125% 58% at 50% -14%, rgba(16, 138, 255, 0.21) 0%, transparent 72%),
+    linear-gradient(180deg, #090f16 0%, #070d14 100%);
+  --am-page-atmosphere: radial-gradient(130% 56% at 50% -10%, rgba(39, 155, 255, 0.32) 0%, transparent 72%);
   --am-card-surface: rgba(15, 27, 41, 0.88);
+  --am-row-surface: rgba(14, 26, 40, 0.92);
+  --am-control-surface: rgba(12, 29, 48, 0.84);
   --am-card-border: rgba(74, 125, 188, 0.34);
+  --am-border-strong: rgba(112, 164, 228, 0.48);
   --am-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
   --am-tabbar-bg: rgba(8, 29, 50, 0.78);
   --am-tabbar-border: rgba(79, 134, 202, 0.42);
@@ -122,13 +156,243 @@ body {
 
 [theme-mode='light'] {
   --am-app-background: linear-gradient(180deg, #f5f6fa 0%, #eef0f5 100%);
+  --am-page-background: linear-gradient(180deg, #f3f5fa 0%, #eceff5 100%);
+  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(29, 125, 255, 0.16) 0%, transparent 72%);
   --am-card-surface: rgba(255, 255, 255, 0.94);
+  --am-row-surface: rgba(255, 255, 255, 0.9);
+  --am-control-surface: rgba(255, 255, 255, 0.78);
   --am-card-border: rgba(12, 26, 42, 0.08);
+  --am-border-strong: rgba(12, 26, 42, 0.14);
   --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.08);
   --am-tabbar-bg: rgba(244, 247, 252, 0.92);
   --am-tabbar-border: rgba(255, 255, 255, 0.82);
   --am-tabbar-active-bg: rgba(0, 122, 255, 0.14);
   --am-tabbar-active-color: #0b84ff;
+}
+
+/* Unified app page primitives */
+.am-page {
+  position: relative;
+  min-height: var(--am-viewport-stable-height);
+  background: var(--am-page-background);
+  overflow-x: hidden;
+}
+
+.am-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: var(--am-page-atmosphere);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.am-page-stack {
+  position: relative;
+  z-index: 1;
+  width: min(100%, var(--am-page-max-width));
+  margin: 0 auto;
+  padding: var(--am-page-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-16);
+}
+
+.am-page-with-tabs .am-page-stack {
+  padding-bottom: calc(var(--am-bottom-tabs-height) + var(--am-safe-area-bottom) + var(--am-space-24));
+}
+
+.am-surface-card {
+  background: var(--am-card-surface);
+  border: 1px solid var(--am-card-border);
+  border-radius: var(--am-radius-card);
+  box-shadow: var(--am-card-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.am-surface-row {
+  background: var(--am-row-surface);
+  border: 1px solid var(--am-card-border);
+  border-radius: var(--am-radius-row);
+  transition:
+    border-color var(--am-motion-base) var(--am-motion-ease-out),
+    transform var(--am-motion-base) var(--am-motion-ease-out),
+    background var(--am-motion-base) var(--am-motion-ease-out);
+}
+
+.am-surface-row:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+.am-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0 0 var(--am-space-12);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--am-page-background) 96%, transparent) 0%,
+      color-mix(in srgb, var(--am-page-background) 88%, transparent) 70%,
+      transparent 100%
+    );
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.am-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-12);
+}
+
+.am-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-12);
+}
+
+.am-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--am-space-12);
+}
+
+.am-section-headerCopy {
+  min-width: 0;
+}
+
+.am-section-headerSubtitle {
+  margin-top: var(--am-space-4);
+}
+
+.am-section-headerAction {
+  flex-shrink: 0;
+}
+
+.am-list-row {
+  width: 100%;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: default;
+}
+
+button.am-list-row {
+  cursor: pointer;
+  border: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.am-list-rowBefore {
+  flex-shrink: 0;
+}
+
+.am-list-rowCopy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.am-list-rowValue {
+  flex-shrink: 0;
+}
+
+.am-list-rowChevron {
+  flex-shrink: 0;
+  opacity: 0.72;
+}
+
+.am-icon-bubble {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-accent-primary) 14%, transparent);
+  color: var(--color-accent-primary);
+}
+
+.am-profile-hero {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-accent-primary) 10%, transparent) 0%, transparent 100%),
+    var(--am-card-surface);
+}
+
+.am-chip-row {
+  display: flex;
+  gap: var(--am-space-8);
+  overflow-x: auto;
+  padding: 0 0 var(--am-space-8);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.am-chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.am-tab-layout {
+  padding-bottom: calc(var(--am-bottom-tabs-height) + var(--am-safe-area-bottom) + var(--am-space-24));
+}
+
+.am-bottom-tabs {
+  position: fixed;
+  bottom: calc(10px + var(--am-safe-area-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, var(--am-page-max-width));
+  max-width: calc(100% - 16px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  height: var(--am-bottom-tabs-height);
+  background: var(--am-tabbar-bg);
+  border: 1px solid var(--am-tabbar-border);
+  border-radius: 30px;
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--color-foreground-primary) 18%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 7px;
+  z-index: 100;
+}
+
+/* UI Kit group unification */
+[class*="_group_"] {
+  background: var(--am-card-surface);
+  border: 1px solid var(--am-card-border);
+  border-radius: var(--am-radius-card);
+  box-shadow: var(--am-card-shadow);
+  overflow: hidden;
+}
+
+[class*="_group_"] [data-group-item='true'] {
+  background: transparent;
+  min-height: 56px;
+  transition: background var(--am-motion-base) var(--am-motion-ease-out);
+}
+
+[class*="_group_"] [data-group-item='true']:hover {
+  background: color-mix(in srgb, var(--color-accent-primary) 7%, transparent);
+}
+
+[class*="_group_"] [data-group-item-border-bottom='true'] {
+  background: var(--am-card-border);
 }
 
 /* Lucide baseline: prevent SVG icons from "floating" on text baselines. */

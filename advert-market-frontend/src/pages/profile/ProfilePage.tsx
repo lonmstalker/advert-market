@@ -9,7 +9,7 @@ import { fetchMyChannels } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useAuth } from '@/shared/hooks';
 import { useSettingsStore } from '@/shared/stores/settings-store';
-import { EmptyState } from '@/shared/ui';
+import { AppPageShell, EmptyState } from '@/shared/ui';
 import { fadeIn, pressScale, staggerChildren } from '@/shared/ui/animations';
 import { BellIcon, GlobeIcon, PaletteIcon, SatelliteIcon } from '@/shared/ui/icons';
 import { ProfileHero } from './components/ProfileHero';
@@ -93,115 +93,105 @@ export default function ProfilePage() {
   }, [profile?.createdAt, langCode, t]);
 
   return (
-    <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-      <ProfileHero
-        displayName={displayName}
-        username={username || undefined}
-        roleBadge={roleBadge}
-        memberSince={memberSince}
-      />
+    <AppPageShell testId="profile-page-shell">
+      <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <ProfileHero
+          displayName={displayName}
+          username={username || undefined}
+          roleBadge={roleBadge}
+          memberSince={memberSince}
+        />
 
-      <motion.div
-        {...staggerChildren}
-        initial="initial"
-        animate="animate"
-        style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}
-      >
-        <motion.div {...fadeIn}>
-          <Group header={t('profile.channels')}>
-            {myChannels && myChannels.length > 0 ? (
-              <>
-                {myChannels.map((ch) => (
-                  <motion.div key={ch.id} {...pressScale}>
+        <motion.div
+          {...staggerChildren}
+          initial="initial"
+          animate="animate"
+          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+        >
+          <motion.div {...fadeIn}>
+            <Group header={t('profile.channels')}>
+              {myChannels && myChannels.length > 0 ? (
+                <>
+                  {myChannels.map((ch) => (
+                    <motion.div key={ch.id} {...pressScale}>
+                      <GroupItem
+                        text={ch.title}
+                        description={ch.username ? `@${ch.username}` : undefined}
+                        after={
+                          <Text type="caption1" color="secondary">
+                            {t('catalog.channel.subscribers', { count: ch.subscriberCount })}
+                          </Text>
+                        }
+                        chevron
+                        onClick={() => navigate(`/catalog/channels/${ch.id}`)}
+                      />
+                    </motion.div>
+                  ))}
+                  <motion.div {...pressScale}>
                     <GroupItem
-                      text={ch.title}
-                      description={ch.username ? `@${ch.username}` : undefined}
-                      after={
-                        <Text type="caption1" color="secondary">
-                          {t('catalog.channel.subscribers', { count: ch.subscriberCount })}
-                        </Text>
+                      text={t('profile.channels.empty.cta')}
+                      before={
+                        <div className="am-icon-bubble" style={{ fontSize: 18 }}>
+                          +
+                        </div>
                       }
                       chevron
-                      onClick={() => navigate(`/catalog/channels/${ch.id}`)}
+                      onClick={() => navigate('/profile/channels/new')}
                     />
                   </motion.div>
-                ))}
-                <motion.div {...pressScale}>
-                  <GroupItem
-                    text={t('profile.channels.empty.cta')}
-                    before={
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '50%',
-                          background: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 18,
-                          color: 'var(--color-accent-primary)',
-                        }}
-                      >
-                        +
-                      </div>
-                    }
-                    chevron
-                    onClick={() => navigate('/profile/channels/new')}
-                  />
-                </motion.div>
-              </>
-            ) : (
-              <EmptyState
-                icon={<SatelliteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
-                title={t('profile.channels.empty.title')}
-                description={t('profile.channels.empty.description')}
-                actionLabel={t('profile.channels.empty.cta')}
-                onAction={() => navigate('/profile/channels/new')}
-              />
-            )}
-          </Group>
-        </motion.div>
+                </>
+              ) : (
+                <EmptyState
+                  icon={<SatelliteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+                  title={t('profile.channels.empty.title')}
+                  description={t('profile.channels.empty.description')}
+                  actionLabel={t('profile.channels.empty.cta')}
+                  onAction={() => navigate('/profile/channels/new')}
+                />
+              )}
+            </Group>
+          </motion.div>
 
-        <motion.div {...fadeIn}>
-          <Group>
-            <motion.div {...pressScale}>
-              <GroupItem
-                before={<SettingsIcon icon={PaletteIcon} />}
-                text={t('creatives.title')}
-                description={t('profile.creatives.description')}
-                chevron
-                onClick={() => navigate('/profile/creatives')}
-              />
-            </motion.div>
-          </Group>
-        </motion.div>
-
-        <motion.div {...fadeIn}>
-          <Group header={t('profile.settings')}>
-            {SETTINGS_ITEMS.map(({ key, icon, route }) => (
-              <motion.div key={key} {...pressScale}>
+          <motion.div {...fadeIn}>
+            <Group>
+              <motion.div {...pressScale}>
                 <GroupItem
-                  before={<SettingsIcon icon={icon} />}
-                  text={key === 'localeCurrency' ? t('profile.localeCurrency.label') : t(`profile.${key}`)}
-                  after={
-                    key === 'localeCurrency' ? (
-                      <Text type="body" color="secondary">
-                        {LANGUAGE_LABELS[langCode] ?? langCode} ·{' '}
-                        {currencyMode === 'AUTO'
-                          ? `${t('profile.localeCurrency.autoShort')} ${displayCurrency}`
-                          : (CURRENCY_LABELS[displayCurrency] ?? displayCurrency)}
-                      </Text>
-                    ) : undefined
-                  }
+                  before={<SettingsIcon icon={PaletteIcon} />}
+                  text={t('creatives.title')}
+                  description={t('profile.creatives.description')}
                   chevron
-                  onClick={() => navigate(route)}
+                  onClick={() => navigate('/profile/creatives')}
                 />
               </motion.div>
-            ))}
-          </Group>
+            </Group>
+          </motion.div>
+
+          <motion.div {...fadeIn}>
+            <Group header={t('profile.settings')}>
+              {SETTINGS_ITEMS.map(({ key, icon, route }) => (
+                <motion.div key={key} {...pressScale}>
+                  <GroupItem
+                    before={<SettingsIcon icon={icon} />}
+                    text={key === 'localeCurrency' ? t('profile.localeCurrency.label') : t(`profile.${key}`)}
+                    after={
+                      key === 'localeCurrency' ? (
+                        <Text type="body" color="secondary">
+                          {LANGUAGE_LABELS[langCode] ?? langCode} ·{' '}
+                          {currencyMode === 'AUTO'
+                            ? `${t('profile.localeCurrency.autoShort')} ${displayCurrency}`
+                            : (CURRENCY_LABELS[displayCurrency] ?? displayCurrency)}
+                        </Text>
+                      ) : undefined
+                    }
+                    chevron
+                    onClick={() => navigate(route)}
+                  />
+                </motion.div>
+              ))}
+            </Group>
+          </motion.div>
         </motion.div>
       </motion.div>
-    </motion.div>
+    </AppPageShell>
   );
 }

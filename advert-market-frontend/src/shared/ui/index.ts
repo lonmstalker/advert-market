@@ -1,5 +1,9 @@
 export * from './animations';
 export { AppIcon } from './components/app-icon';
+export { AppListRow } from './components/app-list-row';
+export { AppPageShell } from './components/app-page-shell';
+export { AppSectionHeader } from './components/app-section-header';
+export { AppSurfaceCard } from './components/app-surface-card';
 export { AuthGuard } from './components/auth-guard';
 export { BackButtonHandler } from './components/back-button-handler';
 export { BottomTabs } from './components/bottom-tabs';

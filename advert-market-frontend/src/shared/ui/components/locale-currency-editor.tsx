@@ -38,6 +38,7 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
   const { showError } = useToast();
   const [view, setView] = useState<LocaleCurrencyView>('main');
   const [undoState, setUndoState] = useState<UndoState | null>(null);
+  const [isSavingLanguage, setIsSavingLanguage] = useState(false);
 
   const storedLanguageCode = useSettingsStore((s) => s.languageCode);
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
@@ -53,14 +54,29 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
       const previousLanguage = i18n.language;
       const previousCurrency = displayCurrency;
       const previousMode = currencyMode;
+      setIsSavingLanguage(true);
       setLanguageCode(nextLanguage);
       void i18n.changeLanguage(nextLanguage);
       return { previousLanguage, previousCurrency, previousMode };
     },
-    onSuccess: (updatedProfile, _nextLanguage, context) => {
-      setFromProfile(updatedProfile);
-      queryClient.setQueryData(profileKeys.me, updatedProfile);
-      const updatedLanguage = normalizeLanguage(updatedProfile.languageCode);
+    onSuccess: (updatedProfile, nextLanguage, context) => {
+      const normalizedRequested = normalizeLanguage(nextLanguage);
+      const normalizedFromServer = normalizeLanguage(updatedProfile.languageCode);
+      const resolvedLanguage =
+        normalizedFromServer === normalizedRequested ? normalizedFromServer : normalizedRequested;
+
+      const profileForStore =
+        normalizedFromServer === normalizedRequested
+          ? updatedProfile
+          : {
+              ...updatedProfile,
+              languageCode: nextLanguage,
+            };
+
+      setFromProfile(profileForStore);
+      queryClient.setQueryData(profileKeys.me, profileForStore);
+
+      const updatedLanguage = resolvedLanguage;
       if (i18n.language !== updatedLanguage) {
         void i18n.changeLanguage(updatedLanguage);
       }
@@ -86,6 +102,9 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
         void i18n.changeLanguage(previousLanguage);
       }
       showError(t('common.toast.saveFailed'));
+    },
+    onSettled: () => {
+      setIsSavingLanguage(false);
     },
   });
 
@@ -115,7 +134,7 @@ export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorP
     return displayCurrency;
   }, [currencyMode, displayCurrency, t]);
 
-  const isPending = languageMutation.isPending || settingsMutation.isPending;
+  const isPending = languageMutation.isPending || settingsMutation.isPending || isSavingLanguage;
   const secondaryButtonStyle = {
     border: 'none',
     background: 'transparent',

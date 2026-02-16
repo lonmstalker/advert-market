@@ -66,7 +66,7 @@ export default function TransactionDetailPage() {
   return (
     <>
       <BackButtonHandler />
-      <motion.div {...fadeIn} className="am-finance-page">
+      <motion.div {...fadeIn} className="am-finance-page" data-testid="wallet-transaction-page-shell">
         <div className="am-finance-stack">
           <div
             className="am-finance-card"

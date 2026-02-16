@@ -21,11 +21,8 @@ for (const viewport of VIEWPORTS) {
     });
 
     test('channel cards are fully visible', async ({ page }) => {
-      await expect(page.getByText('Crypto News Daily')).toBeVisible();
-      const card = page
-        .getByText('Crypto News Daily')
-        .locator('xpath=ancestor::div[contains(@style, "border-radius")]')
-        .first();
+      const card = page.getByTestId('catalog-channel-card').first();
+      await expect(card).toBeVisible();
       const box = await card.boundingBox();
       expect(box).toBeTruthy();
       if (box) {
@@ -35,12 +32,12 @@ for (const viewport of VIEWPORTS) {
     });
 
     test('bottom tabs are visible and not overlapping', async ({ page }) => {
-      const tabs = page.getByRole('link', { name: 'Catalog' });
+      const tabs = page.getByRole('link', { name: /^(Catalog|Каталог)$/ });
       await expect(tabs).toBeVisible();
     });
 
     test('search bar is usable at narrow width', async ({ page }) => {
-      const searchInput = page.getByPlaceholder('Search channels...');
+      const searchInput = page.getByPlaceholder(/^(Search channels\.\.\.|Поиск каналов\.\.\.)$/);
       await expect(searchInput).toBeVisible();
       const box = await searchInput.boundingBox();
       expect(box).toBeTruthy();
@@ -50,9 +47,9 @@ for (const viewport of VIEWPORTS) {
     });
 
     test('deal list renders at narrow width', async ({ page }) => {
-      await page.getByRole('link', { name: 'Deals' }).click();
+      await page.getByRole('link', { name: /^(Deals|Сделки)$/ }).click();
       await page.waitForURL('**/deals');
-      await expect(page.getByText('Deals').first()).toBeVisible();
+      await expect(page.getByText(/^(Deals|Сделки)$/).first()).toBeVisible();
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
       expect(bodyWidth).toBeLessThanOrEqual(viewport.width + 1);
     });
@@ -60,7 +57,7 @@ for (const viewport of VIEWPORTS) {
     test('channel detail page renders at narrow width', async ({ page }) => {
       await page.getByText('Crypto News Daily').click();
       await page.waitForURL('**/catalog/channels/1');
-      await expect(page.getByText('Subscribers')).toBeVisible();
+      await expect(page.getByText(/^(Subscribers|Подписчики)$/)).toBeVisible();
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
       expect(bodyWidth).toBeLessThanOrEqual(viewport.width + 1);
     });

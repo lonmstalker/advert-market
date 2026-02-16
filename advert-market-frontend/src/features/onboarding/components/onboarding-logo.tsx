@@ -1,7 +1,11 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { MegaphoneIcon } from '@/shared/ui';
 
-export function OnboardingLogo() {
+type OnboardingLogoProps = {
+  testId?: string;
+};
+
+export function OnboardingLogo({ testId }: OnboardingLogoProps) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -20,6 +24,7 @@ export function OnboardingLogo() {
         position: 'relative',
         marginBottom: '16px',
       }}
+      data-testid={testId}
     >
       <motion.div
         aria-hidden="true"

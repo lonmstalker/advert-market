@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { getChannelLanguages } from '@/shared/lib/channel-utils';
 import { formatCompactNumber } from '@/shared/lib/format-number';
 import { formatTonCompact } from '@/shared/lib/ton-format';
+import { AppSurfaceCard } from '@/shared/ui';
 import { listItem, pressScale } from '@/shared/ui/animations';
 import { ChannelAvatar } from '@/shared/ui/components/channel-avatar';
 import { LanguageBadge } from '@/shared/ui/components/language-badge';
@@ -25,52 +26,47 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
       {...listItem}
       {...pressScale}
       onClick={onClick}
-      style={{
-        background: 'var(--color-background-base)',
-        border: '1px solid var(--color-border-separator)',
-        borderRadius: 14,
-        padding: '14px 16px',
-        cursor: 'pointer',
-        WebkitTapHighlightColor: 'transparent',
-      }}
+      style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <ChannelAvatar title={channel.title} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
-            <Text type="body" weight="bold">
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                {channel.title}
+      <AppSurfaceCard className="am-catalog-card" testId="catalog-channel-card">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+          <ChannelAvatar title={channel.title} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+              <Text type="body" weight="bold">
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                  {channel.title}
+                </span>
+              </Text>
+              {channel.isVerified && (
+                <VerifiedIcon
+                  style={{ width: 14, height: 14, color: 'var(--color-accent-primary)', flexShrink: 0 }}
+                  aria-label={t('catalog.channel.verified')}
+                  role="img"
+                />
+              )}
+              {langs.map((code) => (
+                <LanguageBadge key={code} code={code} size="sm" />
+              ))}
+            </div>
+            <Text type="caption1" color="secondary">
+              <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {channel.username ? `@${channel.username} · ` : ''}
+                {formatCompactNumber(channel.subscriberCount)} {t('catalog.channel.subs')}
               </span>
             </Text>
-            {channel.isVerified && (
-              <VerifiedIcon
-                style={{ width: 14, height: 14, color: 'var(--color-accent-primary)', flexShrink: 0 }}
-                aria-label={t('catalog.channel.verified')}
-                role="img"
-              />
-            )}
-            {langs.map((code) => (
-              <LanguageBadge key={code} code={code} size="sm" />
-            ))}
           </div>
-          <Text type="caption1" color="secondary">
-            <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {channel.username ? `@${channel.username} · ` : ''}
-              {formatCompactNumber(channel.subscriberCount)} {t('catalog.channel.subs')}
-            </span>
-          </Text>
+          {channel.pricePerPostNano != null && (
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <Text type="callout" weight="bold">
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {t('catalog.channel.from', { price: `${formatTonCompact(channel.pricePerPostNano)} TON` })}
+                </span>
+              </Text>
+            </div>
+          )}
         </div>
-        {channel.pricePerPostNano != null && (
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <Text type="callout" weight="bold">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                {t('catalog.channel.from', { price: `${formatTonCompact(channel.pricePerPostNano)} TON` })}
-              </span>
-            </Text>
-          </div>
-        )}
-      </div>
+      </AppSurfaceCard>
     </motion.div>
   );
 });

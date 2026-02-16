@@ -72,6 +72,7 @@ describe('OnboardingPage', () => {
 
   it('shows locale step as the first onboarding screen', () => {
     renderPage();
+    expect(screen.getByTestId('onboarding-locale-logo')).toBeInTheDocument();
     expect(screen.getByText('Language & Currency')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
     expect(screen.queryByText('Ad Market')).not.toBeInTheDocument();

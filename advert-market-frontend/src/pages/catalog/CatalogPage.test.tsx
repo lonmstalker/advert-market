@@ -19,6 +19,11 @@ function renderCatalog() {
 describe('CatalogPage', () => {
   // --- Happy path ---
 
+  it('renders unified app page shell', () => {
+    renderCatalog();
+    expect(screen.getByTestId('catalog-page-shell')).toBeInTheDocument();
+  });
+
   it('renders search input with placeholder', () => {
     renderCatalog();
     expect(screen.getByPlaceholderText('Search channels...')).toBeInTheDocument();

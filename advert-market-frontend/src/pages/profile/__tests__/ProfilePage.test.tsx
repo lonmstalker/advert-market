@@ -64,6 +64,7 @@ describe('ProfilePage', () => {
 
   it('renders display name', () => {
     renderPage();
+    expect(screen.getByTestId('profile-page-shell')).toBeInTheDocument();
     expect(screen.getByText('Test User')).toBeInTheDocument();
   });
 

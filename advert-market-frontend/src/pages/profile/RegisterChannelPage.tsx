@@ -19,6 +19,7 @@ import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { copyToClipboard } from '@/shared/lib/clipboard';
 import { parseTonToNano } from '@/shared/lib/ton-format';
+import { AppPageShell, AppSectionHeader, AppSurfaceCard } from '@/shared/ui';
 import { fadeIn, pressScale, slideFromLeft, slideFromRight } from '@/shared/ui/animations';
 
 const BOT_USERNAME = '@AdvertMarketBot';
@@ -68,7 +69,8 @@ export default function RegisterChannelPage() {
         if (error.status === 404) {
           setInlineError(t('profile.register.channelNotFound'));
         } else if (error.status === 409) {
-          showError(t('profile.register.alreadyRegistered'));
+          showInfo(t('profile.register.alreadySynced'));
+          navigate('/profile', { replace: true });
         } else {
           setInlineError(error.message);
         }
@@ -88,7 +90,8 @@ export default function RegisterChannelPage() {
     onError: (error) => {
       haptic.notificationOccurred('error');
       if (error instanceof ApiError && error.status === 409) {
-        showError(t('profile.register.alreadyRegistered'));
+        showInfo(t('profile.register.alreadySynced'));
+        navigate('/profile', { replace: true });
       } else {
         showError(t('common.error'));
       }
@@ -170,163 +173,143 @@ export default function RegisterChannelPage() {
   ];
 
   return (
-    <motion.div
-      {...fadeIn}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 'calc(100vh - 40px)',
-        padding: '0 16px',
-      }}
-    >
-      <div style={{ paddingTop: 16, paddingBottom: 16 }}>
-        <Text type="title1" weight="bold">
-          {t('profile.register.title')}
-        </Text>
-      </div>
+    <AppPageShell withTabsPadding={false} testId="profile-register-channel-page">
+      <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 40px)' }}>
+        <AppSectionHeader title={t('profile.register.title')} />
 
-      <AnimatePresence mode="wait">
-        {step === 1 && (
-          <motion.div key="step1" {...slideFromLeft} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Instruction */}
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 12,
-                  background: 'var(--color-background-base)',
-                  border: '1px solid var(--color-border-separator)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                }}
-              >
-                <Text type="subheadline2" color="secondary">
-                  {t('profile.register.addBotInstruction')}
-                </Text>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <Button text={t('profile.register.copyBot')} type="secondary" onClick={handleCopyBot} />
-                  <Button text={t('profile.register.openBot')} type="secondary" onClick={handleOpenBot} />
-                </div>
-              </div>
-
-              {/* Username input */}
-              <div>
-                <div style={{ marginBottom: 8 }}>
-                  <Text type="subheadline2" color="secondary">
-                    {t('profile.register.channelLink')}
-                  </Text>
-                </div>
-                <Input
-                  value={username}
-                  onChange={(v) => {
-                    setUsername(v);
-                    setInlineError(null);
-                  }}
-                  placeholder={t('profile.register.channelPlaceholder')}
-                />
-                {inlineError && (
-                  <motion.div {...fadeIn} style={{ marginTop: 8 }}>
-                    <div style={{ color: 'var(--color-state-destructive)' }}>
-                      <Text type="caption1">{inlineError}</Text>
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div key="step1" {...slideFromLeft} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Instruction */}
+                <AppSurfaceCard>
+                  <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <Text type="subheadline2" color="secondary">
+                      {t('profile.register.addBotInstruction')}
+                    </Text>
+                    <Text type="caption1" color="secondary">
+                      {t('profile.register.autosyncHint')}
+                    </Text>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Button text={t('profile.register.copyBot')} type="secondary" onClick={handleCopyBot} />
+                      <Button text={t('profile.register.openBot')} type="secondary" onClick={handleOpenBot} />
                     </div>
-                  </motion.div>
-                )}
-              </div>
-            </div>
+                  </div>
+                </AppSurfaceCard>
 
-            {/* Verify button */}
-            <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
-              <motion.div {...pressScale}>
-                <Button
-                  text={verifyMutation.isPending ? t('profile.register.verifying') : t('profile.register.verify')}
-                  type="primary"
-                  onClick={handleVerify}
-                  disabled={!username.trim()}
-                  loading={verifyMutation.isPending}
-                />
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 2 && verifyData && (
-          <motion.div key="step2" {...slideFromRight} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Channel info */}
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 12,
-                  background: 'var(--color-background-base)',
-                  border: '1px solid var(--color-border-separator)',
-                }}
-              >
-                <div style={{ marginBottom: 4 }}>
-                  <Text type="subheadline2" color="secondary">
-                    {t('profile.register.channelInfo')}
-                  </Text>
-                </div>
-                <Text type="title2" weight="bold">
-                  {verifyData.title}
-                </Text>
-                {verifyData.username && (
-                  <Text type="subheadline2" color="secondary">
-                    @{verifyData.username}
-                  </Text>
-                )}
-                <div style={{ marginTop: 4 }}>
-                  <Text type="subheadline2" color="secondary">
-                    {t('profile.register.subscribers', { count: verifyData.subscriberCount })}
-                  </Text>
+                {/* Username input */}
+                <div>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text type="subheadline2" color="secondary">
+                      {t('profile.register.channelLink')}
+                    </Text>
+                  </div>
+                  <Input
+                    value={username}
+                    onChange={(v) => {
+                      setUsername(v);
+                      setInlineError(null);
+                    }}
+                    placeholder={t('profile.register.channelPlaceholder')}
+                  />
+                  {inlineError && (
+                    <motion.div {...fadeIn} style={{ marginTop: 8 }}>
+                      <div style={{ color: 'var(--color-state-destructive)' }}>
+                        <Text type="caption1">{inlineError}</Text>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
 
-              {/* Category select */}
-              <div>
-                <div style={{ marginBottom: 8 }}>
-                  <Text type="subheadline2" color="secondary">
-                    {t('profile.register.category')}
-                  </Text>
+              {/* Verify button */}
+              <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
+                <motion.div {...pressScale}>
+                  <Button
+                    text={verifyMutation.isPending ? t('profile.register.verifying') : t('profile.register.verify')}
+                    type="primary"
+                    onClick={handleVerify}
+                    disabled={!username.trim()}
+                    loading={verifyMutation.isPending}
+                  />
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 2 && verifyData && (
+            <motion.div key="step2" {...slideFromRight} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Channel info */}
+                <AppSurfaceCard>
+                  <div style={{ padding: 16 }}>
+                    <div style={{ marginBottom: 4 }}>
+                      <Text type="subheadline2" color="secondary">
+                        {t('profile.register.channelInfo')}
+                      </Text>
+                    </div>
+                    <Text type="title2" weight="bold">
+                      {verifyData.title}
+                    </Text>
+                    {verifyData.username && (
+                      <Text type="subheadline2" color="secondary">
+                        @{verifyData.username}
+                      </Text>
+                    )}
+                    <div style={{ marginTop: 4 }}>
+                      <Text type="subheadline2" color="secondary">
+                        {t('profile.register.subscribers', { count: verifyData.subscriberCount })}
+                      </Text>
+                    </div>
+                  </div>
+                </AppSurfaceCard>
+
+                {/* Category select */}
+                <div>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text type="subheadline2" color="secondary">
+                      {t('profile.register.category')}
+                    </Text>
+                  </div>
+                  <Select options={categoryOptions} value={selectedCategory} onChange={setSelectedCategory} />
                 </div>
-                <Select options={categoryOptions} value={selectedCategory} onChange={setSelectedCategory} />
+
+                {/* Price input */}
+                <div>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text type="subheadline2" color="secondary">
+                      {t('profile.register.price')}
+                    </Text>
+                  </div>
+                  <Input
+                    value={price}
+                    onChange={setPrice}
+                    placeholder={t('profile.register.pricePlaceholder')}
+                    type="number"
+                  />
+                  <div style={{ marginTop: 4 }}>
+                    <Text type="caption1" color="secondary">
+                      {t('profile.register.priceHint')}
+                    </Text>
+                  </div>
+                </div>
               </div>
 
-              {/* Price input */}
-              <div>
-                <div style={{ marginBottom: 8 }}>
-                  <Text type="subheadline2" color="secondary">
-                    {t('profile.register.price')}
-                  </Text>
-                </div>
-                <Input
-                  value={price}
-                  onChange={setPrice}
-                  placeholder={t('profile.register.pricePlaceholder')}
-                  type="number"
-                />
-                <div style={{ marginTop: 4 }}>
-                  <Text type="caption1" color="secondary">
-                    {t('profile.register.priceHint')}
-                  </Text>
-                </div>
+              {/* Register button */}
+              <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
+                <motion.div {...pressScale}>
+                  <Button
+                    text={registerMutation.isPending ? t('profile.register.submitting') : t('profile.register.submit')}
+                    type="primary"
+                    onClick={handleRegister}
+                    loading={registerMutation.isPending}
+                  />
+                </motion.div>
               </div>
-            </div>
-
-            {/* Register button */}
-            <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
-              <motion.div {...pressScale}>
-                <Button
-                  text={registerMutation.isPending ? t('profile.register.submitting') : t('profile.register.submit')}
-                  type="primary"
-                  onClick={handleRegister}
-                  loading={registerMutation.isPending}
-                />
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </AppPageShell>
   );
 }
