@@ -11,19 +11,6 @@ vi.mock('@/shared/hooks/use-haptic', () => ({
 }));
 
 describe('SearchInput', () => {
-  it('renders right action slot', () => {
-    render(
-      <SearchInput
-        value=""
-        onChange={vi.fn()}
-        placeholder="Search"
-        rightAction={<button type="button">Filters</button>}
-      />,
-    );
-
-    expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument();
-  });
-
   it('calls onChange when input changes', async () => {
     const onChange = vi.fn();
     render(<SearchInput value="" onChange={onChange} placeholder="Search" />);

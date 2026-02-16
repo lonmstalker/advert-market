@@ -19,9 +19,10 @@ const previewContainer = {
 
 export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: RoleCardProps) {
   return (
-    <motion.div {...pressScale}>
+    <motion.div {...pressScale} data-testid="role-card-root">
       <Tappable
         className="focusable"
+        data-testid="role-card-trigger"
         onClick={onToggle}
         style={{
           display: 'flex',

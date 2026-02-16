@@ -3,15 +3,8 @@ import { render, screen, userEvent } from '@/test/test-utils';
 import { Chip } from '../chip';
 
 describe('Chip', () => {
-  it('uses tinted active style by default', () => {
+  it('uses accent active style', () => {
     render(<Chip label="Crypto" active onClick={vi.fn()} />);
-    const chip = screen.getByRole('button', { name: 'Crypto' });
-    expect(chip).toHaveStyle({ background: 'var(--am-soft-accent-bg)' });
-    expect(chip).toHaveStyle({ color: 'var(--color-accent-primary)' });
-  });
-
-  it('uses solid active style when tone is solid', () => {
-    render(<Chip label="Crypto" active tone="solid" onClick={vi.fn()} />);
     const chip = screen.getByRole('button', { name: 'Crypto' });
     expect(chip).toHaveStyle({ background: 'var(--color-accent-primary)' });
     expect(chip).toHaveStyle({ color: 'var(--color-static-white)' });

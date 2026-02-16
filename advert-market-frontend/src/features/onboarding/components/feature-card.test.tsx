@@ -3,9 +3,9 @@ import { render, screen } from '@/test/test-utils';
 import { FeatureCard } from './feature-card';
 
 describe('FeatureCard', () => {
-  it('renders icon without background box wrapper', () => {
+  it('renders icon inside background box wrapper', () => {
     render(<FeatureCard icon={<span data-testid="custom-icon">*</span>} title="Title" hint="Hint" />);
     expect(screen.getByTestId('custom-icon')).toBeInTheDocument();
-    expect(screen.queryByTestId('feature-icon-box')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feature-icon-box')).toBeInTheDocument();
   });
 });
