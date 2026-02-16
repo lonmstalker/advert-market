@@ -29,7 +29,7 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
       className="cursor-pointer [-webkit-tap-highlight-color:transparent]"
     >
       <AppSurfaceCard className="am-catalog-card" testId="catalog-channel-card">
-        <div className="flex items-center gap-3 px-4 py-3.5">
+        <div className="flex items-center gap-3 px-4 py-4">
           <ChannelAvatar title={channel.title} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 min-w-0">

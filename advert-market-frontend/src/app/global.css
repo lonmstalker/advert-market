@@ -91,7 +91,7 @@ body {
      Bridge through --color-* so dark theme overrides cascade automatically. */
   --am-app-background: var(--color-background-secondary);
   --am-page-background: var(--color-background-secondary);
-  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, color-mix(in srgb, var(--color-accent-primary) 9%, transparent) 0%, transparent 72%);
+  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, color-mix(in srgb, var(--color-accent-primary) 14%, transparent) 0%, transparent 72%);
   --am-card-surface: var(--color-background-base);
   --am-row-surface: var(--color-background-base);
   --am-control-surface: var(--color-background-secondary);
@@ -177,6 +177,8 @@ body {
   --color-accent-primary: var(--tg-theme-button-color, #3390ec);
   --color-link: var(--tg-theme-link-color, #3390ec);
 
+  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, color-mix(in srgb, var(--color-accent-primary) 20%, transparent) 0%, transparent 72%);
+
   --color-state-success: #30d158;
   --color-state-destructive: #ff453a;
   --color-state-warning: #ff9f0a;
@@ -217,6 +219,8 @@ body {
     --color-state-success: #30d158;
     --color-state-destructive: #ff453a;
     --color-state-warning: #ff9f0a;
+
+    --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, color-mix(in srgb, #3390ec 20%, transparent) 0%, transparent 72%);
 
     --am-card-border: rgba(255, 255, 255, 0.06);
     --am-border-strong: rgba(255, 255, 255, 0.12);
@@ -262,7 +266,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 200px;
+  height: 260px;
   background: var(--am-page-atmosphere);
   pointer-events: none;
   z-index: 0;
@@ -390,8 +394,19 @@ body {
 .am-catalog-card {
   border-radius: 16px;
   border: 1px solid var(--am-card-border);
-  box-shadow: none;
-  background: var(--am-row-surface);
+  box-shadow: var(--am-shadow-sm);
+  background: var(--am-card-surface);
+}
+
+[theme-mode='dark'] .am-catalog-card,
+[data-theme='dark'] .am-catalog-card {
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([theme-mode]):not([data-theme]) .am-catalog-card {
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+  }
 }
 
 .am-tab-layout {

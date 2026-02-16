@@ -167,7 +167,7 @@ export default function CatalogPage() {
         ) : (
           <motion.div key="list" {...staggerChildren} initial="initial" animate="animate">
             {summary && (
-              <div className="py-1">
+              <div className="py-1.5 px-0.5">
                 <Text type="footnote" color="secondary">
                   {summary.avgCpm != null
                     ? t('catalog.summary', {
