@@ -42,6 +42,7 @@ import org.ton.ton4j.smartcontract.wallet.v4.WalletV4R2;
 public class TonWalletService implements TonWalletPort {
 
     private static final Duration TX_LOCK_TTL = Duration.ofSeconds(300);
+    private static final int MAX_SEND_RETRIES = 3;
 
     private final TonBlockchainPort blockchainPort;
     private final DistributedLockPort lockPort;
@@ -110,6 +111,71 @@ public class TonWalletService implements TonWalletPort {
         String walletAddress = wallet.getAddress().toBounceable();
         long seqno = blockchainPort.getSeqno(walletAddress);
 
+        String base64Boc = buildSignedBoc(wallet, subwalletId, seqno,
+                destinationAddress, amountNano);
+
+        for (int attempt = 0; attempt < MAX_SEND_RETRIES; attempt++) {
+            try {
+                String txHash = blockchainPort.sendBoc(base64Boc);
+                metrics.incrementCounter(MetricNames.TON_TX_SUBMITTED,
+                        "direction", "OUT");
+                log.info("TON transaction submitted: txHash={}, subwallet={}, "
+                                + "dest={}, amount={}, seqno={}",
+                        txHash, subwalletId, destinationAddress,
+                        amountNano, seqno);
+                return txHash;
+            } catch (DomainException ex) {
+                String recovered = handleSendFailure(walletAddress, seqno,
+                        subwalletId, attempt);
+                if (recovered != null) {
+                    return recovered;
+                }
+            }
+        }
+
+        throw new DomainException(ErrorCodes.TON_TX_FAILED,
+                "Failed to submit TON transaction after "
+                        + MAX_SEND_RETRIES + " retries");
+    }
+
+    private String handleSendFailure(String walletAddress, long originalSeqno,
+                                      int subwalletId, int attempt) {
+        long currentSeqno = blockchainPort.getSeqno(walletAddress);
+        if (currentSeqno > originalSeqno) {
+            log.warn("Seqno advanced {} -> {} after sendBoc failure, "
+                            + "recovering TX hash for subwallet={}",
+                    originalSeqno, currentSeqno, subwalletId);
+            return recoverTxHash(walletAddress);
+        }
+
+        if (attempt < MAX_SEND_RETRIES - 1) {
+            log.warn("sendBoc failed (attempt {}/{}), seqno unchanged, "
+                            + "retrying: subwallet={}",
+                    attempt + 1, MAX_SEND_RETRIES, subwalletId);
+        }
+        return null;
+    }
+
+    private String recoverTxHash(String walletAddress) {
+        var recent = blockchainPort.getTransactions(walletAddress, 1);
+        if (!recent.isEmpty()) {
+            String recovered = recent.getFirst().txHash();
+            metrics.incrementCounter(MetricNames.TON_TX_SUBMITTED,
+                    "direction", "OUT");
+            log.info("Recovered TX hash after seqno advance: {}",
+                    recovered);
+            return recovered;
+        }
+        metrics.incrementCounter(MetricNames.TON_TX_SUBMITTED,
+                "direction", "OUT");
+        log.warn("Seqno advanced but no recent TX found, "
+                + "returning empty hash");
+        return "";
+    }
+
+    private String buildSignedBoc(WalletV4R2 wallet, int subwalletId,
+                                   long seqno, String destinationAddress,
+                                   long amountNano) {
         WalletV4R2Config txConfig = WalletV4R2Config.builder()
                 .walletId(subwalletId)
                 .seqno(seqno)
@@ -120,25 +186,7 @@ public class TonWalletService implements TonWalletPort {
 
         wallet.createTransferBody(txConfig);
         Cell signedBody = wallet.createInternalSignedBody(txConfig);
-        String base64Boc = signedBody.toBase64();
-
-        String txHash;
-        try {
-            txHash = blockchainPort.sendBoc(base64Boc);
-        } catch (DomainException ex) {
-            log.error("Failed to send TON transaction: subwallet={}, dest={}, amount={}",
-                    subwalletId, destinationAddress, amountNano, ex);
-            throw new DomainException(ErrorCodes.TON_TX_FAILED,
-                    "Failed to submit TON transaction: " + ex.getMessage(), ex);
-        }
-
-        metrics.incrementCounter(MetricNames.TON_TX_SUBMITTED,
-                "direction", "OUT");
-
-        log.info("TON transaction submitted: txHash={}, subwallet={}, dest={}, amount={}",
-                txHash, subwalletId, destinationAddress, amountNano);
-
-        return txHash;
+        return signedBody.toBase64();
     }
 
     @SuppressWarnings("ThrowInsideCatchWithoutCause") // security: prevent mnemonic leak via exception chain
