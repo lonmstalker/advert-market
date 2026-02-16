@@ -6,6 +6,7 @@ import io.github.springpropertiesmd.api.annotation.PropertyGroupDoc;
 import io.github.springpropertiesmd.api.annotation.Requirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
@@ -63,8 +64,9 @@ public record TelegramBotProperties(
     /**
      * Webhook configuration.
      *
-     * @param url    the webhook URL
+     * @param url the webhook URL
      * @param secret the secret token for webhook validation
+     * @param maxBodyBytes max accepted webhook payload body size
      */
     public record Webhook(
             @PropertyDoc(
@@ -78,7 +80,13 @@ public record TelegramBotProperties(
                     required = Requirement.OPTIONAL,
                     sensitive = true
             )
-            @NotBlank String secret
+            @NotBlank String secret,
+
+            @PropertyDoc(
+                    description = "Maximum accepted webhook request body size in bytes",
+                    required = Requirement.OPTIONAL
+            )
+            @Positive @DefaultValue("262144") int maxBodyBytes
     ) {
     }
 

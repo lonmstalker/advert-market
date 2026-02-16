@@ -128,7 +128,8 @@ class StartCommandTest {
 
             var botProps = new TelegramBotProperties(
                     "token", "bot",
-                    new TelegramBotProperties.Webhook("", "secret"),
+                    new TelegramBotProperties.Webhook(
+                            "", "secret", 262_144),
                     new TelegramBotProperties.WebApp("https://app.test"),
                     new TelegramBotProperties.Welcome(""));
 

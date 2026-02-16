@@ -53,9 +53,16 @@ Programmatic registration on startup via `TelegramBot.execute(SetWebhook(...))`.
 
 Endpoint `POST /api/v1/bot/webhook`:
 1. Validate `X-Telegram-Bot-Api-Secret-Token` header matches configured secret
-2. Parse request body via `BotUtils.parseUpdate(body)`
-3. Delegate to `BotUpdateHandler.handle(update)`
-4. Return 200 OK immediately (async processing)
+2. Enforce payload guardrail (`app.telegram.webhook.max-body-bytes`, default 262144) and return `413` for oversized requests
+3. Parse request body via `BotUtils.parseUpdate(body)`
+4. Delegate to `BotUpdateHandler.handle(update)`
+5. Return 200 OK immediately (async processing)
+
+Webhook rejection counters are tracked by reason:
+- `invalid_secret`
+- `parse_error`
+- `oversize`
+- `duplicate`
 
 ---
 

@@ -27,7 +27,7 @@ class TelegramWebhookRegistrarTest {
         var props = mock(TelegramBotProperties.class);
         when(props.webhook()).thenReturn(
                 new TelegramBotProperties.Webhook(
-                        "", "secret"));
+                        "", "secret", 262_144));
 
         var registrar = new TelegramWebhookRegistrar(bot, props);
         registrar.registerWebhook();
@@ -45,7 +45,7 @@ class TelegramWebhookRegistrarTest {
                 "https://example.com/api/v1/bot/webhook";
         when(props.webhook()).thenReturn(
                 new TelegramBotProperties.Webhook(
-                        webhookUrl, "secret-token"));
+                        webhookUrl, "secret-token", 262_144));
 
         BaseResponse ok = mock(BaseResponse.class);
         when(ok.isOk()).thenReturn(true);
@@ -89,7 +89,7 @@ class TelegramWebhookRegistrarTest {
         when(props.webhook()).thenReturn(
                 new TelegramBotProperties.Webhook(
                         "https://example.com/webhook",
-                        "secret-token"));
+                        "secret-token", 262_144));
 
         BaseResponse rejected = mock(BaseResponse.class);
         when(rejected.isOk()).thenReturn(false);
@@ -107,4 +107,3 @@ class TelegramWebhookRegistrarTest {
                 .hasMessageContaining("setWebhook failed");
     }
 }
-

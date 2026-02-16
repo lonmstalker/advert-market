@@ -109,6 +109,8 @@ class BotChannelStatusHandlerTest {
         when(lifecyclePort.findOwnerByTelegramId(-200L))
                 .thenReturn(Optional.of(
                         new ChannelOwnerInfo(-200L, 99L, "Ch")));
+        when(lifecyclePort.deactivateByTelegramId(-200L))
+                .thenReturn(true);
 
         handler.handle(createUpdate(Chat.Type.channel,
                 Status.administrator, Status.kicked, -200L));
@@ -126,6 +128,8 @@ class BotChannelStatusHandlerTest {
         when(lifecyclePort.findOwnerByTelegramId(-300L))
                 .thenReturn(Optional.of(
                         new ChannelOwnerInfo(-300L, 55L, "Demo")));
+        when(lifecyclePort.deactivateByTelegramId(-300L))
+                .thenReturn(true);
 
         handler.handle(createUpdate(Chat.Type.channel,
                 Status.administrator, Status.member, -300L));
@@ -176,6 +180,8 @@ class BotChannelStatusHandlerTest {
         when(lifecyclePort.findOwnerByTelegramId(-600L))
                 .thenReturn(Optional.of(
                         new ChannelOwnerInfo(-600L, 11L, "Rights")));
+        when(lifecyclePort.deactivateByTelegramId(-600L))
+                .thenReturn(true);
 
         var update = createUpdateWithCanPost(
                 Chat.Type.channel, -600L, false);
@@ -183,6 +189,24 @@ class BotChannelStatusHandlerTest {
 
         verify(lifecyclePort).deactivateByTelegramId(-600L);
         verify(notificationPort).send(any());
+    }
+
+    @Test
+    @DisplayName("Does not notify repeatedly when channel already inactive")
+    void handle_adminRightsChanged_canPostFalse_alreadyInactive_noNotify()
+            throws Exception {
+        when(lifecyclePort.findOwnerByTelegramId(-610L))
+                .thenReturn(Optional.of(
+                        new ChannelOwnerInfo(-610L, 13L, "Rights2")));
+        when(lifecyclePort.deactivateByTelegramId(-610L))
+                .thenReturn(false);
+
+        var update = createUpdateWithCanPost(
+                Chat.Type.channel, -610L, false);
+        handler.handle(update);
+
+        verify(lifecyclePort).deactivateByTelegramId(-610L);
+        verify(notificationPort, never()).send(any());
     }
 
     @Test
@@ -198,6 +222,23 @@ class BotChannelStatusHandlerTest {
         handler.handle(update);
 
         verify(lifecyclePort).reactivateByTelegramId(-700L);
+        verify(notificationPort, never()).send(any());
+    }
+
+    @Test
+    @DisplayName("Does not notify repeatedly when demoted update is duplicated")
+    void handle_adminToMember_alreadyInactive_noDuplicateNotify()
+            throws Exception {
+        when(lifecyclePort.findOwnerByTelegramId(-710L))
+                .thenReturn(Optional.of(
+                        new ChannelOwnerInfo(-710L, 24L, "NoDup")));
+        when(lifecyclePort.deactivateByTelegramId(-710L))
+                .thenReturn(false);
+
+        handler.handle(createUpdate(Chat.Type.channel,
+                Status.administrator, Status.member, -710L));
+
+        verify(lifecyclePort).deactivateByTelegramId(-710L);
         verify(notificationPort, never()).send(any());
     }
 

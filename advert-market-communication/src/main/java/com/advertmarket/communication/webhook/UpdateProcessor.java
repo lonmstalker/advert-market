@@ -9,10 +9,12 @@ import com.advertmarket.communication.bot.internal.dispatch.BotDispatcher;
 import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
 import com.advertmarket.communication.bot.internal.error.BotErrorHandler;
 import com.advertmarket.communication.canary.CanaryRouter;
+import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -43,7 +45,16 @@ public class UpdateProcessor {
      * @param update the Telegram update
      */
     public void processAsync(Update update) {
-        botUpdateExecutor.submit(() -> processUpdate(update));
+        try {
+            botUpdateExecutor.submit(
+                    () -> processUpdate(update)).isDone();
+        } catch (RejectedExecutionException ex) {
+            metrics.incrementCounter(
+                    MetricNames.WEBHOOK_DISPATCH_REJECTED,
+                    "reason", "rejected_execution");
+            log.warn("Bot update dispatch rejected for update_id={}",
+                    update.updateId(), ex);
+        }
     }
 
     private void processUpdate(Update update) {

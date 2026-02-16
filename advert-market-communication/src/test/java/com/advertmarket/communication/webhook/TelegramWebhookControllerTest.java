@@ -28,7 +28,7 @@ class TelegramWebhookControllerTest {
         deduplicator = mock(UpdateDeduplicationPort.class);
         processor = mock(UpdateProcessor.class);
         var botProps = mock(TelegramBotProperties.class);
-        var webhook = new Webhook("", "my-secret");
+        var webhook = new Webhook("", "my-secret", 262_144);
         when(botProps.webhook()).thenReturn(webhook);
         var handler = new TelegramWebhookHandler(
                 botProps,
@@ -100,5 +100,20 @@ class TelegramWebhookControllerTest {
 
         assertThat(response.getStatusCode().value())
                 .isEqualTo(400);
+    }
+
+    @Test
+    @DisplayName("Returns 413 for oversized webhook payload")
+    void handleWebhook_oversizedBody_returns413() {
+        String oversized = "{\"update_id\":1,\"payload\":\""
+                + "x".repeat(300_000) + "\"}";
+
+        var response = controller.handleWebhook(
+                "my-secret", oversized);
+
+        assertThat(response.getStatusCode().value())
+                .isEqualTo(413);
+        verify(processor, never()).processAsync(
+                org.mockito.ArgumentMatchers.any());
     }
 }

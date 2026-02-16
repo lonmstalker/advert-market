@@ -2,13 +2,166 @@
 set -e -u -o pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
 
-echo "=== pre-push: running backend unit tests ==="
-"$REPO_ROOT/gradlew" -p "$REPO_ROOT" test -x :advert-market-integration-tests:test --no-daemon -q
+is_zero_sha() {
+  local sha="$1"
+  [[ "$sha" =~ ^0+$ ]]
+}
 
-echo "=== pre-push: running frontend tests ==="
-cd "$REPO_ROOT/advert-market-frontend"
-npm test -- --run
-npm run test:arch
+is_docs_only_path() {
+  local path="$1"
+  case "$path" in
+    *.md|docs/*|.memory-bank/*|tasks/*|.ralph/*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
 
-echo "=== pre-push: all checks passed ==="
+is_frontend_path() {
+  local path="$1"
+  [[ "$path" == advert-market-frontend/* ]]
+}
+
+is_backend_path() {
+  local path="$1"
+  case "$path" in
+    advert-market-app/*|advert-market-communication/*|advert-market-communication-api/*|advert-market-db/*|advert-market-delivery/*|advert-market-delivery-api/*|advert-market-financial/*|advert-market-financial-api/*|advert-market-identity/*|advert-market-identity-api/*|advert-market-integration-tests/*|advert-market-marketplace/*|advert-market-marketplace-api/*|advert-market-shared/*|platform-bom/*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+is_shared_path() {
+  local path="$1"
+  case "$path" in
+    build.gradle|settings.gradle|gradle.properties|gradlew|gradlew.bat|gradle/*|scripts/*|.github/workflows/*|Dockerfile|docker-compose.yml|compose.yml)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+collect_changed_files() {
+  local tmp_changed
+  tmp_changed="$(mktemp)"
+  local had_stdin_data="false"
+
+  while read -r local_ref local_sha remote_ref remote_sha; do
+    had_stdin_data="true"
+    if is_zero_sha "$local_sha"; then
+      continue
+    fi
+
+    local range=""
+    if is_zero_sha "$remote_sha"; then
+      local base
+      base="$(git merge-base "$local_sha" origin/main 2>/dev/null || true)"
+      if [[ -n "$base" ]]; then
+        range="$base..$local_sha"
+      fi
+    else
+      range="$remote_sha..$local_sha"
+    fi
+
+    if [[ -n "$range" ]]; then
+      git diff --name-only "$range" >> "$tmp_changed"
+    else
+      git diff-tree --no-commit-id --name-only -r "$local_sha" >> "$tmp_changed"
+    fi
+  done
+
+  if [[ "$had_stdin_data" != "true" ]]; then
+    local upstream
+    upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+    if [[ -n "$upstream" ]]; then
+      git diff --name-only "$upstream...HEAD" >> "$tmp_changed"
+    else
+      git diff --name-only HEAD~1..HEAD 2>/dev/null >> "$tmp_changed" || true
+    fi
+  fi
+
+  if [[ -s "$tmp_changed" ]]; then
+    sort -u "$tmp_changed"
+  fi
+  rm -f "$tmp_changed"
+}
+
+run_backend_checks() {
+  echo "=== pre-push: running backend unit tests ==="
+  "$REPO_ROOT/gradlew" -p "$REPO_ROOT" test -x :advert-market-integration-tests:test --no-daemon -q
+}
+
+run_frontend_checks() {
+  echo "=== pre-push: running frontend tests ==="
+  cd "$REPO_ROOT/advert-market-frontend"
+  npm test -- --run
+  npm run test:arch
+}
+
+changed_files="$(collect_changed_files)"
+
+if [[ -z "$changed_files" ]]; then
+  echo "=== pre-push: no changed files detected, skipping checks ==="
+  exit 0
+fi
+
+docs_only="true"
+touches_frontend="false"
+touches_backend="false"
+touches_shared="false"
+
+while IFS= read -r file; do
+  [[ -z "$file" ]] && continue
+  if ! is_docs_only_path "$file"; then
+    docs_only="false"
+  fi
+
+  if is_frontend_path "$file"; then
+    touches_frontend="true"
+    continue
+  fi
+
+  if is_backend_path "$file"; then
+    touches_backend="true"
+    continue
+  fi
+
+  if is_shared_path "$file"; then
+    touches_shared="true"
+    continue
+  fi
+
+  if ! is_docs_only_path "$file"; then
+    touches_shared="true"
+  fi
+done <<< "$changed_files"
+
+if [[ "$docs_only" == "true" ]]; then
+  echo "=== pre-push: docs/memory-only changes, skipping heavy checks ==="
+  exit 0
+fi
+
+if [[ "$touches_shared" == "true" ]]; then
+  run_backend_checks
+  run_frontend_checks
+elif [[ "$touches_backend" == "true" && "$touches_frontend" == "true" ]]; then
+  run_backend_checks
+  run_frontend_checks
+elif [[ "$touches_backend" == "true" ]]; then
+  run_backend_checks
+elif [[ "$touches_frontend" == "true" ]]; then
+  run_frontend_checks
+else
+  echo "=== pre-push: no recognized source paths, skipping checks ==="
+fi
+
+echo "=== pre-push: checks passed ==="

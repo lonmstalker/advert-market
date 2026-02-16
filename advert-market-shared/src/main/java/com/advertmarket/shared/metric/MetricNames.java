@@ -92,6 +92,16 @@ public final class MetricNames {
             "channel.bot.status.change";
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_DEACTIVATED_TOTAL =
             "channel.deactivated.total";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_CYCLE_DURATION =
+            "channel.stats.collector.cycle.duration";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_BATCH_SIZE =
+            "channel.stats.collector.batch.size";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_SUCCESS =
+            "channel.stats.collector.success";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_FAILURE =
+            "channel.stats.collector.failure";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_RETRY =
+            "channel.stats.collector.retry";
 
     // --- Deal Timeout ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String DEAL_TIMEOUT_PROCESSED =
@@ -114,6 +124,12 @@ public final class MetricNames {
     // --- Telegram Webhook ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String WEBHOOK_LATENCY =
             "telegram.webhook.latency";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WEBHOOK_REJECTED_TOTAL =
+            "telegram.webhook.rejected.total";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WEBHOOK_ACCEPTED_DISPATCHED =
+            "telegram.webhook.accepted.dispatched";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WEBHOOK_DISPATCH_REJECTED =
+            "telegram.webhook.dispatch.rejected";
     public static final @Fenum(FenumGroup.METRIC_NAME) String DEDUP_ACQUIRED =
             "telegram.update.dedup.acquired";
     public static final @Fenum(FenumGroup.METRIC_NAME) String DEDUP_DUPLICATE =

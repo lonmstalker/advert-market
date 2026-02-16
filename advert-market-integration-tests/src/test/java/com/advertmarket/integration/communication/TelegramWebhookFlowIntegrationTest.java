@@ -69,6 +69,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -173,6 +174,20 @@ class TelegramWebhookFlowIntegrationTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/bot/webhook returns 413 on oversized payload")
+    void oversizedPayloadReturns413() {
+        String oversizedPayload = "{\"update_id\":1,\"payload\":\""
+                + "x".repeat(300_000) + "\"}";
+        webClient.post()
+                .uri("/api/v1/bot/webhook")
+                .header("X-Telegram-Bot-Api-Secret-Token", WEBHOOK_SECRET)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(oversizedPayload)
+                .exchange()
+                .expectStatus().isEqualTo(413);
+    }
+
+    @Test
     @DisplayName("admin -> left deactivates channel and sends CHANNEL_BOT_REMOVED")
     void adminToLeftDeactivatesAndSendsRemovedNotification() throws Exception {
         webClient.post()
@@ -207,6 +222,25 @@ class TelegramWebhookFlowIntegrationTest {
                 .bodyValue(payload)
                 .exchange()
                 .expectStatus().isOk();
+
+        awaitChannelActive(false);
+        awaitTelegramCalls(1);
+    }
+
+    @Test
+    @Tag("bot-hardening")
+    @DisplayName("Burst duplicate updates produce only one side-effect")
+    void burstDuplicatesProduceSingleSideEffect() throws Exception {
+        String payload = fixture("telegram/duplicate_update_id.json");
+        for (int i = 0; i < 20; i++) {
+            webClient.post()
+                    .uri("/api/v1/bot/webhook")
+                    .header("X-Telegram-Bot-Api-Secret-Token", WEBHOOK_SECRET)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(payload)
+                    .exchange()
+                    .expectStatus().isOk();
+        }
 
         awaitChannelActive(false);
         awaitTelegramCalls(1);
@@ -367,7 +401,8 @@ class TelegramWebhookFlowIntegrationTest {
                     "test_bot",
                     new TelegramBotProperties.Webhook(
                             "https://example.test/webhook",
-                            WEBHOOK_SECRET),
+                            WEBHOOK_SECRET,
+                            262_144),
                     new TelegramBotProperties.WebApp("https://example.test"),
                     new TelegramBotProperties.Welcome(""));
         }

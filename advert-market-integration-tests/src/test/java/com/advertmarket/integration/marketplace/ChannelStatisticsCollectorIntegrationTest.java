@@ -4,6 +4,8 @@ import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.integration.support.ContainerProperties;
@@ -41,6 +43,7 @@ class ChannelStatisticsCollectorIntegrationTest {
 
     private static final long OWNER_ID = 901L;
     private static final long CHANNEL_ID = -1009001L;
+    private static final long CHANNEL_ID_2 = -1009002L;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -101,6 +104,52 @@ class ChannelStatisticsCollectorIntegrationTest {
         assertThat(isActive).isFalse();
     }
 
+    @Test
+    @DisplayName("Retries transient SERVICE_UNAVAILABLE and updates on success")
+    void retriesTransientFailureAndEventuallyUpdates() {
+        when(telegramChannelPort.getChatMemberCount(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.SERVICE_UNAVAILABLE,
+                        "temporary outage"))
+                .thenReturn(2024);
+
+        scheduler.collectChannelStatistics();
+
+        Integer subscriberCount = dsl.select(CHANNELS.SUBSCRIBER_COUNT)
+                .from(CHANNELS)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .fetchOne(CHANNELS.SUBSCRIBER_COUNT);
+        assertThat(subscriberCount).isEqualTo(2024);
+        verify(telegramChannelPort, times(2))
+                .getChatMemberCount(CHANNEL_ID);
+    }
+
+    @Test
+    @DisplayName("Mixed batch continues after one channel fails")
+    void mixedBatchContinuesAfterFailure() {
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID_2, OWNER_ID);
+        when(telegramChannelPort.getChatMemberCount(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.CHANNEL_NOT_FOUND,
+                        "missing"));
+        when(telegramChannelPort.getChatMemberCount(CHANNEL_ID_2))
+                .thenReturn(512);
+
+        scheduler.collectChannelStatistics();
+
+        Boolean firstActive = dsl.select(CHANNELS.IS_ACTIVE)
+                .from(CHANNELS)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .fetchOne(CHANNELS.IS_ACTIVE);
+        Integer secondSubscribers = dsl.select(CHANNELS.SUBSCRIBER_COUNT)
+                .from(CHANNELS)
+                .where(CHANNELS.ID.eq(CHANNEL_ID_2))
+                .fetchOne(CHANNELS.SUBSCRIBER_COUNT);
+
+        assertThat(firstActive).isFalse();
+        assertThat(secondSubscribers).isEqualTo(512);
+    }
+
     @Configuration
     @EnableAutoConfiguration
     static class TestConfig {
@@ -129,7 +178,7 @@ class ChannelStatisticsCollectorIntegrationTest {
         ChannelStatisticsCollectorProperties
                 channelStatisticsCollectorProperties() {
             return new ChannelStatisticsCollectorProperties(
-                    true, 100);
+                    true, 100, 0, 2);
         }
 
         @Bean

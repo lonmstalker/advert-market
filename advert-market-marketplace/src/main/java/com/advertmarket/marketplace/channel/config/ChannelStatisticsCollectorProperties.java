@@ -4,6 +4,7 @@ import io.github.springpropertiesmd.api.annotation.PropertyDoc;
 import io.github.springpropertiesmd.api.annotation.PropertyGroupDoc;
 import io.github.springpropertiesmd.api.annotation.Requirement;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
@@ -13,6 +14,8 @@ import org.springframework.validation.annotation.Validated;
  *
  * @param enabled enables/disables periodic collection
  * @param batchSize maximum channels processed per cycle
+ * @param retryBackoffMs fixed backoff between retries for transient failures
+ * @param maxRetriesPerChannel max retries after the first attempt for each channel
  */
 @ConfigurationProperties(prefix = "app.marketplace.channel.statistics")
 @PropertyGroupDoc(
@@ -32,6 +35,19 @@ public record ChannelStatisticsCollectorProperties(
                 description = "Maximum number of channels processed per cycle",
                 required = Requirement.OPTIONAL
         )
-        @Positive @DefaultValue("100") int batchSize
+        @Positive @DefaultValue("100") int batchSize,
+
+        @PropertyDoc(
+                description = "Backoff in milliseconds between retries"
+                        + " for transient Telegram failures",
+                required = Requirement.OPTIONAL
+        )
+        @PositiveOrZero @DefaultValue("1000") long retryBackoffMs,
+
+        @PropertyDoc(
+                description = "Maximum retries per channel for transient Telegram failures",
+                required = Requirement.OPTIONAL
+        )
+        @PositiveOrZero @DefaultValue("2") int maxRetriesPerChannel
 ) {
 }

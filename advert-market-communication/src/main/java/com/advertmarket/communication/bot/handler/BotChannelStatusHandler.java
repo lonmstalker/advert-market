@@ -79,7 +79,13 @@ public class BotChannelStatusHandler implements ChatMemberUpdateHandler {
                     channelId);
             return;
         }
-        channelLifecyclePort.deactivateByTelegramId(channelId);
+        boolean deactivated =
+                channelLifecyclePort.deactivateByTelegramId(channelId);
+        if (!deactivated) {
+            log.debug("Channel={} already inactive on removal update",
+                    channelId);
+            return;
+        }
         metrics.incrementCounter(
                 MetricNames.CHANNEL_DEACTIVATED_TOTAL);
         notifyOwner(owner.get(),
@@ -94,7 +100,13 @@ public class BotChannelStatusHandler implements ChatMemberUpdateHandler {
                     channelId);
             return;
         }
-        channelLifecyclePort.deactivateByTelegramId(channelId);
+        boolean deactivated =
+                channelLifecyclePort.deactivateByTelegramId(channelId);
+        if (!deactivated) {
+            log.debug("Channel={} already inactive on demotion update",
+                    channelId);
+            return;
+        }
         metrics.incrementCounter(
                 MetricNames.CHANNEL_DEACTIVATED_TOTAL);
         notifyOwner(owner.get(),
@@ -109,8 +121,14 @@ public class BotChannelStatusHandler implements ChatMemberUpdateHandler {
                     channelId);
             return;
         }
-        channelLifecyclePort.reactivateByTelegramId(channelId);
-        log.info("Channel={} reactivated after bot promotion",
+        boolean reactivated =
+                channelLifecyclePort.reactivateByTelegramId(channelId);
+        if (reactivated) {
+            log.info("Channel={} reactivated after bot promotion",
+                    channelId);
+            return;
+        }
+        log.debug("Channel={} already active on promotion update",
                 channelId);
     }
 
@@ -126,11 +144,23 @@ public class BotChannelStatusHandler implements ChatMemberUpdateHandler {
             return;
         }
         if (canPost) {
-            channelLifecyclePort.reactivateByTelegramId(channelId);
-            log.info("Channel={} reactivated: canPostMessages=true",
+            boolean reactivated =
+                    channelLifecyclePort.reactivateByTelegramId(channelId);
+            if (reactivated) {
+                log.info("Channel={} reactivated: canPostMessages=true",
+                        channelId);
+                return;
+            }
+            log.debug("Channel={} already active on rights update",
                     channelId);
         } else {
-            channelLifecyclePort.deactivateByTelegramId(channelId);
+            boolean deactivated =
+                    channelLifecyclePort.deactivateByTelegramId(channelId);
+            if (!deactivated) {
+                log.debug("Channel={} already inactive on rights update",
+                        channelId);
+                return;
+            }
             metrics.incrementCounter(
                     MetricNames.CHANNEL_DEACTIVATED_TOTAL);
             notifyOwner(owner.get(),

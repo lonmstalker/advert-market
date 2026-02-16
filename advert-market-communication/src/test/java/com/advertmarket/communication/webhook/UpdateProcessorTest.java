@@ -1,13 +1,26 @@
 package com.advertmarket.communication.webhook;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.advertmarket.communication.bot.internal.dispatch.BotDispatcher;
+import com.advertmarket.communication.bot.internal.error.BotErrorHandler;
+import com.advertmarket.communication.canary.CanaryRouter;
+import com.advertmarket.shared.metric.MetricNames;
+import com.advertmarket.shared.metric.MetricsFacade;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.InlineQuery;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
 import java.lang.reflect.Field;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +54,31 @@ class UpdateProcessorTest {
         var update = new Update();
         setField(update, "update_id", 99999);
         assertThat(UpdateProcessor.extractUserId(update)).isEqualTo(99999);
+    }
+
+    @Test
+    @DisplayName("Does not throw when executor rejects dispatch submit")
+    void processAsync_executorRejected_doesNotThrow() throws Exception {
+        var canaryRouter = mock(CanaryRouter.class);
+        var dispatcher = mock(BotDispatcher.class);
+        var errorHandler = mock(BotErrorHandler.class);
+        var metrics = mock(MetricsFacade.class);
+        var executor = mock(ExecutorService.class);
+
+        when(canaryRouter.isCanary(anyLong())).thenReturn(false);
+        when(executor.submit(any(Runnable.class)))
+                .thenThrow(new RejectedExecutionException("queue full"));
+
+        var processor = new UpdateProcessor(
+                canaryRouter, dispatcher, errorHandler, metrics, executor);
+        var update = createUpdateWithMessageFrom(12345L);
+        setField(update, "update_id", 77);
+
+        assertThatCode(() -> processor.processAsync(update))
+                .doesNotThrowAnyException();
+        verify(metrics).incrementCounter(
+                MetricNames.WEBHOOK_DISPATCH_REJECTED,
+                "reason", "rejected_execution");
     }
 
     // Helper methods using reflection to create Update objects
@@ -89,4 +127,5 @@ class UpdateProcessorTest {
         }
         throw new NoSuchFieldException(name);
     }
+
 }

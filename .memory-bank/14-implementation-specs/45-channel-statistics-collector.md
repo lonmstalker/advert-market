@@ -68,9 +68,24 @@ marketplace:
   statistics:
     update-interval: 6h
     batch-size: 100
+    retry-backoff-ms: 1000
+    max-retries-per-channel: 2
     stale-threshold: 24h
     exclude-after: 7d
 ```
+
+## Hardening Notes (2026-02-16)
+
+- Collector execution is cycle-timed and channel processing is isolated per channel
+  (no single long transaction across the whole batch).
+- Transient failures (`SERVICE_UNAVAILABLE`, `RATE_LIMIT_EXCEEDED`) are retried with fixed backoff.
+- Deactivation behavior for `CHANNEL_NOT_FOUND` and `CHANNEL_BOT_NOT_MEMBER` is preserved.
+- Added operational metrics:
+  - `channel.stats.collector.cycle.duration`
+  - `channel.stats.collector.batch.size`
+  - `channel.stats.collector.success`
+  - `channel.stats.collector.failure`
+  - `channel.stats.collector.retry{reason}`
 
 ## Monitoring
 

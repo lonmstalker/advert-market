@@ -79,6 +79,10 @@ app:
   marketplace:
     team:
       max-managers: 10
+    channel:
+      statistics:
+        retry-backoff-ms: ${CHANNEL_STATS_RETRY_BACKOFF_MS:1000}
+        max-retries-per-channel: ${CHANNEL_STATS_MAX_RETRIES_PER_CHANNEL:2}
     creatives:
       storage:
         enabled: ${CREATIVES_STORAGE_ENABLED:false}
@@ -95,6 +99,7 @@ app:
     webhook:
       url: ${TELEGRAM_WEBHOOK_URL:}
       secret: ${TELEGRAM_WEBHOOK_SECRET:}
+      max-body-bytes: ${TELEGRAM_WEBHOOK_MAX_BODY_BYTES:262144}
     webapp:
       url: ${TELEGRAM_WEBAPP_URL:https://app.advertmarket.com}
     sender:

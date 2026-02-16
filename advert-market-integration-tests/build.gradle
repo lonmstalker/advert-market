@@ -45,8 +45,23 @@ dependencies {
 // Integration tests are opt-in to keep default build non-blocking.
 tasks.named('test') {
     onlyIf { project.findProperty('runIntegrationTests') == 'true' }
+    useJUnitPlatform {
+        excludeTags 'bot-hardening'
+    }
 }
 
 tasks.named('checkstyleTest') {
+    onlyIf { project.findProperty('runIntegrationTests') == 'true' }
+}
+
+tasks.register('botHardeningTest', Test) {
+    description = 'Runs bot hardening integration/performance suite.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'bot-hardening'
+    }
+    shouldRunAfter(tasks.named('test'))
     onlyIf { project.findProperty('runIntegrationTests') == 'true' }
 }
