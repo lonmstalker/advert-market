@@ -44,7 +44,7 @@ class ProfileControllerTest {
     private static final UserProfile PROFILE = new UserProfile(
             42L, "johndoe", "John Doe", "en", "USD", CurrencyMode.AUTO,
             NotificationSettings.defaults(),
-            true, List.of("tech"), Instant.parse("2026-01-01T00:00:00Z"));
+            true, List.of("tech"), null, Instant.parse("2026-01-01T00:00:00Z"));
 
     @BeforeEach
     void setUp() {
@@ -78,7 +78,7 @@ class ProfileControllerTest {
         UserProfile updated = new UserProfile(
                 42L, "johndoe", "John Doe", "ru", "RUB", CurrencyMode.AUTO,
                 NotificationSettings.defaults(),
-                true, List.of("tech"),
+                true, List.of("tech"), null,
                 Instant.parse("2026-01-01T00:00:00Z"));
         when(userService.updateLanguage(
                 eq(USER_ID), any(UpdateLanguageRequest.class)))

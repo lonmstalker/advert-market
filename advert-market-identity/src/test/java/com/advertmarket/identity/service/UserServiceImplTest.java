@@ -37,7 +37,7 @@ class UserServiceImplTest {
     private static final UserProfile PROFILE = new UserProfile(
             42L, "johndoe", "John Doe", "en", "USD", CurrencyMode.AUTO,
             NotificationSettings.defaults(),
-            false, List.of(), Instant.parse("2026-01-01T00:00:00Z"));
+            false, List.of(), null, Instant.parse("2026-01-01T00:00:00Z"));
 
     @BeforeEach
     void setUp() {
@@ -76,7 +76,7 @@ class UserServiceImplTest {
         UserProfile updatedProfile = new UserProfile(
                 42L, "johndoe", "John Doe", "en", "USD", CurrencyMode.AUTO,
                 NotificationSettings.defaults(),
-                true, interests,
+                true, interests, null,
                 Instant.parse("2026-01-01T00:00:00Z"));
         when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(updatedProfile));
@@ -97,7 +97,7 @@ class UserServiceImplTest {
         UserProfile updated = new UserProfile(
                 42L, "johndoe", "John Doe", "ru", "RUB", CurrencyMode.AUTO,
                 NotificationSettings.defaults(),
-                false, List.of(),
+                false, List.of(), null,
                 Instant.parse("2026-01-01T00:00:00Z"));
         when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(updated));
@@ -131,7 +131,7 @@ class UserServiceImplTest {
         UserProfile ruProfile = new UserProfile(
                 42L, "johndoe", "John Doe", "ru", "RUB", CurrencyMode.AUTO,
                 NotificationSettings.defaults(),
-                false, List.of(), Instant.parse("2026-01-01T00:00:00Z"));
+                false, List.of(), null, Instant.parse("2026-01-01T00:00:00Z"));
         when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(ruProfile));
         when(localeCurrencyResolver.resolve("ru"))

@@ -507,11 +507,10 @@ class ChannelRegistrationFlowIntegrationTest {
         @Bean
         ChannelRegistrationService channelRegistrationService(
                 ChannelVerificationService vs,
-                ChannelAutoSyncService autoSyncService,
                 ChannelRepository repo,
                 ChannelRegistrationTxService txService) {
             return new ChannelRegistrationService(
-                    vs, autoSyncService, repo, txService);
+                    vs, repo, txService);
         }
 
         @Bean
