@@ -1,21 +1,27 @@
-#Deals
+# Deals
 
 > Tab 2. Central module - complete deal flow from offer to completion/dispute.
+
+## HEAD Contract Override (2026-02-16)
+
+This page originally documented a broader deals surface. Current frontend in `HEAD` is contract-gated by regenerated OpenAPI.
+
+- Frontend deal API uses:
+  - `GET /api/v1/deals`
+  - `GET /api/v1/deals/{id}`
+  - `POST /api/v1/deals/{id}/transition` (`targetStatus`, optional `reason`, optional partial amounts)
+  - `GET /api/v1/deals/{id}/deposit`
+- Timeline is sourced from `GET /api/v1/deals/{id}` (`DealDetailDto.timeline`).
+- Dedicated `/deals/{id}/timeline` and `/deals/{id}/negotiate` are not used.
+- Deal-embedded creative endpoints (`/brief*`, `/creative*`, `/schedule*`, `/publish*`) are absent in OpenAPI and therefore blocked in UI until backend exposes them.
 
 ## Navigation
 
 ```
 /deals
   └── /deals/:dealId
-      ├── /deals/:dealId/negotiate
-      ├── /deals/:dealId/brief
-      ├── /deals/:dealId/creative
-      ├── /deals/:dealId/creative/review
-      ├── /deals/:dealId/schedule
       ├── [Sheet] Payment (TON Connect)
-      ├── [Sheet] Support
-      ├── /deals/:dealId/dispute
-      └── /deals/:dealId/dispute/evidence
+      └── [Sheet] Transition reason (for reason-required transitions)
 ```
 
 ---
@@ -31,16 +37,15 @@
 ### API
 
 ```
-GET /api/v1/deals?role=advertiser&cursor=&limit=20
-GET /api/v1/deals?role=channel&cursor=&limit=20
+GET /api/v1/deals?cursor=&limit=20&status=
 ```
 
-**Query keys:** `dealKeys.list({ role: 'advertiser', ... })`, `dealKeys.list({ role: 'channel', ... })`
+**Query keys:** `dealKeys.lists()`, `dealKeys.list({ cursor, limit, status })`
 
 ### UI
 
-- **Segment-control**: `t('deals.list.asAdvertiser')` / `t('deals.list.asChannel')`
-  - Visible only if the user has transactions in both roles
+- **Segment-control**: `Advertiser` / `Owner`
+  - Both tabs are always available; filtering by role is client-side from a single backend list.
 - **List of deals** — `Group` + `GroupItem`:
   - `before`: channel avatar (40×40)
   - Title: channel name
@@ -103,11 +108,11 @@ The manager sees channel transactions **only** with the `view_deals` right. With
 
 ```
 GET /api/v1/deals/:dealId
-GET /api/v1/deals/:dealId/timeline
-GET /api/v1/deals/:dealId/escrow # For funded statuses
+GET /api/v1/deals/:dealId/deposit # payment/deposit flow
+POST /api/v1/deals/:dealId/transition
 ```
 
-**Query keys:** `dealKeys.detail(dealId)`, `dealKeys.timeline(dealId)`, `dealKeys.escrow(dealId)`
+**Query keys:** `dealKeys.detail(dealId)`, `dealKeys.deposit(dealId)`
 
 **Polling:** adaptive based on status:
 - `AWAITING_PAYMENT`, `DELIVERY_VERIFYING`: 10s
@@ -737,38 +742,25 @@ src/pages/deals/
   DealsPage.tsx                # Route: /deals
   DealDetailPage.tsx           # Route: /deals/:dealId
   CreateDealPage.tsx           # Route: /deals/new
-  NegotiatePage.tsx            # Route: /deals/:dealId/negotiate
-  BriefPage.tsx                # Route: /deals/:dealId/brief
-  CreativePage.tsx             # Route: /deals/:dealId/creative
-  CreativeReviewPage.tsx       # Route: /deals/:dealId/creative/review
-  SchedulePage.tsx             # Route: /deals/:dealId/schedule
-  DisputePage.tsx              # Route: /deals/:dealId/dispute (form + details)
-  DisputeEvidencePage.tsx      # Route: /deals/:dealId/dispute/evidence
 
 src/features/deals/
   api/
     deals.ts
   components/
-    DealListItem.tsx
-    DealActions.tsx # Action Matrix
-    DealTimeline.tsx
+    DealListItem.tsx            # List card
+    DealActions.tsx             # Action matrix renderer
+    DealTimeline.tsx            # Timeline from detail DTO
     DealStatusBadge.tsx
-    PaymentSheet.tsx            # TON Connect sheet
-    SupportSheet.tsx            # Support ticket sheet
-    TelegramPostPreview.tsx # Creative preview
-    ButtonBuilder.tsx # Builder of buttons for creative
-    EvidenceForm.tsx # Combined evidence form
-    EvidenceTimeline.tsx
-    CreativeImportFlow.tsx # Import a post via bot
+    DealFilterSheet.tsx
+    PaymentSheet.tsx            # TON Connect payment sheet
+    NegotiateSheet.tsx          # Reason sheet for reason-required transitions
   hooks/
-    useDealRole.ts
-    useDealActions.ts
+    useDealDetail.ts            # Single-source deal detail + adaptive polling
+    useDealTransition.ts        # Transition mutation (`targetStatus`)
   lib/
     deal-status.ts              # StatusConfig mapping
-    deal-actions.ts             # Action matrix
+    deal-actions.ts             # status + role action matrix
+    deal-mapper.ts              # DealDto/DealDetailDto -> UI ViewModel
   types/
-    deal.ts                     # Zod schemas
-    creative.ts
-    dispute.ts
-    support.ts
+    deal.ts                     # backend DTOs + UI VM schemas
 ```

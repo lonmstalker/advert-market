@@ -141,19 +141,41 @@ export type ChannelTeam = z.infer<typeof channelTeamSchema>;
 
 export const createDealRequestSchema = z.object({
   channelId: z.number(),
-  pricingRuleId: z.number(),
-  message: z.string().optional(),
+  amountNano: z.number(),
+  pricingRuleId: z.number().optional(),
+  creativeBrief: z.string().optional(),
 });
 
 export type CreateDealRequest = z.infer<typeof createDealRequestSchema>;
 
 export const createDealResponseSchema = z.object({
   id: z.string(),
-  status: z.string(),
   channelId: z.number(),
-  pricingRuleId: z.number(),
-  priceNano: z.number(),
+  advertiserId: z.number(),
+  ownerId: z.number(),
+  status: z.enum([
+    'DRAFT',
+    'OFFER_PENDING',
+    'NEGOTIATING',
+    'ACCEPTED',
+    'AWAITING_PAYMENT',
+    'FUNDED',
+    'CREATIVE_SUBMITTED',
+    'CREATIVE_APPROVED',
+    'SCHEDULED',
+    'PUBLISHED',
+    'DELIVERY_VERIFYING',
+    'COMPLETED_RELEASED',
+    'DISPUTED',
+    'CANCELLED',
+    'EXPIRED',
+    'REFUNDED',
+    'PARTIALLY_REFUNDED',
+  ]),
+  amountNano: z.number(),
+  deadlineAt: z.string().nullable().optional(),
   createdAt: z.string(),
+  version: z.number(),
 });
 
 export type CreateDealResponse = z.infer<typeof createDealResponseSchema>;

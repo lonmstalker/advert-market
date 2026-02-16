@@ -119,6 +119,19 @@ views {
     adMarketplace.backendApi.dealTransitionService -> adMarketplace.primaryDb.dealEvents 'Append FUNDED event'
   }
 
+  // Frontend contract-gated deal flow
+  dynamic view frontendDealContractFlow {
+    title 'Frontend Deal Contract Flow (HEAD)'
+    description 'Frontend follows backend state-machine contract: single deal detail source + targetStatus transitions; creative-in-deal path is blocked until endpoints exist'
+
+    advertiser -> adMarketplace.miniApp.dealFlowUi 'Opens Deals tab (Advertiser/Owner tabs in UI)'
+    adMarketplace.miniApp.dealFlowUi -> adMarketplace.backendApi.dealController 'GET /api/v1/deals (cursor pagination)'
+    adMarketplace.miniApp.dealFlowUi -> adMarketplace.backendApi.dealController 'GET /api/v1/deals/{id} (includes timeline)'
+    adMarketplace.miniApp.dealFlowUi -> adMarketplace.backendApi.dealController 'POST /api/v1/deals/{id}/transition { targetStatus, reason? }'
+    adMarketplace.miniApp.dealFlowUi -> adMarketplace.backendApi.dealController 'GET /api/v1/deals/{id}/deposit (only for AWAITING_PAYMENT payment sheet)'
+    adMarketplace.miniApp.dealFlowUi -> adMarketplace.backendApi.dealController 'Contract gate: no /deals/{id}/timeline, /negotiate, /brief, /creative, /schedule, /publish in HEAD OpenAPI'
+  }
+
   // Payout Release Flow
   dynamic view payoutFlow {
     title 'Payout Release Flow'

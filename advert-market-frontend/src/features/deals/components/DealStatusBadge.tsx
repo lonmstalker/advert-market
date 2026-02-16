@@ -13,6 +13,7 @@ export function DealStatusBadge({ status }: DealStatusBadgeProps) {
 
   return (
     <span
+      data-testid="deal-status-badge"
       className="inline-flex items-center px-2.5 py-0.5 rounded-[8px] whitespace-nowrap"
       style={{ backgroundColor: statusBgVar(config.color) }}
     >

@@ -20,8 +20,208 @@ const API_BASE = '/api/v1';
 const STORAGE_KEYS = {
   profile: 'msw_profile_state',
   deals: 'msw_deals_state',
+  dealTimelines: 'msw_deal_timelines_state',
   registeredChannels: 'msw_registered_channels',
 } as const;
+
+const DEAL_STATUSES = [
+  'DRAFT',
+  'OFFER_PENDING',
+  'NEGOTIATING',
+  'ACCEPTED',
+  'AWAITING_PAYMENT',
+  'FUNDED',
+  'CREATIVE_SUBMITTED',
+  'CREATIVE_APPROVED',
+  'SCHEDULED',
+  'PUBLISHED',
+  'DELIVERY_VERIFYING',
+  'COMPLETED_RELEASED',
+  'DISPUTED',
+  'CANCELLED',
+  'EXPIRED',
+  'REFUNDED',
+  'PARTIALLY_REFUNDED',
+] as const;
+
+const DEAL_STATUS_SET = new Set<string>(DEAL_STATUSES);
+const DEFAULT_COMMISSION_RATE_BP = 1000;
+
+type MockDealState = Omit<(typeof mockDeals)[number], 'status'> & {
+  status: string;
+  amountNano: number;
+  version: number;
+};
+
+type LegacyTimelineEvent = (typeof mockDealTimelines)[string]['events'][number];
+
+type DealTimelineEventState = {
+  id: number;
+  eventType: string;
+  fromStatus: string | null;
+  toStatus: string | null;
+  actorId: number | null;
+  createdAt: string;
+};
+
+type DealTimelineState = Record<string, DealTimelineEventState[]>;
+
+function toAmountNano(deal: { amountNano?: unknown; priceNano?: unknown }): number {
+  if (typeof deal.amountNano === 'number') return deal.amountNano;
+  if (typeof deal.priceNano === 'number') return deal.priceNano;
+  return 1_000_000_000;
+}
+
+function normalizeDealRecord(deal: MockDealState | (typeof mockDeals)[number]): MockDealState {
+  const amountNano = toAmountNano(deal);
+  const version = typeof deal.version === 'number' ? deal.version : 1;
+  const status = typeof deal.status === 'string' && DEAL_STATUS_SET.has(deal.status) ? deal.status : 'DRAFT';
+
+  return {
+    ...deal,
+    status,
+    amountNano,
+    version,
+  };
+}
+
+function mapActorRoleToId(role: LegacyTimelineEvent['actorRole'], deal: MockDealState): number | null {
+  if (role === 'ADVERTISER') return deal.advertiserId;
+  if (role === 'OWNER') return deal.ownerId;
+  return null;
+}
+
+function parseTimelineEventId(rawId: string, fallback: number): number {
+  const digitsOnly = rawId.replace(/\D/g, '');
+  const parsed = Number(digitsOnly);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  return fallback;
+}
+
+function convertLegacyTimelineEvents(events: LegacyTimelineEvent[], deal: MockDealState): DealTimelineEventState[] {
+  if (events.length === 0) {
+    return [
+      {
+        id: 1,
+        eventType: 'DEAL_STATE_CHANGED',
+        fromStatus: null,
+        toStatus: deal.status,
+        actorId: deal.advertiserId,
+        createdAt: deal.createdAt,
+      },
+    ];
+  }
+
+  return events.map((event, index) => {
+    const prevStatus = index > 0 ? events[index - 1]?.status ?? null : null;
+    return {
+      id: parseTimelineEventId(event.id, index + 1),
+      eventType: event.type,
+      fromStatus: prevStatus,
+      toStatus: event.status,
+      actorId: mapActorRoleToId(event.actorRole, deal),
+      createdAt: event.createdAt,
+    };
+  });
+}
+
+function buildDefaultDealTimelines(seedDeals: MockDealState[]): DealTimelineState {
+  const timelines: DealTimelineState = {};
+  for (const deal of seedDeals) {
+    const legacyTimeline = mockDealTimelines[deal.id];
+    const events = legacyTimeline?.events ?? [];
+    timelines[deal.id] = convertLegacyTimelineEvents(events, deal);
+  }
+  return timelines;
+}
+
+function normalizeStoredTimelineEvents(rawEvents: unknown, deal: MockDealState): DealTimelineEventState[] | null {
+  if (!Array.isArray(rawEvents)) return null;
+
+  const normalized: DealTimelineEventState[] = [];
+  for (const [index, raw] of rawEvents.entries()) {
+    if (typeof raw !== 'object' || raw === null) continue;
+    const event = raw as {
+      id?: unknown;
+      eventType?: unknown;
+      fromStatus?: unknown;
+      toStatus?: unknown;
+      actorId?: unknown;
+      createdAt?: unknown;
+      type?: unknown;
+      status?: unknown;
+      actorRole?: unknown;
+    };
+
+    // Backward compatibility for old mock timeline shape.
+    if (typeof event.type === 'string' && typeof event.status === 'string') {
+      const actorRole =
+        event.actorRole === 'ADVERTISER' || event.actorRole === 'OWNER' || event.actorRole === 'SYSTEM'
+          ? event.actorRole
+          : 'SYSTEM';
+      normalized.push({
+        id:
+          typeof event.id === 'string'
+            ? parseTimelineEventId(event.id, index + 1)
+            : typeof event.id === 'number'
+              ? event.id
+              : index + 1,
+        eventType: event.type,
+        fromStatus: index > 0 ? normalized[index - 1]?.toStatus ?? null : null,
+        toStatus: event.status,
+        actorId: mapActorRoleToId(actorRole, deal),
+        createdAt: typeof event.createdAt === 'string' ? event.createdAt : deal.createdAt,
+      });
+      continue;
+    }
+
+    if (typeof event.eventType !== 'string') continue;
+    if (event.fromStatus != null && typeof event.fromStatus !== 'string') continue;
+    if (event.toStatus != null && typeof event.toStatus !== 'string') continue;
+
+    normalized.push({
+      id: typeof event.id === 'number' ? event.id : index + 1,
+      eventType: event.eventType,
+      fromStatus: typeof event.fromStatus === 'string' ? event.fromStatus : null,
+      toStatus: typeof event.toStatus === 'string' ? event.toStatus : null,
+      actorId: typeof event.actorId === 'number' ? event.actorId : null,
+      createdAt: typeof event.createdAt === 'string' ? event.createdAt : deal.createdAt,
+    });
+  }
+
+  return normalized.length > 0 ? normalized : null;
+}
+
+function normalizeDealTimelines(rawState: unknown, seedDeals: MockDealState[]): DealTimelineState {
+  const fallback = buildDefaultDealTimelines(seedDeals);
+  if (typeof rawState !== 'object' || rawState === null) return fallback;
+  const source = rawState as Record<string, unknown>;
+
+  const normalized: DealTimelineState = {};
+  for (const deal of seedDeals) {
+    const rawEntry = source[deal.id];
+    const directEvents = normalizeStoredTimelineEvents(rawEntry, deal);
+    if (directEvents) {
+      normalized[deal.id] = directEvents;
+      continue;
+    }
+
+    const nestedEvents =
+      typeof rawEntry === 'object' && rawEntry !== null
+        ? normalizeStoredTimelineEvents((rawEntry as { events?: unknown }).events, deal)
+        : null;
+    if (nestedEvents) {
+      normalized[deal.id] = nestedEvents;
+      continue;
+    }
+
+    normalized[deal.id] = fallback[deal.id] ?? [];
+  }
+
+  return normalized;
+}
+
+const defaultDeals = mockDeals.map((deal) => normalizeDealRecord(deal));
 
 function hasSessionStorage(): boolean {
   return typeof sessionStorage !== 'undefined' && sessionStorage != null;
@@ -44,9 +244,10 @@ function saveState(key: string, value: unknown): void {
 }
 
 let profile = loadState<typeof mockProfile>(STORAGE_KEYS.profile, { ...mockProfile });
-let deals = loadState<typeof mockDeals>(
-  STORAGE_KEYS.deals,
-  mockDeals.map((d) => ({ ...d })),
+let deals = loadState<MockDealState[]>(STORAGE_KEYS.deals, defaultDeals).map((deal) => normalizeDealRecord(deal));
+let dealTimelines = normalizeDealTimelines(
+  loadState<DealTimelineState>(STORAGE_KEYS.dealTimelines, buildDefaultDealTimelines(defaultDeals)),
+  deals,
 );
 let registeredChannels = loadState<typeof mockChannels>(STORAGE_KEYS.registeredChannels, []);
 
@@ -375,7 +576,8 @@ let creativeVersionsById: Record<string, MockCreativeVersion[]> = {
 
 export function resetMockState(): void {
   profile = { ...mockProfile };
-  deals = mockDeals.map((d) => ({ ...d }));
+  deals = mockDeals.map((deal) => normalizeDealRecord(deal));
+  dealTimelines = buildDefaultDealTimelines(deals);
   registeredChannels = [];
   depositChecks.clear();
   creativeTemplates = mockCreativeTemplates.map((template) => toCreativeTemplate(template));
@@ -386,6 +588,7 @@ export function resetMockState(): void {
   if (!hasSessionStorage()) return;
   sessionStorage.removeItem(STORAGE_KEYS.profile);
   sessionStorage.removeItem(STORAGE_KEYS.deals);
+  sessionStorage.removeItem(STORAGE_KEYS.dealTimelines);
   sessionStorage.removeItem(STORAGE_KEYS.registeredChannels);
 }
 
@@ -399,6 +602,64 @@ function hasPendingDepositIntent(dealId: string): boolean {
   } catch {
     return false;
   }
+}
+
+function currentProfileId(): number | null {
+  syncProfileFromStorage();
+  return typeof profile.id === 'number' ? profile.id : null;
+}
+
+function isParticipant(deal: Pick<MockDealState, 'advertiserId' | 'ownerId'>, userId: number | null): boolean {
+  if (userId == null) return true;
+  return deal.advertiserId === userId || deal.ownerId === userId;
+}
+
+function toDealDto(deal: MockDealState) {
+  return {
+    id: deal.id,
+    channelId: deal.channelId,
+    advertiserId: deal.advertiserId,
+    ownerId: deal.ownerId,
+    status: deal.status,
+    amountNano: deal.amountNano,
+    deadlineAt: deal.deadlineAt ?? null,
+    createdAt: deal.createdAt,
+    version: deal.version,
+  };
+}
+
+function toDealDetailDto(deal: MockDealState) {
+  const commissionNano = Math.floor((deal.amountNano * DEFAULT_COMMISSION_RATE_BP) / 10_000);
+  return {
+    ...toDealDto(deal),
+    commissionRateBp: DEFAULT_COMMISSION_RATE_BP,
+    commissionNano,
+    timeline: dealTimelines[deal.id] ?? [],
+  };
+}
+
+function getNextTimelineEventId(dealId: string): number {
+  const events = dealTimelines[dealId] ?? [];
+  let maxId = 0;
+  for (const event of events) {
+    if (event.id > maxId) {
+      maxId = event.id;
+    }
+  }
+  return maxId + 1;
+}
+
+function appendTimelineEvent(dealId: string, event: DealTimelineEventState): void {
+  const existing = dealTimelines[dealId] ?? [];
+  dealTimelines = {
+    ...dealTimelines,
+    [dealId]: [...existing, event],
+  };
+  saveState(STORAGE_KEYS.dealTimelines, dealTimelines);
+}
+
+function persistDealsState(): void {
+  saveState(STORAGE_KEYS.deals, deals);
 }
 
 export const handlers = [
@@ -429,50 +690,82 @@ export const handlers = [
     return HttpResponse.json(profile);
   }),
 
-  // GET /deals — paginated deal list with role filter
+  // GET /deals — paginated deal list (single backend list + optional status filter)
   http.get(`${API_BASE}/deals`, ({ request }) => {
     const url = new URL(request.url);
-    const role = url.searchParams.get('role');
     const limit = Number(url.searchParams.get('limit')) || 20;
     const cursor = url.searchParams.get('cursor');
+    const status = url.searchParams.get('status');
+    const userId = currentProfileId();
 
-    let filtered = [...deals];
-    if (role) {
-      filtered = filtered.filter((d) => d.role === role);
+    let filtered = deals.filter((deal) => isParticipant(deal, userId));
+
+    if (status && DEAL_STATUS_SET.has(status)) {
+      filtered = filtered.filter((deal) => deal.status === status);
     }
 
     let startIndex = 0;
     if (cursor) {
-      startIndex = filtered.findIndex((d) => d.id === cursor) + 1;
+      startIndex = filtered.findIndex((deal) => deal.id === cursor) + 1;
     }
 
     const page = filtered.slice(startIndex, startIndex + limit);
     const hasNext = startIndex + limit < filtered.length;
     const nextCursor = hasNext ? (page.at(-1)?.id ?? null) : null;
 
-    return HttpResponse.json({ items: page, nextCursor, hasNext });
+    return HttpResponse.json({
+      items: page.map((deal) => toDealDto(deal)),
+      nextCursor,
+      hasNext,
+    });
   }),
 
-  // GET /deals/:dealId — deal detail
+  // GET /deals/:dealId — deal detail with timeline
   http.get(`${API_BASE}/deals/:dealId`, ({ params }) => {
-    const deal = deals.find((d) => d.id === params.dealId);
+    const dealId = params.dealId as string;
+    const deal = deals.find((candidate) => candidate.id === dealId);
     if (!deal) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
-    return HttpResponse.json(deal);
+
+    const userId = currentProfileId();
+    if (!isParticipant(deal, userId)) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Forbidden', status: 403 }, { status: 403 });
+    }
+
+    return HttpResponse.json(toDealDetailDto(deal));
   }),
 
   // GET /deals/:dealId/deposit — escrow address + deposit status (TON Connect)
   http.get(`${API_BASE}/deals/:dealId/deposit`, ({ params }) => {
     const dealId = params.dealId as string;
-    const deal = deals.find((d) => d.id === dealId);
+    const deal = deals.find((candidate) => candidate.id === dealId);
     if (!deal) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
 
-    const amountNano = String(deal.priceNano);
+    const userId = currentProfileId();
+    if (!isParticipant(deal, userId)) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Forbidden', status: 403 }, { status: 403 });
+    }
+
+    const amountNano = String(deal.amountNano);
     const escrowAddress = `UQ_MOCK_ESCROW_${dealId}`;
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
+    if (deal.status === 'FUNDED') {
+      return HttpResponse.json({
+        escrowAddress,
+        amountNano,
+        dealId,
+        status: 'CONFIRMED',
+        currentConfirmations: 1,
+        requiredConfirmations: 1,
+        receivedAmountNano: amountNano,
+        txHash: `txhash_${dealId}`,
+        expiresAt,
+      });
+    }
 
     if (!hasPendingDepositIntent(dealId)) {
       depositChecks.delete(dealId);
@@ -493,9 +786,25 @@ export const handlers = [
     depositChecks.set(dealId, attempt);
 
     if (attempt >= 3) {
-      const updated = { ...deal, status: 'FUNDED', updatedAt: new Date().toISOString() };
-      deals = deals.map((d) => (d.id === dealId ? updated : d));
-      saveState(STORAGE_KEYS.deals, deals);
+      const now = new Date().toISOString();
+      if (deal.status !== 'FUNDED') {
+        const updated = {
+          ...deal,
+          status: 'FUNDED',
+          updatedAt: now,
+          version: deal.version + 1,
+        };
+        deals = deals.map((item) => (item.id === dealId ? updated : item));
+        persistDealsState();
+        appendTimelineEvent(dealId, {
+          id: getNextTimelineEventId(dealId),
+          eventType: 'DEAL_STATE_CHANGED',
+          fromStatus: deal.status,
+          toStatus: 'FUNDED',
+          actorId: null,
+          createdAt: now,
+        });
+      }
 
       return HttpResponse.json({
         escrowAddress,
@@ -537,58 +846,64 @@ export const handlers = [
     });
   }),
 
-  // GET /deals/:dealId/timeline — deal timeline events
-  http.get(`${API_BASE}/deals/:dealId/timeline`, ({ params }) => {
-    const timeline = mockDealTimelines[params.dealId as string];
-    if (!timeline) {
-      return HttpResponse.json({ events: [] });
-    }
-    return HttpResponse.json(timeline);
-  }),
-
-  // POST /deals/:dealId/transition — deal state transition
+  // POST /deals/:dealId/transition — state transition via targetStatus
   http.post(`${API_BASE}/deals/:dealId/transition`, async ({ params, request }) => {
-    const deal = deals.find((d) => d.id === params.dealId);
+    const dealId = params.dealId as string;
+    const deal = deals.find((candidate) => candidate.id === dealId);
     if (!deal) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
-    const body = (await request.json()) as { action: string };
-    const statusMap: Record<string, string> = {
-      SUBMIT_OFFER: 'OFFER_PENDING',
-      ACCEPT: 'ACCEPTED',
-      REQUEST_REVISION: 'NEGOTIATING',
-      PAY: 'AWAITING_PAYMENT',
-      CANCEL: 'CANCELLED',
-      DISPUTE: 'DISPUTED',
-      PUBLISH: 'PUBLISHED',
-      SCHEDULE: 'SCHEDULED',
-      RESOLVE_RELEASE: 'COMPLETED_RELEASED',
-      RESOLVE_REFUND: 'REFUNDED',
-      RESOLVE_PARTIAL_REFUND: 'PARTIALLY_REFUNDED',
-    };
-    const newStatus = statusMap[body.action] ?? deal.status;
-    const updated = { ...deal, status: newStatus, updatedAt: new Date().toISOString() };
-    deals = deals.map((d) => (d.id === deal.id ? updated : d));
-    saveState(STORAGE_KEYS.deals, deals);
-    return HttpResponse.json(updated);
-  }),
 
-  // POST /deals/:dealId/negotiate — counter-offer
-  http.post(`${API_BASE}/deals/:dealId/negotiate`, async ({ params, request }) => {
-    const deal = deals.find((d) => d.id === params.dealId);
-    if (!deal) {
-      return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+    const userId = currentProfileId();
+    if (!isParticipant(deal, userId)) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Forbidden', status: 403 }, { status: 403 });
     }
-    const body = (await request.json()) as { priceNano: number };
-    const updated = {
-      ...deal,
-      status: 'NEGOTIATING',
-      priceNano: body.priceNano,
-      updatedAt: new Date().toISOString(),
+
+    const body = (await request.json()) as {
+      targetStatus?: unknown;
+      reason?: unknown;
+      partialRefundNano?: unknown;
+      partialPayoutNano?: unknown;
     };
-    deals = deals.map((d) => (d.id === deal.id ? updated : d));
-    saveState(STORAGE_KEYS.deals, deals);
-    return HttpResponse.json(updated);
+    const targetStatus = typeof body.targetStatus === 'string' ? body.targetStatus : null;
+
+    if (!targetStatus || !DEAL_STATUS_SET.has(targetStatus)) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Bad Request', status: 400 }, { status: 400 });
+    }
+
+    if (deal.status === targetStatus) {
+      return HttpResponse.json({
+        status: 'ALREADY_IN_TARGET_STATE',
+        newStatus: null,
+        currentStatus: deal.status,
+      });
+    }
+
+    const previousStatus = deal.status;
+    const now = new Date().toISOString();
+    const updated: MockDealState = {
+      ...deal,
+      status: targetStatus,
+      updatedAt: now,
+      version: deal.version + 1,
+    };
+
+    deals = deals.map((item) => (item.id === dealId ? updated : item));
+    persistDealsState();
+    appendTimelineEvent(dealId, {
+      id: getNextTimelineEventId(dealId),
+      eventType: 'DEAL_STATE_CHANGED',
+      fromStatus: previousStatus,
+      toStatus: targetStatus,
+      actorId: userId,
+      createdAt: now,
+    });
+
+    return HttpResponse.json({
+      status: 'SUCCESS',
+      newStatus: targetStatus,
+      currentStatus: previousStatus,
+    });
   }),
 
   // --- Channel registration handlers ---
@@ -1064,25 +1379,62 @@ export const handlers = [
   http.post(`${API_BASE}/deals`, async ({ request }) => {
     const body = (await request.json()) as {
       channelId: number;
-      pricingRuleId: number;
-      message?: string;
+      pricingRuleId?: number;
+      amountNano?: number;
+      creativeBrief?: string;
     };
 
     const channel = mockChannels.find((ch) => ch.id === body.channelId);
     const detail = mockChannelDetails[body.channelId];
     const rule = detail?.pricingRules.find((r) => r.id === body.pricingRuleId);
+    const now = new Date().toISOString();
+    const amountNano = body.amountNano ?? rule?.priceNano ?? channel?.pricePerPostNano ?? 1_000_000_000;
+    const ownerId = detail?.ownerId ?? 1;
+    const newDeal: MockDealState = {
+      id: `deal-${Date.now()}`,
+      status: 'OFFER_PENDING',
+      channelId: body.channelId,
+      channelTitle: channel?.title ?? `Channel #${body.channelId}`,
+      channelUsername: channel?.username ?? null,
+      postType: rule?.postTypes?.[0] ?? 'NATIVE',
+      priceNano: amountNano,
+      role: 'ADVERTISER',
+      advertiserId: profile.id,
+      ownerId,
+      message: body.creativeBrief ?? null,
+      deadlineAt: null,
+      createdAt: now,
+      updatedAt: now,
+      amountNano,
+      version: 1,
+    };
 
-    return HttpResponse.json(
-      {
-        id: `deal-${Date.now()}`,
-        status: 'offer_pending',
-        channelId: body.channelId,
-        pricingRuleId: body.pricingRuleId,
-        priceNano: rule?.priceNano ?? channel?.pricePerPostNano ?? 1_000_000_000,
-        createdAt: new Date().toISOString(),
-      },
-      { status: 201 },
-    );
+    deals = [newDeal, ...deals];
+    dealTimelines = {
+      ...dealTimelines,
+      [newDeal.id]: [
+        {
+          id: 1,
+          eventType: 'DEAL_STATE_CHANGED',
+          fromStatus: null,
+          toStatus: 'DRAFT',
+          actorId: profile.id,
+          createdAt: now,
+        },
+        {
+          id: 2,
+          eventType: 'DEAL_STATE_CHANGED',
+          fromStatus: 'DRAFT',
+          toStatus: 'OFFER_PENDING',
+          actorId: profile.id,
+          createdAt: now,
+        },
+      ],
+    };
+    persistDealsState();
+    saveState(STORAGE_KEYS.dealTimelines, dealTimelines);
+
+    return HttpResponse.json(toDealDto(newDeal), { status: 201 });
   }),
 ];
 

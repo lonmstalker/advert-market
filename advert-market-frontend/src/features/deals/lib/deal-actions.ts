@@ -5,10 +5,10 @@ export type DealActionType =
   | 'reject'
   | 'cancel'
   | 'counter_offer'
-  | 'reply'
   | 'pay'
   | 'approve_creative'
   | 'request_revision'
+  | 'dispute'
   | 'publish'
   | 'schedule';
 
@@ -17,19 +17,73 @@ export type DealAction = {
   i18nKey: string;
   variant: 'primary' | 'secondary' | 'destructive';
   requiresConfirm: boolean;
+  targetStatus?: DealStatus;
+  requiresReason?: boolean;
 };
 
 const ACTION_DEFS: Record<DealActionType, Omit<DealAction, 'type'>> = {
-  accept: { i18nKey: 'deals.actions.accept', variant: 'primary', requiresConfirm: false },
-  reject: { i18nKey: 'deals.actions.reject', variant: 'destructive', requiresConfirm: true },
-  cancel: { i18nKey: 'deals.actions.cancel', variant: 'destructive', requiresConfirm: true },
-  counter_offer: { i18nKey: 'deals.actions.counterOffer', variant: 'secondary', requiresConfirm: false },
-  reply: { i18nKey: 'deals.actions.reply', variant: 'primary', requiresConfirm: false },
-  pay: { i18nKey: 'deals.actions.pay', variant: 'primary', requiresConfirm: false },
-  approve_creative: { i18nKey: 'deals.actions.approveCreative', variant: 'primary', requiresConfirm: false },
-  request_revision: { i18nKey: 'deals.actions.requestRevision', variant: 'secondary', requiresConfirm: false },
-  publish: { i18nKey: 'deals.actions.publish', variant: 'primary', requiresConfirm: false },
-  schedule: { i18nKey: 'deals.actions.schedule', variant: 'secondary', requiresConfirm: false },
+  accept: {
+    i18nKey: 'deals.actions.accept',
+    variant: 'primary',
+    requiresConfirm: false,
+    targetStatus: 'ACCEPTED',
+  },
+  reject: {
+    i18nKey: 'deals.actions.reject',
+    variant: 'destructive',
+    requiresConfirm: true,
+    targetStatus: 'CANCELLED',
+  },
+  cancel: {
+    i18nKey: 'deals.actions.cancel',
+    variant: 'destructive',
+    requiresConfirm: true,
+    targetStatus: 'CANCELLED',
+  },
+  counter_offer: {
+    i18nKey: 'deals.actions.counterOffer',
+    variant: 'secondary',
+    requiresConfirm: false,
+    targetStatus: 'NEGOTIATING',
+    requiresReason: true,
+  },
+  pay: {
+    i18nKey: 'deals.actions.pay',
+    variant: 'primary',
+    requiresConfirm: false,
+  },
+  approve_creative: {
+    i18nKey: 'deals.actions.approveCreative',
+    variant: 'primary',
+    requiresConfirm: false,
+    targetStatus: 'CREATIVE_APPROVED',
+  },
+  request_revision: {
+    i18nKey: 'deals.actions.requestRevision',
+    variant: 'secondary',
+    requiresConfirm: false,
+    targetStatus: 'FUNDED',
+    requiresReason: true,
+  },
+  dispute: {
+    i18nKey: 'deals.actions.dispute',
+    variant: 'secondary',
+    requiresConfirm: true,
+    targetStatus: 'DISPUTED',
+    requiresReason: true,
+  },
+  publish: {
+    i18nKey: 'deals.actions.publish',
+    variant: 'primary',
+    requiresConfirm: false,
+    targetStatus: 'PUBLISHED',
+  },
+  schedule: {
+    i18nKey: 'deals.actions.schedule',
+    variant: 'secondary',
+    requiresConfirm: false,
+    targetStatus: 'SCHEDULED',
+  },
 };
 
 type ActionMatrix = Record<string, { ADVERTISER?: DealActionType[]; OWNER?: DealActionType[] }>;
@@ -40,22 +94,47 @@ const MATRIX: ActionMatrix = {
     OWNER: ['accept', 'counter_offer', 'reject'],
   },
   NEGOTIATING: {
-    ADVERTISER: ['reply', 'cancel'],
-    OWNER: ['reply', 'reject'],
+    ADVERTISER: ['cancel'],
+    OWNER: ['accept', 'counter_offer', 'reject'],
+  },
+  ACCEPTED: {
+    ADVERTISER: ['cancel'],
+    OWNER: ['cancel'],
   },
   AWAITING_PAYMENT: {
-    ADVERTISER: ['pay'],
+    ADVERTISER: ['pay', 'cancel'],
   },
-  CREATIVE_SUBMITTED: {
-    ADVERTISER: ['approve_creative', 'request_revision'],
+  FUNDED: {
+    ADVERTISER: ['cancel'],
+    OWNER: ['cancel'],
   },
-  CREATIVE_APPROVED: {
-    OWNER: ['publish', 'schedule'],
+  SCHEDULED: {
+    ADVERTISER: ['cancel'],
+    OWNER: ['cancel'],
   },
 };
 
-export function getDealActions(status: DealStatus, role: DealRole): DealAction[] {
-  const entry = MATRIX[status];
+const CREATIVE_MATRIX: ActionMatrix = {
+  CREATIVE_SUBMITTED: {
+    ADVERTISER: ['approve_creative', 'request_revision', 'dispute'],
+  },
+  CREATIVE_APPROVED: {
+    ADVERTISER: ['cancel'],
+    OWNER: ['publish', 'schedule', 'cancel'],
+  },
+};
+
+export function getDealActions(
+  status: DealStatus,
+  role: DealRole,
+  options?: { creativeFlowEnabled?: boolean },
+): DealAction[] {
+  const creativeFlowEnabled = options?.creativeFlowEnabled ?? false;
+
+  const entry = creativeFlowEnabled
+    ? (MATRIX[status] ?? CREATIVE_MATRIX[status])
+    : MATRIX[status];
+
   if (!entry) return [];
 
   const types = entry[role];

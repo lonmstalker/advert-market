@@ -1,8 +1,10 @@
+import { useQuery } from '@tanstack/react-query';
 import { Sheet, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
+import { fetchChannelDetail } from '@/features/channels';
 import { DealActions } from '@/features/deals/components/DealActions';
 import { DealTimeline } from '@/features/deals/components/DealTimeline';
 import { NegotiateProvider } from '@/features/deals/components/NegotiateContext';
@@ -11,9 +13,13 @@ import { PaymentProvider } from '@/features/deals/components/PaymentContext';
 import { PaymentSheetContent } from '@/features/deals/components/PaymentSheet';
 import { useDealDetail } from '@/features/deals/hooks/useDealDetail';
 import { useDealTransition } from '@/features/deals/hooks/useDealTransition';
-import type { DealActionType } from '@/features/deals/lib/deal-actions';
+import { mapDealDetailDtoToViewModel } from '@/features/deals/lib/deal-mapper';
+import type { DealAction, DealActionType } from '@/features/deals/lib/deal-actions';
 import { getDealActions } from '@/features/deals/lib/deal-actions';
 import { buildTimelineSteps, getStatusConfig } from '@/features/deals/lib/deal-status';
+import type { DealChannelMetadata, DealStatus } from '@/features/deals/types/deal';
+import { channelKeys, profileKeys } from '@/shared/api/query-keys';
+import { fetchProfile } from '@/shared/api/auth';
 import { useCountdown } from '@/shared/hooks/use-countdown';
 import { useToast } from '@/shared/hooks/use-toast';
 import { loadPendingIntent } from '@/shared/ton';
@@ -22,7 +28,7 @@ import { fadeIn } from '@/shared/ui/animations';
 import { DocumentIcon, SadFaceIcon } from '@/shared/ui/icons';
 import { DealHeroSection } from './components/DealHeroSection';
 
-const TERMINAL_STATUSES = new Set([
+const TERMINAL_STATUSES = new Set<DealStatus>([
   'COMPLETED_RELEASED',
   'CANCELLED',
   'EXPIRED',
@@ -31,6 +37,9 @@ const TERMINAL_STATUSES = new Set([
   'DISPUTED',
 ]);
 
+const CREATIVE_FLOW_ENABLED = false;
+const CREATIVE_BLOCKED_STATUSES = new Set<DealStatus>(['FUNDED', 'CREATIVE_SUBMITTED', 'CREATIVE_APPROVED']);
+
 const sheetMap = {
   negotiate: NegotiateSheetContent,
   payment: PaymentSheetContent,
@@ -38,12 +47,24 @@ const sheetMap = {
 
 type DealSheet = 'negotiate' | 'payment';
 
+function mapChannelMetadata(detail: Awaited<ReturnType<typeof fetchChannelDetail>>): DealChannelMetadata {
+  const firstRule = detail.pricingRules[0];
+  return {
+    title: detail.title,
+    username: detail.username ?? null,
+    postType: firstRule?.postTypes?.[0] ?? null,
+    durationHours: null,
+    postFrequencyHours: detail.postFrequencyHours ?? null,
+  };
+}
+
 export default function DealDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { dealId } = useParams<{ dealId: string }>();
   const [activeSheet, setActiveSheet] = useState<DealSheet>('negotiate');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pendingReasonAction, setPendingReasonAction] = useState<DealAction | null>(null);
   const { showError } = useToast();
 
   useEffect(() => {
@@ -51,18 +72,43 @@ export default function DealDetailPage() {
   }, [dealId, navigate]);
 
   const safeDealId = dealId ?? '';
-  const { deal, timeline, isLoading, isError } = useDealDetail(safeDealId);
-  const { transition, negotiate, isPending } = useDealTransition(safeDealId);
+  const { deal: dealDto, timeline, isLoading: isDealLoading, isError } = useDealDetail(safeDealId);
+  const { transition, isPending } = useDealTransition(safeDealId);
+
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: profileKeys.me,
+    queryFn: fetchProfile,
+    enabled: Boolean(dealDto),
+  });
+
+  const { data: channelDetail } = useQuery({
+    queryKey: channelKeys.detail(dealDto?.channelId ?? 0),
+    queryFn: () => fetchChannelDetail(dealDto?.channelId ?? 0),
+    enabled: Boolean(dealDto?.channelId),
+  });
+
+  const channelMeta = useMemo(() => (channelDetail ? mapChannelMetadata(channelDetail) : null), [channelDetail]);
+
+  const deal = useMemo(() => {
+    if (!dealDto) return null;
+    return mapDealDetailDtoToViewModel(dealDto, {
+      profileId: profile?.id,
+      channel: channelMeta,
+    });
+  }, [channelMeta, dealDto, profile?.id]);
+
   const countdown = useCountdown(deal?.deadlineAt ?? null, t);
 
   const actions = useMemo(() => {
     if (!deal) return [];
-    return getDealActions(deal.status, deal.role);
+    return getDealActions(deal.status, deal.role, {
+      creativeFlowEnabled: CREATIVE_FLOW_ENABLED,
+    });
   }, [deal]);
 
   const timelineSteps = useMemo(() => {
     if (!deal || !timeline) return [];
-    return buildTimelineSteps(timeline.events, deal.status, t);
+    return buildTimelineSteps(deal.timeline, deal.status, t);
   }, [deal, timeline, t]);
 
   useEffect(() => {
@@ -82,18 +128,28 @@ export default function DealDetailPage() {
   }, [dealId, showError, t]);
 
   const handleAction = (type: DealActionType) => {
-    if (type === 'counter_offer' || type === 'reply') {
-      setActiveSheet('negotiate');
-      setSheetOpen(true);
-      return;
-    }
-    if (type === 'pay') {
+    const action = actions.find((candidate) => candidate.type === type);
+    if (!action) return;
+
+    if (action.type === 'pay') {
+      if (deal?.status !== 'AWAITING_PAYMENT') return;
       setActiveSheet('payment');
       setSheetOpen(true);
       return;
     }
-    transition({ action: type });
+
+    if (action.requiresReason) {
+      setPendingReasonAction(action);
+      setActiveSheet('negotiate');
+      setSheetOpen(true);
+      return;
+    }
+
+    if (!action.targetStatus) return;
+    transition({ targetStatus: action.targetStatus });
   };
+
+  const isLoading = isDealLoading || isProfileLoading;
 
   if (isLoading) {
     return (
@@ -121,6 +177,7 @@ export default function DealDetailPage() {
 
   const statusConfig = getStatusConfig(deal.status);
   const isTerminal = TERMINAL_STATUSES.has(deal.status);
+  const isCreativeBlocked = !CREATIVE_FLOW_ENABLED && CREATIVE_BLOCKED_STATUSES.has(deal.status);
 
   return (
     <>
@@ -129,12 +186,12 @@ export default function DealDetailPage() {
         <motion.div {...fadeIn} className="flex flex-col min-h-[calc(100vh-40px)]">
           <DealHeroSection deal={deal} statusConfig={statusConfig} isTerminal={isTerminal} countdown={countdown} />
 
-          {deal.status.includes('CREATIVE') && (
+          {isCreativeBlocked && (
             <div className="pb-3">
               <div className="am-surface-row flex flex-col items-center gap-2 py-5 px-4 text-center">
                 <DocumentIcon size={28} className="text-fg-tertiary" />
                 <Text type="caption1" color="secondary">
-                  {t('deals.detail.creativePlaceholder')}
+                  {t('deals.detail.creativeBlocked')}
                 </Text>
               </div>
             </div>
@@ -152,14 +209,28 @@ export default function DealDetailPage() {
 
       <PaymentProvider dealId={safeDealId} onClose={() => setSheetOpen(false)}>
         <NegotiateProvider
-          currentPriceNano={deal?.priceNano ?? 0}
-          onSubmit={(priceNano, message) => {
-            negotiate({ priceNano, message });
+          actionLabelKey={pendingReasonAction?.i18nKey ?? 'deals.actions.counterOffer'}
+          reasonRequired={pendingReasonAction?.requiresReason ?? false}
+          onSubmit={(reason) => {
+            if (!pendingReasonAction?.targetStatus) return;
+            transition({
+              targetStatus: pendingReasonAction.targetStatus,
+              reason,
+            });
             setSheetOpen(false);
+            setPendingReasonAction(null);
           }}
           isPending={isPending}
         >
-          <Sheet sheets={sheetMap} activeSheet={activeSheet} opened={sheetOpen} onClose={() => setSheetOpen(false)} />
+          <Sheet
+            sheets={sheetMap}
+            activeSheet={activeSheet}
+            opened={sheetOpen}
+            onClose={() => {
+              setSheetOpen(false);
+              setPendingReasonAction(null);
+            }}
+          />
         </NegotiateProvider>
       </PaymentProvider>
     </>

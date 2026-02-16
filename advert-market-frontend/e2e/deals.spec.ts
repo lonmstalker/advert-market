@@ -18,27 +18,27 @@ test.describe('Deals Page', () => {
   test('shows advertiser deals by default', async ({ page }) => {
     await navigateToDeals(page);
     // deal-1: OFFER_PENDING, Tech Digest, role=ADVERTISER
-    await expect(page.getByText('Tech Digest').first()).toBeVisible();
+    await expect(page.getByTestId('deal-list-item-deal-1')).toBeVisible();
   });
 
   test('switching to Owner tab shows owner deals', async ({ page }) => {
     await navigateToDeals(page);
     await page.getByRole('button', { name: /^(Owner|Владелец)$/ }).click();
     // deal-4: FUNDED, Crypto News Daily, role=OWNER
-    await expect(page.getByText('Crypto News Daily').first()).toBeVisible();
+    await expect(page.getByTestId('deal-list-item-deal-4')).toBeVisible();
   });
 
   test('clicking a deal navigates to detail page', async ({ page }) => {
     await navigateToDeals(page);
-    await expect(page.getByText('Tech Digest').first()).toBeVisible();
-    await page.getByText('Tech Digest').first().click();
+    await expect(page.getByTestId('deal-list-item-deal-1')).toBeVisible();
+    await page.getByTestId('deal-list-item-deal-1').click();
     await page.waitForURL('**/deals/deal-1');
     await expect(page.getByText(/^(Timeline|Таймлайн|Хронология)$/)).toBeVisible();
   });
 
   test('deal detail shows timeline and actions', async ({ page }) => {
     await navigateToDeals(page);
-    await page.getByText('Tech Digest').first().click();
+    await page.getByTestId('deal-list-item-deal-1').click();
     await page.waitForURL('**/deals/deal-1');
     // Should show timeline
     await expect(page.getByText(/^(Timeline|Таймлайн|Хронология)$/)).toBeVisible();
@@ -48,7 +48,7 @@ test.describe('Deals Page', () => {
 
   test('Pay action opens TON payment sheet', async ({ page }) => {
     await navigateToDeals(page);
-    await page.getByText('Finance Pro').first().click();
+    await page.getByTestId('deal-list-item-deal-3').click();
     await page.waitForURL('**/deals/deal-3');
 
     // deal-3: AWAITING_PAYMENT, role=ADVERTISER
@@ -78,10 +78,10 @@ test.describe('Deals Page', () => {
     });
 
     await navigateToDeals(page);
-    await page.getByText('Finance Pro').first().click();
+    await page.getByTestId('deal-list-item-deal-3').click();
     await page.waitForURL('**/deals/deal-3');
 
     // Deposit mock progresses and sets deal status to FUNDED.
-    await expect(page.getByText(/(Funded|Оплачено|Профинансировано)/i)).toBeVisible();
+    await expect(page.getByTestId('deal-status-badge').first()).toContainText(/(Funded|Оплачено|Профинансировано)/i);
   });
 });

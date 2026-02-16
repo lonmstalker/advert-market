@@ -2,8 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
-import { mockDeals, mockDealTimelines } from '@/test/mocks/data';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { server } from '@/test/mocks/server';
 
 vi.mock('@telegram-apps/sdk-react', () => ({
@@ -13,6 +12,30 @@ vi.mock('@telegram-apps/sdk-react', () => ({
 import { useDealDetail } from '../useDealDetail';
 
 const API_BASE = '/api/v1';
+
+const dealDetail = {
+  id: 'deal-1',
+  channelId: 2,
+  advertiserId: 1,
+  ownerId: 2,
+  status: 'OFFER_PENDING' as const,
+  amountNano: 3_000_000_000,
+  commissionRateBp: 200,
+  commissionNano: 60_000_000,
+  deadlineAt: null,
+  createdAt: '2026-01-01T00:00:00Z',
+  version: 1,
+  timeline: [
+    {
+      id: 10,
+      eventType: 'DEAL_STATE_CHANGED',
+      fromStatus: 'DRAFT' as const,
+      toStatus: 'OFFER_PENDING' as const,
+      actorId: 1,
+      createdAt: '2026-01-01T00:00:00Z',
+    },
+  ],
+};
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -26,6 +49,17 @@ function createWrapper() {
 }
 
 describe('useDealDetail', () => {
+  beforeEach(() => {
+    server.use(
+      http.get(`${API_BASE}/deals/:dealId`, () => {
+        return HttpResponse.json(dealDetail);
+      }),
+      http.get(`${API_BASE}/deals/:dealId/timeline`, () => {
+        return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
+      }),
+    );
+  });
+
   it('starts in loading state', () => {
     const { result } = renderHook(() => useDealDetail('deal-1'), {
       wrapper: createWrapper(),
@@ -36,7 +70,7 @@ describe('useDealDetail', () => {
     expect(result.current.timeline).toBeUndefined();
   });
 
-  it('fetches deal data successfully', async () => {
+  it('reads timeline from deal detail response', async () => {
     const { result } = renderHook(() => useDealDetail('deal-1'), {
       wrapper: createWrapper(),
     });
@@ -45,34 +79,33 @@ describe('useDealDetail', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.deal).toBeDefined();
     expect(result.current.deal?.id).toBe('deal-1');
     expect(result.current.deal?.status).toBe('OFFER_PENDING');
-    expect(result.current.deal?.channelTitle).toBe('Tech Digest');
-    expect(result.current.isError).toBe(false);
+    expect(result.current.timeline).toHaveLength(1);
+    expect(result.current.timeline?.[0]?.toStatus).toBe('OFFER_PENDING');
   });
 
-  it('fetches timeline after deal is loaded', async () => {
+  it('does not depend on /deals/{id}/timeline endpoint', async () => {
     const { result } = renderHook(() => useDealDetail('deal-1'), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(result.current.timeline).toBeDefined();
+      expect(result.current.deal).toBeDefined();
     });
 
-    expect(result.current.timeline?.events).toHaveLength(mockDealTimelines['deal-1'].events.length);
-    expect(result.current.timeline?.events[0].type).toBe('CREATED');
+    expect(result.current.isError).toBe(false);
+    expect(result.current.timeline).toEqual(dealDetail.timeline);
   });
 
-  it('sets isError when deal fetch fails', async () => {
+  it('sets error state when detail request fails', async () => {
     server.use(
       http.get(`${API_BASE}/deals/:dealId`, () => {
         return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
       }),
     );
 
-    const { result } = renderHook(() => useDealDetail('nonexistent-deal'), {
+    const { result } = renderHook(() => useDealDetail('missing-deal'), {
       wrapper: createWrapper(),
     });
 
@@ -81,42 +114,11 @@ describe('useDealDetail', () => {
     });
 
     expect(result.current.deal).toBeUndefined();
-    expect(result.current.isLoading).toBe(false);
-  });
-
-  it('does not fetch timeline when deal query fails', async () => {
-    server.use(
-      http.get(`${API_BASE}/deals/:dealId`, () => {
-        return HttpResponse.json({ type: 'about:blank', title: 'Internal Server Error', status: 500 }, { status: 500 });
-      }),
-    );
-
-    const { result } = renderHook(() => useDealDetail('fail-deal'), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => {
-      expect(result.current.isError).toBe(true);
-    });
-
     expect(result.current.timeline).toBeUndefined();
   });
 
-  it('returns correct data shape for a deal with full timeline', async () => {
-    const { result } = renderHook(() => useDealDetail('deal-7'), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => {
-      expect(result.current.timeline).toBeDefined();
-    });
-
-    expect(result.current.deal?.status).toBe('COMPLETED_RELEASED');
-    expect(result.current.timeline?.events).toHaveLength(mockDealTimelines['deal-7'].events.length);
-  });
-
-  it('provides a refetch function that works', async () => {
-    const { result } = renderHook(() => useDealDetail('deal-2'), {
+  it('refetch delegates to detail query', async () => {
+    const { result } = renderHook(() => useDealDetail('deal-1'), {
       wrapper: createWrapper(),
     });
 
@@ -125,29 +127,6 @@ describe('useDealDetail', () => {
     });
 
     expect(typeof result.current.refetch).toBe('function');
-
-    // Call refetch -- should not throw
-    result.current.refetch();
-  });
-
-  it('returns empty timeline events for a deal without timeline data', async () => {
-    server.use(
-      http.get(`${API_BASE}/deals/:dealId`, () => {
-        return HttpResponse.json(mockDeals[0]);
-      }),
-      http.get(`${API_BASE}/deals/:dealId/timeline`, () => {
-        return HttpResponse.json({ events: [] });
-      }),
-    );
-
-    const { result } = renderHook(() => useDealDetail('deal-no-timeline'), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => {
-      expect(result.current.timeline).toBeDefined();
-    });
-
-    expect(result.current.timeline?.events).toEqual([]);
+    await result.current.refetch();
   });
 });

@@ -31,7 +31,7 @@ export default function CreateDealPage() {
   });
 
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
+  const [creativeBrief, setCreativeBrief] = useState('');
 
   const selectedRule = channel?.pricingRules.find((r) => r.id === Number(selectedRuleId));
 
@@ -53,11 +53,12 @@ export default function CreateDealPage() {
   });
 
   const handleSubmit = () => {
-    if (!selectedRuleId || !channel) return;
+    if (!selectedRuleId || !channel || !selectedRule) return;
     mutation.mutate({
       channelId: channel.id,
+      amountNano: selectedRule.priceNano,
       pricingRuleId: Number(selectedRuleId),
-      message: message.trim() || undefined,
+      creativeBrief: creativeBrief.trim() || undefined,
     });
   };
 
@@ -129,8 +130,8 @@ export default function CreateDealPage() {
             )}
 
             <TextareaField
-              value={message}
-              onChange={setMessage}
+              value={creativeBrief}
+              onChange={setCreativeBrief}
               label={t('deals.create.message')}
               placeholder={t('deals.create.messagePlaceholder')}
               maxLength={2000}

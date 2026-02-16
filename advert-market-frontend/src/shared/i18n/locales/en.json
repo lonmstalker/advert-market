@@ -39,55 +39,55 @@
       "ownerPreview2": "Receive deals",
       "ownerPreview3": "Earn in TON"
     },
-  "tour": {
-    "skip": "Skip tutorial",
+    "tour": {
+      "skip": "Skip tutorial",
       "skipConfirm": {
         "title": "Skip tutorial?",
         "description": "You can open it later in Profile."
       },
-    "next": "Next",
-    "finish": "Get Started",
-    "finishAdvertiser": "Open catalog",
-    "finishOwner": "Add channel",
-    "finishBoth": "Open catalog",
-    "error": "Something went wrong. Tap to try again.",
-    "taskRequired": "Complete the task to continue",
-    "taskStatus": {
-      "recommended": "Recommended: complete the action in this slide",
-      "completed": "Done: you can continue or explore more"
-    },
-    "slide1": {
-      "title": "Find Channels",
-      "titleAdvertiser": "Find Channels",
-      "titleOwner": "Find demand for your channel",
-      "hint": "Tap a channel to see its details",
-      "hintAdvertiser": "Tap a channel to see its details",
-      "hintOwner": "Open a channel card to see how buyers evaluate listings",
-      "taskHint": "Tap on 'Crypto News Daily'",
-      "taskDone": "That's what channel details look like!"
-    },
-    "slide2": {
-      "title": "Secure Deals",
-      "titleAdvertiser": "Secure Deals",
-      "titleOwner": "Approve and manage deals",
-      "hint": "Approve the creative to see deal progress",
-      "hintAdvertiser": "Approve the creative to see deal progress",
-      "hintOwner": "Approve the creative to move the deal to publication",
-      "taskHint": "Tap 'Approve' to advance to the next stage",
-      "taskDone": "Creative approved! Moving to publication.",
+      "next": "Next",
+      "finish": "Get Started",
+      "finishAdvertiser": "Open catalog",
+      "finishOwner": "Open catalog",
+      "finishBoth": "Open catalog",
+      "error": "Something went wrong. Tap to try again.",
+      "taskRequired": "Complete the task to continue",
+      "taskStatus": {
+        "recommended": "Recommended: complete the action in this slide",
+        "completed": "Done: you can continue or explore more"
+      },
+      "slide1": {
+        "title": "Find Channels",
+        "titleAdvertiser": "Find Channels",
+        "titleOwner": "Find demand for your channel",
+        "hint": "Tap a channel to see its details",
+        "hintAdvertiser": "Tap a channel to see its details",
+        "hintOwner": "Open a channel card to see how buyers evaluate listings",
+        "taskHint": "Tap on 'Crypto News Daily'",
+        "taskDone": "That's what channel details look like!"
+      },
+      "slide2": {
+        "title": "Secure Deals",
+        "titleAdvertiser": "Secure Deals",
+        "titleOwner": "Approve and manage deals",
+        "hint": "Approve the creative to see deal progress",
+        "hintAdvertiser": "Approve the creative to see deal progress",
+        "hintOwner": "Approve the creative to move the deal to publication",
+        "taskHint": "Tap 'Approve' to advance to the next stage",
+        "taskDone": "Creative approved! Moving to publication.",
         "previewText": "Sponsored post draft:\n\nLaunch your product to 125K crypto readers.\n\nLearn more →",
         "replay": "Replay demo"
       },
-    "slide3": {
-      "title": "Secure Payments",
-      "titleAdvertiser": "Secure Payments",
-      "titleOwner": "Escrow & payout flow",
-      "hint": "Tap escrow to see the flow",
-      "hintAdvertiser": "Tap escrow to see the flow",
-      "hintOwner": "Tap escrow to see when and how payout is released",
-      "taskHint": "Tap on 'Escrow'",
-      "taskDone": "That's how secure escrow works!"
-    },
+      "slide3": {
+        "title": "Secure Payments",
+        "titleAdvertiser": "Secure Payments",
+        "titleOwner": "Escrow & payout flow",
+        "hint": "Tap escrow to see the flow",
+        "hintAdvertiser": "Tap escrow to see the flow",
+        "hintOwner": "Tap escrow to see when and how payout is released",
+        "taskHint": "Tap on 'Escrow'",
+        "taskDone": "That's how secure escrow works!"
+      },
       "mockup": {
         "dealTimeline": "Deal timeline",
         "statusCompleted": "completed",
@@ -340,7 +340,7 @@
         "POLL": "Poll"
       }
     },
-    "summary": "{{count}} channels \u00b7 \u2300 {{avgCpm}}/1K \u00b7 {{minSubs}}\u2013{{maxSubs}} subs",
+    "summary": "{{count}} channels · ⌀ {{avgCpm}}/1K · {{minSubs}}–{{maxSubs}} subs",
     "empty": {
       "title": "Nothing found",
       "description": "Try changing your search parameters or reset filters",
@@ -452,14 +452,15 @@
       "duration": "Post duration",
       "durationValue": "{{hours}}h",
       "postFrequency": "Top position ~{{hours}}h",
-      "creativePlaceholder": "Creative preview will be available after backend integration"
+      "creativePlaceholder": "Creative preview will be available after backend integration",
+      "creativeBlocked": "Creative flow inside deal is temporarily blocked: backend endpoints are not available yet."
     },
     "negotiate": {
-      "title": "Counter-offer",
+      "title": "Transition reason",
       "currentPrice": "Current price",
       "proposedPrice": "Your price (TON)",
-      "message": "Message",
-      "messagePlaceholder": "Explain your offer...",
+      "message": "Reason",
+      "messagePlaceholder": "Briefly describe the transition reason...",
       "submit": "Send offer"
     },
     "payment": {
@@ -475,7 +476,8 @@
       "success": "Done",
       "error": "Action failed",
       "negotiateSuccess": "Counter-offer sent",
-      "negotiateError": "Failed to send counter-offer"
+      "negotiateError": "Failed to send counter-offer",
+      "already": "Deal is already in target status"
     },
     "confirm": {
       "title": "Are you sure?",

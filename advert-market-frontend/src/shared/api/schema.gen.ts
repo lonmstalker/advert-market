@@ -432,6 +432,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/deposits/{id}/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['reject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/deposits/{id}/approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['approve'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/wallet/transactions': {
     parameters: {
       query?: never;
@@ -507,6 +539,22 @@ export interface paths {
       cookie?: never;
     };
     get: operations['getDetail_1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/deals/{id}/deposit': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getDeposit'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1001,6 +1049,10 @@ export interface components {
         | 'PARTIALLY_REFUNDED'
         | 'EXPIRED';
       reason?: string;
+      /** Format: int64 */
+      partialRefundNano?: number;
+      /** Format: int64 */
+      partialPayoutNano?: number;
     };
     DealTransitionResponse: {
       status?: string;
@@ -1163,6 +1215,29 @@ export interface components {
        * @example John Doe
        */
       displayName?: string;
+    };
+    DepositInfo: {
+      escrowAddress?: string;
+      amountNano?: string;
+      dealId?: string;
+      /** @enum {string} */
+      status?:
+        | 'AWAITING_PAYMENT'
+        | 'TX_DETECTED'
+        | 'CONFIRMING'
+        | 'AWAITING_OPERATOR_REVIEW'
+        | 'CONFIRMED'
+        | 'EXPIRED'
+        | 'UNDERPAID'
+        | 'OVERPAID'
+        | 'REJECTED';
+      /** Format: int32 */
+      currentConfirmations?: number;
+      /** Format: int32 */
+      requiredConfirmations?: number;
+      receivedAmountNano?: string;
+      txHash?: string;
+      expiresAt?: string;
     };
     AccountId: {
       value?: string;
@@ -2589,6 +2664,50 @@ export interface operations {
       };
     };
   };
+  reject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['DepositInfo'];
+        };
+      };
+    };
+  };
+  approve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['DepositInfo'];
+        };
+      };
+    };
+  };
   getTransactions: {
     parameters: {
       query?: {
@@ -2724,6 +2843,28 @@ export interface operations {
         };
         content: {
           '*/*': components['schemas']['DealDetailDto'];
+        };
+      };
+    };
+  };
+  getDeposit: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['DepositInfo'];
         };
       };
     };

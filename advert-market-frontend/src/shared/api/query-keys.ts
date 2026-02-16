@@ -10,7 +10,6 @@ export const dealKeys = {
   list: (params?: PaginationParams) => [...dealKeys.lists(), params] as const,
   details: () => [...dealKeys.all, 'detail'] as const,
   detail: (id: string) => [...dealKeys.details(), id] as const,
-  timeline: (id: string) => [...dealKeys.detail(id), 'timeline'] as const,
   deposit: (id: string) => [...dealKeys.detail(id), 'deposit'] as const,
   escrow: (id: string) => [...dealKeys.detail(id), 'escrow'] as const,
 };

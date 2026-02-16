@@ -21,8 +21,6 @@ tags:
   description: Creative template library
 - name: Profile
   description: User profile management
-- name: Deposits
-  description: Deal deposit query and operator review
 paths:
   /internal/v1/canary:
     get:
@@ -646,63 +644,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/DealTransitionResponse"
-  /api/v1/deals/{id}/deposit:
-    get:
-      tags:
-      - Deposits
-      operationId: getDeposit
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/DepositInfo"
-  /api/v1/admin/deposits/{id}/approve:
-    post:
-      tags:
-      - Deposits
-      operationId: approve
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/DepositInfo"
-  /api/v1/admin/deposits/{id}/reject:
-    post:
-      tags:
-      - Deposits
-      operationId: reject
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/DepositInfo"
   /api/v1/creatives:
     get:
       tags:
@@ -1176,6 +1117,44 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/LoginResponse"
+  /api/v1/admin/deposits/{id}/reject:
+    post:
+      tags:
+      - deposit-admin-controller
+      operationId: reject
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DepositInfo"
+  /api/v1/admin/deposits/{id}/approve:
+    post:
+      tags:
+      - deposit-admin-controller
+      operationId: approve
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DepositInfo"
   /api/v1/wallet/transactions:
     get:
       tags:
@@ -1280,6 +1259,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/DealDetailDto"
+  /api/v1/deals/{id}/deposit:
+    get:
+      tags:
+      - deal-controller
+      operationId: getDeposit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DepositInfo"
   /api/v1/creatives/{id}/versions:
     get:
       tags:
@@ -2126,11 +2124,9 @@ components:
         partialRefundNano:
           type: integer
           format: int64
-          description: Required when targetStatus is PARTIALLY_REFUNDED.
         partialPayoutNano:
           type: integer
           format: int64
-          description: Required when targetStatus is PARTIALLY_REFUNDED.
       required:
       - targetStatus
     DealTransitionResponse:
@@ -2178,51 +2174,6 @@ components:
           - REFUNDED
           - PARTIALLY_REFUNDED
           - EXPIRED
-    DepositInfo:
-      type: object
-      properties:
-        escrowAddress:
-          type: string
-        amountNano:
-          type: string
-        dealId:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum:
-          - AWAITING_PAYMENT
-          - TX_DETECTED
-          - CONFIRMING
-          - AWAITING_OPERATOR_REVIEW
-          - CONFIRMED
-          - EXPIRED
-          - UNDERPAID
-          - OVERPAID
-          - REJECTED
-        currentConfirmations:
-          type: integer
-          format: int32
-          nullable: true
-        requiredConfirmations:
-          type: integer
-          format: int32
-          nullable: true
-        receivedAmountNano:
-          type: string
-          nullable: true
-        txHash:
-          type: string
-          nullable: true
-        expiresAt:
-          type: string
-          format: date-time
-          nullable: true
-      required:
-      - escrowAddress
-      - amountNano
-      - dealId
-      - status
     ChannelRegistrationRequest:
       type: object
       description: Channel registration request
@@ -2395,6 +2346,39 @@ components:
           type: string
           description: Display name from first + last name
           example: John Doe
+    DepositInfo:
+      type: object
+      properties:
+        escrowAddress:
+          type: string
+        amountNano:
+          type: string
+        dealId:
+          type: string
+        status:
+          type: string
+          enum:
+          - AWAITING_PAYMENT
+          - TX_DETECTED
+          - CONFIRMING
+          - AWAITING_OPERATOR_REVIEW
+          - CONFIRMED
+          - EXPIRED
+          - UNDERPAID
+          - OVERPAID
+          - REJECTED
+        currentConfirmations:
+          type: integer
+          format: int32
+        requiredConfirmations:
+          type: integer
+          format: int32
+        receivedAmountNano:
+          type: string
+        txHash:
+          type: string
+        expiresAt:
+          type: string
     AccountId:
       type: object
       properties:

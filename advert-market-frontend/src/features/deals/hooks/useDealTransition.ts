@@ -3,20 +3,22 @@ import { useTranslation } from 'react-i18next';
 import { dealKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
-import { negotiateDeal, transitionDeal } from '../api/deals';
-import { EXPECTED_NEXT_STATUS } from '../lib/deal-status';
-import type { Deal, DealStatus, NegotiateRequest, TransitionRequest } from '../types/deal';
+import { transitionDeal } from '../api/deals';
+import type { DealDetailDto, DealStatus, TransitionRequest } from '../types/deal';
 
-const FINANCIAL_STATUSES = new Set<DealStatus>([
+const NON_OPTIMISTIC_TARGET_STATUSES = new Set<DealStatus>([
   'AWAITING_PAYMENT',
   'FUNDED',
+  'PUBLISHED',
+  'DELIVERY_VERIFYING',
   'COMPLETED_RELEASED',
   'REFUNDED',
   'PARTIALLY_REFUNDED',
+  'EXPIRED',
 ]);
 
-function isFinancialTransition(currentStatus: DealStatus | undefined): boolean {
-  return currentStatus != null && FINANCIAL_STATUSES.has(currentStatus);
+function canApplyOptimisticUpdate(targetStatus: DealStatus): boolean {
+  return !NON_OPTIMISTIC_TARGET_STATUSES.has(targetStatus);
 }
 
 export function useDealTransition(dealId: string) {
@@ -27,32 +29,37 @@ export function useDealTransition(dealId: string) {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: dealKeys.detail(dealId) });
-    queryClient.invalidateQueries({ queryKey: dealKeys.timeline(dealId) });
     queryClient.invalidateQueries({ queryKey: dealKeys.lists() });
   };
 
   const transitionMutation = useMutation({
     mutationFn: (request: TransitionRequest) => transitionDeal(dealId, request),
-    async onMutate() {
+    async onMutate(request) {
       const detailKey = dealKeys.detail(dealId);
-      const previous = queryClient.getQueryData<Deal>(detailKey);
+      const previous = queryClient.getQueryData<DealDetailDto>(detailKey);
 
-      if (previous && !isFinancialTransition(previous.status)) {
-        const nextStatus = EXPECTED_NEXT_STATUS[previous.status];
-        if (nextStatus) {
-          await queryClient.cancelQueries({ queryKey: detailKey });
-          queryClient.setQueryData<Deal>(detailKey, { ...previous, status: nextStatus });
-          haptic.notificationOccurred('success');
-          return { previous };
-        }
+      if (previous && canApplyOptimisticUpdate(request.targetStatus)) {
+        await queryClient.cancelQueries({ queryKey: detailKey });
+        queryClient.setQueryData<DealDetailDto>(detailKey, {
+          ...previous,
+          status: request.targetStatus,
+        });
+        haptic.notificationOccurred('success');
+        return { previous };
       }
 
       return { previous: undefined };
     },
-    onSuccess(_data, _variables, context) {
+    onSuccess(data, _variables, context) {
       if (!context?.previous) {
         haptic.notificationOccurred('success');
       }
+
+      if (data.status === 'ALREADY_IN_TARGET_STATE') {
+        showSuccess(t('deals.transition.already'));
+        return;
+      }
+
       showSuccess(t('deals.transition.success'));
     },
     onError(_error, _variables, context) {
@@ -67,22 +74,8 @@ export function useDealTransition(dealId: string) {
     },
   });
 
-  const negotiateMutation = useMutation({
-    mutationFn: (request: NegotiateRequest) => negotiateDeal(dealId, request),
-    onSuccess: () => {
-      haptic.notificationOccurred('success');
-      showSuccess(t('deals.transition.negotiateSuccess'));
-      invalidate();
-    },
-    onError: () => {
-      haptic.notificationOccurred('error');
-      showError(t('deals.transition.negotiateError'));
-    },
-  });
-
   return {
     transition: transitionMutation.mutate,
-    negotiate: negotiateMutation.mutate,
-    isPending: transitionMutation.isPending || negotiateMutation.isPending,
+    isPending: transitionMutation.isPending,
   };
 }

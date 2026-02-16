@@ -1,8 +1,9 @@
 import { createContext, useContext } from 'react';
 
 type NegotiateContextValue = {
-  currentPriceNano: number;
-  onSubmit: (priceNano: number, message?: string) => void;
+  actionLabelKey: string;
+  reasonRequired: boolean;
+  onSubmit: (reason?: string) => void;
   isPending: boolean;
 };
 
@@ -10,12 +11,15 @@ const NegotiateContext = createContext<NegotiateContextValue | null>(null);
 
 export function NegotiateProvider({
   children,
-  currentPriceNano,
+  actionLabelKey,
+  reasonRequired,
   onSubmit,
   isPending,
 }: NegotiateContextValue & { children: React.ReactNode }) {
   return (
-    <NegotiateContext.Provider value={{ currentPriceNano, onSubmit, isPending }}>{children}</NegotiateContext.Provider>
+    <NegotiateContext.Provider value={{ actionLabelKey, reasonRequired, onSubmit, isPending }}>
+      {children}
+    </NegotiateContext.Provider>
   );
 }
 

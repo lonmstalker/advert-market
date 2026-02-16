@@ -92,18 +92,30 @@ Rules:
 
 | Method | Path | Module | Notes |
 |---|---|---|---|
-| `GET` | `/api/v1/deals` | `advert-market-deal` | Deal list (role-filtered, cursor pagination) |
+| `GET` | `/api/v1/deals` | `advert-market-deal` | Deal list (cursor pagination, optional `status` filter) |
 | `POST` | `/api/v1/deals` | `advert-market-deal` | Deal creation |
 | `GET` | `/api/v1/deals/{id}` | `advert-market-deal` | Deal detail |
 | `POST` | `/api/v1/deals/{id}/transition` | `advert-market-deal` | State transitions |
+| `GET` | `/api/v1/deals/{id}/deposit` | `advert-market-deal` | Deposit address + confirmation progress |
+
+#### Deal Contract Gate (2026-02-16)
+
+- OpenAPI regenerated from backend `HEAD` confirms:
+  - `GET /api/v1/deals`
+  - `POST /api/v1/deals`
+  - `GET /api/v1/deals/{id}`
+  - `POST /api/v1/deals/{id}/transition`
+  - `GET /api/v1/deals/{id}/deposit`
+- Endpoints absent in generated contract:
+  - `/api/v1/deals/{id}/timeline`
+  - `/api/v1/deals/{id}/negotiate`
+  - `/api/v1/deals/{id}/brief*`, `/creative*`, `/schedule*`, `/publish*`
+- Frontend policy: deal creative sub-flow is blocked until backend contract exposes dedicated endpoints.
 
 ## Planned API
 
 | Method | Path | Purpose | Beads ID | Target module |
 |---|---|---|---|---|
-| `GET` | `/api/v1/deals/{id}/timeline` | Deal event timeline | `advert-market-av4.5` | `advert-market-deal` |
-| `POST` | `/api/v1/deals/{id}/negotiate` | Counter-offer flow | `advert-market-av4.5` | `advert-market-deal` |
-| `GET` | `/api/v1/deals/{id}/deposit` | Deposit info | `advert-market-av4.3` | `advert-market-deal` |
 | `GET` | `/api/v1/deals/{id}/escrow` | Escrow status | `advert-market-av4.3` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/brief` | Submit brief | `advert-market-6wx.3` | `advert-market-deal` |
 | `GET` | `/api/v1/deals/{id}/brief` | Read brief | `advert-market-6wx.3` | `advert-market-deal` |

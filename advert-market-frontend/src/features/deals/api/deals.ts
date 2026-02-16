@@ -2,15 +2,16 @@ import { ApiError } from '@/shared/api';
 import { api } from '@/shared/api/client';
 import { type PaginatedResponse, paginatedResponseSchema } from '@/shared/api/types';
 import {
-  type Deal,
-  type DealListItem,
-  type DealRole,
-  type DealTimeline,
-  dealListItemSchema,
-  dealSchema,
-  dealTimelineSchema,
-  type NegotiateRequest,
+  type DealDepositInfo,
+  type DealDetailDto,
+  type DealDto,
+  type DealStatus,
+  type DealTransitionResponse,
   type TransitionRequest,
+  dealDepositInfoSchema,
+  dealDetailDtoSchema,
+  dealDtoSchema,
+  dealTransitionResponseSchema,
 } from '../types/deal';
 
 const DEAL_API_UNAVAILABLE_STATUSES = new Set([404, 405, 501]);
@@ -21,19 +22,17 @@ function isDealApiUnavailable(error: unknown): error is ApiError {
 }
 
 export function fetchDeals(params: {
-  role?: DealRole;
   cursor?: string;
   limit?: number;
-  statuses?: string[];
-}): Promise<PaginatedResponse<DealListItem>> {
+  status?: DealStatus;
+}): Promise<PaginatedResponse<DealDto>> {
   return api
     .get('/deals', {
-      schema: paginatedResponseSchema(dealListItemSchema),
+      schema: paginatedResponseSchema(dealDtoSchema),
       params: {
-        role: params.role,
         cursor: params.cursor,
         limit: params.limit ?? 20,
-        statuses: params.statuses?.join(','),
+        status: params.status,
       },
     })
     .catch((error: unknown) => {
@@ -48,26 +47,20 @@ export function fetchDeals(params: {
     });
 }
 
-export function fetchDeal(dealId: string): Promise<Deal> {
+export function fetchDeal(dealId: string): Promise<DealDetailDto> {
   return api.get(`/deals/${dealId}`, {
-    schema: dealSchema,
+    schema: dealDetailDtoSchema,
   });
 }
 
-export function fetchDealTimeline(dealId: string): Promise<DealTimeline> {
-  return api.get(`/deals/${dealId}/timeline`, {
-    schema: dealTimelineSchema,
+export function fetchDealDeposit(dealId: string): Promise<DealDepositInfo> {
+  return api.get(`/deals/${dealId}/deposit`, {
+    schema: dealDepositInfoSchema,
   });
 }
 
-export function transitionDeal(dealId: string, request: TransitionRequest): Promise<Deal> {
+export function transitionDeal(dealId: string, request: TransitionRequest): Promise<DealTransitionResponse> {
   return api.post(`/deals/${dealId}/transition`, request, {
-    schema: dealSchema,
-  });
-}
-
-export function negotiateDeal(dealId: string, request: NegotiateRequest): Promise<Deal> {
-  return api.post(`/deals/${dealId}/negotiate`, request, {
-    schema: dealSchema,
+    schema: dealTransitionResponseSchema,
   });
 }

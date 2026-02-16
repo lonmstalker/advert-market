@@ -1,15 +1,18 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
 import { Spinner } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { fetchChannelDetail } from '@/features/channels';
 import { fetchDeals } from '@/features/deals/api/deals';
 import { DealFilterSheet } from '@/features/deals/components/DealFilterSheet';
 import { DealListItem } from '@/features/deals/components/DealListItem';
 import { DealListSkeleton } from '@/features/deals/components/DealListSkeleton';
-import type { DealRole } from '@/features/deals/types/deal';
-import { dealKeys } from '@/shared/api/query-keys';
+import { mapDealDtoToViewModel } from '@/features/deals/lib/deal-mapper';
+import type { DealChannelMetadata, DealRole } from '@/features/deals/types/deal';
+import { channelKeys, dealKeys, profileKeys } from '@/shared/api/query-keys';
+import { fetchProfile } from '@/shared/api/auth';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
 import { AppPageShell, AppSectionHeader, EmptyState, EndOfList, FilterButton, SegmentControl } from '@/shared/ui';
 import { staggerChildren } from '@/shared/ui/animations';
@@ -20,6 +23,17 @@ const TABS: { value: DealRole; label: string }[] = [
   { value: 'OWNER', label: 'deals.tabs.owner' },
 ];
 
+function mapChannelMetadata(detail: Awaited<ReturnType<typeof fetchChannelDetail>>): DealChannelMetadata {
+  const firstRule = detail.pricingRules[0];
+  return {
+    title: detail.title,
+    username: detail.username ?? null,
+    postType: firstRule?.postTypes?.[0] ?? null,
+    durationHours: null,
+    postFrequencyHours: detail.postFrequencyHours ?? null,
+  };
+}
+
 export default function DealsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -27,28 +41,73 @@ export default function DealsPage() {
   const [filterStatuses, setFilterStatuses] = useState<Set<string>>(new Set());
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const statusesArray = useMemo(() => [...filterStatuses], [filterStatuses]);
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: profileKeys.me,
+    queryFn: fetchProfile,
+  });
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
-    queryKey: [...dealKeys.lists(), { role: activeRole, statuses: statusesArray }],
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading: isDealsLoading } = useInfiniteQuery({
+    queryKey: [...dealKeys.lists(), 'all'],
     queryFn: ({ pageParam }) =>
       fetchDeals({
-        role: activeRole,
         cursor: pageParam,
         limit: 20,
-        statuses: statusesArray.length > 0 ? statusesArray : undefined,
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => (lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined),
   });
 
-  const deals = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
+  const dealDtos = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
+
+  const channelIds = useMemo(
+    () => [...new Set(dealDtos.map((deal) => deal.channelId))],
+    [dealDtos],
+  );
+
+  const channelQueries = useQueries({
+    queries: channelIds.map((channelId) => ({
+      queryKey: channelKeys.detail(channelId),
+      queryFn: () => fetchChannelDetail(channelId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const channelMetaById = useMemo(() => {
+    const map = new Map<number, DealChannelMetadata>();
+    channelIds.forEach((channelId, index) => {
+      const detail = channelQueries[index]?.data;
+      if (detail) {
+        map.set(channelId, mapChannelMetadata(detail));
+      }
+    });
+    return map;
+  }, [channelIds, channelQueries]);
+
+  const deals = useMemo(() => {
+    if (!profile?.id) return [];
+
+    const mapped = dealDtos
+      .map((deal) =>
+        mapDealDtoToViewModel(deal, {
+          profileId: profile.id,
+          channel: channelMetaById.get(deal.channelId) ?? null,
+        }),
+      )
+      .filter((deal) => deal.role === activeRole);
+
+    if (filterStatuses.size === 0) {
+      return mapped;
+    }
+
+    return mapped.filter((deal) => filterStatuses.has(deal.status));
+  }, [activeRole, channelMetaById, dealDtos, filterStatuses, profile?.id]);
 
   const sentinelRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage });
 
   const translatedTabs = TABS.map((tab) => ({ value: tab.value, label: t(tab.label) }));
 
   const activeFilterCount = filterStatuses.size;
+  const isLoading = isProfileLoading || isDealsLoading;
 
   return (
     <>

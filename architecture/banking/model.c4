@@ -64,7 +64,7 @@ model {
       }
 
       dealFlowUi = component 'Deal Flow UI' {
-        description 'Deal timeline with Approve -> Pay progression, status transitions via MainButton'
+        description 'Deal list/detail for backend state machine: GET /deals, GET /deals/{id} (timeline in detail), POST /deals/{id}/transition, GET /deals/{id}/deposit'
       }
 
       disputeUi = component 'Dispute UI' {
@@ -88,7 +88,7 @@ model {
 
       // Deal Domain (deal module)
       dealController = component 'Deal Controller' {
-        description 'REST endpoints: /api/v1/deals — CRUD, transitions, offers'
+        description 'REST endpoints: /api/v1/deals, /{id}, /{id}/transition, /{id}/deposit (state-machine contract source for frontend)'
       }
 
       dealTransitionService = service 'Deal Transition Service' {
@@ -447,7 +447,7 @@ model {
 
   // Mini App -> Backend API (sync REST)
   adMarketplace.miniApp.escrowUi -[sync]-> adMarketplace.backendApi.dealController 'GET deposit address, payment status'
-  adMarketplace.miniApp.dealFlowUi -[sync]-> adMarketplace.backendApi.dealController 'POST transitions, GET timeline'
+  adMarketplace.miniApp.dealFlowUi -[sync]-> adMarketplace.backendApi.dealController 'GET list/detail, POST transitions, GET deposit'
   adMarketplace.miniApp.disputeUi -[sync]-> adMarketplace.backendApi.disputeService 'POST dispute, upload evidence'
   adMarketplace.miniApp.teamManagementUi -[sync]-> adMarketplace.backendApi.channelTeamService 'Invite, assign rights, revoke'
   adMarketplace.miniApp.creativeEditorUi -[sync]-> adMarketplace.backendApi.creativeController 'GET/POST/PUT/DELETE creatives + media upload'

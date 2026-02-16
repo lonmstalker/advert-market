@@ -5,16 +5,44 @@ import { DealActions } from '../DealActions';
 
 function makeAction(type: DealActionType, overrides: Partial<DealAction> = {}): DealAction {
   const defaults: Record<DealActionType, Omit<DealAction, 'type'>> = {
-    accept: { i18nKey: 'deals.actions.accept', variant: 'primary', requiresConfirm: false },
-    reject: { i18nKey: 'deals.actions.reject', variant: 'destructive', requiresConfirm: true },
-    cancel: { i18nKey: 'deals.actions.cancel', variant: 'destructive', requiresConfirm: true },
-    counter_offer: { i18nKey: 'deals.actions.counterOffer', variant: 'secondary', requiresConfirm: false },
-    reply: { i18nKey: 'deals.actions.reply', variant: 'primary', requiresConfirm: false },
+    accept: { i18nKey: 'deals.actions.accept', variant: 'primary', requiresConfirm: false, targetStatus: 'ACCEPTED' },
+    reject: { i18nKey: 'deals.actions.reject', variant: 'destructive', requiresConfirm: true, targetStatus: 'CANCELLED' },
+    cancel: { i18nKey: 'deals.actions.cancel', variant: 'destructive', requiresConfirm: true, targetStatus: 'CANCELLED' },
+    counter_offer: {
+      i18nKey: 'deals.actions.counterOffer',
+      variant: 'secondary',
+      requiresConfirm: false,
+      targetStatus: 'NEGOTIATING',
+      requiresReason: true,
+    },
     pay: { i18nKey: 'deals.actions.pay', variant: 'primary', requiresConfirm: false },
-    approve_creative: { i18nKey: 'deals.actions.approveCreative', variant: 'primary', requiresConfirm: false },
-    request_revision: { i18nKey: 'deals.actions.requestRevision', variant: 'secondary', requiresConfirm: false },
-    publish: { i18nKey: 'deals.actions.publish', variant: 'primary', requiresConfirm: false },
-    schedule: { i18nKey: 'deals.actions.schedule', variant: 'secondary', requiresConfirm: false },
+    approve_creative: {
+      i18nKey: 'deals.actions.approveCreative',
+      variant: 'primary',
+      requiresConfirm: false,
+      targetStatus: 'CREATIVE_APPROVED',
+    },
+    request_revision: {
+      i18nKey: 'deals.actions.requestRevision',
+      variant: 'secondary',
+      requiresConfirm: false,
+      targetStatus: 'FUNDED',
+      requiresReason: true,
+    },
+    dispute: {
+      i18nKey: 'deals.actions.dispute',
+      variant: 'secondary',
+      requiresConfirm: true,
+      targetStatus: 'DISPUTED',
+      requiresReason: true,
+    },
+    publish: { i18nKey: 'deals.actions.publish', variant: 'primary', requiresConfirm: false, targetStatus: 'PUBLISHED' },
+    schedule: {
+      i18nKey: 'deals.actions.schedule',
+      variant: 'secondary',
+      requiresConfirm: false,
+      targetStatus: 'SCHEDULED',
+    },
   };
   return { type, ...defaults[type], ...overrides };
 }
@@ -110,10 +138,10 @@ describe('DealActions', () => {
     expect(onAction).toHaveBeenCalledWith('pay');
   });
 
-  it('renders reply button for NEGOTIATING status', () => {
-    const actions = [makeAction('reply'), makeAction('cancel')];
+  it('renders counter-offer button for NEGOTIATING status', () => {
+    const actions = [makeAction('counter_offer'), makeAction('cancel')];
     renderWithProviders(<DealActions actions={actions} onAction={vi.fn()} isPending={false} />);
-    expect(screen.getByText('Reply')).toBeInTheDocument();
+    expect(screen.getByText('Counter-offer')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
 
