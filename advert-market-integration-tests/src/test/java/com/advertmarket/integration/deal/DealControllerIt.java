@@ -1,8 +1,13 @@
 package com.advertmarket.integration.deal;
 
+import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
+import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
+import static com.advertmarket.db.generated.tables.DealEvents.DEAL_EVENTS;
+import static com.advertmarket.db.generated.tables.Deals.DEALS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.app.outbox.JooqOutboxRepository;
@@ -15,7 +20,13 @@ import com.advertmarket.integration.support.ContainerProperties;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
+import com.advertmarket.marketplace.api.dto.ChannelSyncResult;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
+import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
+import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import com.advertmarket.shared.pagination.CursorPage;
@@ -25,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
+import org.jooq.JSONB;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +60,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.jooq.impl.DSL;
 
 /**
  * HTTP-level integration tests for Deal endpoints.
@@ -65,6 +78,8 @@ class DealControllerIt {
 
     private static final long ADVERTISER_ID = 100L;
     private static final long OWNER_ID = 200L;
+    private static final long NEW_OWNER_ID = 400L;
+    private static final long MANAGER_ID = 500L;
     private static final long NON_PARTICIPANT_ID = 300L;
     private static final long CHANNEL_ID = -1001234567890L;
     private static final long UNKNOWN_CHANNEL_ID = 999_999L;
@@ -91,15 +106,22 @@ class DealControllerIt {
     @Autowired
     private DSLContext dsl;
 
+    @Autowired
+    private ChannelAutoSyncPort channelAutoSyncPort;
+
     @BeforeEach
     void setUp() {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
+        reset(channelAutoSyncPort);
+        when(channelAutoSyncPort.syncFromTelegram(anyLong()))
+                .thenReturn(new ChannelSyncResult(false, null, OWNER_ID));
         DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, ADVERTISER_ID);
         TestDataFactory.upsertUser(dsl, OWNER_ID);
         TestDataFactory.upsertUser(dsl, NON_PARTICIPANT_ID);
+        TestDataFactory.upsertUser(dsl, MANAGER_ID);
         TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
     }
 
@@ -298,10 +320,213 @@ class DealControllerIt {
                 .isEqualTo("DEAL_NOT_FOUND");
     }
 
+    @Test
+    @DisplayName("POST /deals/{id}/transition owner-side returns 503 when live sync fails")
+    void transition_ownerSideSyncFailure_returns503() {
+        UUID dealId = createDealViaApi(advertiserToken());
+        transitionByToken(advertiserToken(), dealId, "OFFER_PENDING");
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.SERVICE_UNAVAILABLE,
+                        "telegram unavailable"));
+
+        webClient.post()
+                .uri("/api/v1/deals/{id}/transition", dealId)
+                .headers(h -> h.setBearerAuth(ownerToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(transitionRequest("ACCEPTED"))
+                .exchange()
+                .expectStatus().isEqualTo(503)
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("SERVICE_UNAVAILABLE");
+    }
+
+    @Test
+    @DisplayName("Owner transfer reassigns non-terminal deal owner and appends audit event")
+    void ownerTransfer_reassignsDealOwner_andAppendsAuditEvent() {
+        TestDataFactory.upsertUser(dsl, NEW_OWNER_ID);
+        UUID dealId = createDealViaApi(advertiserToken());
+        transitionByToken(advertiserToken(), dealId, "OFFER_PENDING");
+
+        dsl.update(CHANNELS)
+                .set(CHANNELS.OWNER_ID, NEW_OWNER_ID)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .execute();
+        dsl.deleteFrom(CHANNEL_MEMBERSHIPS)
+                .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(CHANNEL_ID))
+                .execute();
+        dsl.insertInto(CHANNEL_MEMBERSHIPS)
+                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, CHANNEL_ID)
+                .set(CHANNEL_MEMBERSHIPS.USER_ID, NEW_OWNER_ID)
+                .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
+                .execute();
+
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenReturn(new ChannelSyncResult(
+                        true, OWNER_ID, NEW_OWNER_ID));
+
+        webClient.post()
+                .uri("/api/v1/deals/{id}/transition", dealId)
+                .headers(h -> h.setBearerAuth(newOwnerToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(transitionRequest("ACCEPTED"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("SUCCESS")
+                .jsonPath("$.newStatus").isEqualTo("ACCEPTED");
+
+        Long dealOwnerId = dsl.select(DEALS.OWNER_ID)
+                .from(DEALS)
+                .where(DEALS.ID.eq(dealId))
+                .fetchOne(DEALS.OWNER_ID);
+        assertThat(dealOwnerId).isEqualTo(NEW_OWNER_ID);
+
+        int reassignmentEvents = dsl.selectCount()
+                .from(DEAL_EVENTS)
+                .where(DEAL_EVENTS.DEAL_ID.eq(dealId))
+                .and(DEAL_EVENTS.EVENT_TYPE.eq("AUDIT_EVENT"))
+                .and(DSL.condition(
+                        "payload::text like {0}",
+                        "%OWNER_REASSIGNED%"))
+                .fetchOne(0, int.class);
+        assertThat(reassignmentEvents).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("Owner transfer does not reassign terminal deal owner")
+    void ownerTransfer_terminalDeal_isNotReassigned() {
+        TestDataFactory.upsertUser(dsl, NEW_OWNER_ID);
+        UUID dealId = createDealViaApi(advertiserToken());
+
+        dsl.update(DEALS)
+                .set(DEALS.STATUS, "COMPLETED_RELEASED")
+                .where(DEALS.ID.eq(dealId))
+                .execute();
+        dsl.update(CHANNELS)
+                .set(CHANNELS.OWNER_ID, NEW_OWNER_ID)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .execute();
+        dsl.deleteFrom(CHANNEL_MEMBERSHIPS)
+                .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(CHANNEL_ID))
+                .execute();
+        dsl.insertInto(CHANNEL_MEMBERSHIPS)
+                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, CHANNEL_ID)
+                .set(CHANNEL_MEMBERSHIPS.USER_ID, NEW_OWNER_ID)
+                .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
+                .execute();
+
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenReturn(new ChannelSyncResult(
+                        true, OWNER_ID, NEW_OWNER_ID));
+
+        webClient.post()
+                .uri("/api/v1/deals/{id}/transition", dealId)
+                .headers(h -> h.setBearerAuth(newOwnerToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(transitionRequest("ACCEPTED"))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("INVALID_STATE_TRANSITION");
+
+        Long dealOwnerId = dsl.select(DEALS.OWNER_ID)
+                .from(DEALS)
+                .where(DEALS.ID.eq(dealId))
+                .fetchOne(DEALS.OWNER_ID);
+        assertThat(dealOwnerId).isEqualTo(OWNER_ID);
+
+        int reassignmentEvents = dsl.selectCount()
+                .from(DEAL_EVENTS)
+                .where(DEAL_EVENTS.DEAL_ID.eq(dealId))
+                .and(DEAL_EVENTS.EVENT_TYPE.eq("AUDIT_EVENT"))
+                .and(DSL.condition(
+                        "payload::text like {0}",
+                        "%OWNER_REASSIGNED%"))
+                .fetchOne(0, int.class);
+        assertThat(reassignmentEvents).isZero();
+    }
+
+    @Test
+    @DisplayName("Manager with moderate right can execute owner-side transition")
+    void managerWithModerateRight_canTransitionOwnerSide() {
+        dsl.insertInto(CHANNEL_MEMBERSHIPS)
+                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, CHANNEL_ID)
+                .set(CHANNEL_MEMBERSHIPS.USER_ID, MANAGER_ID)
+                .set(CHANNEL_MEMBERSHIPS.ROLE, "MANAGER")
+                .set(CHANNEL_MEMBERSHIPS.RIGHTS, JSONB.valueOf(
+                        "{\"moderate\": true}"))
+                .execute();
+
+        UUID dealId = createDealViaApi(advertiserToken());
+        transitionByToken(advertiserToken(), dealId, "OFFER_PENDING");
+
+        webClient.post()
+                .uri("/api/v1/deals/{id}/transition", dealId)
+                .headers(h -> h.setBearerAuth(managerToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(transitionRequest("ACCEPTED"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("SUCCESS")
+                .jsonPath("$.newStatus").isEqualTo("ACCEPTED");
+    }
+
+    @Test
+    @DisplayName("Old owner after transfer cannot execute owner-side transition")
+    void oldOwnerAfterTransfer_cannotTransitionOwnerSide() {
+        TestDataFactory.upsertUser(dsl, NEW_OWNER_ID);
+        UUID dealId = createDealViaApi(advertiserToken());
+        transitionByToken(advertiserToken(), dealId, "OFFER_PENDING");
+
+        dsl.update(CHANNELS)
+                .set(CHANNELS.OWNER_ID, NEW_OWNER_ID)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .execute();
+        dsl.deleteFrom(CHANNEL_MEMBERSHIPS)
+                .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(CHANNEL_ID))
+                .execute();
+        dsl.insertInto(CHANNEL_MEMBERSHIPS)
+                .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, CHANNEL_ID)
+                .set(CHANNEL_MEMBERSHIPS.USER_ID, NEW_OWNER_ID)
+                .set(CHANNEL_MEMBERSHIPS.ROLE, "OWNER")
+                .execute();
+
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenReturn(new ChannelSyncResult(
+                        true, OWNER_ID, NEW_OWNER_ID));
+
+        webClient.post()
+                .uri("/api/v1/deals/{id}/transition", dealId)
+                .headers(h -> h.setBearerAuth(ownerToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(transitionRequest("ACCEPTED"))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("DEAL_NOT_PARTICIPANT");
+    }
+
     // --- helpers ---
 
     private String advertiserToken() {
         return TestDataFactory.jwt(jwtTokenProvider, ADVERTISER_ID);
+    }
+
+    private String ownerToken() {
+        return TestDataFactory.jwt(jwtTokenProvider, OWNER_ID);
+    }
+
+    private String newOwnerToken() {
+        return TestDataFactory.jwt(jwtTokenProvider, NEW_OWNER_ID);
+    }
+
+    private String managerToken() {
+        return TestDataFactory.jwt(jwtTokenProvider, MANAGER_ID);
     }
 
     private UUID createDealViaApi(String token) {
@@ -328,6 +553,16 @@ class DealControllerIt {
     private static Map<String, String> transitionRequest(
             String targetStatus) {
         return Map.of("targetStatus", targetStatus);
+    }
+
+    private void transitionByToken(String token, UUID dealId, String targetStatus) {
+        webClient.post()
+                .uri("/api/v1/deals/{id}/transition", dealId)
+                .headers(h -> h.setBearerAuth(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(transitionRequest(targetStatus))
+                .exchange()
+                .expectStatus().isOk();
     }
 
     /**
@@ -386,6 +621,16 @@ class DealControllerIt {
                                 OffsetDateTime.now()));
             });
             return repo;
+        }
+
+        @Bean
+        ChannelAutoSyncPort channelAutoSyncPort() {
+            return mock(ChannelAutoSyncPort.class);
+        }
+
+        @Bean
+        ChannelAuthorizationPort channelAuthorizationPort(DSLContext dsl) {
+            return new ChannelAuthorizationAdapter(dsl);
         }
 
         @Bean

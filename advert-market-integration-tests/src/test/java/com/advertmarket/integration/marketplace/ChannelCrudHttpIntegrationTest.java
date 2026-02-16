@@ -7,9 +7,11 @@ import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_RULE_POST_TYPES;
 import static com.advertmarket.db.generated.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -21,7 +23,9 @@ import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelListItem;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
+import com.advertmarket.marketplace.api.dto.ChannelSyncResult;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.CategoryRepository;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
@@ -37,6 +41,8 @@ import com.advertmarket.marketplace.channel.web.ChannelController;
 import com.advertmarket.marketplace.channel.web.ChannelSearchCriteriaConverter;
 import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
@@ -99,11 +105,17 @@ class ChannelCrudHttpIntegrationTest {
     @Autowired
     private ChannelSearchPort channelSearchPort;
 
+    @Autowired
+    private ChannelAutoSyncPort channelAutoSyncPort;
+
     @BeforeEach
     void setUp() {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
+        reset(channelAutoSyncPort);
+        when(channelAutoSyncPort.syncFromTelegram(anyLong()))
+                .thenReturn(new ChannelSyncResult(false, null, OWNER_ID));
         dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
         dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
         dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
@@ -300,6 +312,28 @@ class ChannelCrudHttpIntegrationTest {
                 .jsonPath("$.error_code").isEqualTo("CHANNEL_NOT_OWNED");
     }
 
+    @Test
+    @DisplayName("PUT /api/v1/channels/{id} returns 503 when live sync fails")
+    void updateReturns503WhenLiveSyncFails() {
+        TestDataFactory.insertChannelWithOwner(dsl, CHANNEL_ID, OWNER_ID);
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.SERVICE_UNAVAILABLE,
+                        "telegram unavailable"));
+
+        webClient.put()
+                .uri("/api/v1/channels/{id}", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ChannelUpdateRequest(
+                        "desc", null, null, null, null))
+                .exchange()
+                .expectStatus().isEqualTo(503)
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("SERVICE_UNAVAILABLE");
+    }
+
     // --- helpers ---
 
     private String jwt(long userId) {
@@ -357,8 +391,15 @@ class ChannelCrudHttpIntegrationTest {
         ChannelService channelService(
                 ChannelSearchPort searchPort,
                 ChannelRepository repo,
-                ChannelAuthorizationPort authPort) {
-            return new ChannelService(searchPort, repo, authPort);
+                ChannelAuthorizationPort authPort,
+                ChannelAutoSyncPort autoSyncPort) {
+            return new ChannelService(
+                    searchPort, repo, authPort, autoSyncPort);
+        }
+
+        @Bean
+        ChannelAutoSyncPort channelAutoSyncPort() {
+            return mock(ChannelAutoSyncPort.class);
         }
 
         @Bean

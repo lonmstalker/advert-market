@@ -2,6 +2,8 @@ package com.advertmarket.integration.marketplace;
 
 import static com.advertmarket.db.generated.tables.Categories.CATEGORIES;
 import static com.advertmarket.db.generated.tables.ChannelCategories.CHANNEL_CATEGORIES;
+import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
+import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -14,6 +16,7 @@ import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.dto.ChannelRegistrationRequest;
 import com.advertmarket.marketplace.api.dto.ChannelResponse;
+import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyRequest;
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
 import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
@@ -30,6 +33,7 @@ import com.advertmarket.marketplace.channel.mapper.ChannelListItemMapper;
 import com.advertmarket.marketplace.channel.repository.JooqCategoryRepository;
 import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
 import com.advertmarket.marketplace.channel.search.ParadeDbChannelSearch;
+import com.advertmarket.marketplace.channel.service.ChannelAutoSyncService;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationTxService;
 import com.advertmarket.marketplace.channel.service.ChannelService;
@@ -167,11 +171,11 @@ class ChannelRegistrationFlowIntegrationTest {
     }
 
     @Test
-    @DisplayName("My channels returns owned channels only")
+    @DisplayName("My channels returns all channels where user is a member")
     void myChannelsReturnsOwnedChannels() {
         String ownerToken = TestDataFactory.jwt(
                 jwtTokenProvider, TEST_USER_ID);
-        registerChannel(ownerToken);
+        verifyChannel(ownerToken);
 
         var myChannels = webClient.get()
                 .uri("/api/v1/channels/my")
@@ -202,7 +206,92 @@ class ChannelRegistrationFlowIntegrationTest {
                     .getResponseBody();
 
         assertThat(otherChannels).isNotNull();
-        assertThat(otherChannels).isEmpty();
+        assertThat(otherChannels).hasSize(1);
+        assertThat(otherChannels.getFirst().title()).isEqualTo(CHAN_TITLE);
+    }
+
+    @Test
+    @DisplayName("Owner transfer via Telegram sync revokes old owner and grants new owner")
+    void ownerTransferViaSyncUpdatesAccessAndMemberships() {
+        String oldOwnerToken = TestDataFactory.jwt(
+                jwtTokenProvider, TEST_USER_ID);
+        String newOwnerToken = TestDataFactory.jwt(
+                jwtTokenProvider, OTHER_USER_ID);
+
+        verifyChannel(oldOwnerToken);
+
+        when(telegramChannelPort.getChatAdministrators(CHAN_TG_ID))
+                .thenReturn(List.of(admin(OTHER_USER_ID), botAdmin()));
+        when(telegramChannelPort.getChatMemberCount(CHAN_TG_ID))
+                .thenReturn(777);
+
+        webClient.put()
+                .uri("/api/v1/channels/{id}", CHAN_TG_ID)
+                .headers(h -> h.setBearerAuth(oldOwnerToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ChannelUpdateRequest(
+                        "old owner update", null, null, null, null))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("CHANNEL_NOT_OWNED");
+
+        webClient.put()
+                .uri("/api/v1/channels/{id}", CHAN_TG_ID)
+                .headers(h -> h.setBearerAuth(newOwnerToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ChannelUpdateRequest(
+                        "new owner update", null, null, null, null))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.ownerId")
+                .isEqualTo(OTHER_USER_ID);
+
+        Long ownerId = dsl.select(CHANNELS.OWNER_ID)
+                .from(CHANNELS)
+                .where(CHANNELS.ID.eq(CHAN_TG_ID))
+                .fetchOne(CHANNELS.OWNER_ID);
+        assertThat(ownerId).isEqualTo(OTHER_USER_ID);
+
+        int ownerMembershipCount = dsl.selectCount()
+                .from(CHANNEL_MEMBERSHIPS)
+                .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(CHAN_TG_ID))
+                .and(CHANNEL_MEMBERSHIPS.ROLE.eq("OWNER"))
+                .fetchOne(0, int.class);
+        assertThat(ownerMembershipCount).isEqualTo(1);
+
+        Long membershipOwnerId = dsl.select(CHANNEL_MEMBERSHIPS.USER_ID)
+                .from(CHANNEL_MEMBERSHIPS)
+                .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(CHAN_TG_ID))
+                .and(CHANNEL_MEMBERSHIPS.ROLE.eq("OWNER"))
+                .fetchOne(CHANNEL_MEMBERSHIPS.USER_ID);
+        assertThat(membershipOwnerId).isEqualTo(OTHER_USER_ID);
+
+        var oldOwnerChannels = webClient.get()
+                .uri("/api/v1/channels/my")
+                .headers(h -> h.setBearerAuth(oldOwnerToken))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<
+                        List<ChannelResponse>>() {})
+                .returnResult()
+                .getResponseBody();
+        assertThat(oldOwnerChannels).isEmpty();
+
+        var newOwnerChannels = webClient.get()
+                .uri("/api/v1/channels/my")
+                .headers(h -> h.setBearerAuth(newOwnerToken))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<
+                        List<ChannelResponse>>() {})
+                .returnResult()
+                .getResponseBody();
+        assertThat(newOwnerChannels).hasSize(1);
+        assertThat(newOwnerChannels.getFirst().ownerId())
+                .isEqualTo(OTHER_USER_ID);
     }
 
     @Test
@@ -226,22 +315,18 @@ class ChannelRegistrationFlowIntegrationTest {
         assertThat(verifyBody.channelId()).isEqualTo(CHAN_TG_ID);
         assertThat(verifyBody.botStatus().isAdmin()).isTrue();
 
-        // 2. Register (needs getChat by ID mock)
-        configureMockById();
-        ChannelResponse regBody = webClient.post()
+        // 2. Register fallback after successful autosync
+        webClient.post()
                 .uri("/api/v1/channels")
                 .headers(h -> h.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ChannelRegistrationRequest(
                         CHAN_TG_ID, List.of("tech"), null))
                 .exchange()
-                .expectStatus().isCreated()
-                .expectBody(ChannelResponse.class)
-                .returnResult()
-                .getResponseBody();
-
-        assertThat(regBody).isNotNull();
-        assertThat(regBody.id()).isEqualTo(CHAN_TG_ID);
+                .expectStatus().isEqualTo(409)
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("CHANNEL_ALREADY_REGISTERED");
 
         // 3. Search — should find
         var searchResult = webClient.get()
@@ -290,13 +375,27 @@ class ChannelRegistrationFlowIntegrationTest {
                 .expectStatus().isCreated();
     }
 
+    private void verifyChannel(String token) {
+        webClient.post()
+                .uri("/api/v1/channels/verify")
+                .headers(h -> h.setBearerAuth(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ChannelVerifyRequest(CHAN_UNAME))
+                .exchange()
+                .expectStatus().isOk();
+    }
+
     private void configureMocks() {
         when(telegramChannelPort.getChatByUsername(CHAN_UNAME))
+                .thenReturn(chatInfo());
+        when(telegramChannelPort.getChat(CHAN_TG_ID))
                 .thenReturn(chatInfo());
         when(telegramChannelPort.getChatMember(CHAN_TG_ID, BOT_USER_ID))
                 .thenReturn(botAdmin());
         when(telegramChannelPort.getChatMember(CHAN_TG_ID, TEST_USER_ID))
                 .thenReturn(admin(TEST_USER_ID));
+        when(telegramChannelPort.getChatAdministrators(CHAN_TG_ID))
+                .thenReturn(List.of(admin(TEST_USER_ID), botAdmin()));
         when(telegramChannelPort.getChatMemberCount(CHAN_TG_ID))
                 .thenReturn(500);
     }
@@ -395,6 +494,13 @@ class ChannelRegistrationFlowIntegrationTest {
         }
 
         @Bean
+        ChannelAutoSyncService channelAutoSyncService(
+                TelegramChannelPort tcp,
+                DSLContext dsl) {
+            return new ChannelAutoSyncService(tcp, dsl);
+        }
+
+        @Bean
         ChannelRegistrationTxService channelRegistrationTxService(
                 ChannelRepository repo) {
             return new ChannelRegistrationTxService(repo);
@@ -403,9 +509,11 @@ class ChannelRegistrationFlowIntegrationTest {
         @Bean
         ChannelRegistrationService channelRegistrationService(
                 ChannelVerificationService vs,
+                ChannelAutoSyncService autoSyncService,
                 ChannelRepository repo,
                 ChannelRegistrationTxService txService) {
-            return new ChannelRegistrationService(vs, repo, txService);
+            return new ChannelRegistrationService(
+                    vs, autoSyncService, repo, txService);
         }
 
         @Bean
@@ -418,9 +526,10 @@ class ChannelRegistrationFlowIntegrationTest {
         ChannelService channelService(
                 ChannelSearchPort searchPort,
                 ChannelRepository channelRepo,
-                ChannelAuthorizationAdapter authAdapter) {
+                ChannelAuthorizationAdapter authAdapter,
+                ChannelAutoSyncService autoSyncService) {
             return new ChannelService(
-                    searchPort, channelRepo, authAdapter);
+                    searchPort, channelRepo, authAdapter, autoSyncService);
         }
 
         @Bean

@@ -3,17 +3,22 @@ package com.advertmarket.integration.marketplace;
 import static com.advertmarket.db.generated.tables.ChannelPricingRules.CHANNEL_PRICING_RULES;
 import static com.advertmarket.db.generated.tables.PricingRulePostTypes.PRICING_RULE_POST_TYPES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
 import com.advertmarket.integration.support.ContainerProperties;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.TestDataFactory;
+import com.advertmarket.marketplace.api.dto.ChannelSyncResult;
 import com.advertmarket.marketplace.api.dto.PricingRuleCreateRequest;
 import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.dto.PricingRuleUpdateRequest;
 import com.advertmarket.marketplace.api.model.PostType;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.PricingRuleRepository;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
@@ -21,6 +26,8 @@ import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import com.advertmarket.marketplace.pricing.service.PricingRuleService;
 import com.advertmarket.marketplace.pricing.web.PricingRuleController;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.UserId;
 import java.util.Set;
 import org.jooq.DSLContext;
@@ -76,11 +83,17 @@ class PricingRuleHttpIntegrationTest {
     @Autowired
     private DSLContext dsl;
 
+    @Autowired
+    private ChannelAutoSyncPort channelAutoSyncPort;
+
     @BeforeEach
     void setUp() {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
+        reset(channelAutoSyncPort);
+        when(channelAutoSyncPort.syncFromTelegram(anyLong()))
+                .thenReturn(new ChannelSyncResult(false, null, OWNER_ID));
         DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, OWNER_ID);
         TestDataFactory.upsertUser(dsl, OTHER_USER_ID);
@@ -239,6 +252,27 @@ class PricingRuleHttpIntegrationTest {
                 .jsonPath("$.length()").isEqualTo(0);
     }
 
+    @Test
+    @DisplayName("POST /api/v1/channels/{id}/pricing returns 503 when live sync fails")
+    void createRuleReturns503WhenLiveSyncFails() {
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.SERVICE_UNAVAILABLE,
+                        "telegram unavailable"));
+
+        webClient.post()
+                .uri("/api/v1/channels/{id}/pricing", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PricingRuleCreateRequest(
+                        "Repost", null, Set.of(PostType.REPOST), 1_000_000L, 1))
+                .exchange()
+                .expectStatus().isEqualTo(503)
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("SERVICE_UNAVAILABLE");
+    }
+
     // --- helpers ---
 
     private String jwt(long userId) {
@@ -284,8 +318,14 @@ class PricingRuleHttpIntegrationTest {
         @Bean
         PricingRuleService pricingRuleService(
                 PricingRuleRepository repo,
-                ChannelAuthorizationPort authPort) {
-            return new PricingRuleService(repo, authPort);
+                ChannelAuthorizationPort authPort,
+                ChannelAutoSyncPort autoSyncPort) {
+            return new PricingRuleService(repo, authPort, autoSyncPort);
+        }
+
+        @Bean
+        ChannelAutoSyncPort channelAutoSyncPort() {
+            return mock(ChannelAutoSyncPort.class);
         }
 
         @Bean

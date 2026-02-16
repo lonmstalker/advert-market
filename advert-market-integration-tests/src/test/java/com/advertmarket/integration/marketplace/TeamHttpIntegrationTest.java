@@ -2,6 +2,10 @@ package com.advertmarket.integration.marketplace;
 
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
@@ -17,6 +21,7 @@ import com.advertmarket.marketplace.api.dto.TeamMemberDto;
 import com.advertmarket.marketplace.api.dto.TeamUpdateRightsRequest;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
@@ -25,6 +30,8 @@ import com.advertmarket.marketplace.team.mapper.TeamMemberDtoMapper;
 import com.advertmarket.marketplace.team.repository.JooqTeamMembershipRepository;
 import com.advertmarket.marketplace.team.service.TeamService;
 import com.advertmarket.marketplace.team.web.TeamController;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.json.JsonFacade;
 import java.util.Optional;
 import java.util.Set;
@@ -82,11 +89,18 @@ class TeamHttpIntegrationTest {
     @Autowired
     private DSLContext dsl;
 
+    @Autowired
+    private ChannelAutoSyncPort channelAutoSyncPort;
+
     @BeforeEach
     void setUp() {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
+        reset(channelAutoSyncPort);
+        when(channelAutoSyncPort.syncFromTelegram(anyLong()))
+                .thenReturn(new com.advertmarket.marketplace.api.dto
+                        .ChannelSyncResult(false, null, OWNER_ID));
         DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, OWNER_ID, "Owner", "owner");
         TestDataFactory.upsertUser(dsl, MANAGER_ID, "Manager", "manager");
@@ -346,6 +360,28 @@ class TeamHttpIntegrationTest {
                 .jsonPath("$.length()").isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("POST /api/v1/channels/{id}/team returns 503 when live sync fails")
+    void inviteReturns503WhenLiveSyncFails() {
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.SERVICE_UNAVAILABLE,
+                        "telegram unavailable"));
+
+        webClient.post()
+                .uri("/api/v1/channels/{id}/team", CHANNEL_ID)
+                .headers(h -> h.setBearerAuth(jwt(OWNER_ID)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new TeamInviteRequest(
+                        MANAGER_ID,
+                        Set.of(ChannelRight.MODERATE)))
+                .exchange()
+                .expectStatus().isEqualTo(503)
+                .expectBody()
+                .jsonPath("$.error_code")
+                .isEqualTo("SERVICE_UNAVAILABLE");
+    }
+
     // --- helpers ---
 
     private String jwt(long userId) {
@@ -419,6 +455,11 @@ class TeamHttpIntegrationTest {
                 }
 
                 @Override
+                public java.util.List<ChannelResponse> findByMemberUserId(long userId) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
                 public boolean deactivate(long channelId) {
                     throw new UnsupportedOperationException();
                 }
@@ -434,9 +475,16 @@ class TeamHttpIntegrationTest {
         TeamService teamService(
                 TeamMembershipRepository repo,
                 ChannelAuthorizationPort authPort,
+                ChannelAutoSyncPort autoSyncPort,
                 ChannelRepository channelRepo,
                 TeamProperties teamProperties) {
-            return new TeamService(repo, authPort, channelRepo, teamProperties);
+            return new TeamService(
+                    repo, authPort, autoSyncPort, channelRepo, teamProperties);
+        }
+
+        @Bean
+        ChannelAutoSyncPort channelAutoSyncPort() {
+            return mock(ChannelAutoSyncPort.class);
         }
 
         @Bean
