@@ -6,7 +6,9 @@ import com.advertmarket.communication.bot.internal.builder.Reply;
 import com.advertmarket.communication.bot.internal.dispatch.CallbackHandler;
 import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
+import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.i18n.LocalizationService;
+import com.advertmarket.shared.model.UserId;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class LanguageCallbackHandler implements CallbackHandler {
             );
 
     private final LocalizationService i18n;
+    private final UserRepository userRepository;
 
     @Override
     public String prefix() {
@@ -45,11 +48,22 @@ public class LanguageCallbackHandler implements CallbackHandler {
         log.info("Language selected: {} for user_id={}",
                 langCode, ctx.userId());
 
+        saveLanguagePreference(ctx, langCode);
+
         String lang = ctx.languageCode() != null
                 ? ctx.languageCode() : "ru";
         Reply.callback(ctx)
                 .callbackText(i18n.msg("bot.language.selected",
                         lang, langName))
                 .send(sender);
+    }
+
+    private void saveLanguagePreference(UpdateContext ctx,
+            String langCode) {
+        if (ctx.user() == null || langCode.isEmpty()) {
+            return;
+        }
+        userRepository.updateLanguage(
+                new UserId(ctx.userId()), langCode);
     }
 }

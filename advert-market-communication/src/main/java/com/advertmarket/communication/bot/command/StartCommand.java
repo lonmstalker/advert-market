@@ -6,7 +6,10 @@ import com.advertmarket.communication.bot.internal.config.TelegramBotProperties;
 import com.advertmarket.communication.bot.internal.dispatch.BotCommand;
 import com.advertmarket.communication.bot.internal.dispatch.UpdateContext;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
+import com.advertmarket.identity.api.dto.TelegramUserData;
+import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.i18n.LocalizationService;
+import com.pengrad.telegrambot.model.User;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -38,14 +41,17 @@ public class StartCommand implements BotCommand {
     private final String webAppUrl;
     private final String welcomeCustomEmojiId;
     private final LocalizationService i18n;
+    private final UserRepository userRepository;
 
     /** Creates the start command. */
     public StartCommand(TelegramBotProperties botProperties,
-            LocalizationService i18n) {
+            LocalizationService i18n,
+            UserRepository userRepository) {
         this.webAppUrl = botProperties.webapp().url();
         this.welcomeCustomEmojiId = botProperties.welcome() != null
                 ? botProperties.welcome().customEmojiId() : "";
         this.i18n = i18n;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -55,6 +61,8 @@ public class StartCommand implements BotCommand {
 
     @Override
     public void handle(UpdateContext ctx, TelegramSender sender) {
+        upsertUser(ctx);
+
         String text = ctx.messageText();
         String param = extractDeepLinkParam(text);
 
@@ -63,6 +71,20 @@ public class StartCommand implements BotCommand {
         } else {
             handleWelcome(ctx, sender);
         }
+    }
+
+    private void upsertUser(UpdateContext ctx) {
+        User user = ctx.user();
+        if (user == null) {
+            return;
+        }
+        var data = new TelegramUserData(
+                user.id(),
+                user.firstName(),
+                user.lastName(),
+                user.username(),
+                user.languageCode());
+        userRepository.upsert(data);
     }
 
     private void handleWelcome(UpdateContext ctx,
