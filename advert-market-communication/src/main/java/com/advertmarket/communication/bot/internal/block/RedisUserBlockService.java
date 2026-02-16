@@ -28,9 +28,9 @@ public class RedisUserBlockService implements UserBlockPort, UserBlockCheckPort 
             return Boolean.TRUE.equals(
                     redis.hasKey(properties.keyPrefix() + userId));
         } catch (DataAccessException e) {
-            log.warn("Redis error checking block for userId={}",
-                    userId, e);
-            return false;
+            log.error("Redis error checking block for userId={}"
+                    + " — failing closed (treating as blocked)", userId, e);
+            return true;
         }
     }
 

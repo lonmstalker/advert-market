@@ -190,7 +190,17 @@ public class LedgerService implements LedgerPort {
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
-                    public void afterCommit() {
+                    public void beforeCommit(boolean readOnly) {
+                        for (AccountId accountId : accounts) {
+                            balanceCache.evict(accountId);
+                        }
+                    }
+
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status != STATUS_COMMITTED) {
+                            return;
+                        }
                         for (AccountId accountId : accounts) {
                             balanceCache.evict(accountId);
                         }

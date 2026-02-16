@@ -118,6 +118,19 @@ public class JooqOutboxRepository implements OutboxRepository {
                 .execute();
     }
 
+    @Override
+    public int resetStuckProcessing(int stuckThresholdSeconds) {
+        var cutoff = OffsetDateTime.now(ZoneOffset.UTC)
+                .minusSeconds(stuckThresholdSeconds);
+        return dsl.update(NOTIFICATION_OUTBOX)
+                .set(NOTIFICATION_OUTBOX.STATUS,
+                        OutboxStatus.PENDING.name())
+                .where(NOTIFICATION_OUTBOX.STATUS.eq(
+                        OutboxStatus.PROCESSING.name()))
+                .and(NOTIFICATION_OUTBOX.CREATED_AT.lessThan(cutoff))
+                .execute();
+    }
+
     @SuppressWarnings("fenum")
     private OutboxEntry toEntry(Record record) {
         var dealIdUuid = record.get(NOTIFICATION_OUTBOX.DEAL_ID);

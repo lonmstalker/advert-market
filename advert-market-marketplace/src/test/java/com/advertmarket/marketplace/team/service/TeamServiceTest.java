@@ -16,6 +16,7 @@ import com.advertmarket.marketplace.api.dto.TeamUpdateRightsRequest;
 import com.advertmarket.marketplace.api.model.ChannelMembershipRole;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
 import com.advertmarket.marketplace.team.config.TeamProperties;
@@ -54,6 +55,8 @@ class TeamServiceTest {
     private TeamMembershipRepository teamRepository;
     @Mock
     private ChannelAuthorizationPort authorizationPort;
+    @Mock
+    private ChannelAutoSyncPort channelAutoSyncPort;
     @Mock
     private ChannelRepository channelRepository;
     @Mock

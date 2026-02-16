@@ -6,6 +6,7 @@ import com.advertmarket.marketplace.api.dto.ChannelResponse;
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.ChannelSearchPort;
 import com.advertmarket.marketplace.channel.mapper.ChannelSearchCriteriaNormalizer;
@@ -28,6 +29,7 @@ public class ChannelService {
     private final ChannelSearchPort searchPort;
     private final ChannelRepository channelRepository;
     private final ChannelAuthorizationPort authorizationPort;
+    private final ChannelAutoSyncPort channelAutoSyncPort;
 
     /**
      * Searches active channels by the given criteria.
@@ -56,12 +58,12 @@ public class ChannelService {
     /**
      * Returns all active channels owned by the given user.
      *
-     * @param ownerId user ID
+     * @param userId user ID
      * @return list of owned channels
      */
     @NonNull
-    public List<ChannelResponse> findByOwnerId(long ownerId) {
-        return channelRepository.findByOwnerId(ownerId);
+    public List<ChannelResponse> findByMemberUserId(long userId) {
+        return channelRepository.findByMemberUserId(userId);
     }
 
     /**
@@ -93,6 +95,7 @@ public class ChannelService {
     public ChannelResponse update(long channelId,
                                   @NonNull ChannelUpdateRequest request) {
         requireOwner(channelId);
+        channelAutoSyncPort.syncFromTelegram(channelId);
         return channelRepository.update(channelId, request)
                 .orElseThrow(() -> new DomainException(
                         ErrorCodes.CHANNEL_NOT_FOUND,
@@ -109,6 +112,7 @@ public class ChannelService {
     @Transactional
     public void deactivate(long channelId) {
         requireOwner(channelId);
+        channelAutoSyncPort.syncFromTelegram(channelId);
         boolean deactivated = channelRepository.deactivate(channelId);
         if (!deactivated) {
             throw new DomainException(

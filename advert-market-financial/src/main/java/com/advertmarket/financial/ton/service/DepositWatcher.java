@@ -157,9 +157,9 @@ public class DepositWatcher {
         if (record.getSeqno() != null) {
             return (int) (masterSeqno - record.getSeqno());
         }
-        txRepository.updateStatus(record.getId(), "PENDING",
-                0, record.getVersion());
-        return -1;
+        txRepository.updateSeqno(record.getId(), masterSeqno,
+                record.getVersion());
+        return 0;
     }
 
     private void confirmDeposit(TonTransactionsRecord record,
@@ -170,10 +170,11 @@ public class DepositWatcher {
                 tx.feeNano(),
                 OffsetDateTime.ofInstant(
                         Instant.ofEpochSecond(tx.utime()),
-                        ZoneOffset.UTC));
+                        ZoneOffset.UTC),
+                record.getVersion());
 
         if (!updated) {
-            log.debug("Deposit id={} already confirmed (CAS miss)",
+            log.warn("Deposit id={} already confirmed by another instance",
                     record.getId());
             return;
         }

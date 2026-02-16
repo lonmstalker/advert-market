@@ -27,6 +27,8 @@ public class OutboxPoller {
     private final OutboxProperties properties;
     private final MetricsFacade metrics;
 
+    private long lastRecoveryMillis;
+
     /**
      * Scheduled polling loop that fetches and publishes outbox entries.
      */
@@ -34,6 +36,8 @@ public class OutboxPoller {
             "${app.outbox.poll-interval:500ms}")
     public void poll() {
         metrics.incrementCounter(MetricNames.OUTBOX_POLL_COUNT);
+
+        recoverStuckEntries();
 
         List<OutboxEntry> batch =
                 repository.findPendingBatch(properties.batchSize());
@@ -68,6 +72,24 @@ public class OutboxPoller {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             handleFailure(entry, ex);
+        }
+    }
+
+    private static final long RECOVERY_INTERVAL_MS = 60_000;
+
+    private void recoverStuckEntries() {
+        long now = System.currentTimeMillis();
+        if (now - lastRecoveryMillis < RECOVERY_INTERVAL_MS) {
+            return;
+        }
+        lastRecoveryMillis = now;
+
+        int reset = repository.resetStuckProcessing(
+                properties.stuckThresholdSeconds());
+        if (reset > 0) {
+            log.warn("Reset {} stuck PROCESSING outbox entries", reset);
+            metrics.incrementCounter(
+                    MetricNames.OUTBOX_STUCK_RECOVERED);
         }
     }
 

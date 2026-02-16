@@ -46,4 +46,13 @@ public interface OutboxRepository {
      * @param id the entry identifier
      */
     void incrementRetry(long id);
+
+    /**
+     * Resets PROCESSING entries stuck longer than the given threshold
+     * back to PENDING so they can be re-processed.
+     *
+     * @param stuckThresholdSeconds seconds after which PROCESSING is stuck
+     * @return number of reset entries
+     */
+    int resetStuckProcessing(int stuckThresholdSeconds);
 }

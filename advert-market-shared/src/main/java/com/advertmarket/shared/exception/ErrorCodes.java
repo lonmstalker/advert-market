@@ -80,6 +80,8 @@ public final class ErrorCodes {
             "CHANNEL_INACCESSIBLE";
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_NOT_OWNED =
             "CHANNEL_NOT_OWNED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_NOT_ACTIVE =
+            "CHANNEL_NOT_ACTIVE";
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_STATS_UNAVAILABLE =
             "CHANNEL_STATS_UNAVAILABLE";
     public static final @Fenum(FenumGroup.ERROR_CODE) String CHANNEL_BOT_NOT_MEMBER =

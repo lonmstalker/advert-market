@@ -12,6 +12,8 @@ public final class ChannelSearchCriteriaNormalizer {
     private ChannelSearchCriteriaNormalizer() {
     }
 
+    private static final int MAX_QUERY_LENGTH = 200;
+
     /**
      * Normalizes criteria values and clamps pagination limits.
      */
@@ -19,7 +21,12 @@ public final class ChannelSearchCriteriaNormalizer {
             ChannelSearchCriteria criteria) {
         int limit = Math.clamp(criteria.limit(), 1,
                 ChannelSearchCriteria.MAX_LIMIT);
-        if (limit == criteria.limit()) {
+        String query = criteria.query();
+        if (query != null && query.length() > MAX_QUERY_LENGTH) {
+            query = query.substring(0, MAX_QUERY_LENGTH);
+        }
+        if (limit == criteria.limit()
+                && query == criteria.query()) {
             return criteria;
         }
         return new ChannelSearchCriteria(
@@ -30,7 +37,7 @@ public final class ChannelSearchCriteriaNormalizer {
                 criteria.maxPrice(),
                 criteria.minEngagement(),
                 criteria.language(),
-                criteria.query(),
+                query,
                 criteria.sort(),
                 criteria.cursor(),
                 limit);

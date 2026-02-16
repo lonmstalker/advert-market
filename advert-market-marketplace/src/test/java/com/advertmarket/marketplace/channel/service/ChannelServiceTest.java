@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +15,7 @@ import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
 import com.advertmarket.marketplace.api.dto.ChannelSort;
 import com.advertmarket.marketplace.api.dto.ChannelUpdateRequest;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.ChannelSearchPort;
 import com.advertmarket.shared.exception.DomainException;
@@ -43,6 +45,8 @@ class ChannelServiceTest {
     private ChannelRepository channelRepository;
     @Mock
     private ChannelAuthorizationPort authorizationPort;
+    @Mock
+    private ChannelAutoSyncPort channelAutoSyncPort;
 
     @InjectMocks
     private ChannelService channelService;
@@ -129,6 +133,7 @@ class ChannelServiceTest {
         var result = channelService.update(CHANNEL_ID, request);
 
         assertThat(result.id()).isEqualTo(CHANNEL_ID);
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
@@ -143,6 +148,7 @@ class ChannelServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(ErrorCodes.CHANNEL_NOT_OWNED);
+        verify(channelAutoSyncPort, never()).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
@@ -153,6 +159,7 @@ class ChannelServiceTest {
 
         channelService.deactivate(CHANNEL_ID);
 
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
         verify(channelRepository).deactivate(CHANNEL_ID);
     }
 
@@ -165,19 +172,20 @@ class ChannelServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(ErrorCodes.CHANNEL_NOT_OWNED);
+        verify(channelAutoSyncPort, never()).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
-    @DisplayName("Should delegate findByOwnerId to ChannelRepository")
-    void shouldDelegateFindByOwnerId() {
+    @DisplayName("Should delegate findByMemberUserId to ChannelRepository")
+    void shouldDelegateFindByMemberUserId() {
         var expected = List.of(channelResponse());
-        when(channelRepository.findByOwnerId(222L)).thenReturn(expected);
+        when(channelRepository.findByMemberUserId(222L)).thenReturn(expected);
 
-        var result = channelService.findByOwnerId(222L);
+        var result = channelService.findByMemberUserId(222L);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().id()).isEqualTo(CHANNEL_ID);
-        verify(channelRepository).findByOwnerId(222L);
+        verify(channelRepository).findByMemberUserId(222L);
     }
 
     private static ChannelListItem channelListItem() {

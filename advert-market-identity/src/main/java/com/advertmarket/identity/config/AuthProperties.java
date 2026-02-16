@@ -42,7 +42,7 @@ public record AuthProperties(
     /**
      * JWT settings.
      *
-     * @param secret     signing secret (minimum 32 bytes for HS256)
+     * @param secret     signing secret (minimum 64 bytes for HS256)
      * @param expiration token lifetime in seconds
      */
     public record Jwt(
@@ -52,7 +52,7 @@ public record AuthProperties(
                     required = Requirement.REQUIRED,
                     sensitive = true
             )
-            @NotBlank @Size(min = 32) @NonNull String secret,
+            @NotBlank @Size(min = 64) @NonNull String secret,
 
             @PropertyDoc(
                     description = "Token lifetime in seconds",

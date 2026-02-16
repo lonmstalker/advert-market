@@ -3,6 +3,8 @@ package com.advertmarket.app.config;
 import com.advertmarket.app.listener.KafkaMdcInterceptor;
 import com.advertmarket.shared.event.EventDeserializationException;
 import com.advertmarket.shared.json.JsonException;
+import com.advertmarket.shared.metric.MetricNames;
+import com.advertmarket.shared.metric.MetricsFacade;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -38,10 +40,13 @@ public class KafkaConsumerConfig {
 
     // CHECKSTYLE.SUPPRESS: AbbreviationAsWordInName for +1 lines
     private final String bootstrapServers;
+    private final MetricsFacade metrics;
 
     KafkaConsumerConfig(
-            KafkaClientProperties kafkaProperties) {
+            KafkaClientProperties kafkaProperties,
+            MetricsFacade metrics) {
         this.bootstrapServers = kafkaProperties.bootstrapServers();
+        this.metrics = metrics;
     }
 
     /** Consumer factory with error-handling deserializer. */
@@ -134,18 +139,22 @@ public class KafkaConsumerConfig {
                 NOTIFICATION_MAX_MS);
     }
 
+    @SuppressWarnings("fenum:argument")
     private DefaultErrorHandler createHandler(
             KafkaTemplate<String, String> kafkaTemplate,
             long initialInterval,
             double multiplier,
             long maxInterval) {
-        var recoverer =
+        var dlqRecoverer =
                 new DeadLetterPublishingRecoverer(kafkaTemplate);
         var backOff = new ExponentialBackOff(
                 initialInterval, multiplier);
         backOff.setMaxInterval(maxInterval);
         var handler = new DefaultErrorHandler(
-                recoverer, backOff);
+                (record, ex) -> {
+                    metrics.incrementCounter(MetricNames.DLQ_EVENT_SENT);
+                    dlqRecoverer.accept(record, ex);
+                }, backOff);
         handler.addNotRetryableExceptions(
                 EventDeserializationException.class,
                 JsonException.class);

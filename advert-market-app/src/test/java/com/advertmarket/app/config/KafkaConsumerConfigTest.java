@@ -1,7 +1,9 @@
 package com.advertmarket.app.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
+import com.advertmarket.shared.metric.MetricsFacade;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +16,8 @@ class KafkaConsumerConfigTest {
     @DisplayName("Reads bootstrap servers from KafkaClientProperties")
     void consumerFactoryUsesKafkaProperties() {
         var config = new KafkaConsumerConfig(
-                new KafkaClientProperties("kafka:9092"));
+                new KafkaClientProperties("kafka:9092"),
+                mock(MetricsFacade.class));
 
         var consumerFactory = config.consumerFactory();
         assertThat(consumerFactory)

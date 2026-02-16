@@ -1,6 +1,7 @@
 package com.advertmarket.marketplace.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -20,7 +21,7 @@ public record ChannelRegistrationRequest(
         @Nullable List<String> categories,
 
         @Schema(description = "Price per post in nanoTON")
-        @Nullable Long pricePerPostNano
+        @Nullable @Positive Long pricePerPostNano
 ) {
 
     /** Creates a request with a defensive copy of categories. */

@@ -79,21 +79,26 @@ public class JooqTonTransactionRepository {
     }
 
     /**
-     * Marks a transaction as confirmed with blockchain details.
+     * CAS-guarded confirmation of a transaction with blockchain details.
+     *
+     * @param expectedVersion optimistic lock — only updates if version matches
+     * @return true if exactly one row was updated (CAS success)
      */
     public boolean updateConfirmed(long id,
                                    @NonNull String txHash,
                                    int confirmations,
                                    long feeNano,
-                                   @NonNull OffsetDateTime confirmedAt) {
+                                   @NonNull OffsetDateTime confirmedAt,
+                                   int expectedVersion) {
         return dsl.update(TON_TRANSACTIONS)
                 .set(TON_TRANSACTIONS.STATUS, "CONFIRMED")
                 .set(TON_TRANSACTIONS.TX_HASH, txHash)
                 .set(TON_TRANSACTIONS.CONFIRMATIONS, confirmations)
                 .set(TON_TRANSACTIONS.FEE_NANO, feeNano)
                 .set(TON_TRANSACTIONS.CONFIRMED_AT, confirmedAt)
-                .set(TON_TRANSACTIONS.VERSION, TON_TRANSACTIONS.VERSION.plus(1))
+                .set(TON_TRANSACTIONS.VERSION, expectedVersion + 1)
                 .where(TON_TRANSACTIONS.ID.eq(id))
+                .and(TON_TRANSACTIONS.VERSION.eq(expectedVersion))
                 .execute() == 1;
     }
 
@@ -104,6 +109,20 @@ public class JooqTonTransactionRepository {
         return dsl.selectFrom(TON_TRANSACTIONS)
                 .where(TON_TRANSACTIONS.TX_HASH.eq(txHash))
                 .fetchOptionalInto(TonTransactionsRecord.class);
+    }
+
+    /**
+     * Saves the masterchain seqno as reference point for confirmation tracking.
+     *
+     * @return true if exactly one row was updated
+     */
+    public boolean updateSeqno(long id, long seqno, int expectedVersion) {
+        return dsl.update(TON_TRANSACTIONS)
+                .set(TON_TRANSACTIONS.SEQNO, seqno)
+                .set(TON_TRANSACTIONS.VERSION, expectedVersion + 1)
+                .where(TON_TRANSACTIONS.ID.eq(id))
+                .and(TON_TRANSACTIONS.VERSION.eq(expectedVersion))
+                .execute() == 1;
     }
 
     /**

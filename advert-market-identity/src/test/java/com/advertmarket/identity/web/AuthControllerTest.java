@@ -82,8 +82,8 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Should use request remoteAddr for rate limiting (ignore X-Forwarded-For)")
-    void shouldUseRemoteAddrForRateLimiting() throws Exception {
+    @DisplayName("Should use X-Forwarded-For for rate limiting when present")
+    void shouldUseForwardedForWhenPresent() throws Exception {
         when(authService.login(any(LoginRequest.class)))
                 .thenReturn(new LoginResponse(
                         "jwt-token", 3600,
@@ -96,6 +96,29 @@ class AuthControllerTest {
                             return request;
                         })
                         .header("X-Forwarded-For", "9.9.9.9")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new LoginRequest("valid-init-data"))))
+                .andExpect(status().isOk());
+
+        org.mockito.Mockito.verify(rateLimiter)
+                .checkRate("9.9.9.9");
+    }
+
+    @Test
+    @DisplayName("Should fall back to remoteAddr when X-Forwarded-For absent")
+    void shouldFallBackToRemoteAddr() throws Exception {
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(new LoginResponse(
+                        "jwt-token", 3600,
+                        new LoginResponse.UserSummary(
+                                42L, "johndoe", "John Doe")));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .with(request -> {
+                            request.setRemoteAddr("1.2.3.4");
+                            return request;
+                        })
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new LoginRequest("valid-init-data"))))

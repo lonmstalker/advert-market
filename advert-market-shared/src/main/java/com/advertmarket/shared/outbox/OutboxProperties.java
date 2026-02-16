@@ -45,13 +45,20 @@ public record OutboxProperties(
                 description = "Timeout for publishing a single outbox entry to Kafka",
                 required = Requirement.OPTIONAL
         )
-        Duration publishTimeout
+        Duration publishTimeout,
+
+        @PropertyDoc(
+                description = "Seconds after which a PROCESSING entry is considered stuck",
+                required = Requirement.OPTIONAL
+        )
+        int stuckThresholdSeconds
 ) {
 
     private static final long DEFAULT_POLL_INTERVAL_MS = 500;
     private static final int DEFAULT_BATCH_SIZE = 50;
     private static final int DEFAULT_MAX_RETRIES = 3;
     private static final long DEFAULT_PUBLISH_TIMEOUT_S = 5;
+    private static final int DEFAULT_STUCK_THRESHOLD_S = 300;
 
     /** Applies defaults for unset properties. */
     public OutboxProperties {
@@ -69,6 +76,9 @@ public record OutboxProperties(
         }
         if (publishTimeout == null) {
             publishTimeout = Duration.ofSeconds(DEFAULT_PUBLISH_TIMEOUT_S);
+        }
+        if (stuckThresholdSeconds <= 0) {
+            stuckThresholdSeconds = DEFAULT_STUCK_THRESHOLD_S;
         }
     }
 }

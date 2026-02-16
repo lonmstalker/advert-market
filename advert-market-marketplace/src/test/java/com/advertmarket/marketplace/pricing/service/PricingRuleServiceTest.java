@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +13,7 @@ import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.dto.PricingRuleUpdateRequest;
 import com.advertmarket.marketplace.api.model.PostType;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.PricingRuleRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
@@ -36,6 +38,8 @@ class PricingRuleServiceTest {
     private PricingRuleRepository pricingRuleRepository;
     @Mock
     private ChannelAuthorizationPort authorizationPort;
+    @Mock
+    private ChannelAutoSyncPort channelAutoSyncPort;
 
     @InjectMocks
     private PricingRuleService pricingRuleService;
@@ -64,6 +68,7 @@ class PricingRuleServiceTest {
         var result = pricingRuleService.create(CHANNEL_ID, request);
 
         assertThat(result.name()).isEqualTo("Repost");
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
@@ -78,6 +83,7 @@ class PricingRuleServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(ErrorCodes.CHANNEL_NOT_OWNED);
+        verify(channelAutoSyncPort, never()).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
@@ -93,6 +99,7 @@ class PricingRuleServiceTest {
                 CHANNEL_ID, RULE_ID, request);
 
         assertThat(result.name()).isEqualTo("Repost");
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
@@ -109,6 +116,7 @@ class PricingRuleServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(ErrorCodes.PRICING_RULE_NOT_FOUND);
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
@@ -119,6 +127,7 @@ class PricingRuleServiceTest {
 
         pricingRuleService.delete(CHANNEL_ID, RULE_ID);
 
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
         verify(pricingRuleRepository).deactivate(RULE_ID);
     }
 
@@ -133,6 +142,7 @@ class PricingRuleServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(ErrorCodes.PRICING_RULE_NOT_FOUND);
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
     }
 
     private static PricingRuleDto pricingRule() {

@@ -71,7 +71,7 @@ class ErrorCodeTest {
     @Test
     @DisplayName("Has expected number of error codes")
     void hasExpectedCount() {
-        assertThat(ErrorCode.values()).hasSize(69);
+        assertThat(ErrorCode.values()).hasSize(70);
     }
 
     @Test

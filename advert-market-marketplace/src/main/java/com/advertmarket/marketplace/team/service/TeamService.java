@@ -6,6 +6,7 @@ import com.advertmarket.marketplace.api.dto.TeamUpdateRightsRequest;
 import com.advertmarket.marketplace.api.model.ChannelMembershipRole;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.TeamMembershipRepository;
 import com.advertmarket.marketplace.team.config.TeamProperties;
@@ -30,6 +31,7 @@ public class TeamService {
 
     private final TeamMembershipRepository teamRepository;
     private final ChannelAuthorizationPort authorizationPort;
+    private final ChannelAutoSyncPort channelAutoSyncPort;
     private final ChannelRepository channelRepository;
     private final TeamProperties teamProperties;
 
@@ -57,6 +59,7 @@ public class TeamService {
     public TeamMemberDto invite(long channelId,
                                 @NonNull TeamInviteRequest request) {
         requireOwner(channelId);
+        channelAutoSyncPort.syncFromTelegram(channelId);
         requireChannelExists(channelId);
 
         long currentUserId = SecurityContextUtil.currentUserId().value();
@@ -105,6 +108,7 @@ public class TeamService {
     public TeamMemberDto updateRights(long channelId, long userId,
                                        @NonNull TeamUpdateRightsRequest request) {
         requireOwner(channelId);
+        channelAutoSyncPort.syncFromTelegram(channelId);
         requireNotOwnerMember(channelId, userId);
 
         return teamRepository.updateRights(

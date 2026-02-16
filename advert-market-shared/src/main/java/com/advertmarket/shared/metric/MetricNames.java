@@ -156,6 +156,10 @@ public final class MetricNames {
             "outbox.poll.count";
     public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_RECORDS_FAILED =
             "outbox.records.failed";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_STUCK_RECOVERED =
+            "outbox.stuck.recovered";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String DLQ_EVENT_SENT =
+            "dlq.event.sent";
     public static final @Fenum(FenumGroup.METRIC_NAME) String OUTBOX_LAG =
             "outbox.lag";
     public static final @Fenum(FenumGroup.METRIC_NAME) String LOCK_ACQUIRED =

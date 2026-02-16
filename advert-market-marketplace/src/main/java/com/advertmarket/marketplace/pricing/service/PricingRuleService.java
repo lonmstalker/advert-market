@@ -4,6 +4,7 @@ import com.advertmarket.marketplace.api.dto.PricingRuleCreateRequest;
 import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.dto.PricingRuleUpdateRequest;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.PricingRuleRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
@@ -22,6 +23,7 @@ public class PricingRuleService {
 
     private final PricingRuleRepository pricingRuleRepository;
     private final ChannelAuthorizationPort authorizationPort;
+    private final ChannelAutoSyncPort channelAutoSyncPort;
 
     /**
      * Lists active pricing rules for a channel.
@@ -46,6 +48,7 @@ public class PricingRuleService {
     public PricingRuleDto create(long channelId,
                                  @NonNull PricingRuleCreateRequest request) {
         requireOwner(channelId);
+        channelAutoSyncPort.syncFromTelegram(channelId);
         return pricingRuleRepository.insert(channelId, request);
     }
 
@@ -62,6 +65,7 @@ public class PricingRuleService {
     public PricingRuleDto update(long channelId, long ruleId,
                                  @NonNull PricingRuleUpdateRequest request) {
         requireOwner(channelId);
+        channelAutoSyncPort.syncFromTelegram(channelId);
         return pricingRuleRepository.update(ruleId, request)
                 .orElseThrow(() -> new DomainException(
                         ErrorCodes.PRICING_RULE_NOT_FOUND,
@@ -77,6 +81,7 @@ public class PricingRuleService {
     @Transactional
     public void delete(long channelId, long ruleId) {
         requireOwner(channelId);
+        channelAutoSyncPort.syncFromTelegram(channelId);
         boolean deleted = pricingRuleRepository.deactivate(ruleId);
         if (!deleted) {
             throw new DomainException(

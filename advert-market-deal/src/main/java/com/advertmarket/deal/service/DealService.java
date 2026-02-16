@@ -3,7 +3,6 @@ package com.advertmarket.deal.service;
 import com.advertmarket.deal.api.dto.CreateDealCommand;
 import com.advertmarket.deal.api.dto.DealDetailDto;
 import com.advertmarket.deal.api.dto.DealDto;
-import com.advertmarket.deal.api.dto.DealEventDto;
 import com.advertmarket.deal.api.dto.DealEventRecord;
 import com.advertmarket.deal.api.dto.DealListCriteria;
 import com.advertmarket.deal.api.dto.DealRecord;
@@ -15,17 +14,20 @@ import com.advertmarket.deal.api.port.DealPort;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.deal.repository.JooqDealRepository;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.financial.CommissionCalculator;
+import com.advertmarket.shared.json.JsonFacade;
+import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
 import com.advertmarket.shared.model.Money;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.time.Instant;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -45,8 +47,10 @@ public class DealService implements DealPort {
     private final DealEventRepository dealEventRepository;
     private final DealAuthorizationPort dealAuthorizationPort;
     private final DealTransitionService dealTransitionService;
+    private final ChannelAutoSyncPort channelAutoSyncPort;
     private final ChannelRepository channelRepository;
     private final DealDtoMapper dealDtoMapper;
+    private final JsonFacade jsonFacade;
 
     @Override
     @Transactional
@@ -59,10 +63,16 @@ public class DealService implements DealPort {
     @Transactional
     public @NonNull DealDto create(@NonNull CreateDealCommand command,
                                    long advertiserId) {
+        channelAutoSyncPort.syncFromTelegram(command.channelId());
         var channel = channelRepository.findDetailById(command.channelId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         ErrorCodes.CHANNEL_NOT_FOUND, "Channel",
                         String.valueOf(command.channelId())));
+
+        if (!channel.isActive()) {
+            throw new DomainException(ErrorCodes.CHANNEL_NOT_ACTIVE,
+                    "Channel is not active: " + command.channelId());
+        }
 
         var amount = Money.ofNano(command.amountNano());
         var commission = CommissionCalculator.calculate(
@@ -147,6 +157,67 @@ public class DealService implements DealPort {
     @Transactional
     public @NonNull DealTransitionResult transition(
             @NonNull DealTransitionCommand command) {
+        reconcileOwnerForTransition(command);
         return dealTransitionService.transition(command);
+    }
+
+    private void reconcileOwnerForTransition(
+            DealTransitionCommand command) {
+        if (!requiresLiveSync(command)) {
+            return;
+        }
+
+        var deal = dealRepository.findById(command.dealId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        ErrorCodes.DEAL_NOT_FOUND,
+                        "Deal",
+                        command.dealId().value().toString()));
+
+        channelAutoSyncPort.syncFromTelegram(deal.channelId());
+        var channel = channelRepository.findDetailById(deal.channelId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        ErrorCodes.CHANNEL_NOT_FOUND,
+                        "Channel",
+                        String.valueOf(deal.channelId())));
+
+        long oldOwnerId = deal.ownerId();
+        long newOwnerId = channel.ownerId();
+        if (oldOwnerId == newOwnerId || deal.status().isTerminal()) {
+            return;
+        }
+
+        boolean reassigned = dealRepository.reassignOwnerIfNonTerminal(
+                command.dealId(), newOwnerId);
+        if (reassigned) {
+            appendOwnerReassignmentEvent(deal, command, oldOwnerId, newOwnerId);
+        }
+    }
+
+    private static boolean requiresLiveSync(DealTransitionCommand command) {
+        return command.actorType() == ActorType.CHANNEL_OWNER
+                || command.actorType() == ActorType.CHANNEL_ADMIN
+                || command.targetStatus() == DealStatus.COMPLETED_RELEASED;
+    }
+
+    @SuppressWarnings("fenum:assignment")
+    private void appendOwnerReassignmentEvent(
+            DealRecord deal,
+            DealTransitionCommand command,
+            long oldOwnerId,
+            long newOwnerId) {
+        String payload = jsonFacade.toJson(Map.of(
+                "type", "OWNER_REASSIGNED",
+                "oldOwnerId", oldOwnerId,
+                "newOwnerId", newOwnerId));
+        dealEventRepository.append(new DealEventRecord(
+                null,
+                deal.id(),
+                "AUDIT_EVENT",
+                null,
+                null,
+                command.actorId(),
+                command.actorType().name(),
+                payload,
+                Instant.now()));
     }
 }
