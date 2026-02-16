@@ -66,20 +66,25 @@ body {
   --am-page-max-width: 760px;
   --am-page-padding: 16px;
 
-  /* App surfaces (Telegram wallet-inspired). */
-  --am-app-background: linear-gradient(180deg, #f5f6fa 0%, #eef0f5 100%);
-  --am-page-background: linear-gradient(180deg, #f3f5fa 0%, #eceff5 100%);
-  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(29, 125, 255, 0.16) 0%, transparent 72%);
-  --am-card-surface: rgba(255, 255, 255, 0.94);
-  --am-row-surface: rgba(255, 255, 255, 0.9);
-  --am-control-surface: rgba(255, 255, 255, 0.78);
-  --am-card-border: rgba(12, 26, 42, 0.08);
-  --am-border-strong: rgba(12, 26, 42, 0.14);
-  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.08);
-  --am-tabbar-bg: rgba(244, 247, 252, 0.92);
-  --am-tabbar-border: rgba(255, 255, 255, 0.82);
-  --am-tabbar-active-bg: rgba(0, 122, 255, 0.14);
-  --am-tabbar-active-color: #0b84ff;
+  /* App surfaces (Telegram Wallet native 2026). */
+  --am-app-background: #f1f3f4;
+  --am-page-background: #f1f3f4;
+  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(0, 122, 255, 0.09) 0%, transparent 72%);
+  --am-card-surface: #ffffff;
+  --am-row-surface: #ffffff;
+  --am-control-surface: #f1f3f4;
+  --am-input-bg: #eef1f5;
+  --am-input-placeholder: #6f7781;
+  --am-header-surface: color-mix(in srgb, #ffffff 88%, transparent);
+  --am-wallet-hero-surface: #ffffff;
+  --am-card-border: rgba(18, 29, 41, 0.08);
+  --am-border-strong: rgba(18, 29, 41, 0.16);
+  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.07);
+  --am-tabbar-bg: rgba(255, 255, 255, 0.9);
+  --am-tabbar-border: rgba(0, 0, 0, 0.08);
+  --am-tabbar-shadow: 0 14px 32px rgba(13, 28, 47, 0.12);
+  --am-tabbar-active-bg: rgba(0, 122, 255, 0.12);
+  --am-tabbar-active-color: #007aff;
   --am-finance-page-max-width: 780px;
   --am-finance-page-padding: 16px;
   --am-finance-page-top-glow:
@@ -107,67 +112,92 @@ body {
     transparent 100%
   );
 
-  --am-wallet-top-pill-bg: rgba(255, 255, 255, 0.75);
+  --am-wallet-top-pill-bg: rgba(255, 255, 255, 0.86);
   --am-wallet-top-pill-border: rgba(20, 37, 58, 0.1);
-  --am-wallet-segment-bg: rgba(220, 226, 236, 0.6);
-  --am-wallet-segment-active-bg: rgba(255, 255, 255, 0.95);
-  --am-wallet-action-bg: rgba(255, 255, 255, 0.78);
+  --am-wallet-segment-bg: rgba(220, 226, 236, 0.72);
+  --am-wallet-segment-active-bg: rgba(255, 255, 255, 0.96);
+  --am-wallet-action-bg: rgba(255, 255, 255, 0.86);
   --am-wallet-action-border: rgba(25, 47, 74, 0.1);
   --am-wallet-action-icon-bg: rgba(10, 132, 255, 0.14);
   --am-wallet-action-icon: #127de8;
 }
 
 [theme-mode='dark'] {
-  --am-app-background:
-    radial-gradient(130% 55% at 50% -12%, rgba(16, 132, 255, 0.24) 0%, transparent 72%),
-    linear-gradient(180deg, #0a1118 0%, #080d14 100%);
-  --am-page-background:
-    radial-gradient(125% 58% at 50% -14%, rgba(16, 138, 255, 0.21) 0%, transparent 72%),
-    linear-gradient(180deg, #090f16 0%, #070d14 100%);
-  --am-page-atmosphere: radial-gradient(130% 56% at 50% -10%, rgba(39, 155, 255, 0.32) 0%, transparent 72%);
-  --am-card-surface: rgba(15, 27, 41, 0.88);
-  --am-row-surface: rgba(14, 26, 40, 0.92);
-  --am-control-surface: rgba(12, 29, 48, 0.84);
-  --am-card-border: rgba(74, 125, 188, 0.34);
-  --am-border-strong: rgba(112, 164, 228, 0.48);
-  --am-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
-  --am-tabbar-bg: rgba(8, 29, 50, 0.78);
-  --am-tabbar-border: rgba(79, 134, 202, 0.42);
-  --am-tabbar-active-bg: rgba(34, 144, 255, 0.24);
-  --am-tabbar-active-color: #45a6ff;
+  --color-background-secondary: #0f161c;
+  --color-background-base: #17212b;
+  --color-background-modal: #1c2936;
+  --color-border-separator: rgba(255, 255, 255, 0.08);
+  --color-foreground-primary: #f5f5f5;
+  --color-foreground-secondary: #889098;
+  --color-foreground-tertiary: #5d6872;
+  --color-accent-primary: #50a8eb;
+  --color-link: #50a8eb;
+
+  --am-app-background: #0f161c;
+  --am-page-background: #0f161c;
+  --am-page-atmosphere: radial-gradient(130% 52% at 50% -10%, rgba(80, 168, 235, 0.2) 0%, transparent 74%);
+  --am-card-surface: #17212b;
+  --am-row-surface: #17212b;
+  --am-control-surface: #0f161c;
+  --am-input-bg: #0a0f14;
+  --am-input-placeholder: #58626d;
+  --am-header-surface: color-mix(in srgb, #17212b 88%, transparent);
+  --am-wallet-hero-surface: #1c2936;
+  --am-card-border: rgba(255, 255, 255, 0.05);
+  --am-border-strong: rgba(255, 255, 255, 0.1);
+  --am-card-shadow: none;
+  --am-tabbar-bg: rgba(28, 41, 54, 0.9);
+  --am-tabbar-border: rgba(255, 255, 255, 0.1);
+  --am-tabbar-shadow: none;
+  --am-tabbar-active-bg: rgba(80, 168, 235, 0.15);
+  --am-tabbar-active-color: #50a8eb;
   --am-finance-page-top-glow:
-    radial-gradient(120% 50% at 50% -10%, rgba(31, 146, 255, 0.34) 0%, transparent 72%);
-  --am-finance-muted: rgba(180, 200, 222, 0.78);
-  --am-finance-success-bg: rgba(52, 199, 89, 0.22);
-  --am-finance-success-text: #4dd974;
-  --am-soft-accent-bg: rgba(39, 148, 255, 0.2);
-  --am-soft-secondary-bg: rgba(166, 189, 215, 0.2);
-  --am-hero-gradient-accent: linear-gradient(180deg, rgba(36, 145, 255, 0.24) 0%, rgba(36, 145, 255, 0) 100%);
-  --am-hero-gradient-success: linear-gradient(180deg, rgba(56, 209, 105, 0.22) 0%, rgba(56, 209, 105, 0) 100%);
-  --am-wallet-top-pill-bg: rgba(15, 37, 60, 0.84);
-  --am-wallet-top-pill-border: rgba(87, 136, 195, 0.34);
-  --am-wallet-segment-bg: rgba(20, 44, 70, 0.9);
-  --am-wallet-segment-active-bg: rgba(255, 255, 255, 0.18);
-  --am-wallet-action-bg: rgba(15, 37, 62, 0.86);
-  --am-wallet-action-border: rgba(86, 137, 198, 0.33);
-  --am-wallet-action-icon-bg: rgba(57, 161, 255, 0.24);
-  --am-wallet-action-icon: #53b4ff;
+    radial-gradient(120% 50% at 50% -10%, rgba(80, 168, 235, 0.24) 0%, transparent 72%);
+  --am-finance-muted: #889098;
+  --am-finance-success-bg: rgba(76, 217, 100, 0.2);
+  --am-finance-success-text: #4cd964;
+  --am-soft-accent-bg: rgba(80, 168, 235, 0.15);
+  --am-soft-secondary-bg: rgba(136, 144, 152, 0.2);
+  --am-hero-gradient-accent: linear-gradient(180deg, rgba(80, 168, 235, 0.2) 0%, rgba(80, 168, 235, 0) 100%);
+  --am-hero-gradient-success: linear-gradient(180deg, rgba(76, 217, 100, 0.2) 0%, rgba(76, 217, 100, 0) 100%);
+  --am-wallet-top-pill-bg: rgba(28, 41, 54, 0.92);
+  --am-wallet-top-pill-border: rgba(255, 255, 255, 0.1);
+  --am-wallet-segment-bg: rgba(15, 22, 28, 0.96);
+  --am-wallet-segment-active-bg: rgba(28, 41, 54, 0.96);
+  --am-wallet-action-bg: rgba(23, 33, 43, 0.98);
+  --am-wallet-action-border: rgba(255, 255, 255, 0.08);
+  --am-wallet-action-icon-bg: rgba(80, 168, 235, 0.18);
+  --am-wallet-action-icon: #50a8eb;
+  --am-skeleton-base: #232e3c;
+  --am-skeleton-highlight: rgba(245, 245, 245, 0.05);
 }
 
 [theme-mode='light'] {
-  --am-app-background: linear-gradient(180deg, #f5f6fa 0%, #eef0f5 100%);
-  --am-page-background: linear-gradient(180deg, #f3f5fa 0%, #eceff5 100%);
-  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(29, 125, 255, 0.16) 0%, transparent 72%);
-  --am-card-surface: rgba(255, 255, 255, 0.94);
-  --am-row-surface: rgba(255, 255, 255, 0.9);
-  --am-control-surface: rgba(255, 255, 255, 0.78);
+  --color-background-secondary: #f1f3f4;
+  --color-background-base: #ffffff;
+  --color-background-modal: #ffffff;
+  --color-border-separator: rgba(0, 0, 0, 0.1);
+  --color-accent-primary: #007aff;
+  --color-link: #007aff;
+
+  --am-app-background: #f1f3f4;
+  --am-page-background: #f1f3f4;
+  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(0, 122, 255, 0.09) 0%, transparent 72%);
+  --am-card-surface: #ffffff;
+  --am-row-surface: #ffffff;
+  --am-control-surface: #f1f3f4;
+  --am-input-bg: #eef1f5;
+  --am-input-placeholder: #6f7781;
+  --am-header-surface: color-mix(in srgb, #ffffff 88%, transparent);
+  --am-wallet-hero-surface: #ffffff;
   --am-card-border: rgba(12, 26, 42, 0.08);
-  --am-border-strong: rgba(12, 26, 42, 0.14);
-  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.08);
-  --am-tabbar-bg: rgba(244, 247, 252, 0.92);
-  --am-tabbar-border: rgba(255, 255, 255, 0.82);
-  --am-tabbar-active-bg: rgba(0, 122, 255, 0.14);
-  --am-tabbar-active-color: #0b84ff;
+  --am-border-strong: rgba(12, 26, 42, 0.16);
+  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.07);
+  --am-tabbar-bg: rgba(255, 255, 255, 0.9);
+  --am-tabbar-border: rgba(0, 0, 0, 0.08);
+  --am-tabbar-shadow: 0 14px 32px rgba(13, 28, 47, 0.12);
+  --am-tabbar-active-bg: rgba(0, 122, 255, 0.12);
+  --am-tabbar-active-color: #007aff;
 }
 
 /* Unified app page primitives */
@@ -196,9 +226,46 @@ body {
   width: min(100%, var(--am-page-max-width));
   margin: 0 auto;
   padding: var(--am-page-padding);
+  padding-bottom: calc(var(--am-page-padding) + var(--am-safe-area-bottom));
   display: flex;
   flex-direction: column;
   gap: var(--am-space-16);
+}
+
+.am-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  padding-top: max(4px, var(--am-safe-area-top));
+  padding-bottom: 10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--am-header-surface) 98%, transparent) 0%,
+      color-mix(in srgb, var(--am-header-surface) 84%, transparent) 70%,
+      transparent 100%
+    );
+}
+
+.am-page-headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.am-page-headerCopy {
+  min-width: 0;
+}
+
+.am-page-headerSubtitle {
+  margin-top: 2px;
+}
+
+.am-page-headerAction {
+  flex-shrink: 0;
 }
 
 .am-page-with-tabs .am-page-stack {
@@ -346,17 +413,52 @@ button.am-list-row {
   display: none;
 }
 
+.am-catalog-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.am-catalog-listItem {
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.am-catalog-listItem::after {
+  content: '';
+  position: absolute;
+  left: 64px;
+  right: 0;
+  bottom: 6px;
+  height: 1px;
+  background: var(--color-border-separator);
+}
+
+.am-catalog-listItem:last-child {
+  padding-bottom: 0;
+}
+
+.am-catalog-listItem:last-child::after {
+  display: none;
+}
+
+.am-catalog-card {
+  border-radius: 16px;
+  border: 1px solid var(--am-card-border);
+  box-shadow: none;
+  background: var(--am-row-surface);
+}
+
 .am-tab-layout {
   padding-bottom: calc(var(--am-bottom-tabs-height) + var(--am-safe-area-bottom) + var(--am-space-24));
 }
 
 .am-bottom-tabs {
   position: fixed;
-  bottom: calc(10px + var(--am-safe-area-bottom));
+  bottom: calc(16px + var(--am-safe-area-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: min(100%, var(--am-page-max-width));
-  max-width: calc(100% - 16px);
+  width: min(calc(100% - (var(--am-page-padding) * 2)), var(--am-page-max-width));
+  max-width: calc(100% - (var(--am-page-padding) * 2));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -365,7 +467,7 @@ button.am-list-row {
   background: var(--am-tabbar-bg);
   border: 1px solid var(--am-tabbar-border);
   border-radius: 30px;
-  box-shadow: 0 14px 32px color-mix(in srgb, var(--color-foreground-primary) 18%, transparent);
+  box-shadow: var(--am-tabbar-shadow);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 7px;
@@ -392,7 +494,13 @@ button.am-list-row {
 }
 
 [class*="_group_"] [data-group-item-border-bottom='true'] {
-  background: var(--am-card-border);
+  width: calc(100% - 56px);
+  margin-left: 56px;
+  background: var(--color-border-separator);
+}
+
+[class*="_group_"] [data-group-item='true']:last-child [data-group-item-border-bottom='true'] {
+  display: none;
 }
 
 /* Lucide baseline: prevent SVG icons from "floating" on text baselines. */
@@ -453,6 +561,38 @@ button.am-list-row {
   justify-content: center;
 }
 
+@keyframes am-shimmer {
+  0% {
+    background-position: -220% 0;
+  }
+  100% {
+    background-position: 220% 0;
+  }
+}
+
+.am-catalog-skeleton-card {
+  border-radius: 16px;
+  border: 1px solid var(--am-card-border);
+  background: var(--am-row-surface);
+  padding: 14px 16px;
+}
+
+.am-skeleton-block {
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--color-foreground-tertiary) 16%, transparent) 8%,
+    color-mix(in srgb, var(--color-static-white) 20%, transparent) 18%,
+    color-mix(in srgb, var(--color-foreground-tertiary) 16%, transparent) 33%
+  );
+  background-size: 220% 100%;
+  animation: am-shimmer 1.4s linear infinite;
+}
+
+[theme-mode='dark'] .am-skeleton-block {
+  background: linear-gradient(110deg, var(--am-skeleton-base) 8%, var(--am-skeleton-highlight) 18%, var(--am-skeleton-base) 33%);
+  background-size: 220% 100%;
+}
+
 /* Creative editor responsive layout */
 .creative-editor-desktop {
   display: none;
@@ -474,6 +614,22 @@ button.am-list-row {
   :root {
     --am-onboarding-page-padding: 24px;
     --am-finance-page-padding: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --am-page-max-width: 960px;
+    --am-finance-page-max-width: 980px;
+    --am-page-padding: 20px;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --am-page-max-width: 1200px;
+    --am-finance-page-max-width: 1220px;
+    --am-page-padding: 24px;
   }
 }
 
@@ -513,6 +669,22 @@ button.am-list-row {
   box-shadow: var(--am-card-shadow);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.am-escrow-heading {
+  display: flex;
+  flex-direction: column;
+}
+
+.am-wallet-heroCard {
+  background: var(--am-wallet-hero-surface);
+}
+
+.am-wallet-connectSecondary {
+  padding: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-background-base) 82%, transparent);
+  border: 1px solid var(--am-card-border);
 }
 
 .am-wallet-top {
@@ -588,4 +760,8 @@ button.am-list-row {
   background: color-mix(in srgb, var(--am-card-surface) 82%, transparent);
   border-radius: 16px;
   padding: 12px 14px;
+}
+
+.am-solid-textarea::placeholder {
+  color: var(--am-input-placeholder);
 }
