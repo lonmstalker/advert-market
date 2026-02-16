@@ -13,17 +13,7 @@ export function OnboardingLogo({ testId }: OnboardingLogoProps) {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      style={{
-        width: '120px',
-        height: '120px',
-        borderRadius: '32px',
-        backgroundColor: 'var(--color-background-base)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        marginBottom: '16px',
-      }}
+      className="size-[120px] rounded-[32px] bg-bg-base flex items-center justify-center relative mb-4"
       data-testid={testId}
     >
       <motion.div

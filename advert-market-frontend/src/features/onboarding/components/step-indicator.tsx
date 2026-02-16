@@ -10,52 +10,27 @@ export function StepIndicator() {
   const currentStep = STEPS.indexOf(pathname);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '40px',
-        padding: '0 16px',
-        gap: '0',
-      }}
-    >
+    <div className="flex items-center justify-center h-10 px-4">
       {STEPS.map((path, i) => {
         const isCompleted = i < currentStep;
         const isActive = i === currentStep;
 
         return (
-          <div key={path} style={{ display: 'flex', alignItems: 'center' }}>
+          <div key={path} className="flex items-center">
             <motion.div
+              data-testid="step-dot"
               initial={false}
               animate={{
                 backgroundColor: isCompleted || isActive ? 'var(--color-accent-primary)' : 'transparent',
                 borderColor: isCompleted || isActive ? 'var(--color-accent-primary)' : 'var(--color-border-separator)',
               }}
               transition={{ duration: 0.25 }}
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                border: '1.5px solid',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
+              className="size-2 rounded-full border-[1.5px] flex items-center justify-center shrink-0"
             >
               {isCompleted && <Icon name="check" size="6px" className="am-icon-white" />}
             </motion.div>
             {i < STEPS.length - 1 && (
-              <div
-                style={{
-                  width: '32px',
-                  height: '2px',
-                  backgroundColor: 'var(--color-border-separator)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
+              <div data-testid="step-connector" className="w-8 h-0.5 bg-separator relative overflow-hidden">
                 <motion.div
                   initial={false}
                   animate={{ width: i < currentStep ? '100%' : '0%' }}

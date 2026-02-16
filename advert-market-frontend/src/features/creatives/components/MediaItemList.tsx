@@ -57,7 +57,7 @@ export function MediaItemList({ media, onChange }: MediaItemListProps) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="flex flex-col gap-2">
       <Text type="subheadline1" weight="medium">
         {t('creatives.form.media')}
       </Text>

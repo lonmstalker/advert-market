@@ -26,21 +26,19 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
       {...listItem}
       {...pressScale}
       onClick={onClick}
-      style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
+      className="cursor-pointer [-webkit-tap-highlight-color:transparent]"
     >
       <AppSurfaceCard className="am-catalog-card" testId="catalog-channel-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+        <div className="flex items-center gap-3 px-4 py-3.5">
           <ChannelAvatar title={channel.title} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 min-w-0">
               <Text type="body" weight="bold">
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                  {channel.title}
-                </span>
+                <span className="block truncate">{channel.title}</span>
               </Text>
               {channel.isVerified && (
                 <VerifiedIcon
-                  style={{ width: 14, height: 14, color: 'var(--color-accent-primary)', flexShrink: 0 }}
+                  className="size-3.5 text-accent shrink-0"
                   aria-label={t('catalog.channel.verified')}
                   role="img"
                 />
@@ -50,16 +48,16 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
               ))}
             </div>
             <Text type="caption1" color="secondary">
-              <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className="block truncate">
                 {channel.username ? `@${channel.username} · ` : ''}
                 {formatCompactNumber(channel.subscriberCount)} {t('catalog.channel.subs')}
               </span>
             </Text>
           </div>
           {channel.pricePerPostNano != null && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div className="text-right shrink-0">
               <Text type="callout" weight="bold">
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                <span className="tabular-nums">
                   {t('catalog.channel.from', { price: `${formatTonCompact(channel.pricePerPostNano)} TON` })}
                 </span>
               </Text>

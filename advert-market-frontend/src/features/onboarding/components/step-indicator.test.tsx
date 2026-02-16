@@ -32,12 +32,11 @@ vi.mock('motion/react', () => {
 });
 
 function getStepDots(container: HTMLElement) {
-  // Step dots have border-radius: 50% in their style
-  return Array.from(container.querySelectorAll('div[style*="border-radius: 50%"]'));
+  return Array.from(container.querySelectorAll('[data-testid="step-dot"]'));
 }
 
 function getConnectors(container: HTMLElement) {
-  return Array.from(container.querySelectorAll('div[style*="width: 32px"]'));
+  return Array.from(container.querySelectorAll('[data-testid="step-connector"]'));
 }
 
 function getDotBgColor(dot: Element): string {

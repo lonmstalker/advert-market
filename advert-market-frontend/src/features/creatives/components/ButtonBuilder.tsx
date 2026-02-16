@@ -7,13 +7,6 @@ import { pressScale } from '@/shared/ui/animations';
 import { CrossIcon, GlobeIcon } from '@/shared/ui/icons';
 import type { InlineButton } from '../types/creative';
 
-const cardStyle: CSSProperties = {
-  borderRadius: 12,
-  background: 'var(--color-background-base)',
-  border: '1px solid var(--color-border-separator)',
-  overflow: 'hidden',
-};
-
 const previewStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -27,13 +20,6 @@ const previewStyle: CSSProperties = {
   fontSize: 14,
   fontWeight: 500,
   margin: '12px 12px 8px',
-};
-
-const fieldsStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-  padding: '0 12px 12px',
 };
 
 const addZoneStyle: CSSProperties = {
@@ -75,7 +61,7 @@ export function ButtonBuilder({ buttons, onChange, max = 5 }: ButtonBuilderProps
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="flex flex-col gap-2">
       <Text type="subheadline2" color="secondary">
         {t('creatives.form.buttons')}
       </Text>
@@ -89,15 +75,8 @@ export function ButtonBuilder({ buttons, onChange, max = 5 }: ButtonBuilderProps
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div style={cardStyle}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 12px 0',
-                }}
-              >
+            <div className="rounded-[12px] bg-bg-base border border-separator overflow-hidden">
+              <div className="flex items-center justify-between px-3 pt-2">
                 <Text type="caption1" color="secondary">
                   #{index + 1}
                 </Text>
@@ -128,9 +107,9 @@ export function ButtonBuilder({ buttons, onChange, max = 5 }: ButtonBuilderProps
               </div>
 
               {/* Input fields */}
-              <div style={fieldsStyle}>
+              <div className="flex flex-col gap-2 px-3 pb-3">
                 <div>
-                  <div style={{ marginBottom: 4 }}>
+                  <div className="mb-1">
                     <Text type="caption1" color="tertiary">
                       {t('creatives.form.buttonText')}
                     </Text>
@@ -142,7 +121,7 @@ export function ButtonBuilder({ buttons, onChange, max = 5 }: ButtonBuilderProps
                   />
                 </div>
                 <div>
-                  <div style={{ marginBottom: 4 }}>
+                  <div className="mb-1">
                     <Text type="caption1" color="tertiary">
                       {t('creatives.form.buttonUrl')}
                     </Text>

@@ -1,5 +1,7 @@
 import type { Preview } from '@storybook/react-vite';
 import '@telegram-tools/ui-kit/dist/index.css';
+import '../src/app/tailwind.css';
+import '../src/app/components.css';
 import '../src/app/global.css';
 import { withTheme } from './decorators';
 

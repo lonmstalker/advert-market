@@ -249,36 +249,8 @@ body {
     );
 }
 
-.am-page-headerRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.am-page-headerCopy {
-  min-width: 0;
-}
-
-.am-page-headerSubtitle {
-  margin-top: 2px;
-}
-
-.am-page-headerAction {
-  flex-shrink: 0;
-}
-
 .am-page-with-tabs .am-page-stack {
   padding-bottom: calc(var(--am-bottom-tabs-height) + var(--am-safe-area-bottom) + var(--am-space-24));
-}
-
-.am-surface-card {
-  background: var(--am-card-surface);
-  border: 1px solid var(--am-card-border);
-  border-radius: var(--am-radius-card);
-  box-shadow: var(--am-card-shadow);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .am-surface-row {
@@ -312,75 +284,6 @@ body {
   -webkit-backdrop-filter: blur(6px);
 }
 
-.am-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--am-space-12);
-}
-
-.am-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--am-space-12);
-}
-
-.am-section-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--am-space-12);
-}
-
-.am-section-headerCopy {
-  min-width: 0;
-}
-
-.am-section-headerSubtitle {
-  margin-top: var(--am-space-4);
-}
-
-.am-section-headerAction {
-  flex-shrink: 0;
-}
-
-.am-list-row {
-  width: 100%;
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  cursor: default;
-}
-
-button.am-list-row {
-  cursor: pointer;
-  border: 0;
-  font: inherit;
-  color: inherit;
-}
-
-.am-list-rowBefore {
-  flex-shrink: 0;
-}
-
-.am-list-rowCopy {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.am-list-rowValue {
-  flex-shrink: 0;
-}
-
-.am-list-rowChevron {
-  flex-shrink: 0;
-  opacity: 0.72;
-}
 
 .am-icon-bubble {
   width: 36px;
@@ -411,11 +314,6 @@ button.am-list-row {
 
 .am-chip-row::-webkit-scrollbar {
   display: none;
-}
-
-.am-catalog-list {
-  display: flex;
-  flex-direction: column;
 }
 
 .am-catalog-listItem {
@@ -503,13 +401,6 @@ button.am-list-row {
   display: none;
 }
 
-/* Lucide baseline: prevent SVG icons from "floating" on text baselines. */
-.lucide {
-  display: block;
-  vertical-align: middle;
-  flex-shrink: 0;
-}
-
 @supports (height: 100dvh) {
   :root {
     --am-viewport-height-fallback: 100dvh;
@@ -542,23 +433,6 @@ button.am-list-row {
 .focusable:focus-visible {
   outline: 2px solid var(--color-accent-primary);
   outline-offset: 2px;
-}
-
-/* Reusable utility classes */
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 @keyframes am-shimmer {
@@ -654,44 +528,12 @@ button.am-list-row {
   z-index: 0;
 }
 
-.am-finance-stack {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.am-finance-card {
-  background: var(--am-card-surface);
-  border: 1px solid var(--am-card-border);
-  border-radius: 18px;
-  box-shadow: var(--am-card-shadow);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.am-escrow-heading {
-  display: flex;
-  flex-direction: column;
-}
-
-.am-wallet-heroCard {
-  background: var(--am-wallet-hero-surface);
-}
 
 .am-wallet-connectSecondary {
   padding: 2px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-background-base) 82%, transparent);
   border: 1px solid var(--am-card-border);
-}
-
-.am-wallet-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
 }
 
 .am-wallet-pill {
@@ -711,17 +553,6 @@ button.am-list-row {
   background: var(--am-wallet-segment-bg);
 }
 
-.am-wallet-segment-active {
-  background: var(--am-wallet-segment-active-bg);
-  border-radius: 18px;
-}
-
-.am-wallet-actions {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
 .am-wallet-action {
   border: 1px solid var(--am-wallet-action-border);
   background: var(--am-wallet-action-bg);
@@ -738,10 +569,6 @@ button.am-list-row {
   color: var(--am-wallet-action-icon);
 }
 
-.am-wallet-headerAmount {
-  font-variant-numeric: tabular-nums;
-}
-
 .am-wallet-positiveChip {
   display: inline-flex;
   align-items: center;
@@ -749,10 +576,6 @@ button.am-list-row {
   padding: 3px 10px;
   background: var(--am-finance-success-bg);
   color: var(--am-finance-success-text);
-}
-
-.am-wallet-muted {
-  color: var(--am-finance-muted);
 }
 
 .am-history-header {

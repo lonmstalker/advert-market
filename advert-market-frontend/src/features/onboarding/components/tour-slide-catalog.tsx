@@ -34,7 +34,7 @@ export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="flex flex-col gap-2">
       <Text type="title2" weight="bold" align="center">
         {isOwnerPrimary ? t('onboarding.tour.slide1.titleOwner') : t('onboarding.tour.slide1.titleAdvertiser')}
       </Text>
@@ -53,13 +53,7 @@ export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
             >
               <MockupSearchBar placeholder={t('onboarding.tour.mockup.searchPlaceholder')} />
               <Group header={t('onboarding.tour.mockup.popular')}>
-                <div
-                  style={{
-                    padding: 2,
-                    borderRadius: 16,
-                    background: 'var(--am-soft-accent-bg)',
-                  }}
-                >
+                <div className="p-0.5 rounded-[16px] bg-soft-accent">
                   <GroupItem
                     text={t('onboarding.tour.mockup.channelName1')}
                     description={`125K ${t('catalog.channel.subs')}`}
@@ -72,32 +66,32 @@ export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
                     onClick={handleChannelClick}
                   />
                 </div>
-                <div style={{ opacity: 0.4, pointerEvents: 'none', filter: 'grayscale(0.5)' }}>
+                <div className="opacity-40 pointer-events-none grayscale-[0.5]">
                   <GroupItem
                     text={t('onboarding.tour.mockup.channelName2')}
                     description={`89K ${t('catalog.channel.subs')}`}
                     after={
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className="flex items-center gap-1.5">
                         <Text type="body" weight="bold" color="accent">
                           <span className="tabular-nums">3 TON</span>
                         </Text>
-                        <span aria-hidden="true" style={{ fontSize: 14 }}>
+                        <span aria-hidden="true" className="text-sm">
                           🔐
                         </span>
                       </div>
                     }
                   />
                 </div>
-                <div style={{ opacity: 0.4, pointerEvents: 'none', filter: 'grayscale(0.5)' }}>
+                <div className="opacity-40 pointer-events-none grayscale-[0.5]">
                   <GroupItem
                     text={t('onboarding.tour.mockup.channelName3')}
                     description={`67K ${t('catalog.channel.subs')}`}
                     after={
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className="flex items-center gap-1.5">
                         <Text type="body" weight="bold" color="accent">
                           <span className="tabular-nums">4.5 TON</span>
                         </Text>
-                        <span aria-hidden="true" style={{ fontSize: 14 }}>
+                        <span aria-hidden="true" className="text-sm">
                           🔐
                         </span>
                       </div>
@@ -121,15 +115,7 @@ export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
                   before={
                     <div
                       aria-hidden="true"
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '50%',
-                        backgroundColor: 'var(--color-background-secondary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
+                      className="size-9 rounded-full bg-bg-secondary flex items-center justify-center"
                     >
                       <NewspaperIcon style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }} />
                     </div>
@@ -156,10 +142,10 @@ export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
                   after={<Text type="body">{t('onboarding.tour.mockup.reach')}</Text>}
                 />
               </Group>
-              <div style={{ marginTop: '8px' }}>
+              <div className="mt-2">
                 <Button text={t('onboarding.tour.mockup.createDeal')} type="primary" disabled />
               </div>
-              <output aria-live="polite" style={{ display: 'block', textAlign: 'center', marginTop: '8px' }}>
+              <output aria-live="polite" className="block text-center mt-2">
                 <Text type="caption1" color="accent">
                   {t('onboarding.tour.slide1.taskDone')}
                 </Text>

@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import { App } from '@/app/App';
 
 import '@telegram-tools/ui-kit/dist/index.css';
+import '@/app/tailwind.css';
+import '@/app/components.css';
 import '@/app/global.css';
 
 let webViewportFallbackBound = false;

@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import mkcert from 'vite-plugin-mkcert';
@@ -9,7 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     // Playwright's webServer readiness check does not trust mkcert by default.
     // We disable mkcert for e2e to keep local runs deterministic.
-    plugins: isE2E ? [react()] : [react(), mkcert()],
+    plugins: isE2E ? [tailwindcss(), react()] : [tailwindcss(), react(), mkcert()],
     resolve: {
       alias: {
         '@': resolve(process.cwd(), 'src'),
