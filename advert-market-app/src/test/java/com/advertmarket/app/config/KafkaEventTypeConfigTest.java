@@ -13,10 +13,10 @@ class KafkaEventTypeConfigTest {
             new KafkaEventTypeConfig();
 
     @Test
-    @DisplayName("Registry has 19 event types registered")
+    @DisplayName("Registry has 21 event types registered")
     void registrySize() {
         var registry = config.eventTypeRegistry();
-        assertThat(registry.size()).isEqualTo(19);
+        assertThat(registry.size()).isEqualTo(21);
     }
 
     @Test
