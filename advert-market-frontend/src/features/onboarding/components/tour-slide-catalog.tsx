@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
 import type { OnboardingPrimaryRole } from '@/features/onboarding/store/onboarding-store';
 import { useHaptic } from '@/shared/hooks';
-import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
+import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
 import { NewspaperIcon } from '@/shared/ui/icons';
 import { MockupContainer } from './mockup-container';
 import { MockupSearchBar } from './mockup-search-bar';

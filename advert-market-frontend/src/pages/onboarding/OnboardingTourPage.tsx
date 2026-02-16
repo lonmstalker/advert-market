@@ -12,7 +12,7 @@ import { TourSlideDeal } from '@/features/onboarding/components/tour-slide-deal'
 import { TourSlideWallet } from '@/features/onboarding/components/tour-slide-wallet';
 import { resolveOnboardingRoute, useOnboardingStore } from '@/features/onboarding/store/onboarding-store';
 import { profileKeys } from '@/shared/api';
-import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
+import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
 import { pressScale, Tappable } from '@/shared/ui';
 
 const SLIDE_COUNT = 3;

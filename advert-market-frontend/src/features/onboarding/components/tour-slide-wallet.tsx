@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
 import type { OnboardingPrimaryRole } from '@/features/onboarding/store/onboarding-store';
 import { useHaptic } from '@/shared/hooks';
-import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
+import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
 import { CheckCircleIcon, CoinIcon, LockIcon, NewspaperIcon } from '@/shared/ui/icons';
 import { ChannelHeader } from './channel-header';
 import { MockupContainer } from './mockup-container';

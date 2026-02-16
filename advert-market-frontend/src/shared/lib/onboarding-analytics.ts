@@ -1,7 +1,6 @@
-import type { OnboardingPrimaryRole } from '@/features/onboarding/store/onboarding-store';
-
 type OnboardingStep = 'welcome' | 'interest' | 'tour-1' | 'tour-2' | 'tour-3';
 type TourTask = 'open_channel_detail' | 'approve_creative' | 'open_escrow';
+type OnboardingPrimaryRole = 'advertiser' | 'owner' | 'both';
 
 type OnboardingEventMap = {
   onboarding_view: { step: OnboardingStep };

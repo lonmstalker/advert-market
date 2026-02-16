@@ -8,7 +8,7 @@ import { RoleCard } from '@/features/onboarding/components/role-card';
 import { RolePreviewItem } from '@/features/onboarding/components/role-preview-item';
 import { resolveOnboardingPrimaryRole, useOnboardingStore } from '@/features/onboarding/store/onboarding-store';
 import { useHaptic } from '@/shared/hooks';
-import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
+import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
 import { MonitorIcon, pressScale, SpeakerIcon, slideUp } from '@/shared/ui';
 import { ChartBarIcon, ClipboardIcon, CoinIcon, HandshakeIcon, SearchIcon, TonDiamondIcon } from '@/shared/ui/icons';
 

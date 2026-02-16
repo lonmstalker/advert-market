@@ -8,7 +8,7 @@ import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo
 import { OnboardingSettingsSheet } from '@/features/onboarding/components/onboarding-settings-sheet';
 import { OnboardingShell } from '@/features/onboarding/components/onboarding-shell';
 import { useHaptic } from '@/shared/hooks';
-import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
+import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
 import { DocumentIcon, pressScale, SearchIcon, staggerChildren, Tappable, WalletIcon } from '@/shared/ui';
 import { GlobeIcon } from '@/shared/ui/icons';
 
