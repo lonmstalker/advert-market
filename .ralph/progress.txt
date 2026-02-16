@@ -1,6 +1,6 @@
 # Ralph Progress: av4.2-ton-sdk-hardening
 
-## Status: 11/14 COMPLETE
+## Status: 12/14 COMPLETE
 
 ## Completed Stories
 - US-001 ✅ CAS version check in updateConfirmed
@@ -14,8 +14,8 @@
 - US-009 ✅ retry_count column + failure escalation
 - US-012 ✅ Negative tests for TonCenterBlockchainAdapter
 - US-013 ✅ Idempotency tests for EscrowService
+- US-014 ✅ Integration tests for concurrent deposit processing (3 tests: SKIP LOCKED, CAS, retry)
 
 ## Remaining Stories
 - US-010 ⏭️ SKIPPED — address normalization not critical
 - US-011 ⏭️ SKIPPED — requires HTTP-level TonCenterException changes
-- US-014 ⏭️ SKIPPED — integration tests too large for this iteration

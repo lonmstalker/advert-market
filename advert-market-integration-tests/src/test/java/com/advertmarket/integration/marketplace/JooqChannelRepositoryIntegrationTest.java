@@ -63,7 +63,6 @@ class JooqChannelRepositoryIntegrationTest {
         repository = new JooqChannelRepository(
                 dsl,
                 Mappers.getMapper(ChannelRecordMapper.class),
-                pricingRuleMapper,
                 categoryRepo,
                 pricingRuleRepo);
         DatabaseSupport.cleanAllTables(dsl);

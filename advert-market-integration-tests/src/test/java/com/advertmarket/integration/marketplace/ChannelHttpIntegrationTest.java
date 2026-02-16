@@ -28,6 +28,7 @@ import com.advertmarket.marketplace.channel.repository.JooqChannelRepository;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationService;
 import com.advertmarket.marketplace.channel.service.ChannelRegistrationTxService;
 import com.advertmarket.marketplace.channel.service.ChannelService;
+import com.advertmarket.marketplace.channel.service.ChannelAutoSyncService;
 import com.advertmarket.marketplace.channel.service.ChannelVerificationService;
 import com.advertmarket.marketplace.channel.web.ChannelController;
 import com.advertmarket.marketplace.channel.web.ChannelSearchCriteriaConverter;
@@ -251,12 +252,16 @@ class ChannelHttpIntegrationTest {
     private void configureMockHappyPath() {
         when(telegramChannelPort.getChatByUsername(CHAN_UNAME))
                 .thenReturn(chatInfo());
+        when(telegramChannelPort.getChat(CHAN_TG_ID))
+                .thenReturn(chatInfo());
         when(telegramChannelPort.getChatMember(
                 CHAN_TG_ID, BOT_USER_ID))
                 .thenReturn(botAdmin());
         when(telegramChannelPort.getChatMember(
                 CHAN_TG_ID, TEST_USER_ID))
                 .thenReturn(admin(TEST_USER_ID));
+        when(telegramChannelPort.getChatAdministrators(CHAN_TG_ID))
+                .thenReturn(List.of(admin(TEST_USER_ID), botAdmin()));
         when(telegramChannelPort.getChatMemberCount(CHAN_TG_ID))
                 .thenReturn(500);
     }
@@ -343,12 +348,10 @@ class ChannelHttpIntegrationTest {
                 DSLContext dsl,
                 com.advertmarket.marketplace.channel.mapper
                         .ChannelRecordMapper channelMapper,
-                com.advertmarket.marketplace.pricing.mapper
-                        .PricingRuleRecordMapper pricingRuleMapper,
                 CategoryRepository categoryRepo,
                 JooqPricingRuleRepository pricingRuleRepo) {
             return new JooqChannelRepository(
-                    dsl, channelMapper, pricingRuleMapper,
+                    dsl, channelMapper,
                     categoryRepo, pricingRuleRepo);
         }
 
@@ -369,10 +372,18 @@ class ChannelHttpIntegrationTest {
         @Bean
         ChannelRegistrationService channelRegistrationService(
                 ChannelVerificationService vs,
+                ChannelAutoSyncService autoSyncService,
                 ChannelRepository repo,
                 ChannelRegistrationTxService txService) {
             return new ChannelRegistrationService(
-                    vs, repo, txService);
+                    vs, autoSyncService, repo, txService);
+        }
+
+        @Bean
+        ChannelAutoSyncService channelAutoSyncService(
+                TelegramChannelPort telegramChannelPort,
+                DSLContext dsl) {
+            return new ChannelAutoSyncService(telegramChannelPort, dsl);
         }
 
         @Bean

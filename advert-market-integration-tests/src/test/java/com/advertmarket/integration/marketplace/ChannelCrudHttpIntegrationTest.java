@@ -374,11 +374,10 @@ class ChannelCrudHttpIntegrationTest {
         ChannelRepository channelRepository(
                 DSLContext dsl,
                 ChannelRecordMapper channelMapper,
-                PricingRuleRecordMapper pricingRuleMapper,
                 CategoryRepository categoryRepo,
                 JooqPricingRuleRepository pricingRuleRepo) {
             return new JooqChannelRepository(
-                    dsl, channelMapper, pricingRuleMapper,
+                    dsl, channelMapper,
                     categoryRepo, pricingRuleRepo);
         }
 

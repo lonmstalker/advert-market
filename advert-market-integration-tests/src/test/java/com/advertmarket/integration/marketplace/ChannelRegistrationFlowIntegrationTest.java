@@ -467,12 +467,10 @@ class ChannelRegistrationFlowIntegrationTest {
                 DSLContext dsl,
                 com.advertmarket.marketplace.channel.mapper
                         .ChannelRecordMapper channelMapper,
-                com.advertmarket.marketplace.pricing.mapper
-                        .PricingRuleRecordMapper pricingRuleMapper,
                 CategoryRepository categoryRepo,
                 JooqPricingRuleRepository pricingRuleRepo) {
             return new JooqChannelRepository(
-                    dsl, channelMapper, pricingRuleMapper,
+                    dsl, channelMapper,
                     categoryRepo, pricingRuleRepo);
         }
 
