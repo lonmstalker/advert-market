@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 public class PayoutConfig {
 
     @Bean
+    @SuppressWarnings("checkstyle:ParameterNumber")
     PayoutExecutorWorker payoutExecutorWorker(
             TonWalletPort tonWalletPort,
             LedgerPort ledgerPort,

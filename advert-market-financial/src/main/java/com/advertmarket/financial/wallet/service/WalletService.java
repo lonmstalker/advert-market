@@ -1,11 +1,10 @@
 package com.advertmarket.financial.wallet.service;
 
-import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.api.model.LedgerEntry;
+import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.model.WalletSummary;
 import com.advertmarket.financial.api.model.WithdrawalResponse;
-import com.advertmarket.financial.api.model.WithdrawalStatus;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.WalletPort;
 import com.advertmarket.identity.api.port.UserRepository;
@@ -19,8 +18,8 @@ import com.advertmarket.shared.model.Money;
 import com.advertmarket.shared.model.TonAddress;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
-import java.time.Instant;
 import com.advertmarket.shared.util.IdempotencyKey;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class WalletService implements WalletPort {
 
     private static final long VELOCITY_WINDOW_SECONDS = 86_400L;
+    private static final String WITHDRAWAL_STATUS_PENDING = "PENDING";
 
     private final LedgerPort ledgerPort;
     private final UserRepository userRepository;
@@ -99,7 +99,7 @@ public class WalletService implements WalletPort {
                     existingTxRef.get());
             return new WithdrawalResponse(
                     existingTxRef.get().toString(),
-                    WithdrawalStatus.PENDING.name(),
+                    WITHDRAWAL_STATUS_PENDING,
                     amountNano, tonAddress.value());
         }
 
@@ -146,7 +146,7 @@ public class WalletService implements WalletPort {
                 userId.value(), amountNano, tonAddress.value(), txRef);
 
         return new WithdrawalResponse(
-                txRef.toString(), WithdrawalStatus.PENDING.name(),
+                txRef.toString(), WITHDRAWAL_STATUS_PENDING,
                 amountNano, tonAddress.value());
     }
 

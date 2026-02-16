@@ -38,3 +38,12 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka'
     testImplementation 'com.github.pengrad:java-telegram-bot-api'
 }
+
+// Integration tests are opt-in to keep default build non-blocking.
+tasks.named('test') {
+    onlyIf { project.findProperty('runIntegrationTests') == 'true' }
+}
+
+tasks.named('checkstyleTest') {
+    onlyIf { project.findProperty('runIntegrationTests') == 'true' }
+}

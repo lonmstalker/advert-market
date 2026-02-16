@@ -11,11 +11,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.financial.api.model.TonTransactionInfo;
 import com.advertmarket.financial.api.port.TonBlockchainPort;
 import com.advertmarket.financial.config.TonProperties;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
-import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
@@ -185,7 +185,7 @@ class DepositWatcherTest {
 
         @Test
         @DisplayName("Should not publish event when CAS version conflict in updateConfirmed")
-        void shouldNotPublishEventWhenCASFails() {
+        void shouldNotPublishEventWhenCasFails() {
             var record = createPendingRecord(
                     5L, UUID.randomUUID(), "UQaddr5", 10_000_000_000L);
             record.setVersion(3);

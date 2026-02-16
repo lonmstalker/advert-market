@@ -3,7 +3,6 @@ package com.advertmarket.marketplace.channel.repository;
 import static com.advertmarket.db.generated.tables.Categories.CATEGORIES;
 import static com.advertmarket.db.generated.tables.ChannelCategories.CHANNEL_CATEGORIES;
 import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
-import static com.advertmarket.db.generated.tables.ChannelPricingRules.CHANNEL_PRICING_RULES;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;

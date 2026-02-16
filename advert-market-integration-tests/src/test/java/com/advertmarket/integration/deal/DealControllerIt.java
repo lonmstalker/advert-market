@@ -616,7 +616,9 @@ class DealControllerIt {
                                 r.get(com.advertmarket.db.generated
                                         .tables.Channels
                                         .CHANNELS.OWNER_ID),
-                                null, 0, null, List.of(),
+                                null, 0, null,
+                                new ChannelDetailResponse.ChannelRules(null),
+                                List.of(),
                                 OffsetDateTime.now(),
                                 OffsetDateTime.now()));
             });

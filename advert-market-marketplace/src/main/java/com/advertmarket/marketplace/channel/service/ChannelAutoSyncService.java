@@ -35,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChannelAutoSyncService implements ChannelAutoSyncPort {
 
     private static final String TYPE_CHANNEL = "channel";
-    private static final String SOURCE_TELEGRAM_SYNC = "TELEGRAM_SYNC";
 
     private static final JSONB EMPTY_RIGHTS = JSONB.valueOf("{}");
 
@@ -164,7 +163,6 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
                 .set(CHANNEL_MEMBERSHIPS.ROLE,
                         ChannelMembershipRole.OWNER.name())
                 .set(CHANNEL_MEMBERSHIPS.RIGHTS, EMPTY_RIGHTS)
-                .set(CHANNEL_MEMBERSHIPS.SOURCE, SOURCE_TELEGRAM_SYNC)
                 .onConflict(
                         CHANNEL_MEMBERSHIPS.CHANNEL_ID,
                         CHANNEL_MEMBERSHIPS.USER_ID)
@@ -172,7 +170,6 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
                 .set(CHANNEL_MEMBERSHIPS.ROLE,
                         ChannelMembershipRole.OWNER.name())
                 .set(CHANNEL_MEMBERSHIPS.RIGHTS, EMPTY_RIGHTS)
-                .set(CHANNEL_MEMBERSHIPS.SOURCE, SOURCE_TELEGRAM_SYNC)
                 .set(CHANNEL_MEMBERSHIPS.VERSION,
                         CHANNEL_MEMBERSHIPS.VERSION.plus(1))
                 .execute();
@@ -184,7 +181,6 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
                     .set(CHANNEL_MEMBERSHIPS.ROLE,
                             ChannelMembershipRole.MANAGER.name())
                     .set(CHANNEL_MEMBERSHIPS.RIGHTS, EMPTY_RIGHTS)
-                    .set(CHANNEL_MEMBERSHIPS.SOURCE, SOURCE_TELEGRAM_SYNC)
                     .onConflict(
                             CHANNEL_MEMBERSHIPS.CHANNEL_ID,
                             CHANNEL_MEMBERSHIPS.USER_ID)
@@ -192,20 +188,15 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
                     .set(CHANNEL_MEMBERSHIPS.ROLE,
                             ChannelMembershipRole.MANAGER.name())
                     .set(CHANNEL_MEMBERSHIPS.RIGHTS, EMPTY_RIGHTS)
-                    .set(CHANNEL_MEMBERSHIPS.SOURCE, SOURCE_TELEGRAM_SYNC)
                     .set(CHANNEL_MEMBERSHIPS.VERSION,
                             CHANNEL_MEMBERSHIPS.VERSION.plus(1))
-                    .where(CHANNEL_MEMBERSHIPS.SOURCE.eq(
-                            SOURCE_TELEGRAM_SYNC))
                     .execute();
         }
 
         var staleDelete = dsl.deleteFrom(CHANNEL_MEMBERSHIPS)
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
                 .and(CHANNEL_MEMBERSHIPS.ROLE.eq(
-                        ChannelMembershipRole.MANAGER.name()))
-                .and(CHANNEL_MEMBERSHIPS.SOURCE.eq(
-                        SOURCE_TELEGRAM_SYNC));
+                        ChannelMembershipRole.MANAGER.name()));
         if (!managerIds.isEmpty()) {
             staleDelete = staleDelete.and(
                     CHANNEL_MEMBERSHIPS.USER_ID.notIn(managerIds));

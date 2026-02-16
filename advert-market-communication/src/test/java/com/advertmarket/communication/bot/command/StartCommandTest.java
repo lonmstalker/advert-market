@@ -191,7 +191,7 @@ class StartCommandTest {
         @Test
         @DisplayName("Should not fail when user is null in update")
         void handlesNullUser() throws Exception {
-            var update = new Update();
+            final var update = new Update();
             var message = new Message();
             setField(message, "text", "/start");
             var chat = new Chat();

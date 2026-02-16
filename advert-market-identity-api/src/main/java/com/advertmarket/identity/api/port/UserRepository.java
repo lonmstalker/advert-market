@@ -1,9 +1,9 @@
 package com.advertmarket.identity.api.port;
 
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
-import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.shared.model.UserId;
 import java.util.List;
 import java.util.Optional;

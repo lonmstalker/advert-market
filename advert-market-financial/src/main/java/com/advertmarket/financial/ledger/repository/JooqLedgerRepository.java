@@ -145,14 +145,15 @@ public class JooqLedgerRepository {
             @NonNull AccountId accountId,
             @NonNull EntryType entryType,
             @NonNull Instant since) {
-        return dsl.select(DSL.coalesce(
-                        DSL.sum(LEDGER_ENTRIES.DEBIT_NANO),
-                        0L))
+        Long sum = dsl.select(DSL.coalesce(
+                                DSL.sum(LEDGER_ENTRIES.DEBIT_NANO),
+                                0L))
                 .from(LEDGER_ENTRIES)
                 .where(LEDGER_ENTRIES.ACCOUNT_ID.eq(accountId.value()))
                 .and(LEDGER_ENTRIES.ENTRY_TYPE.eq(entryType.name()))
                 .and(LEDGER_ENTRIES.CREATED_AT.ge(since.atOffset(
                         java.time.ZoneOffset.UTC)))
-                .fetchSingle(0, long.class);
+                .fetchSingle(0, Long.class);
+        return sum == null ? 0L : sum;
     }
 }

@@ -1,6 +1,7 @@
 package com.advertmarket.marketplace.channel.mapper;
 
 import com.advertmarket.marketplace.api.dto.ChannelSearchCriteria;
+import java.util.Objects;
 
 /**
  * Normalizes {@link ChannelSearchCriteria} values (e.g. clamping limits).
@@ -26,7 +27,7 @@ public final class ChannelSearchCriteriaNormalizer {
             query = query.substring(0, MAX_QUERY_LENGTH);
         }
         if (limit == criteria.limit()
-                && query == criteria.query()) {
+                && Objects.equals(query, criteria.query())) {
             return criteria;
         }
         return new ChannelSearchCriteria(

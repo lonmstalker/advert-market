@@ -23,6 +23,8 @@ public record TonAddress(@NonNull String value) {
             Pattern.compile("^[A-Za-z0-9_-]{48}$");
     private static final int USER_FRIENDLY_BYTES = 36;
     private static final int CRC_OFFSET = 34;
+    private static final int BYTE_MASK = 0xFF;
+    private static final int HIGH_BYTE_SHIFT = 8;
 
     /**
      * Creates a TON address.
@@ -62,8 +64,8 @@ public record TonAddress(@NonNull String value) {
         }
 
         byte[] data = Arrays.copyOf(decoded, CRC_OFFSET);
-        int expected = ((decoded[CRC_OFFSET] & 0xFF) << 8)
-                | (decoded[CRC_OFFSET + 1] & 0xFF);
+        int expected = ((decoded[CRC_OFFSET] & BYTE_MASK) << HIGH_BYTE_SHIFT)
+                | (decoded[CRC_OFFSET + 1] & BYTE_MASK);
         int actual = crc16Xmodem(data);
 
         if (actual != expected) {

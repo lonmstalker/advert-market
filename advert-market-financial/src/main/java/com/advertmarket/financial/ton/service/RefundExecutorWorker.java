@@ -29,8 +29,8 @@ import com.advertmarket.shared.outbox.OutboxStatus;
 import com.advertmarket.shared.util.IdempotencyKey;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Locale;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -107,6 +107,7 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                 command.refundAddress(),
                 command.subwalletId());
         int version = 0;
+        // CHECKSTYLE.OFF: IllegalCatch
         try {
             String txHash = tonWalletPort.submitTransaction(
                     command.subwalletId(),
@@ -124,6 +125,7 @@ public class RefundExecutorWorker implements RefundExecutorPort {
             txRepository.updateStatus(txId, "ABANDONED", 0, version);
             throw ex;
         }
+        // CHECKSTYLE.ON: IllegalCatch
     }
 
     private TxRef reuseOrFail(

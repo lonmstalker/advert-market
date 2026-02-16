@@ -3,7 +3,6 @@ package com.advertmarket.financial.ton.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.financial.config.TonProperties;
-import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

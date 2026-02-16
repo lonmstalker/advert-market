@@ -1,6 +1,7 @@
 package com.advertmarket.app.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 
 import com.advertmarket.shared.logging.MdcKeys;
@@ -117,14 +118,12 @@ class CorrelationIdFilterTest {
                 UUID.randomUUID().toString());
         var response = new MockHttpServletResponse();
 
-        try {
-            filter.doFilterInternal(request, response,
-                    (req, res) -> {
-                        throw new RuntimeException("test");
-                    });
-        } catch (RuntimeException ignored) {
-            // expected
-        }
+        assertThatThrownBy(() -> filter.doFilterInternal(request, response,
+                (req, res) -> {
+                    throw new RuntimeException("test");
+                }))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("test");
 
         assertThat(MDC.get(MdcKeys.CORRELATION_ID)).isNull();
     }

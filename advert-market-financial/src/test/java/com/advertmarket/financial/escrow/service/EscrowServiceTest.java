@@ -14,8 +14,8 @@ import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.shared.metric.MetricsFacade;
-import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.AccountId;
+import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.UserId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -165,7 +165,8 @@ class EscrowServiceTest {
     class ReleaseEscrow {
 
         @Test
-        @DisplayName("Should create 3-leg transfer: DEBIT ESCROW, CREDIT COMMISSION, CREDIT OWNER_PENDING")
+        @DisplayName("Should create 3-leg transfer: DEBIT ESCROW, "
+                + "CREDIT COMMISSION, CREDIT OWNER_PENDING")
         void threeLegTransfer() {
             var dealId = DealId.generate();
             var ownerId = new UserId(123L);

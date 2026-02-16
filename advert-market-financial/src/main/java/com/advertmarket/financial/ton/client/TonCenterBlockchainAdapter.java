@@ -38,11 +38,13 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
                     .filter(tx -> {
                         var txId = tx.getTransactionId();
                         if (txId == null || txId.getHash() == null) {
-                            log.warn("Skipping TON transaction with missing txId/hash for address={}", address);
+                            log.warn("Skipping TON transaction with missing "
+                                    + "txId/hash for address={}", address);
                             return false;
                         }
                         if (tx.getInMsg() == null) {
-                            log.warn("Skipping TON transaction with missing inMsg: txHash={}", txId.getHash());
+                            log.warn("Skipping TON transaction with missing "
+                                    + "inMsg: txHash={}", txId.getHash());
                             return false;
                         }
                         return true;

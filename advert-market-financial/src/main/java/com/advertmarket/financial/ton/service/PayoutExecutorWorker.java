@@ -4,6 +4,8 @@ import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.financial.api.event.ExecutePayoutCommand;
 import com.advertmarket.financial.api.event.PayoutCompletedEvent;
 import com.advertmarket.financial.api.event.PayoutDeferredEvent;
+import com.advertmarket.financial.api.model.Leg;
+import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.PayoutExecutorPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
@@ -19,8 +21,6 @@ import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
-import com.advertmarket.financial.api.model.Leg;
-import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.EntryType;
@@ -32,8 +32,8 @@ import com.advertmarket.shared.outbox.OutboxStatus;
 import com.advertmarket.shared.util.IdempotencyKey;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Locale;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -125,6 +125,7 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                 payoutAddress,
                 command.subwalletId());
         int version = 0;
+        // CHECKSTYLE.OFF: IllegalCatch
         try {
             String txHash = tonWalletPort.submitTransaction(
                     command.subwalletId(),
@@ -142,6 +143,7 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
             txRepository.updateStatus(txId, "ABANDONED", 0, version);
             throw ex;
         }
+        // CHECKSTYLE.ON: IllegalCatch
     }
 
     private TxRef reuseOrFail(

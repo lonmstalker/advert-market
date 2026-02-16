@@ -189,14 +189,18 @@ public class TonWalletService implements TonWalletPort {
         return signedBody.toBase64();
     }
 
-    @SuppressWarnings("ThrowInsideCatchWithoutCause") // security: prevent mnemonic leak via exception chain
-    private static TweetNaclFast.Signature.KeyPair deriveKeyPair(String mnemonic) {
+    // security: prevent mnemonic leak via exception chain
+    @SuppressWarnings("ThrowInsideCatchWithoutCause")
+    private static TweetNaclFast.Signature.KeyPair deriveKeyPair(
+            String mnemonic) {
         try {
-            var pair = Mnemonic.toKeyPair(Arrays.asList(mnemonic.split("\\s+")));
+            var pair = Mnemonic.toKeyPair(
+                    Arrays.asList(mnemonic.split("\\s+")));
             return TweetNaclFast.Signature.keyPair_fromSeed(pair.getSecretKey());
         } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
             log.error("Failed to derive key pair: invalid mnemonic format");
-            throw new IllegalStateException("Failed to derive key pair from mnemonic");
+            throw new IllegalStateException(
+                    "Failed to derive key pair from mnemonic");
         }
     }
 }

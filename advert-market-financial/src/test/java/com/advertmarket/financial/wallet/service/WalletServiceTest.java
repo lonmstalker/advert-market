@@ -19,8 +19,8 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.model.UserId;
-import com.advertmarket.shared.util.IdempotencyKey;
 import com.advertmarket.shared.pagination.CursorPage;
+import com.advertmarket.shared.util.IdempotencyKey;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -199,7 +199,8 @@ class WalletServiceTest {
         }
 
         @Test
-        @DisplayName("Should return existing result for duplicate idempotency key without re-checking balance")
+        @DisplayName("Should return existing result for duplicate "
+                + "idempotency key without re-checking balance")
         void shouldReturnExistingForDuplicateIdempotencyKey() {
             var userId = new UserId(42L);
             var existingTxRef = UUID.randomUUID();

@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.deal.api.dto.CreateDealCommand;
-import com.advertmarket.deal.api.dto.DealEventRecord;
 import com.advertmarket.deal.api.dto.DealListCriteria;
 import com.advertmarket.deal.api.dto.DealRecord;
 import com.advertmarket.deal.api.dto.DealTransitionCommand;
@@ -18,12 +17,13 @@ import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
+import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
-import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
@@ -32,7 +32,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -77,7 +76,9 @@ class DealServiceTest {
         return new ChannelDetailResponse(
                 channelId, "Test Channel", "test", "desc", 1000,
                 List.of("crypto"), 1_000_000_000L, true, ownerId,
-                BigDecimal.valueOf(5.5), 500, "ru", List.of(),
+                BigDecimal.valueOf(5.5), 500, "ru",
+                new ChannelDetailResponse.ChannelRules(null),
+                List.<PricingRuleDto>of(),
                 OffsetDateTime.now(), OffsetDateTime.now());
     }
 

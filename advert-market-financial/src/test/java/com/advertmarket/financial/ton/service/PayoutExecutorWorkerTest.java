@@ -73,11 +73,15 @@ class PayoutExecutorWorkerTest {
     @DisplayName("should fail-closed when outbound payout exists in CREATED without tx hash")
     void shouldFailClosedOnCreatedOutboundPayoutWithoutHash() {
         var dealId = DealId.generate();
-        var command = new ExecutePayoutCommand(42L, 1_000_000_000L, 100_000_000L, 11);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_PAYOUT, dealId, command);
+        var command = new ExecutePayoutCommand(
+                42L, 1_000_000_000L, 100_000_000L, 11);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_PAYOUT, dealId, command);
 
         when(lockPort.withLock(anyString(), any(Duration.class), any()))
-                .thenAnswer(invocation -> invocation.<java.util.function.Supplier<?>>getArgument(2).get());
+                .thenAnswer(invocation -> invocation
+                        .<java.util.function.Supplier<?>>getArgument(2)
+                        .get());
         when(userRepository.findTonAddress(any()))
                 .thenReturn(Optional.of("UQ-owner-address"));
 
@@ -102,8 +106,10 @@ class PayoutExecutorWorkerTest {
     @DisplayName("should submit TX, record ledger, and publish PayoutCompletedEvent on success")
     void shouldCompletePayoutSuccessfully() {
         var dealId = DealId.generate();
-        var command = new ExecutePayoutCommand(42L, 1_000_000_000L, 100_000_000L, 11);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_PAYOUT, dealId, command);
+        var command = new ExecutePayoutCommand(
+                42L, 1_000_000_000L, 100_000_000L, 11);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_PAYOUT, dealId, command);
 
         when(lockPort.withLock(anyString(), any(Duration.class), any()))
                 .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
@@ -133,8 +139,10 @@ class PayoutExecutorWorkerTest {
     @DisplayName("should publish PayoutDeferredEvent when owner has no TON address")
     void shouldDeferWhenNoTonAddress() {
         var dealId = DealId.generate();
-        var command = new ExecutePayoutCommand(99L, 1_000_000_000L, 100_000_000L, 11);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_PAYOUT, dealId, command);
+        var command = new ExecutePayoutCommand(
+                99L, 1_000_000_000L, 100_000_000L, 11);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_PAYOUT, dealId, command);
 
         when(lockPort.withLock(anyString(), any(Duration.class), any()))
                 .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
@@ -153,8 +161,10 @@ class PayoutExecutorWorkerTest {
     @DisplayName("should propagate exception when submitTransaction fails")
     void shouldPropagateExceptionOnSubmitFailure() {
         var dealId = DealId.generate();
-        var command = new ExecutePayoutCommand(42L, 1_000_000_000L, 100_000_000L, 11);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_PAYOUT, dealId, command);
+        var command = new ExecutePayoutCommand(
+                42L, 1_000_000_000L, 100_000_000L, 11);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_PAYOUT, dealId, command);
 
         when(lockPort.withLock(anyString(), any(Duration.class), any()))
                 .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());

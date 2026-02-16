@@ -83,7 +83,8 @@ class TonCenterBlockchainAdapterTest {
         @Test
         @DisplayName("Should filter out transactions with null txId hash")
         void filtersNullTxIdHash() {
-            var validTx = createValidTx("hash1", "100", "1000000000");
+            final var validTx = createValidTx("hash1", "100",
+                    "1000000000");
 
             var nullHashTxId = new TransactionResponse.TransactionId();
             nullHashTxId.setHash(null);
@@ -110,7 +111,8 @@ class TonCenterBlockchainAdapterTest {
         @Test
         @DisplayName("Should filter out transactions with null txId")
         void filtersNullTxId() {
-            var validTx = createValidTx("hash2", "300", "3000000000");
+            final var validTx = createValidTx("hash2", "300",
+                    "3000000000");
 
             var nullIdTx = new TransactionResponse();
             nullIdTx.setTransactionId(null);
@@ -134,7 +136,8 @@ class TonCenterBlockchainAdapterTest {
         @Test
         @DisplayName("Should filter out transactions with null inMsg")
         void filtersNullInMsg() {
-            var validTx = createValidTx("hash3", "400", "4000000000");
+            final var validTx = createValidTx("hash3", "400",
+                    "4000000000");
 
             var nullMsgTxId = new TransactionResponse.TransactionId();
             nullMsgTxId.setHash("hashNoMsg");

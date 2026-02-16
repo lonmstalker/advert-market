@@ -6,7 +6,6 @@ import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.config.CommissionSweepProperties;
 import com.advertmarket.financial.ledger.repository.JooqAccountBalanceRepository;
 import com.advertmarket.shared.lock.DistributedLockPort;
-import com.advertmarket.shared.lock.LockKeys;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
@@ -32,7 +31,7 @@ import org.springframework.stereotype.Component;
 @SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class CommissionSweepScheduler {
 
-    private static final String LOCK_KEY = LockKeys.COMMISSION_SWEEP;
+    private static final String LOCK_KEY = "scheduler:commission-sweep";
 
     private final JooqAccountBalanceRepository balanceRepository;
     private final LedgerPort ledgerPort;
@@ -40,6 +39,9 @@ public class CommissionSweepScheduler {
     private final MetricsFacade metrics;
     private final CommissionSweepProperties props;
 
+    /**
+     * Executes scheduled commission sweep under a distributed lock.
+     */
     @Scheduled(cron = "${app.financial.commission-sweep.cron:0 0 2 * * *}")
     public void sweep() {
         var token = lockPort.tryLock(LOCK_KEY, props.lockTtl());
@@ -93,6 +95,7 @@ public class CommissionSweepScheduler {
                 totalSwept, count);
     }
 
+    // CHECKSTYLE.OFF: IllegalCatch
     private long sweepAccount(AccountId accountId, String date) {
         try {
             long balance = ledgerPort.getBalance(accountId);
@@ -114,11 +117,12 @@ public class CommissionSweepScheduler {
                     "Commission sweep " + date + " from " + accountId);
             ledgerPort.transfer(transfer);
             return balance;
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             log.warn("Failed to sweep commission account {}: {}",
                     accountId, ex.getMessage());
             metrics.incrementCounter(MetricNames.COMMISSION_SWEEP_FAILED);
             return 0;
         }
     }
+    // CHECKSTYLE.ON: IllegalCatch
 }

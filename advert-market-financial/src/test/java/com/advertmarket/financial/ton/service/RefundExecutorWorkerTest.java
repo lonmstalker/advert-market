@@ -73,10 +73,13 @@ class RefundExecutorWorkerTest {
                 1_500_000_000L,
                 "UQ-advertiser-address",
                 33);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_REFUND, dealId, command);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, dealId, command);
 
         when(lockPort.withLock(anyString(), any(Duration.class), any()))
-                .thenAnswer(invocation -> invocation.<java.util.function.Supplier<?>>getArgument(2).get());
+                .thenAnswer(invocation -> invocation
+                        .<java.util.function.Supplier<?>>getArgument(2)
+                        .get());
 
         var existing = new TonTransactionsRecord();
         existing.setId(777L);
@@ -101,7 +104,8 @@ class RefundExecutorWorkerTest {
         var dealId = DealId.generate();
         var command = new ExecuteRefundCommand(
                 7L, 1_500_000_000L, "UQ-advertiser-address", 33);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_REFUND, dealId, command);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, dealId, command);
 
         when(lockPort.withLock(anyString(), any(Duration.class), any()))
                 .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
@@ -131,7 +135,8 @@ class RefundExecutorWorkerTest {
         var dealId = DealId.generate();
         var command = new ExecuteRefundCommand(
                 7L, 1_500_000_000L, "UQ-advertiser-address", 33);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_REFUND, dealId, command);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, dealId, command);
 
         when(lockPort.withLock(anyString(), any(Duration.class), any()))
                 .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
@@ -158,7 +163,8 @@ class RefundExecutorWorkerTest {
     void shouldSkipWhenDealIdNull() {
         var command = new ExecuteRefundCommand(
                 7L, 1_500_000_000L, "UQ-advertiser-address", 33);
-        var envelope = EventEnvelope.create(EventTypes.EXECUTE_REFUND, null, command);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, null, command);
 
         worker.executeRefund(envelope);
 
