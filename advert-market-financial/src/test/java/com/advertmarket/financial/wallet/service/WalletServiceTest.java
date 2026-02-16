@@ -1,0 +1,107 @@
+package com.advertmarket.financial.wallet.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import com.advertmarket.financial.api.model.LedgerEntry;
+import com.advertmarket.financial.api.port.LedgerPort;
+import com.advertmarket.shared.model.AccountId;
+import com.advertmarket.shared.model.EntryType;
+import com.advertmarket.shared.model.UserId;
+import com.advertmarket.shared.pagination.CursorPage;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("WalletService — user wallet operations")
+class WalletServiceTest {
+
+    private LedgerPort ledgerPort;
+    private WalletService walletService;
+
+    @BeforeEach
+    void setUp() {
+        ledgerPort = mock(LedgerPort.class);
+        walletService = new WalletService(ledgerPort);
+    }
+
+    @Nested
+    @DisplayName("getSummary")
+    class GetSummary {
+
+        @Test
+        @DisplayName("Should return available balance from OWNER_PENDING account")
+        void returnsAvailableBalance() {
+            var userId = new UserId(42L);
+            var ownerPendingAccount = AccountId.ownerPending(userId);
+
+            when(ledgerPort.getBalance(ownerPendingAccount))
+                    .thenReturn(5_000_000_000L);
+
+            var summary = walletService.getSummary(userId);
+
+            assertThat(summary.availableBalanceNano()).isEqualTo(5_000_000_000L);
+        }
+
+        @Test
+        @DisplayName("Should return zero balances for new user with no transactions")
+        void returnsZerosForNewUser() {
+            var userId = new UserId(99L);
+            var ownerPendingAccount = AccountId.ownerPending(userId);
+
+            when(ledgerPort.getBalance(ownerPendingAccount))
+                    .thenReturn(0L);
+
+            var summary = walletService.getSummary(userId);
+
+            assertThat(summary.availableBalanceNano()).isZero();
+            assertThat(summary.pendingBalanceNano()).isZero();
+            assertThat(summary.totalEarnedNano()).isZero();
+        }
+    }
+
+    @Nested
+    @DisplayName("getTransactions")
+    class GetTransactions {
+
+        @Test
+        @DisplayName("Should return paginated ledger entries for OWNER_PENDING account")
+        void returnsPaginatedEntries() {
+            var userId = new UserId(42L);
+            var ownerPendingAccount = AccountId.ownerPending(userId);
+            var entry = new LedgerEntry(
+                    1L, null, ownerPendingAccount, EntryType.ESCROW_RELEASE,
+                    0L, 1_000_000_000L, "idem-1", UUID.randomUUID(),
+                    "Payout", Instant.now());
+            var page = new CursorPage<>(List.of(entry), null);
+
+            when(ledgerPort.getEntriesByAccount(ownerPendingAccount, null, 20))
+                    .thenReturn(page);
+
+            var result = walletService.getTransactions(userId, null, 20);
+
+            assertThat(result.items()).hasSize(1);
+            assertThat(result.hasMore()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should forward cursor to LedgerPort")
+        void forwardsCursor() {
+            var userId = new UserId(42L);
+            var ownerPendingAccount = AccountId.ownerPending(userId);
+            var page = CursorPage.<LedgerEntry>empty();
+
+            when(ledgerPort.getEntriesByAccount(ownerPendingAccount, "cursor123", 10))
+                    .thenReturn(page);
+
+            var result = walletService.getTransactions(userId, "cursor123", 10);
+
+            assertThat(result.items()).isEmpty();
+        }
+    }
+}

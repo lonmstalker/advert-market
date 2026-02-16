@@ -9,7 +9,6 @@ import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.ledger.mapper.LedgerEntryMapper;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
-import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.util.ArrayList;
 import java.util.List;

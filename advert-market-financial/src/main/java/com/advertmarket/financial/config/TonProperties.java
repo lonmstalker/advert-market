@@ -5,8 +5,10 @@ import io.github.springpropertiesmd.api.annotation.PropertyGroupDoc;
 import io.github.springpropertiesmd.api.annotation.Requirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import java.time.Duration;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -50,7 +52,13 @@ public record TonProperties(
                 description = "Blockchain network: testnet or mainnet",
                 required = Requirement.REQUIRED
         )
-        @NotBlank @NonNull String network
+        @NotBlank @NonNull String network,
+
+        @PropertyDoc(
+                description = "Confirmation policy tiers",
+                required = Requirement.OPTIONAL
+        )
+        @Valid @DefaultValue Confirmation confirmation
 ) {
 
     /**
@@ -121,5 +129,61 @@ public record TonProperties(
             )
             @Positive @DefaultValue("100") int batchSize
     ) {
+    }
+
+    /**
+     * Tiered confirmation policy for deposit verification.
+     *
+     * <p>Each tier defines a threshold (nanoTON): amounts up to that
+     * threshold (inclusive) use the tier's confirmation count.
+     * Tiers must be sorted by ascending threshold.
+     *
+     * @param tiers ordered list of confirmation tiers
+     */
+    public record Confirmation(
+            @PropertyDoc(
+                    description = "Ordered list of confirmation tiers",
+                    required = Requirement.OPTIONAL
+            )
+            @NotEmpty @NonNull List<Tier> tiers
+    ) {
+
+        private static final long NANO_100_TON = 100_000_000_000L;
+        private static final long NANO_1000_TON = 1_000_000_000_000L;
+        private static final int SMALL_CONFIRMATIONS = 1;
+        private static final int MEDIUM_CONFIRMATIONS = 3;
+        private static final int LARGE_CONFIRMATIONS = 5;
+
+        /** Defensive copy for immutability. */
+        public Confirmation {
+            tiers = List.copyOf(tiers);
+        }
+
+        /**
+         * Default confirmation policy:
+         * up to 100 TON = 1 conf,
+         * up to 1000 TON = 3 conf,
+         * above = 5 conf + review.
+         */
+        public Confirmation() {
+            this(List.of(
+                    new Tier(NANO_100_TON, SMALL_CONFIRMATIONS, false),
+                    new Tier(NANO_1000_TON, MEDIUM_CONFIRMATIONS, false),
+                    new Tier(Long.MAX_VALUE, LARGE_CONFIRMATIONS, true)));
+        }
+
+        /**
+         * A single confirmation tier.
+         *
+         * @param thresholdNano  max amount in nanoTON for this tier (inclusive)
+         * @param confirmations  required number of block confirmations
+         * @param operatorReview whether manual operator review is required
+         */
+        public record Tier(
+                long thresholdNano,
+                @Positive int confirmations,
+                boolean operatorReview
+        ) {
+        }
     }
 }

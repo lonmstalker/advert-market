@@ -4,7 +4,7 @@ import static com.advertmarket.db.generated.Sequences.DEAL_SUBWALLET_SEQ;
 
 import com.advertmarket.financial.api.port.TonBlockchainPort;
 import com.advertmarket.financial.ton.client.TonCenterBlockchainAdapter;
-import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
+import com.advertmarket.financial.ton.service.ConfirmationPolicyService;
 import com.advertmarket.financial.ton.service.TonWalletService;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
@@ -63,11 +63,16 @@ public class TonConfig {
                 props.wallet().allocationSize());
     }
 
+    /** Creates the confirmation policy service. */
+    @Bean
+    public ConfirmationPolicyService confirmationPolicyService(TonProperties props) {
+        return new ConfirmationPolicyService(props.confirmation());
+    }
+
     /** Creates the wallet service for address generation and TX submission. */
     @Bean
     public TonWalletService tonWalletService(
             TonBlockchainPort tonBlockchainPort,
-            JooqTonTransactionRepository txRepository,
             DistributedLockPort lockPort,
             SequenceAllocator subwalletSequenceAllocator,
             MetricsFacade metrics,
@@ -77,8 +82,9 @@ public class TonConfig {
         var decryptedWallet = new TonProperties.Wallet(
                 decryptedMnemonic, props.wallet().allocationSize());
         var decryptedProps = new TonProperties(
-                props.api(), decryptedWallet, props.deposit(), props.network());
-        return new TonWalletService(tonBlockchainPort, txRepository, lockPort,
+                props.api(), decryptedWallet, props.deposit(),
+                props.network(), props.confirmation());
+        return new TonWalletService(tonBlockchainPort, lockPort,
                 subwalletSequenceAllocator, metrics, decryptedProps);
     }
 

@@ -1,8 +1,10 @@
 package com.advertmarket.deal.config;
 
+import com.advertmarket.deal.adapter.FinancialEventAdapter;
 import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.service.DealTransitionService;
+import com.advertmarket.financial.api.port.EscrowPort;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -25,5 +27,12 @@ public class DealConfig {
         return new DealTransitionService(
                 dealRepository, dealEventRepository,
                 outboxRepository, jsonFacade);
+    }
+
+    @Bean
+    FinancialEventAdapter financialEventAdapter(
+            DealTransitionService dealTransitionService,
+            EscrowPort escrowPort) {
+        return new FinancialEventAdapter(dealTransitionService, escrowPort);
     }
 }

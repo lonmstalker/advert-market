@@ -4,7 +4,6 @@ import com.advertmarket.financial.api.model.DepositAddressInfo;
 import com.advertmarket.financial.api.port.TonBlockchainPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
 import com.advertmarket.financial.config.TonProperties;
-import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.lock.DistributedLockPort;
@@ -13,6 +12,7 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.sequence.SequenceAllocator;
 import com.iwebpp.crypto.TweetNaclFast;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -35,12 +35,15 @@ import org.ton.ton4j.smartcontract.wallet.v4.WalletV4R2;
  * <p>NOT {@code @Component} — wired via {@link com.advertmarket.financial.config.TonConfig}.
  */
 @Slf4j
+@SuppressFBWarnings(
+        value = "CT_CONSTRUCTOR_THROW",
+        justification = "Key derivation in constructor is intentional — "
+                + "fail-fast on invalid mnemonic at startup")
 public class TonWalletService implements TonWalletPort {
 
     private static final Duration TX_LOCK_TTL = Duration.ofSeconds(300);
 
     private final TonBlockchainPort blockchainPort;
-    private final JooqTonTransactionRepository txRepository;
     private final DistributedLockPort lockPort;
     private final SequenceAllocator sequenceAllocator;
     private final MetricsFacade metrics;
@@ -51,20 +54,17 @@ public class TonWalletService implements TonWalletPort {
      * Creates a new wallet service.
      *
      * @param blockchainPort    port for blockchain API calls
-     * @param txRepository      repository for transaction persistence
      * @param lockPort          distributed lock for TX serialization
      * @param sequenceAllocator bulk sequence allocator for subwallet IDs
      * @param metrics           metrics facade
      * @param props             TON configuration properties
      */
     public TonWalletService(TonBlockchainPort blockchainPort,
-                            JooqTonTransactionRepository txRepository,
                             DistributedLockPort lockPort,
                             SequenceAllocator sequenceAllocator,
                             MetricsFacade metrics,
                             TonProperties props) {
         this.blockchainPort = blockchainPort;
-        this.txRepository = txRepository;
         this.lockPort = lockPort;
         this.sequenceAllocator = sequenceAllocator;
         this.metrics = metrics;

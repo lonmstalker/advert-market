@@ -2,9 +2,7 @@ package com.advertmarket.financial.ledger.mapper;
 
 import com.advertmarket.db.generated.tables.records.LedgerEntriesRecord;
 import com.advertmarket.financial.api.model.LedgerEntry;
-import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
-import com.advertmarket.shared.model.EntryType;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;

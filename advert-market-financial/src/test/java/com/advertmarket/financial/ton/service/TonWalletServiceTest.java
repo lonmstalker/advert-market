@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.financial.api.model.DepositAddressInfo;
 import com.advertmarket.financial.api.port.TonBlockchainPort;
 import com.advertmarket.financial.config.TonProperties;
-import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
@@ -34,7 +33,6 @@ class TonWalletServiceTest {
                     + "abandon abandon abandon abandon abandon abandon abandon art";
 
     private TonBlockchainPort blockchainPort;
-    private JooqTonTransactionRepository txRepository;
     private DistributedLockPort lockPort;
     private SequenceAllocator sequenceAllocator;
     private MetricsFacade metrics;
@@ -43,7 +41,6 @@ class TonWalletServiceTest {
     @BeforeEach
     void setUp() {
         blockchainPort = mock(TonBlockchainPort.class);
-        txRepository = mock(JooqTonTransactionRepository.class);
         lockPort = mock(DistributedLockPort.class);
         sequenceAllocator = mock(SequenceAllocator.class);
         metrics = mock(MetricsFacade.class);
@@ -52,9 +49,10 @@ class TonWalletServiceTest {
         var wallet = new TonProperties.Wallet(TEST_MNEMONIC, 50);
         var deposit = new TonProperties.Deposit(
                 Duration.ofSeconds(10), Duration.ofMinutes(30), 100);
-        var props = new TonProperties(api, wallet, deposit, "testnet");
+        var props = new TonProperties(api, wallet, deposit, "testnet",
+                new TonProperties.Confirmation());
 
-        service = new TonWalletService(blockchainPort, txRepository, lockPort,
+        service = new TonWalletService(blockchainPort, lockPort,
                 sequenceAllocator, metrics, props);
     }
 
