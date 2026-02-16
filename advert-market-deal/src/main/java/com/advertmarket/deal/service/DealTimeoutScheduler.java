@@ -74,7 +74,9 @@ public class DealTimeoutScheduler {
                     DealStatus.EXPIRED,
                     0L,
                     ActorType.SYSTEM,
-                    TIMEOUT_REASON);
+                    TIMEOUT_REASON,
+                    null,
+                    null);
 
             dealTransitionService.transition(command);
 

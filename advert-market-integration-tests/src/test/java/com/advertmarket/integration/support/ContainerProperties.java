@@ -19,6 +19,15 @@ public final class ContainerProperties {
     }
 
     /**
+     * Registers PostgreSQL + Redis + Kafka properties.
+     */
+    public static void registerAllWithKafka(
+            DynamicPropertyRegistry registry) {
+        registerAll(registry);
+        registerKafka(registry);
+    }
+
+    /**
      * Registers PostgreSQL datasource properties.
      */
     public static void registerPostgres(DynamicPropertyRegistry registry) {
@@ -38,5 +47,13 @@ public final class ContainerProperties {
                 SharedContainers::redisHost);
         registry.add("spring.data.redis.port",
                 SharedContainers::redisPort);
+    }
+
+    /**
+     * Registers Kafka bootstrap servers.
+     */
+    public static void registerKafka(DynamicPropertyRegistry registry) {
+        registry.add("spring.kafka.bootstrap-servers",
+                SharedContainers::kafkaBootstrapServers);
     }
 }

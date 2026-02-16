@@ -73,6 +73,8 @@ public class DealTransitionService {
         // Validate actor permission
         validateActorPermission(deal.status(), targetStatus, command.actorType());
 
+        validatePartialAmounts(command);
+
         // CAS update
         int updated = dealRepository.updateStatus(
                 dealId, deal.status(), targetStatus, deal.version());
@@ -132,6 +134,20 @@ public class DealTransitionService {
         }
     }
 
+    private void validatePartialAmounts(DealTransitionCommand command) {
+        if (command.targetStatus() != DealStatus.PARTIALLY_REFUNDED) {
+            return;
+        }
+
+        if (command.partialRefundNano() == null
+                || command.partialPayoutNano() == null) {
+            throw new DomainException(
+                    ErrorCodes.MISSING_REQUIRED_FIELD,
+                    "partialRefundNano and partialPayoutNano are required "
+                            + "for PARTIALLY_REFUNDED transition");
+        }
+    }
+
     // DealStatus.name() → String is intentional for event persistence
     @SuppressWarnings("fenum:argument")
     private void appendEvent(DealRecord deal, DealStatus targetStatus,
@@ -160,7 +176,9 @@ public class DealTransitionService {
         var payload = new DealStateChangedEvent(
                 deal.status(), targetStatus,
                 command.actorId(), command.actorType(),
-                deal.amountNano(), deal.channelId());
+                deal.amountNano(), deal.channelId(),
+                command.partialRefundNano(),
+                command.partialPayoutNano());
 
         var envelope = EventEnvelope.create(
                 EventTypes.DEAL_STATE_CHANGED, dealId, payload);

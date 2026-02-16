@@ -15,6 +15,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param actorType type of actor who triggered the transition
  * @param dealAmountNano deal amount in nanoTON
  * @param channelId target Telegram channel ID
+ * @param partialRefundNano partial refund amount for dispute resolution
+ * @param partialPayoutNano partial payout amount for dispute resolution
  */
 public record DealStateChangedEvent(
         @NonNull DealStatus fromStatus,
@@ -22,5 +24,7 @@ public record DealStateChangedEvent(
         @Nullable Long actorId,
         @NonNull ActorType actorType,
         long dealAmountNano,
-        long channelId) implements DomainEvent {
+        long channelId,
+        @Nullable Long partialRefundNano,
+        @Nullable Long partialPayoutNano) implements DomainEvent {
 }

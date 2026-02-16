@@ -264,6 +264,69 @@ public class JooqDealRepository implements DealRepository {
                 .execute();
     }
 
+    @Override
+    public void setDepositAddress(
+            @NonNull DealId dealId,
+            @NonNull String depositAddress,
+            int subwalletId) {
+        dsl.update(DEALS)
+                .set(DEALS.DEPOSIT_ADDRESS, depositAddress)
+                .set(DEALS.SUBWALLET_ID, subwalletId)
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
+    @Override
+    public void setFunded(
+            @NonNull DealId dealId,
+            @NonNull Instant fundedAt,
+            @NonNull String depositTxHash) {
+        dsl.update(DEALS)
+                .set(DEALS.FUNDED_AT, OffsetDateTime.ofInstant(fundedAt, ZoneOffset.UTC))
+                .set(DEALS.DEPOSIT_TX_HASH, depositTxHash)
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
+    @Override
+    public void setPayoutTxHash(
+            @NonNull DealId dealId,
+            @NonNull String payoutTxHash) {
+        dsl.update(DEALS)
+                .set(DEALS.PAYOUT_TX_HASH, payoutTxHash)
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
+    @Override
+    public void setRefundedTxHash(
+            @NonNull DealId dealId,
+            @NonNull String refundedTxHash) {
+        dsl.update(DEALS)
+                .set(DEALS.REFUNDED_TX_HASH, refundedTxHash)
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
+    @Override
+    public void setPublicationMetadata(
+            @NonNull DealId dealId,
+            long messageId,
+            @NonNull String contentHash,
+            @NonNull Instant publishedAt) {
+        dsl.update(DEALS)
+                .set(DEALS.MESSAGE_ID, messageId)
+                .set(DEALS.CONTENT_HASH, contentHash)
+                .set(DEALS.PUBLISHED_AT, OffsetDateTime.ofInstant(publishedAt, ZoneOffset.UTC))
+                .set(DEALS.UPDATED_AT, OffsetDateTime.now())
+                .where(DEALS.ID.eq(dealId.value()))
+                .execute();
+    }
+
     /**
      * Encodes a composite cursor from the last record's created_at and id.
      */

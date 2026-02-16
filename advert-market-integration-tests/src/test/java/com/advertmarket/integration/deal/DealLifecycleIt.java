@@ -177,6 +177,29 @@ class DealLifecycleIt {
             assertThat(result).hasSize(1);
             assertThat(result.getFirst().id()).isEqualTo(deal2.value());
         }
+
+        @Test
+        @DisplayName("database default commission_rate_bp should be 200 (2%)")
+        void insertWithoutCommissionRate_usesTwoPercentDefault() {
+            var dealId = DealId.generate();
+
+            dsl.insertInto(DEALS)
+                    .set(DEALS.ID, dealId.value())
+                    .set(DEALS.CHANNEL_ID, CHANNEL_ID)
+                    .set(DEALS.ADVERTISER_ID, ADVERTISER_ID)
+                    .set(DEALS.OWNER_ID, OWNER_ID)
+                    .set(DEALS.STATUS, DealStatus.DRAFT.name())
+                    .set(DEALS.AMOUNT_NANO, ONE_TON_NANO)
+                    .set(DEALS.COMMISSION_NANO, 20_000_000L)
+                    .execute();
+
+            Integer commissionRateBp = dsl.select(DEALS.COMMISSION_RATE_BP)
+                    .from(DEALS)
+                    .where(DEALS.ID.eq(dealId.value()))
+                    .fetchOne(DEALS.COMMISSION_RATE_BP);
+
+            assertThat(commissionRateBp).isEqualTo(200);
+        }
     }
 
     @Nested

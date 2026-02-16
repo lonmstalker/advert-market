@@ -4,6 +4,7 @@ import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_ME
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static com.advertmarket.db.generated.tables.DealEvents.DEAL_EVENTS;
 import static com.advertmarket.db.generated.tables.Deals.DEALS;
+import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATION_OUTBOX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -13,6 +14,11 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.app.outbox.JooqOutboxRepository;
 import com.advertmarket.deal.api.dto.DealDetailDto;
 import com.advertmarket.deal.api.dto.DealDto;
+import com.advertmarket.deal.api.dto.DealTransitionCommand;
+import com.advertmarket.deal.api.dto.DealTransitionResult;
+import com.advertmarket.deal.service.DealService;
+import com.advertmarket.financial.api.port.DepositPort;
+import com.advertmarket.financial.api.port.EscrowPort;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.integration.marketplace.config.MarketplaceTestConfig;
@@ -28,9 +34,15 @@ import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.json.JsonFacade;
+import com.advertmarket.shared.lock.DistributedLockPort;
+import com.advertmarket.shared.model.ActorType;
+import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.DealStatus;
+import com.advertmarket.shared.event.TopicNames;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import com.advertmarket.shared.pagination.CursorPage;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,6 +117,9 @@ class DealControllerIt {
 
     @Autowired
     private DSLContext dsl;
+
+    @Autowired
+    private DealService dealService;
 
     @Autowired
     private ChannelAutoSyncPort channelAutoSyncPort;
@@ -343,6 +358,85 @@ class DealControllerIt {
     }
 
     @Test
+    @DisplayName("Full workflow: create deal with creative brief and reach COMPLETED_RELEASED")
+    void fullWorkflow_createDealAndCreativeToCompletedReleased() {
+        String creativeBrief = """
+                {"goal":"Install app","cta":"Open mini app","format":"post"}
+                """;
+
+        var createBody = webClient.post().uri("/api/v1/deals")
+                .headers(h -> h.setBearerAuth(advertiserToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of(
+                        "channelId", CHANNEL_ID,
+                        "amountNano", ONE_TON_NANO,
+                        "creativeBrief", creativeBrief))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(DealDto.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(createBody).isNotNull();
+        UUID dealId = createBody.id().value();
+
+        String storedCreativeBrief = dsl.select(DEALS.CREATIVE_BRIEF)
+                .from(DEALS)
+                .where(DEALS.ID.eq(dealId))
+                .fetchSingle(DEALS.CREATIVE_BRIEF)
+                .data();
+        assertThat(storedCreativeBrief)
+                .contains("Install app")
+                .contains("Open mini app")
+                .contains("post");
+
+        transitionByToken(advertiserToken(), dealId, "OFFER_PENDING");
+        transitionByToken(ownerToken(), dealId, "ACCEPTED");
+        transitionAsSystem(dealId, DealStatus.AWAITING_PAYMENT);
+        transitionAsSystem(dealId, DealStatus.FUNDED);
+        transitionByToken(ownerToken(), dealId, "CREATIVE_SUBMITTED");
+        transitionByToken(advertiserToken(), dealId, "CREATIVE_APPROVED");
+        transitionByToken(ownerToken(), dealId, "PUBLISHED");
+        transitionAsSystem(dealId, DealStatus.DELIVERY_VERIFYING);
+        transitionAsSystem(dealId, DealStatus.COMPLETED_RELEASED);
+
+        var detail = webClient.get()
+                .uri("/api/v1/deals/{id}", dealId)
+                .headers(h -> h.setBearerAuth(advertiserToken()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(DealDetailDto.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(detail).isNotNull();
+        assertThat(detail.status()).isEqualTo(DealStatus.COMPLETED_RELEASED);
+        assertThat(detail.timeline()).hasSize(9);
+        assertThat(detail.timeline().getFirst().toStatus())
+                .isEqualTo(DealStatus.COMPLETED_RELEASED);
+
+        String finalStatus = dsl.select(DEALS.STATUS)
+                .from(DEALS)
+                .where(DEALS.ID.eq(dealId))
+                .fetchSingle(DEALS.STATUS);
+        assertThat(finalStatus).isEqualTo(DealStatus.COMPLETED_RELEASED.name());
+
+        int stateChangeEvents = dsl.selectCount()
+                .from(DEAL_EVENTS)
+                .where(DEAL_EVENTS.DEAL_ID.eq(dealId))
+                .and(DEAL_EVENTS.EVENT_TYPE.eq("DEAL_STATE_CHANGED"))
+                .fetchOne(0, int.class);
+        assertThat(stateChangeEvents).isEqualTo(9);
+
+        int outboxEvents = dsl.selectCount()
+                .from(NOTIFICATION_OUTBOX)
+                .where(NOTIFICATION_OUTBOX.DEAL_ID.eq(dealId))
+                .and(NOTIFICATION_OUTBOX.TOPIC.eq(TopicNames.DEAL_STATE_CHANGED))
+                .fetchOne(0, int.class);
+        assertThat(outboxEvents).isEqualTo(9);
+    }
+
+    @Test
     @DisplayName("Owner transfer reassigns non-terminal deal owner and appends audit event")
     void ownerTransfer_reassignsDealOwner_andAppendsAuditEvent() {
         TestDataFactory.upsertUser(dsl, NEW_OWNER_ID);
@@ -565,6 +659,19 @@ class DealControllerIt {
                 .expectStatus().isOk();
     }
 
+    private void transitionAsSystem(UUID dealId, DealStatus targetStatus) {
+        var result = dealService.transition(new DealTransitionCommand(
+                DealId.of(dealId),
+                targetStatus,
+                null,
+                ActorType.SYSTEM,
+                null,
+                null,
+                null));
+        assertThat(result)
+                .isInstanceOf(DealTransitionResult.Success.class);
+    }
+
     /**
      * Minimal Spring config for deal HTTP tests.
      */
@@ -619,8 +726,8 @@ class DealControllerIt {
                                 null, 0, null,
                                 new ChannelDetailResponse.ChannelRules(null),
                                 List.of(),
-                                OffsetDateTime.now(),
-                                OffsetDateTime.now()));
+                                OffsetDateTime.now(ZoneOffset.UTC),
+                                OffsetDateTime.now(ZoneOffset.UTC)));
             });
             return repo;
         }
@@ -638,6 +745,32 @@ class DealControllerIt {
         @Bean
         OutboxRepository outboxRepository(DSLContext dsl) {
             return new JooqOutboxRepository(dsl);
+        }
+
+        @Bean
+        EscrowPort escrowPort() {
+            return mock(EscrowPort.class);
+        }
+
+        @Bean
+        DepositPort depositPort() {
+            return mock(DepositPort.class);
+        }
+
+        @Bean
+        DistributedLockPort distributedLockPort() {
+            return new DistributedLockPort() {
+                @Override
+                public Optional<String> tryLock(String key,
+                                                java.time.Duration ttl) {
+                    return Optional.of("test-lock-token");
+                }
+
+                @Override
+                public void unlock(String key, String token) {
+                    // no-op for tests
+                }
+            };
         }
     }
 }

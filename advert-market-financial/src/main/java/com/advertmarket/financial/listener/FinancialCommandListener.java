@@ -2,8 +2,10 @@ package com.advertmarket.financial.listener;
 
 import com.advertmarket.financial.api.event.ExecutePayoutCommand;
 import com.advertmarket.financial.api.event.ExecuteRefundCommand;
+import com.advertmarket.financial.api.event.WatchDepositCommand;
 import com.advertmarket.financial.api.port.PayoutExecutorPort;
 import com.advertmarket.financial.api.port.RefundExecutorPort;
+import com.advertmarket.financial.ton.service.DepositWatcher;
 import com.advertmarket.shared.event.ConsumerGroups;
 import com.advertmarket.shared.event.EventEnvelope;
 import com.advertmarket.shared.event.EventEnvelopeDeserializer;
@@ -29,6 +31,7 @@ public class FinancialCommandListener {
     private final EventEnvelopeDeserializer deserializer;
     private final PayoutExecutorPort payoutExecutor;
     private final RefundExecutorPort refundExecutor;
+    private final DepositWatcher depositWatcher;
     private final MetricsFacade metrics;
 
     /** Consumes financial commands from Kafka. */
@@ -55,6 +58,9 @@ public class FinancialCommandListener {
     @SuppressWarnings({"unchecked", "fenum"})
     private void dispatch(EventEnvelope<?> envelope) {
         switch (envelope.eventType()) {
+            case EventTypes.WATCH_DEPOSIT ->
+                    depositWatcher.watchDeposit(
+                            (EventEnvelope<WatchDepositCommand>) envelope);
             case EventTypes.EXECUTE_PAYOUT ->
                     payoutExecutor.executePayout(
                             (EventEnvelope<ExecutePayoutCommand>) envelope);

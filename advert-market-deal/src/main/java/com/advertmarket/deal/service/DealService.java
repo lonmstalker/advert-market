@@ -41,7 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DealService implements DealPort {
 
-    private static final int DEFAULT_COMMISSION_RATE_BP = 1000;
+    private static final int DEFAULT_COMMISSION_RATE_BP = 200;
     private static final long MIN_DEAL_AMOUNT_NANO =
             Money.NANO_PER_TON / 2;
 

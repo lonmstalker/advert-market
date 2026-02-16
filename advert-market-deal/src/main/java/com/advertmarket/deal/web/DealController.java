@@ -3,6 +3,7 @@ package com.advertmarket.deal.web;
 import com.advertmarket.deal.api.dto.DealDetailDto;
 import com.advertmarket.deal.api.dto.DealDto;
 import com.advertmarket.deal.usecase.DealUseCase;
+import com.advertmarket.financial.api.model.DepositInfo;
 import com.advertmarket.shared.pagination.CursorPage;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -36,6 +37,11 @@ class DealController {
     @GetMapping("/{id}")
     DealDetailDto getDetail(@PathVariable("id") UUID id) {
         return dealUseCase.getDetail(id);
+    }
+
+    @GetMapping("/{id}/deposit")
+    DepositInfo getDeposit(@PathVariable("id") UUID id) {
+        return dealUseCase.getDepositInfo(id);
     }
 
     @GetMapping

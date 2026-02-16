@@ -69,6 +69,11 @@ public final class ConsumerGroups {
             DELIVERY_EVENT_HANDLER =
             "delivery-event-handler";
 
+    /** Executes deal post-transition workflow side-effects. */
+    public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
+            DEAL_WORKFLOW_ENGINE =
+            "deal-workflow-engine";
+
     /** Handles reconciliation result events. */
     public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
             RECONCILIATION_RESULT_HANDLER =

@@ -95,4 +95,62 @@ public interface DealRepository {
      * @param dealId deal identifier
      */
     void clearDeadline(@NonNull DealId dealId);
+
+    /**
+     * Persists deposit address and subwallet for a deal.
+     *
+     * @param dealId deal identifier
+     * @param depositAddress generated deposit address
+     * @param subwalletId subwallet identifier
+     */
+    void setDepositAddress(
+            @NonNull DealId dealId,
+            @NonNull String depositAddress,
+            int subwalletId);
+
+    /**
+     * Marks deal as funded and stores confirmed deposit tx hash.
+     *
+     * @param dealId deal identifier
+     * @param fundedAt funding timestamp
+     * @param depositTxHash confirmed deposit transaction hash
+     */
+    void setFunded(
+            @NonNull DealId dealId,
+            @NonNull Instant fundedAt,
+            @NonNull String depositTxHash);
+
+    /**
+     * Stores payout transaction hash.
+     *
+     * @param dealId deal identifier
+     * @param payoutTxHash payout transaction hash
+     */
+    void setPayoutTxHash(
+            @NonNull DealId dealId,
+            @NonNull String payoutTxHash);
+
+    /**
+     * Stores refund transaction hash.
+     *
+     * @param dealId deal identifier
+     * @param refundedTxHash refund transaction hash
+     */
+    void setRefundedTxHash(
+            @NonNull DealId dealId,
+            @NonNull String refundedTxHash);
+
+    /**
+     * Persists publication metadata from delivery worker.
+     *
+     * @param dealId deal identifier
+     * @param messageId published Telegram message id
+     * @param contentHash published content hash
+     * @param publishedAt publication timestamp
+     */
+    void setPublicationMetadata(
+            @NonNull DealId dealId,
+            long messageId,
+            @NonNull String contentHash,
+            @NonNull Instant publishedAt);
 }

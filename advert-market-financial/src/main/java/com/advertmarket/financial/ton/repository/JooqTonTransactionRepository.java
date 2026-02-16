@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -47,12 +48,30 @@ public class JooqTonTransactionRepository {
     }
 
     /**
+     * Finds latest inbound transaction (deposit) for a deal.
+     */
+    public @NonNull Optional<TonTransactionsRecord> findLatestInboundByDealId(
+            @NonNull UUID dealId) {
+        return dsl.selectFrom(TON_TRANSACTIONS)
+                .where(TON_TRANSACTIONS.DEAL_ID.eq(dealId))
+                .and(TON_TRANSACTIONS.DIRECTION.eq("IN"))
+                .orderBy(TON_TRANSACTIONS.ID.desc())
+                .limit(1)
+                .fetchOptionalInto(TonTransactionsRecord.class);
+    }
+
+    /**
      * Finds pending deposit transactions with FOR UPDATE SKIP LOCKED.
      */
     public @NonNull List<TonTransactionsRecord> findPendingDeposits(int limit) {
         return dsl.selectFrom(TON_TRANSACTIONS)
                 .where(TON_TRANSACTIONS.DIRECTION.eq("IN"))
-                .and(TON_TRANSACTIONS.STATUS.eq("PENDING"))
+                .and(TON_TRANSACTIONS.STATUS.in(
+                        "PENDING",
+                        "TX_DETECTED",
+                        "CONFIRMING",
+                        "UNDERPAID",
+                        "OVERPAID"))
                 .orderBy(TON_TRANSACTIONS.CREATED_AT.asc())
                 .limit(limit)
                 .forUpdate()
@@ -90,13 +109,42 @@ public class JooqTonTransactionRepository {
                                    long feeNano,
                                    @NonNull OffsetDateTime confirmedAt,
                                    int expectedVersion) {
-        return dsl.update(TON_TRANSACTIONS)
+        return updateConfirmed(
+                id,
+                txHash,
+                confirmations,
+                feeNano,
+                confirmedAt,
+                null,
+                expectedVersion);
+    }
+
+    /**
+     * CAS-guarded confirmation with optional source address persistence.
+     *
+     * @param fromAddress optional deposit source address
+     * @param expectedVersion optimistic lock — only updates if version matches
+     * @return true if exactly one row was updated (CAS success)
+     */
+    public boolean updateConfirmed(
+            long id,
+            @NonNull String txHash,
+            int confirmations,
+            long feeNano,
+            @NonNull OffsetDateTime confirmedAt,
+            @Nullable String fromAddress,
+            int expectedVersion) {
+        var query = dsl.update(TON_TRANSACTIONS)
                 .set(TON_TRANSACTIONS.STATUS, "CONFIRMED")
                 .set(TON_TRANSACTIONS.TX_HASH, txHash)
                 .set(TON_TRANSACTIONS.CONFIRMATIONS, confirmations)
                 .set(TON_TRANSACTIONS.FEE_NANO, feeNano)
                 .set(TON_TRANSACTIONS.CONFIRMED_AT, confirmedAt)
-                .set(TON_TRANSACTIONS.VERSION, expectedVersion + 1)
+                .set(TON_TRANSACTIONS.VERSION, expectedVersion + 1);
+        if (fromAddress != null && !fromAddress.isBlank()) {
+            query = query.set(TON_TRANSACTIONS.FROM_ADDRESS, fromAddress);
+        }
+        return query
                 .where(TON_TRANSACTIONS.ID.eq(id))
                 .and(TON_TRANSACTIONS.VERSION.eq(expectedVersion))
                 .execute() == 1;

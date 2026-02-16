@@ -10,6 +10,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.financial.api.model.DepositInfo;
+import com.advertmarket.financial.api.model.DepositStatus;
+import com.advertmarket.financial.api.port.DepositPort;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.service.DealService;
@@ -51,6 +54,8 @@ class DealUseCaseTest {
     private ChannelAutoSyncPort channelAutoSyncPort;
     @Mock
     private ChannelAuthorizationPort channelAuthorizationPort;
+    @Mock
+    private DepositPort depositPort;
 
     @InjectMocks
     private DealUseCase useCase;
@@ -77,7 +82,8 @@ class DealUseCaseTest {
 
         var response = useCase.transition(
                 dealUuid,
-                new DealTransitionRequest(DealStatus.ACCEPTED, null));
+                new DealTransitionRequest(
+                        DealStatus.ACCEPTED, null, null, null));
 
         assertThat(response.status()).isEqualTo("SUCCESS");
         var commandCaptor = ArgumentCaptor.forClass(
@@ -102,7 +108,8 @@ class DealUseCaseTest {
 
         var response = useCase.transition(
                 dealUuid,
-                new DealTransitionRequest(DealStatus.CANCELLED, "test"));
+                new DealTransitionRequest(
+                        DealStatus.CANCELLED, "test", null, null));
 
         assertThat(response.status()).isEqualTo("SUCCESS");
         var commandCaptor = ArgumentCaptor.forClass(
@@ -125,7 +132,8 @@ class DealUseCaseTest {
 
         assertThatThrownBy(() -> useCase.transition(
                 dealUuid,
-                new DealTransitionRequest(DealStatus.ACCEPTED, null)))
+                new DealTransitionRequest(
+                        DealStatus.ACCEPTED, null, null, null)))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(DEAL_NOT_PARTICIPANT);
@@ -145,7 +153,8 @@ class DealUseCaseTest {
 
         assertThatThrownBy(() -> useCase.transition(
                 dealUuid,
-                new DealTransitionRequest(DealStatus.ACCEPTED, null)))
+                new DealTransitionRequest(
+                        DealStatus.ACCEPTED, null, null, null)))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(SERVICE_UNAVAILABLE);
@@ -163,10 +172,47 @@ class DealUseCaseTest {
 
         var response = useCase.transition(
                 dealUuid,
-                new DealTransitionRequest(DealStatus.OFFER_PENDING, null));
+                new DealTransitionRequest(
+                        DealStatus.OFFER_PENDING, null, null, null));
 
         assertThat(response.status()).isEqualTo("SUCCESS");
         verify(channelAutoSyncPort, never()).syncFromTelegram(anyLong());
+    }
+
+    @Test
+    @DisplayName("getDepositInfo should return financial projection for participant")
+    void getDepositInfo_forParticipant() {
+        UUID dealUuid = UUID.randomUUID();
+        var dealId = com.advertmarket.shared.model.DealId.of(dealUuid);
+        when(dealAuthorizationPort.isParticipant(dealId)).thenReturn(true);
+        when(depositPort.getDepositInfo(dealId)).thenReturn(
+                java.util.Optional.of(new DepositInfo(
+                        "UQ_test",
+                        "1000000000",
+                        dealUuid.toString(),
+                        DepositStatus.AWAITING_PAYMENT,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)));
+
+        var result = useCase.getDepositInfo(dealUuid);
+
+        assertThat(result.escrowAddress()).isEqualTo("UQ_test");
+        assertThat(result.status()).isEqualTo(DepositStatus.AWAITING_PAYMENT);
+    }
+
+    @Test
+    @DisplayName("approveDeposit should reject non-operator")
+    void approveDeposit_nonOperator_rejected() {
+        UUID dealUuid = UUID.randomUUID();
+        setCurrentUser(USER_ID, false);
+
+        assertThatThrownBy(() -> useCase.approveDeposit(dealUuid))
+                .isInstanceOf(DomainException.class)
+                .extracting(e -> ((DomainException) e).getErrorCode())
+                .isEqualTo(com.advertmarket.shared.exception.ErrorCodes.AUTH_INSUFFICIENT_PERMISSIONS);
     }
 
     private static void setCurrentUser(long userId, boolean operator) {

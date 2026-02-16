@@ -202,6 +202,27 @@ class EscrowServiceTest {
                     .extracting(r -> r.idempotencyKey().value())
                     .containsOnly("release:" + dealId.value());
         }
+
+        @Test
+        @DisplayName("Should skip commission leg when commission rate is zero")
+        void zeroCommission_skipsCommissionLeg() {
+            var dealId = DealId.generate();
+            var ownerId = new UserId(123L);
+            when(ledgerPort.transfer(any())).thenReturn(UUID.randomUUID());
+
+            service.releaseEscrow(dealId, ownerId, 10_000_000_000L, 0);
+
+            var captor = ArgumentCaptor.forClass(TransferRequest.class);
+            verify(ledgerPort).transfer(captor.capture());
+
+            var request = captor.getValue();
+            assertThat(request.legs()).hasSize(2);
+            assertThat(request.legs())
+                    .noneMatch(leg ->
+                            leg.accountId().equals(AccountId.commission(dealId)));
+            assertThat(request.idempotencyKey().value())
+                    .isEqualTo("release:" + dealId.value());
+        }
     }
 
     @Nested

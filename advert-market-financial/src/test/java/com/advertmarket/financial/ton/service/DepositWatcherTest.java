@@ -112,7 +112,7 @@ class DepositWatcherTest {
             when(blockchainPort.getMasterchainSeqno()).thenReturn(105L);
             when(txRepository.updateConfirmed(
                     eq(1L), eq("txhash1"), anyInt(),
-                    eq(1000L), any(OffsetDateTime.class), eq(0)))
+                    eq(1000L), any(OffsetDateTime.class), anyString(), eq(0)))
                     .thenReturn(true);
             when(jsonFacade.toJson(any())).thenReturn("{}");
 
@@ -120,7 +120,7 @@ class DepositWatcherTest {
 
             verify(txRepository).updateConfirmed(
                     eq(1L), eq("txhash1"), anyInt(),
-                    eq(1000L), any(OffsetDateTime.class), eq(0));
+                    eq(1000L), any(OffsetDateTime.class), anyString(), eq(0));
             verify(outboxRepository).save(any(OutboxEntry.class));
             verify(lockPort).unlock(anyString(), eq("token-1"));
         }
@@ -149,7 +149,7 @@ class DepositWatcherTest {
 
             verify(txRepository, never()).updateConfirmed(
                     anyLong(), anyString(), anyInt(),
-                    anyLong(), any(OffsetDateTime.class), anyInt());
+                    anyLong(), any(OffsetDateTime.class), anyString(), anyInt());
             verify(outboxRepository, never()).save(any());
         }
 
@@ -204,7 +204,7 @@ class DepositWatcherTest {
             // CAS fails — another instance already confirmed
             when(txRepository.updateConfirmed(
                     eq(5L), eq("txhash5"), anyInt(),
-                    eq(500L), any(OffsetDateTime.class), eq(3)))
+                    eq(500L), any(OffsetDateTime.class), anyString(), eq(3)))
                     .thenReturn(false);
 
             watcher.pollDeposits();
@@ -233,7 +233,7 @@ class DepositWatcherTest {
             when(blockchainPort.getMasterchainSeqno()).thenReturn(510L);
             when(txRepository.updateConfirmed(
                     eq(6L), eq("txhash6"), anyInt(),
-                    eq(300L), any(OffsetDateTime.class), eq(7)))
+                    eq(300L), any(OffsetDateTime.class), anyString(), eq(7)))
                     .thenReturn(true);
             when(jsonFacade.toJson(any())).thenReturn("{}");
 
@@ -242,7 +242,7 @@ class DepositWatcherTest {
             // Verify version 7 was passed to CAS
             verify(txRepository).updateConfirmed(
                     eq(6L), eq("txhash6"), anyInt(),
-                    eq(300L), any(OffsetDateTime.class), eq(7));
+                    eq(300L), any(OffsetDateTime.class), anyString(), eq(7));
         }
 
         @Test
@@ -271,7 +271,7 @@ class DepositWatcherTest {
             // 0 confirmations < 1 required, so no confirm
             verify(txRepository, never()).updateConfirmed(
                     anyLong(), anyString(), anyInt(),
-                    anyLong(), any(OffsetDateTime.class), anyInt());
+                    anyLong(), any(OffsetDateTime.class), anyString(), anyInt());
         }
 
         @Test
@@ -296,7 +296,7 @@ class DepositWatcherTest {
 
             verify(txRepository, never()).updateConfirmed(
                     anyLong(), anyString(), anyInt(),
-                    anyLong(), any(OffsetDateTime.class), anyInt());
+                    anyLong(), any(OffsetDateTime.class), anyString(), anyInt());
         }
 
         @Test
@@ -321,14 +321,14 @@ class DepositWatcherTest {
 
             verify(txRepository, never()).updateConfirmed(
                     anyLong(), anyString(), anyInt(),
-                    anyLong(), any(OffsetDateTime.class), anyInt());
+                    anyLong(), any(OffsetDateTime.class), anyString(), anyInt());
         }
 
         @Test
         @DisplayName("Should select most recent transaction by lt when multiple match")
         void shouldSelectMostRecentByLt() {
             var record = createPendingRecord(
-                    12L, UUID.randomUUID(), "UQaddrLt", 1_000_000_000L);
+                    12L, UUID.randomUUID(), "UQaddrLt", 2_000_000_000L);
 
             when(lockPort.tryLock(anyString(), any(Duration.class)))
                     .thenReturn(Optional.of("token-1"));
@@ -347,7 +347,7 @@ class DepositWatcherTest {
             when(blockchainPort.getMasterchainSeqno()).thenReturn(200L);
             when(txRepository.updateConfirmed(
                     eq(12L), eq("newTx"), anyInt(),
-                    eq(500L), any(OffsetDateTime.class), eq(0)))
+                    eq(500L), any(OffsetDateTime.class), anyString(), eq(0)))
                     .thenReturn(true);
             when(jsonFacade.toJson(any())).thenReturn("{}");
 
@@ -356,7 +356,7 @@ class DepositWatcherTest {
             // Must select "newTx" (lt=200) over "oldTx" (lt=100)
             verify(txRepository).updateConfirmed(
                     eq(12L), eq("newTx"), anyInt(),
-                    eq(500L), any(OffsetDateTime.class), eq(0));
+                    eq(500L), any(OffsetDateTime.class), anyString(), eq(0));
         }
 
         @Test
@@ -382,7 +382,7 @@ class DepositWatcherTest {
             when(blockchainPort.getMasterchainSeqno()).thenReturn(305L);
             when(txRepository.updateConfirmed(
                     eq(11L), anyString(), anyInt(),
-                    anyLong(), any(OffsetDateTime.class), eq(0)))
+                    anyLong(), any(OffsetDateTime.class), anyString(), eq(0)))
                     .thenReturn(true);
             when(jsonFacade.toJson(any())).thenReturn("{}");
 
@@ -391,7 +391,7 @@ class DepositWatcherTest {
             // Second deposit still processed despite first failing
             verify(txRepository).updateConfirmed(
                     eq(11L), eq("txOk"), anyInt(),
-                    eq(500L), any(OffsetDateTime.class), eq(0));
+                    eq(500L), any(OffsetDateTime.class), anyString(), eq(0));
         }
 
         @Test

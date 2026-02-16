@@ -73,7 +73,20 @@ class DealTransitionServiceTest {
     private DealTransitionCommand cmd(DealId dealId, DealStatus target,
                                       ActorType actorType) {
         Long actorId = actorType == ActorType.SYSTEM ? null : 100L;
-        return new DealTransitionCommand(dealId, target, actorId, actorType, null);
+        Long partialRefund = target == DealStatus.PARTIALLY_REFUNDED
+                ? 600_000_000L
+                : null;
+        Long partialPayout = target == DealStatus.PARTIALLY_REFUNDED
+                ? 400_000_000L
+                : null;
+        return new DealTransitionCommand(
+                dealId,
+                target,
+                actorId,
+                actorType,
+                null,
+                partialRefund,
+                partialPayout);
     }
 
     @Nested
@@ -131,6 +144,28 @@ class DealTransitionServiceTest {
             assertThatThrownBy(() -> service.transition(
                     cmd(dealId, DealStatus.FUNDED, ActorType.ADVERTISER)))
                     .isInstanceOf(InvalidStateTransitionException.class);
+        }
+
+        @Test
+        @DisplayName("transition DISPUTED → PARTIALLY_REFUNDED without partial amounts should reject")
+        void transitionDisputedToPartiallyRefundedWithoutAmountsShouldReject() {
+            var dealId = DealId.generate();
+            var deal = dealInStatus(dealId, DealStatus.DISPUTED, 0);
+            when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
+
+            var command = new DealTransitionCommand(
+                    dealId,
+                    DealStatus.PARTIALLY_REFUNDED,
+                    1L,
+                    ActorType.PLATFORM_OPERATOR,
+                    "operator resolution",
+                    null,
+                    null);
+
+            assertThatThrownBy(() -> service.transition(command))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.MISSING_REQUIRED_FIELD);
         }
 
         @ParameterizedTest(name = "from terminal state {0} should reject")
@@ -299,7 +334,8 @@ class DealTransitionServiceTest {
 
             var command = new DealTransitionCommand(
                     dealId, DealStatus.CANCELLED, 100L,
-                    ActorType.ADVERTISER, "Changed my mind");
+                    ActorType.ADVERTISER, "Changed my mind",
+                    null, null);
             service.transition(command);
 
             verify(dealRepository).setCancellationReason(
@@ -318,7 +354,7 @@ class DealTransitionServiceTest {
 
             var command = new DealTransitionCommand(
                     dealId, DealStatus.CANCELLED, 100L,
-                    ActorType.ADVERTISER, null);
+                    ActorType.ADVERTISER, null, null, null);
             service.transition(command);
 
             verify(dealRepository, never()).setCancellationReason(any(), any());
@@ -343,7 +379,8 @@ class DealTransitionServiceTest {
 
             var command = new DealTransitionCommand(
                     dealId, DealStatus.CANCELLED, 100L,
-                    ActorType.ADVERTISER, "Changed my mind");
+                    ActorType.ADVERTISER, "Changed my mind",
+                    null, null);
             service.transition(command);
 
             var captor = ArgumentCaptor.forClass(DealEventRecord.class);

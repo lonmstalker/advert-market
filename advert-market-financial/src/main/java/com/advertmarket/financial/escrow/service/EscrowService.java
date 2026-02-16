@@ -119,16 +119,18 @@ public class EscrowService implements EscrowPort {
         var result = CommissionCalculator.calculate(
                 dealAmount, commissionRateBp);
 
-        var legs = new java.util.ArrayList<>(List.of(
-                new Leg(AccountId.escrow(dealId),
-                        EntryType.ESCROW_RELEASE, dealAmount,
-                        Leg.Side.DEBIT),
-                new Leg(AccountId.commission(dealId),
-                        EntryType.PLATFORM_COMMISSION,
-                        result.commission(), Leg.Side.CREDIT),
-                new Leg(AccountId.ownerPending(ownerId),
-                        EntryType.OWNER_PAYOUT,
-                        result.ownerPayout(), Leg.Side.CREDIT)));
+        var legs = new java.util.ArrayList<Leg>();
+        legs.add(new Leg(AccountId.escrow(dealId),
+                EntryType.ESCROW_RELEASE, dealAmount,
+                Leg.Side.DEBIT));
+        if (!result.commission().isZero()) {
+            legs.add(new Leg(AccountId.commission(dealId),
+                    EntryType.PLATFORM_COMMISSION,
+                    result.commission(), Leg.Side.CREDIT));
+        }
+        legs.add(new Leg(AccountId.ownerPending(ownerId),
+                EntryType.OWNER_PAYOUT,
+                result.ownerPayout(), Leg.Side.CREDIT));
 
         var transfer = new TransferRequest(
                 dealId,

@@ -114,7 +114,8 @@ class DealServiceTest {
             verify(dealRepository).insert(captor.capture());
             var saved = captor.getValue();
             assertThat(saved.status()).isEqualTo(DealStatus.DRAFT);
-            assertThat(saved.commissionNano()).isGreaterThan(0);
+            assertThat(saved.commissionRateBp()).isEqualTo(200);
+            assertThat(saved.commissionNano()).isEqualTo(20_000_000L);
         }
 
         @Test
@@ -203,7 +204,7 @@ class DealServiceTest {
         void transition_shouldDelegate() {
             var cmd = new DealTransitionCommand(
                     DealId.generate(), DealStatus.OFFER_PENDING,
-                    100L, ActorType.ADVERTISER, null);
+                    100L, ActorType.ADVERTISER, null, null, null);
             var expected = new DealTransitionResult.Success(DealStatus.OFFER_PENDING);
             when(dealTransitionService.transition(cmd)).thenReturn(expected);
 

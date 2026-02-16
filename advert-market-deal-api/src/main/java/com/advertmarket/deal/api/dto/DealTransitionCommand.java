@@ -15,6 +15,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param actorId initiating user ID (null for SYSTEM)
  * @param actorType type of actor performing the transition
  * @param reason optional reason (e.g. cancellation reason)
+ * @param partialRefundNano partial refund amount in nanoTON
+ *                          (required for DISPUTED -> PARTIALLY_REFUNDED)
+ * @param partialPayoutNano partial payout amount in nanoTON
+ *                          (required for DISPUTED -> PARTIALLY_REFUNDED)
  */
 @Schema(description = "Deal state transition command")
 public record DealTransitionCommand(
@@ -22,5 +26,7 @@ public record DealTransitionCommand(
         @NonNull DealStatus targetStatus,
         @Nullable Long actorId,
         @NonNull ActorType actorType,
-        @Nullable String reason) {
+        @Nullable String reason,
+        @Nullable Long partialRefundNano,
+        @Nullable Long partialPayoutNano) {
 }

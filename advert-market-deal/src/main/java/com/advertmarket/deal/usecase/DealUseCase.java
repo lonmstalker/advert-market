@@ -11,10 +11,13 @@ import com.advertmarket.deal.service.DealService;
 import com.advertmarket.deal.web.CreateDealRequest;
 import com.advertmarket.deal.web.DealTransitionRequest;
 import com.advertmarket.deal.web.DealTransitionResponse;
+import com.advertmarket.financial.api.model.DepositInfo;
+import com.advertmarket.financial.api.port.DepositPort;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
@@ -39,6 +42,7 @@ public class DealUseCase {
     private final DealAuthorizationPort dealAuthorizationPort;
     private final ChannelAutoSyncPort channelAutoSyncPort;
     private final ChannelAuthorizationPort channelAuthorizationPort;
+    private final DepositPort depositPort;
 
     /**
      * Creates a new deal for the current authenticated user.
@@ -93,10 +97,53 @@ public class DealUseCase {
                 request.targetStatus(),
                 actorId,
                 actorType,
-                request.reason());
+                request.reason(),
+                request.partialRefundNano(),
+                request.partialPayoutNano());
 
         var result = dealService.transition(command);
         return toResponse(result);
+    }
+
+    /**
+     * Returns deposit projection for a deal.
+     */
+    @NonNull
+    public DepositInfo getDepositInfo(@NonNull UUID id) {
+        var dealId = DealId.of(id);
+        if (!SecurityContextUtil.isOperator()
+                && !dealAuthorizationPort.isParticipant(dealId)) {
+            throw new DomainException(
+                    ErrorCodes.DEAL_NOT_PARTICIPANT,
+                    "Not a participant of deal " + dealId);
+        }
+        return depositPort.getDepositInfo(dealId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        ErrorCodes.ENTITY_NOT_FOUND,
+                        "Deposit",
+                        dealId.value().toString()));
+    }
+
+    /**
+     * Operator-only approval for deposits awaiting manual review.
+     */
+    @NonNull
+    public DepositInfo approveDeposit(@NonNull UUID id) {
+        assertOperator();
+        var dealId = DealId.of(id);
+        depositPort.approveDeposit(dealId);
+        return getDepositInfo(id);
+    }
+
+    /**
+     * Operator-only rejection for deposits awaiting manual review.
+     */
+    @NonNull
+    public DepositInfo rejectDeposit(@NonNull UUID id) {
+        assertOperator();
+        var dealId = DealId.of(id);
+        depositPort.rejectDeposit(dealId);
+        return getDepositInfo(id);
     }
 
     private ActorType resolveActorType(DealId dealId) {
@@ -135,5 +182,13 @@ public class DealUseCase {
                             null,
                             a.currentStatus());
         };
+    }
+
+    private static void assertOperator() {
+        if (!SecurityContextUtil.isOperator()) {
+            throw new DomainException(
+                    ErrorCodes.AUTH_INSUFFICIENT_PERMISSIONS,
+                    "Operator role required");
+        }
     }
 }

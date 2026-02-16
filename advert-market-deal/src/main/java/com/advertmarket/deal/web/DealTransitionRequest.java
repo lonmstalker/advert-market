@@ -2,6 +2,7 @@ package com.advertmarket.deal.web;
 
 import com.advertmarket.shared.model.DealStatus;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -9,5 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public record DealTransitionRequest(
         @NotNull DealStatus targetStatus,
-        @Nullable String reason) {
+        @Nullable String reason,
+        @Nullable @Positive Long partialRefundNano,
+        @Nullable @Positive Long partialPayoutNano) {
 }

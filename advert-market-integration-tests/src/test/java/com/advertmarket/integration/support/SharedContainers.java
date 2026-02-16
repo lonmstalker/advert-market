@@ -2,6 +2,7 @@ package com.advertmarket.integration.support;
 
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -32,9 +33,15 @@ public final class SharedContainers {
                             + "a1ab6c79f393f53490e42cb2111084a9"))
                     .withExposedPorts(REDIS_PORT);
 
+    @SuppressWarnings("resource")
+    public static final KafkaContainer KAFKA =
+            new KafkaContainer(DockerImageName.parse(
+                    "apache/kafka-native:3.8.0"));
+
     static {
         POSTGRES.start();
         REDIS.start();
+        KAFKA.start();
     }
 
     private SharedContainers() {
@@ -63,5 +70,10 @@ public final class SharedContainers {
     /** Mapped port for the shared Redis container. */
     public static int redisPort() {
         return REDIS.getMappedPort(REDIS_PORT);
+    }
+
+    /** Bootstrap servers for the shared Kafka container. */
+    public static String kafkaBootstrapServers() {
+        return KAFKA.getBootstrapServers();
     }
 }

@@ -9,6 +9,8 @@ dependencies {
     implementation project(':advert-market-financial-api')
     implementation project(':advert-market-identity-api')
     implementation project(':advert-market-marketplace-api')
+    implementation project(':advert-market-delivery-api')
+    implementation project(':advert-market-communication-api')
     implementation project(':advert-market-shared')
     implementation project(':advert-market-db')
 

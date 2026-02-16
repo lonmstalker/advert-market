@@ -4,6 +4,7 @@ import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.financial.api.event.DepositConfirmedEvent;
 import com.advertmarket.financial.api.event.DepositFailedEvent;
 import com.advertmarket.financial.api.event.DepositFailureReason;
+import com.advertmarket.financial.api.event.WatchDepositCommand;
 import com.advertmarket.financial.api.model.TonTransactionInfo;
 import com.advertmarket.financial.api.port.TonBlockchainPort;
 import com.advertmarket.financial.config.TonProperties;
@@ -25,11 +26,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -78,6 +77,34 @@ public class DepositWatcher {
         }
     }
 
+    /**
+     * Registers (or reuses) a deposit watch initiated from workflow commands.
+     */
+    public void watchDeposit(EventEnvelope<WatchDepositCommand> envelope) {
+        var dealId = Objects.requireNonNull(
+                envelope.dealId(), "dealId is required for WATCH_DEPOSIT");
+        var command = envelope.payload();
+
+        var existing = txRepository.findLatestInboundByDealId(dealId.value());
+        if (existing.isPresent()) {
+            log.debug("Deposit watch already registered for deal={}", dealId);
+            return;
+        }
+
+        var record = new TonTransactionsRecord();
+        record.setDealId(dealId.value());
+        record.setDirection("IN");
+        record.setAmountNano(command.expectedAmountNano());
+        record.setToAddress(command.depositAddress());
+        record.setStatus("PENDING");
+        record.setConfirmations(0);
+        record.setVersion(0);
+        record.setRetryCount(0);
+        txRepository.save(record);
+        log.info("Registered deposit watch: deal={}, address={}",
+                dealId, command.depositAddress());
+    }
+
     private void doPollDeposits() {
         var pending = txRepository.findPendingDeposits(
                 depositProps.batchSize());
@@ -118,7 +145,7 @@ public class DepositWatcher {
     }
 
     private void processOne(TonTransactionsRecord record,
-                             long masterSeqno) {
+                            long masterSeqno) {
         if (isTimedOut(record)) {
             handleTimeout(record);
             return;
@@ -132,60 +159,75 @@ public class DepositWatcher {
             return;
         }
 
-        var match = findMatchingTx(toAddress, expectedAmount);
-        if (match == null) {
+        var inboundTxs = blockchainPort.getTransactions(
+                toAddress, TX_FETCH_LIMIT).stream()
+                .filter(tx -> tx.amountNano() > 0)
+                .toList();
+        if (inboundTxs.isEmpty()) {
+            return;
+        }
+
+        long totalReceived = inboundTxs.stream()
+                .mapToLong(TonTransactionInfo::amountNano)
+                .sum();
+        var latest = inboundTxs.stream()
+                .max(Comparator.comparingLong(TonTransactionInfo::lt))
+                .orElseThrow();
+
+        if (totalReceived < expectedAmount) {
+            updateProgressStatus(record, "UNDERPAID", confirmations(record));
             return;
         }
 
         var requirement = confirmationPolicy.requiredConfirmations(
-                match.amountNano());
+                totalReceived);
         int confirmedBlocks = resolveConfirmedBlocks(record, masterSeqno);
         if (confirmedBlocks < 0) {
             return;
         }
 
         if (confirmedBlocks < requirement.confirmations()) {
-            log.debug("Deposit id={} has {}/{} confirmations",
+            String status = record.getSeqno() == null
+                    ? "TX_DETECTED"
+                    : (totalReceived > expectedAmount ? "OVERPAID" : "CONFIRMING");
+            updateProgressStatus(record, status, confirmedBlocks);
+            log.debug("Deposit id={} has {}/{} confirmations, status={}",
                     record.getId(), confirmedBlocks,
-                    requirement.confirmations());
+                    requirement.confirmations(), status);
             return;
         }
 
-        confirmDeposit(record, match, confirmedBlocks);
-    }
+        if (totalReceived > expectedAmount || requirement.operatorReview()) {
+            updateProgressStatus(
+                    record, "AWAITING_OPERATOR_REVIEW", confirmedBlocks);
+            return;
+        }
 
-    private @Nullable TonTransactionInfo findMatchingTx(
-            String toAddress, long expectedAmount) {
-        List<TonTransactionInfo> txs = blockchainPort.getTransactions(
-                toAddress, TX_FETCH_LIMIT);
-
-        return txs.stream()
-                .filter(tx -> tx.amountNano() > 0
-                        && tx.amountNano() >= expectedAmount)
-                .max(Comparator.comparingLong(TonTransactionInfo::lt))
-                .orElse(null);
+        confirmDeposit(record, latest, confirmedBlocks, totalReceived);
     }
 
     private int resolveConfirmedBlocks(TonTransactionsRecord record,
-                                        long masterSeqno) {
+                                       long masterSeqno) {
         if (record.getSeqno() != null) {
             return (int) (masterSeqno - record.getSeqno());
         }
         txRepository.updateSeqno(record.getId(), masterSeqno,
-                record.getVersion());
+                version(record));
         return 0;
     }
 
     private void confirmDeposit(TonTransactionsRecord record,
-                                 TonTransactionInfo tx,
-                                 int confirmedBlocks) {
+                                TonTransactionInfo tx,
+                                int confirmedBlocks,
+                                long receivedAmountNano) {
         boolean updated = txRepository.updateConfirmed(
                 record.getId(), tx.txHash(), confirmedBlocks,
                 tx.feeNano(),
                 OffsetDateTime.ofInstant(
                         Instant.ofEpochSecond(tx.utime()),
                         ZoneOffset.UTC),
-                record.getVersion());
+                Objects.requireNonNullElse(tx.fromAddress(), ""),
+                version(record));
 
         if (!updated) {
             log.warn("Deposit id={} already confirmed by another instance",
@@ -198,8 +240,8 @@ public class DepositWatcher {
         String toAddr = Objects.requireNonNull(
                 record.getToAddress(), "toAddress");
         var event = new DepositConfirmedEvent(
-                tx.txHash(), tx.amountNano(),
-                record.getAmountNano(), confirmedBlocks,
+                tx.txHash(), receivedAmountNano,
+                requiredAmount(record), confirmedBlocks,
                 fromAddr, toAddr);
 
         publishOutboxEvent(record,
@@ -209,7 +251,7 @@ public class DepositWatcher {
         log.info("Deposit confirmed: id={}, txHash={}, "
                         + "amount={}, confirmations={}",
                 record.getId(), tx.txHash(),
-                tx.amountNano(), confirmedBlocks);
+                receivedAmountNano, confirmedBlocks);
     }
 
     private boolean isTimedOut(TonTransactionsRecord record) {
@@ -222,12 +264,15 @@ public class DepositWatcher {
     }
 
     private void handleTimeout(TonTransactionsRecord record) {
-        txRepository.updateStatus(record.getId(), "TIMEOUT",
-                0, record.getVersion());
+        boolean updated = txRepository.updateStatus(
+                record.getId(), "TIMEOUT", 0, version(record));
+        if (!updated) {
+            return;
+        }
 
         var event = new DepositFailedEvent(
                 DepositFailureReason.TIMEOUT,
-                record.getAmountNano(), 0L);
+                requiredAmount(record), 0L);
 
         publishOutboxEvent(record,
                 EventTypes.DEPOSIT_FAILED, event);
@@ -235,6 +280,44 @@ public class DepositWatcher {
         metrics.incrementCounter(MetricNames.TON_DEPOSIT_TIMEOUT);
         log.info("Deposit timed out: id={}, dealId={}",
                 record.getId(), record.getDealId());
+    }
+
+    private void updateProgressStatus(
+            TonTransactionsRecord record,
+            String status,
+            int confirmations) {
+        int currentConfirmations = confirmations(record);
+        if (status.equals(record.getStatus())
+                && confirmations == currentConfirmations) {
+            return;
+        }
+        boolean updated = txRepository.updateStatus(
+                record.getId(),
+                status,
+                confirmations,
+                version(record));
+        if (!updated) {
+            log.debug("Deposit progress CAS skipped: id={}, targetStatus={}",
+                    record.getId(), status);
+        }
+    }
+
+    private static int confirmations(TonTransactionsRecord record) {
+        return record.getConfirmations() != null
+                ? record.getConfirmations()
+                : 0;
+    }
+
+    private static int version(TonTransactionsRecord record) {
+        return record.getVersion() != null
+                ? record.getVersion()
+                : 0;
+    }
+
+    private static long requiredAmount(TonTransactionsRecord record) {
+        return Objects.requireNonNull(
+                record.getAmountNano(),
+                "amount_nano must be present for deposit");
     }
 
     private <T extends DomainEvent> void publishOutboxEvent(
