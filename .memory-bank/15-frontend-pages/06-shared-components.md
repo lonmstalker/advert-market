@@ -50,6 +50,7 @@ errors.* — frontend-only errors (validation, offline, timeout)
 3. Frontend sync rule: `useAuth` applies `profile.languageCode` to both settings store and `i18n`
 4. Runtime i18n bundles: both `ru` and `en` are preloaded at app init to allow immediate language switching in onboarding/profile without lazy reload races.
 5. Fallback: `ru`
+6. Settings update endpoints can return stale `languageCode`; profile settings pages must normalize responses with `preserveLanguageOnSettingsUpdate(updatedProfile, store.languageCode)` before writing query/store state.
 
 ---
 
