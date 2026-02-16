@@ -50,7 +50,8 @@ class FinancialEventListenerTest {
     @DisplayName("Dispatches DEPOSIT_CONFIRMED to port")
     void dispatchesDepositConfirmed() {
         var payload = new DepositConfirmedEvent(
-                "tx1", 1_000_000_000L, 3, "from", "deposit");
+                "tx1", 1_000_000_000L, 1_000_000_000L,
+                3, "from", "deposit");
         var envelope = EventEnvelope.create(
                 EventTypes.DEPOSIT_CONFIRMED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
@@ -121,7 +122,8 @@ class FinancialEventListenerTest {
     @DisplayName("Unknown type does not invoke port")
     void unknownType_doesNotInvokePort() {
         var payload = new DepositConfirmedEvent(
-                "tx1", 1_000_000_000L, 3, "from", "deposit");
+                "tx1", 1_000_000_000L, 1_000_000_000L,
+                3, "from", "deposit");
         var envelope = new EventEnvelope<>(
                 UUID.randomUUID(), "UNKNOWN_TYPE", DEAL_ID,
                 Instant.now(), 1,

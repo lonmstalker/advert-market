@@ -24,18 +24,22 @@ public interface EscrowPort {
             @NonNull DealId dealId, long amountNano);
 
     /**
-     * Confirms a deposit via double-entry ledger:
-     * DEBIT EXTERNAL_TON / CREDIT ESCROW:{dealId}.
+     * Confirms a deposit via double-entry ledger.
      *
-     * @param dealId        the deal identifier
-     * @param txHash        blockchain transaction hash
-     * @param amountNano    confirmed deposit amount
-     * @param confirmations number of block confirmations
-     * @param fromAddress   sender's TON address
+     * <p>For exact matches: DEBIT EXTERNAL_TON / CREDIT ESCROW:{dealId}.
+     * For overpayments: additional CREDIT OVERPAYMENT:{dealId} for excess.
+     *
+     * @param dealId             the deal identifier
+     * @param txHash             blockchain transaction hash
+     * @param amountNano         confirmed (received) deposit amount
+     * @param expectedAmountNano expected deposit amount
+     * @param confirmations      number of block confirmations
+     * @param fromAddress        sender's TON address
      */
     void confirmDeposit(@NonNull DealId dealId,
                         @NonNull String txHash,
                         long amountNano,
+                        long expectedAmountNano,
                         int confirmations,
                         @NonNull String fromAddress);
 

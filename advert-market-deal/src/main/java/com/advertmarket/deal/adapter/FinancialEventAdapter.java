@@ -37,8 +37,8 @@ public class FinancialEventAdapter implements FinancialEventPort {
         var event = envelope.payload();
 
         escrowPort.confirmDeposit(dealId, event.txHash(),
-                event.amountNano(), event.confirmations(),
-                event.fromAddress());
+                event.amountNano(), event.expectedAmountNano(),
+                event.confirmations(), event.fromAddress());
 
         dealTransitionService.transition(new DealTransitionCommand(
                 dealId, DealStatus.FUNDED, null,

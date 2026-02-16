@@ -40,7 +40,8 @@ class FinancialEventAdapterTest {
     void onDepositConfirmed() {
         var dealId = DealId.generate();
         var event = new DepositConfirmedEvent(
-                "txhash1", 10_000_000_000L, 3, "fromAddr", "UQaddr");
+                "txhash1", 10_000_000_000L, 10_000_000_000L,
+                3, "fromAddr", "UQaddr");
         var envelope = EventEnvelope.create(
                 EventTypes.DEPOSIT_CONFIRMED, dealId, event);
 
@@ -50,7 +51,8 @@ class FinancialEventAdapterTest {
         adapter.onDepositConfirmed(envelope);
 
         verify(escrowPort).confirmDeposit(
-                dealId, "txhash1", 10_000_000_000L, 3, "fromAddr");
+                dealId, "txhash1", 10_000_000_000L, 10_000_000_000L,
+                3, "fromAddr");
 
         var captor = ArgumentCaptor.forClass(DealTransitionCommand.class);
         verify(dealTransitionService).transition(captor.capture());

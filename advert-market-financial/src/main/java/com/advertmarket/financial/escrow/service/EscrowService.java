@@ -69,26 +69,45 @@ public class EscrowService implements EscrowPort {
     public void confirmDeposit(@NonNull DealId dealId,
                                @NonNull String txHash,
                                long amountNano,
+                               long expectedAmountNano,
                                int confirmations,
                                @NonNull String fromAddress) {
-        var amount = Money.ofNano(amountNano);
-        var transfer = TransferRequest.balanced(
+        var received = Money.ofNano(amountNano);
+        long excess = DepositAmountValidator.excessNano(
+                expectedAmountNano, amountNano);
+
+        var legs = new java.util.ArrayList<>(List.of(
+                new Leg(AccountId.externalTon(),
+                        EntryType.ESCROW_DEPOSIT, received,
+                        Leg.Side.DEBIT)));
+
+        if (excess > 0) {
+            var expected = Money.ofNano(expectedAmountNano);
+            legs.add(new Leg(AccountId.escrow(dealId),
+                    EntryType.ESCROW_DEPOSIT, expected,
+                    Leg.Side.CREDIT));
+            legs.add(new Leg(AccountId.overpayment(dealId),
+                    EntryType.ESCROW_DEPOSIT,
+                    Money.ofNano(excess), Leg.Side.CREDIT));
+        } else {
+            legs.add(new Leg(AccountId.escrow(dealId),
+                    EntryType.ESCROW_DEPOSIT, received,
+                    Leg.Side.CREDIT));
+        }
+
+        var transfer = new TransferRequest(
                 dealId,
                 IdempotencyKey.deposit(txHash),
-                List.of(
-                        new Leg(AccountId.externalTon(),
-                                EntryType.ESCROW_DEPOSIT, amount,
-                                Leg.Side.DEBIT),
-                        new Leg(AccountId.escrow(dealId),
-                                EntryType.ESCROW_DEPOSIT, amount,
-                                Leg.Side.CREDIT)),
+                legs,
                 "Deposit confirmed: " + txHash);
 
         ledgerPort.transfer(transfer);
         metrics.incrementCounter(MetricNames.DEPOSIT_RECEIVED);
 
-        log.info("Escrow funded: deal={}, txHash={}, amount={}",
-                dealId, txHash, amount);
+        log.info("Escrow funded: deal={}, txHash={}, received={}, "
+                        + "expected={}, excess={}",
+                dealId, txHash, amountNano,
+                expectedAmountNano, excess);
     }
 
     @Override

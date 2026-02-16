@@ -198,7 +198,8 @@ public class DepositWatcher {
         String toAddr = Objects.requireNonNull(
                 record.getToAddress(), "toAddress");
         var event = new DepositConfirmedEvent(
-                tx.txHash(), tx.amountNano(), confirmedBlocks,
+                tx.txHash(), tx.amountNano(),
+                record.getAmountNano(), confirmedBlocks,
                 fromAddr, toAddr);
 
         publishOutboxEvent(record,
