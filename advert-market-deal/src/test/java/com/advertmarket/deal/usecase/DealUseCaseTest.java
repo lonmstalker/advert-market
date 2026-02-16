@@ -14,6 +14,7 @@ import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.service.DealService;
 import com.advertmarket.deal.web.DealTransitionRequest;
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.shared.exception.DomainException;
@@ -94,7 +95,7 @@ class DealUseCaseTest {
         when(dealAuthorizationPort.getChannelId(any())).thenReturn(CHANNEL_ID);
         when(dealAuthorizationPort.isAdvertiser(any())).thenReturn(false);
         when(channelAuthorizationPort.isOwner(CHANNEL_ID)).thenReturn(false);
-        when(channelAuthorizationPort.hasRight(CHANNEL_ID, "moderate"))
+        when(channelAuthorizationPort.hasRight(CHANNEL_ID, ChannelRight.MODERATE))
                 .thenReturn(true);
         when(dealService.transition(any())).thenReturn(
                 new DealTransitionResult.Success(DealStatus.CANCELLED));
@@ -119,7 +120,7 @@ class DealUseCaseTest {
         when(dealAuthorizationPort.getChannelId(any())).thenReturn(CHANNEL_ID);
         when(dealAuthorizationPort.isAdvertiser(any())).thenReturn(false);
         when(channelAuthorizationPort.isOwner(CHANNEL_ID)).thenReturn(false);
-        when(channelAuthorizationPort.hasRight(CHANNEL_ID, "moderate"))
+        when(channelAuthorizationPort.hasRight(CHANNEL_ID, ChannelRight.MODERATE))
                 .thenReturn(false);
 
         assertThatThrownBy(() -> useCase.transition(

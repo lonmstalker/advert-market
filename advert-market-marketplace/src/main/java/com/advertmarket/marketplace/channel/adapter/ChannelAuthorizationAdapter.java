@@ -3,6 +3,7 @@ package com.advertmarket.marketplace.channel.adapter;
 import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 
 import com.advertmarket.marketplace.api.model.ChannelMembershipRole;
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.shared.security.SecurityContextUtil;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +34,9 @@ public class ChannelAuthorizationAdapter implements ChannelAuthorizationPort {
     }
 
     @Override
-    public boolean hasRight(long channelId, @NonNull String right) {
+    public boolean hasRight(long channelId, @NonNull ChannelRight right) {
         long userId = SecurityContextUtil.currentUserId().value();
+        String jsonKey = right.name().toLowerCase();
         return dsl.fetchExists(
                 dsl.selectOne()
                         .from(CHANNEL_MEMBERSHIPS)
@@ -47,7 +49,7 @@ public class ChannelAuthorizationAdapter implements ChannelAuthorizationPort {
                                         .and(DSL.field(
                                                 "rights->>{0}",
                                                 String.class,
-                                                DSL.val(right))
+                                                DSL.val(jsonKey))
                                                 .eq("true")))));
     }
 }

@@ -1,5 +1,6 @@
 package com.advertmarket.marketplace.api.port;
 
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -14,5 +15,5 @@ public interface ChannelAuthorizationPort {
     boolean isOwner(long channelId);
 
     /** Returns {@code true} if the current user has the specified right on the channel. */
-    boolean hasRight(long channelId, @NonNull String right);
+    boolean hasRight(long channelId, @NonNull ChannelRight right);
 }

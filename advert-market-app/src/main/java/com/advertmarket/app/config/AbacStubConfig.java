@@ -1,6 +1,7 @@
 package com.advertmarket.app.config;
 
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.shared.model.DealId;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -54,7 +55,7 @@ public class AbacStubConfig {
 
             @Override
             public boolean hasRight(long channelId,
-                    @NonNull String right) {
+                    @NonNull ChannelRight right) {
                 return false;
             }
         };

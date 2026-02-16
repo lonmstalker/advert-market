@@ -154,7 +154,7 @@ public class TeamService {
     }
 
     private void requireRight(long channelId, ChannelRight right) {
-        if (!authorizationPort.hasRight(channelId, right.name().toLowerCase())) {
+        if (!authorizationPort.hasRight(channelId, right)) {
             throw new DomainException(
                     ErrorCodes.CHANNEL_NOT_OWNED,
                     "Insufficient rights on channel: " + channelId);

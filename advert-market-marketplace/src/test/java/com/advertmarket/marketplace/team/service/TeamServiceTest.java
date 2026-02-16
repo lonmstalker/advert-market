@@ -83,7 +83,7 @@ class TeamServiceTest {
         @Test
         @DisplayName("Should list members when user has manage_team right")
         void shouldListMembers() {
-            when(authorizationPort.hasRight(CHANNEL_ID, "manage_team"))
+            when(authorizationPort.hasRight(CHANNEL_ID, ChannelRight.MANAGE_TEAM))
                     .thenReturn(true);
             when(teamRepository.findByChannelId(CHANNEL_ID))
                     .thenReturn(List.of(ownerMember(), managerMember()));
@@ -96,7 +96,7 @@ class TeamServiceTest {
         @Test
         @DisplayName("Should throw when user lacks manage_team right")
         void shouldThrowWhenNoRight() {
-            when(authorizationPort.hasRight(CHANNEL_ID, "manage_team"))
+            when(authorizationPort.hasRight(CHANNEL_ID, ChannelRight.MANAGE_TEAM))
                     .thenReturn(false);
 
             assertThatThrownBy(

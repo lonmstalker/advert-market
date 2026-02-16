@@ -8,6 +8,7 @@ import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.service.DealService;
+import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.deal.web.CreateDealRequest;
@@ -113,7 +114,7 @@ public class DealUseCase {
         if (channelAuthorizationPort.isOwner(channelId)) {
             return ActorType.CHANNEL_OWNER;
         }
-        if (channelAuthorizationPort.hasRight(channelId, "moderate")) {
+        if (channelAuthorizationPort.hasRight(channelId, ChannelRight.MODERATE)) {
             return ActorType.CHANNEL_ADMIN;
         }
         throw new DomainException(ErrorCodes.DEAL_NOT_PARTICIPANT,
