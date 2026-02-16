@@ -13,7 +13,7 @@ export function ProfileHero({ displayName, username, roleBadge, memberSince, ava
   return (
     <AppSurfaceCard className="am-profile-hero">
       <div className="flex flex-col items-center pt-6 px-4 pb-4 gap-2">
-        <div className="am-profile-avatar-ring p-[3px]" style={{ background: 'var(--color-accent-primary)' }}>
+        <div className="am-profile-avatar-ring p-[3px] bg-accent">
           <div className="w-full h-full rounded-full overflow-hidden border-[3px] border-bg-base flex-center">
             {avatarUrl ? (
               <Image

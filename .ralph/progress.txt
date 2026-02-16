@@ -1,6 +1,6 @@
 # Ralph Progress: frontend-visual-overhaul
 
-## Status: 5/11 IN PROGRESS
+## Status: 6/11 IN PROGRESS
 
 ## Stories
 - US-001 ✅ CSS variable fallbacks (CRITICAL blocker)
@@ -8,7 +8,7 @@
 - US-003 ✅ Deal list card readability — badges, spacing, Tailwind
 - US-004 ✅ Deal detail page — inline styles → Tailwind, timeline glow CSS class
 - US-005 ✅ Wallet page — transactions + group list Tailwind, action icons 24px
-- US-006 ⏳ Profile page
+- US-006 ✅ Profile page — avatar ring bg-accent, verified dark/light
 - US-007 ⏳ Onboarding flow
 - US-008 ⏳ Channel detail page
 - US-009 ⏳ Glass blur / pressScale / haptic audit
