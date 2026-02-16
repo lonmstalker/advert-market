@@ -76,14 +76,8 @@ export function MiniTimeline({ steps, onActiveClick, expandedIndex, onStepClick 
               ) : isActive ? (
                 <motion.div
                   aria-hidden="true"
-                  animate={{
-                    boxShadow: [
-                      '0 0 0 0px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
-                      '0 0 0 4px color-mix(in srgb, var(--color-accent-primary) 0%, transparent)',
-                      '0 0 0 0px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
-                    ],
-                  }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                  animate={{ opacity: [1, 0.72, 1], scale: [1, 0.96, 1] }}
+                  transition={{ duration: 1.2, repeat: 2, ease: 'easeInOut' }}
                   style={{
                     width: '16px',
                     height: '16px',

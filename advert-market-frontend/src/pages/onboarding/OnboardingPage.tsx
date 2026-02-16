@@ -1,12 +1,14 @@
 import { Button, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { FeatureCard } from '@/features/onboarding/components/feature-card';
 import { OnboardingLogo } from '@/features/onboarding/components/onboarding-logo';
 import { OnboardingSettingsSheet } from '@/features/onboarding/components/onboarding-settings-sheet';
+import { OnboardingShell } from '@/features/onboarding/components/onboarding-shell';
 import { useHaptic } from '@/shared/hooks';
+import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
 import { DocumentIcon, pressScale, SearchIcon, staggerChildren, Tappable, WalletIcon } from '@/shared/ui';
 import { GlobeIcon } from '@/shared/ui/icons';
 
@@ -16,51 +18,75 @@ export default function OnboardingPage() {
   const haptic = useHaptic();
   const [showSettings, setShowSettings] = useState(false);
 
+  useEffect(() => {
+    trackOnboardingEvent('onboarding_view', { step: 'welcome' });
+  }, []);
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 'calc(var(--am-viewport-stable-height) - var(--am-onboarding-top-chrome-height, 40px))',
-        padding: '0 24px',
-        position: 'relative',
-        overflow: 'hidden',
+    <OnboardingShell
+      centerContent
+      topAction={
+        <Tappable
+          onClick={() => setShowSettings(true)}
+          style={{
+            width: 44,
+            height: 44,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 12,
+            border: 'none',
+            background: 'transparent',
+            color: 'var(--color-foreground-secondary)',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          aria-label={t('profile.language')}
+        >
+          <GlobeIcon size={20} />
+        </Tappable>
+      }
+      footer={
+        <>
+          <motion.div {...pressScale}>
+            <Button
+              text={t('onboarding.welcome.start')}
+              type="primary"
+              onClick={() => {
+                trackOnboardingEvent('onboarding_primary_click', { step: 'welcome' });
+                haptic.impactOccurred('light');
+                navigate('/onboarding/interest');
+              }}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            style={{ textAlign: 'center', marginTop: '12px' }}
+          >
+            <Text type="caption1" color="secondary">
+              {t('onboarding.welcome.timeHint')}
+            </Text>
+          </motion.div>
+        </>
+      }
+      contentStyle={{
+        textAlign: 'center',
+        gap: '12px',
       }}
     >
-      <Tappable
-        onClick={() => setShowSettings(true)}
-        style={{
-          position: 'absolute',
-          top: 8,
-          right: 0,
-          width: 40,
-          height: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: 10,
-          border: 'none',
-          background: 'transparent',
-          color: 'var(--color-foreground-secondary)',
-          cursor: 'pointer',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-        aria-label={t('profile.settings')}
-      >
-        <GlobeIcon size={20} />
-      </Tappable>
-
       <div
         style={{
-          flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          textAlign: 'center',
           gap: '12px',
           minHeight: 0,
           overflowY: 'auto',
+          paddingBottom: 8,
+          overflowX: 'hidden',
         }}
       >
         <OnboardingLogo />
@@ -79,7 +105,7 @@ export default function OnboardingPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.25 }}
-          style={{ maxWidth: '280px' }}
+          style={{ maxWidth: '320px' }}
         >
           <Text type="body" color="secondary" align="center">
             {t('onboarding.welcome.subtitle')}
@@ -119,30 +145,7 @@ export default function OnboardingPage() {
         </motion.div>
       </div>
 
-      <div style={{ flexShrink: 0, paddingBottom: 'calc(16px + var(--am-safe-area-bottom))', paddingTop: '12px' }}>
-        <motion.div {...pressScale}>
-          <Button
-            text={t('onboarding.welcome.start')}
-            type="primary"
-            onClick={() => {
-              haptic.impactOccurred('light');
-              navigate('/onboarding/interest');
-            }}
-          />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          style={{ textAlign: 'center', marginTop: '12px' }}
-        >
-          <Text type="caption1" color="secondary">
-            {t('onboarding.welcome.timeHint')}
-          </Text>
-        </motion.div>
-      </div>
-
       <OnboardingSettingsSheet open={showSettings} onClose={() => setShowSettings(false)} />
-    </div>
+    </OnboardingShell>
   );
 }

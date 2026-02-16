@@ -36,6 +36,9 @@ body {
 
   /* Onboarding top chrome: StepIndicator (40px) + safe top inset. */
   --am-onboarding-top-chrome-height: calc(40px + var(--am-safe-area-top));
+  --am-onboarding-max-width: 640px;
+  --am-onboarding-page-padding: 16px;
+  --am-onboarding-footer-padding-bottom: 16px;
 
   /* Fixed bottom bar layout contract (see DESIGN_GUIDELINES.md). */
   --am-fixed-bottom-bar-base: 92px;
@@ -132,5 +135,11 @@ body {
   }
   .creative-editor-mobile {
     display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  :root {
+    --am-onboarding-page-padding: 24px;
   }
 }

@@ -51,6 +51,23 @@ Prevents UI Kit Button `flex-grow: 1` from stretching in flex containers:
 
 **Critical:** Never place `<Button>` directly in a flex column with `minHeight: 100vh` — its `flex-grow: 1` will stretch it to fill remaining space.
 
+### Onboarding Shell (sticky CTA + safe area)
+
+`OnboardingShell` is the canonical wrapper for all onboarding screens:
+
+- Top action row (language / skip)
+- Flexible content area
+- Sticky footer with primary action
+
+Layout contract:
+
+- `maxWidth: var(--am-onboarding-max-width)`
+- Horizontal padding via `var(--am-onboarding-page-padding)`
+- Footer bottom spacing via `calc(var(--am-onboarding-footer-padding-bottom) + var(--am-safe-area-bottom))`
+- Height tied to stable Telegram viewport token (`--am-viewport-stable-height`)
+
+This keeps CTA placement consistent across mobile and desktop and prevents iOS home-indicator overlap.
+
 ### Icon Container (onboarding, feature highlights)
 
 Emoji in a rounded-square container instead of bare emoji:
@@ -80,8 +97,9 @@ State-driven slides instead of scroll-snap:
 - `AnimatePresence mode="wait"` with x-axis slide variants (enter: x:40, exit: x:-40)
 - Pill-dot indicator: active dot `width: 24px`, inactive `8px` — Motion `animate={{ width }}`
 - Dot color via CSS `transition` (not Motion `animate`) to avoid jsdom warnings
-- Navigation: "Next" (primary button) + "Skip" (text link, `subheadline1 secondary`)
-- Last slide: button text changes, Skip disappears
+- Navigation: "Next/Finish" (primary button) + always-visible "Skip tutorial" in header
+- Last slide: primary button text is role-aware (owner vs advertiser/both)
+- Tour is soft-gated: Next is always available; completion status is shown as hint text
 
 ### Text Alignment
 

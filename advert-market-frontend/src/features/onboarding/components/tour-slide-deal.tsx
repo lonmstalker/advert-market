@@ -3,6 +3,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
+import type { OnboardingPrimaryRole } from '@/features/onboarding/store/onboarding-store';
+import { useHaptic } from '@/shared/hooks';
+import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
 import type { InlineButton, MediaItem, TextEntity } from '@/shared/types/text-entity';
 import { TelegramPostPreview } from '@/shared/ui';
 import { NewspaperIcon } from '@/shared/ui/icons';
@@ -15,12 +18,18 @@ import { TaskHint } from './task-hint';
 type DealView = 'timeline' | 'allStates';
 type DealState = 'initial' | 'approved';
 
-export function TourSlideDeal() {
+type TourSlideDealProps = {
+  primaryRole: OnboardingPrimaryRole;
+};
+
+export function TourSlideDeal({ primaryRole }: TourSlideDealProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const [dealView, setDealView] = useState<DealView>('timeline');
   const [dealState, setDealState] = useState<DealState>('initial');
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
-  const { completeTourTask } = useOnboardingStore();
+  const { completeTourTask, getTaskState } = useOnboardingStore();
+  const isOwnerPrimary = primaryRole === 'owner';
 
   const creativePreview = useMemo(() => {
     const text = t('onboarding.tour.slide2.previewText');
@@ -167,9 +176,14 @@ export function TourSlideDeal() {
   );
 
   function handleApprove() {
+    const alreadyCompleted = getTaskState(1) === 'completed';
+    haptic.selectionChanged();
     setDealState('approved');
     setExpandedStep(2);
     completeTourTask(1);
+    if (!alreadyCompleted) {
+      trackOnboardingEvent('tour_task_complete', { task: 'approve_creative' });
+    }
   }
 
   function handleStepClick(index: number) {
@@ -179,10 +193,10 @@ export function TourSlideDeal() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <Text type="title2" weight="bold" align="center">
-        {t('onboarding.tour.slide2.title')}
+        {isOwnerPrimary ? t('onboarding.tour.slide2.titleOwner') : t('onboarding.tour.slide2.titleAdvertiser')}
       </Text>
       <Text type="caption1" color="secondary" align="center">
-        {t('onboarding.tour.slide2.hint')}
+        {isOwnerPrimary ? t('onboarding.tour.slide2.hintOwner') : t('onboarding.tour.slide2.hintAdvertiser')}
       </Text>
 
       <MockupContainer>
@@ -228,42 +242,52 @@ export function TourSlideDeal() {
                 />
               </div>
 
-              <div style={{ marginTop: 16 }}>
+              <div
+                style={{
+                  position: 'sticky',
+                  bottom: -16,
+                  backgroundColor: 'var(--color-background-secondary)',
+                  paddingTop: 10,
+                  paddingBottom: 8,
+                  marginTop: 14,
+                  borderTop: '1px solid var(--color-border-separator)',
+                }}
+              >
                 <Button
                   text={t('onboarding.tour.mockup.approve')}
                   type="primary"
                   disabled={dealState === 'approved'}
                   onClick={dealState === 'initial' ? handleApprove : undefined}
                 />
-              </div>
 
-              <AnimatePresence>
+                <AnimatePresence>
+                  {dealState === 'approved' && (
+                    <motion.div
+                      role="status"
+                      aria-live="polite"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{ textAlign: 'center', marginTop: '8px' }}
+                    >
+                      <Text type="caption1" color="accent">
+                        {t('onboarding.tour.slide2.taskDone')}
+                      </Text>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {dealState === 'approved' && (
-                  <motion.div
-                    role="status"
-                    aria-live="polite"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ textAlign: 'center', marginTop: '8px' }}
-                  >
-                    <Text type="caption1" color="accent">
-                      {t('onboarding.tour.slide2.taskDone')}
-                    </Text>
-                  </motion.div>
+                  <MockupTextButton
+                    text={t('onboarding.tour.slide2.replay')}
+                    onClick={() => {
+                      setDealState('initial');
+                      setExpandedStep(1);
+                    }}
+                  />
                 )}
-              </AnimatePresence>
-
-              {dealState === 'approved' && (
-                <MockupTextButton
-                  text={t('onboarding.tour.slide2.replay')}
-                  onClick={() => {
-                    setDealState('initial');
-                    setExpandedStep(1);
-                  }}
-                />
-              )}
+              </div>
 
               <MockupTextButton
                 text={t('onboarding.tour.allStates.link')}

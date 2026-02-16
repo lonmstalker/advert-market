@@ -33,6 +33,7 @@ describe('OnboardingTourPage', () => {
         <Route path="/onboarding/tour" element={<OnboardingTourPage />} />
         <Route path="/onboarding/interest" element={<div>interest-page</div>} />
         <Route path="/catalog" element={<div>catalog-page</div>} />
+        <Route path="/profile/channels/new" element={<div>owner-entry-page</div>} />
       </Routes>,
       { initialEntries: ['/onboarding/tour'] },
     );
@@ -49,29 +50,33 @@ describe('OnboardingTourPage', () => {
     expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
   });
 
-  it('Next button is disabled until task is completed', () => {
+  it('Next button is enabled even when task is not completed (soft-gated)', () => {
     renderPage();
-    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
   });
 
-  it('Next button becomes enabled after completing slide task', async () => {
+  it('shows recommended task status when task is not completed', () => {
+    renderPage();
+    expect(screen.getByText('Recommended: complete the action in this slide')).toBeInTheDocument();
+  });
+
+  it('shows completed task status after completing slide task', async () => {
     renderPage();
     completeTask(0);
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+      expect(screen.getByText('Done: you can continue or explore more')).toBeInTheDocument();
     });
   });
 
-  it('advances to second slide on Next click after task', async () => {
+  it('advances to second slide on Next click without task completion', async () => {
     const { user } = renderPage();
-    completeTask(0);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => {
       expect(screen.getByText('Secure Deals')).toBeInTheDocument();
     });
   });
 
-  it('shows Get Started button on last slide', async () => {
+  it('shows role-aware finish button on last slide', async () => {
     const { user } = renderPage();
     completeTask(0);
     await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -79,13 +84,34 @@ describe('OnboardingTourPage', () => {
     completeTask(1);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Get Started' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Open catalog' })).toBeInTheDocument();
     });
   });
 
-  it('does not show Skip link', () => {
+  it('shows Skip link in tour header', () => {
     renderPage();
-    expect(screen.queryByText('Skip tutorial')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Skip tutorial' })).toBeInTheDocument();
+  });
+
+  it('opens skip confirmation dialog', async () => {
+    const { user } = renderPage();
+    await user.click(screen.getByRole('button', { name: 'Skip tutorial' }));
+    expect(screen.getByText('Skip tutorial?')).toBeInTheDocument();
+  });
+
+  it('redirects owner to owner-first action after completion', async () => {
+    act(() => {
+      useOnboardingStore.getState().reset();
+      useOnboardingStore.getState().toggleInterest('owner');
+      useOnboardingStore.getState().setActiveSlide(2);
+    });
+
+    const { user } = renderPage();
+    await user.click(screen.getByRole('button', { name: 'Add channel' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('owner-entry-page')).toBeInTheDocument();
+    });
   });
 
   it('redirects to /onboarding/interest when interests are empty', () => {
@@ -94,11 +120,6 @@ describe('OnboardingTourPage', () => {
     });
     renderPage();
     expect(screen.getByText('interest-page')).toBeInTheDocument();
-  });
-
-  it('shows task required hint when task not completed', () => {
-    renderPage();
-    expect(screen.getByText('Complete the task to continue')).toBeInTheDocument();
   });
 
   it('renders pagination dots with ARIA tablist role', () => {

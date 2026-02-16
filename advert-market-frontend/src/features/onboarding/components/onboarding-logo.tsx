@@ -1,7 +1,9 @@
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { MegaphoneIcon } from '@/shared/ui';
 
 export function OnboardingLogo() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
@@ -19,14 +21,17 @@ export function OnboardingLogo() {
         marginBottom: '16px',
       }}
     >
-      <div
+      <motion.div
+        aria-hidden="true"
+        initial={false}
+        animate={shouldReduceMotion ? undefined : { rotate: [0, 360] }}
+        transition={shouldReduceMotion ? undefined : { duration: 6, ease: 'linear', repeat: 2 }}
         style={{
           position: 'absolute',
           inset: '-4px',
           borderRadius: '36px',
           border: '1px solid var(--color-accent-primary)',
           opacity: 0.4,
-          animation: 'logo-ring-rotate 8s linear infinite',
           backgroundImage:
             'conic-gradient(from 0deg, var(--color-accent-primary) 0%, transparent 30%, transparent 70%, var(--color-accent-primary) 100%)',
           mask: 'linear-gradient(var(--color-static-white) 0 0) content-box, linear-gradient(var(--color-static-white) 0 0)',
@@ -38,9 +43,6 @@ export function OnboardingLogo() {
         }}
       />
       <MegaphoneIcon width={56} height={56} style={{ color: 'var(--color-accent-primary)' }} />
-      <style>
-        {`@keyframes logo-ring-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
-      </style>
     </motion.div>
   );
 }

@@ -27,6 +27,7 @@ vi.mock('motion/react', () => {
   return {
     motion: motionProxy,
     AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+    useReducedMotion: () => false,
   };
 });
 
@@ -40,7 +41,7 @@ describe('TourSlideDeal', () => {
   });
 
   it('renders timeline with 3 macro steps', () => {
-    renderWithProviders(<TourSlideDeal />);
+    renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     expect(screen.getByText('Offer & Negotiation')).toBeInTheDocument();
     expect(screen.getByText('Payment & Creative')).toBeInTheDocument();
@@ -48,13 +49,13 @@ describe('TourSlideDeal', () => {
   });
 
   it('shows Approve button', () => {
-    renderWithProviders(<TourSlideDeal />);
+    renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
   });
 
   it('calls completeTourTask(1) on approve click', async () => {
-    const { user } = renderWithProviders(<TourSlideDeal />);
+    const { user } = renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     await user.click(screen.getByRole('button', { name: 'Approve' }));
 
@@ -64,7 +65,7 @@ describe('TourSlideDeal', () => {
   });
 
   it('shows task done message after approve', async () => {
-    const { user } = renderWithProviders(<TourSlideDeal />);
+    const { user } = renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     await user.click(screen.getByRole('button', { name: 'Approve' }));
 
@@ -76,7 +77,7 @@ describe('TourSlideDeal', () => {
   it('does not auto-reset approved state after a delay', async () => {
     vi.useFakeTimers();
     try {
-      renderWithProviders(<TourSlideDeal />);
+      renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
       fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
 
@@ -94,7 +95,7 @@ describe('TourSlideDeal', () => {
   });
 
   it('switches to allStates view', async () => {
-    const { user } = renderWithProviders(<TourSlideDeal />);
+    const { user } = renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     await user.click(screen.getByText('All 17 states →'));
 
@@ -104,7 +105,7 @@ describe('TourSlideDeal', () => {
   });
 
   it('shows all 4 groups in allStates view', async () => {
-    const { user } = renderWithProviders(<TourSlideDeal />);
+    const { user } = renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     await user.click(screen.getByText('All 17 states →'));
 
@@ -117,7 +118,7 @@ describe('TourSlideDeal', () => {
   });
 
   it('navigates back from allStates to timeline', async () => {
-    const { user } = renderWithProviders(<TourSlideDeal />);
+    const { user } = renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     await user.click(screen.getByText('All 17 states →'));
     await waitFor(() => {
@@ -132,7 +133,7 @@ describe('TourSlideDeal', () => {
   });
 
   it('hides TaskHint after approve', async () => {
-    const { user } = renderWithProviders(<TourSlideDeal />);
+    const { user } = renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     await user.click(screen.getByRole('button', { name: 'Approve' }));
 
@@ -142,7 +143,7 @@ describe('TourSlideDeal', () => {
   });
 
   it('hides TaskHint in allStates view', async () => {
-    const { user } = renderWithProviders(<TourSlideDeal />);
+    const { user } = renderWithProviders(<TourSlideDeal primaryRole="advertiser" />);
 
     await user.click(screen.getByText('All 17 states →'));
 

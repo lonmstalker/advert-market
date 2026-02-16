@@ -12,7 +12,7 @@ describe('TourSlideCatalog', () => {
   });
 
   it('renders channel list initially', () => {
-    renderWithProviders(<TourSlideCatalog />);
+    renderWithProviders(<TourSlideCatalog primaryRole="advertiser" />);
 
     expect(screen.getByText('Crypto News Daily')).toBeInTheDocument();
     expect(screen.getByText('Tech Digest')).toBeInTheDocument();
@@ -20,7 +20,7 @@ describe('TourSlideCatalog', () => {
   });
 
   it('shows channel detail on channel click', async () => {
-    const { user } = renderWithProviders(<TourSlideCatalog />);
+    const { user } = renderWithProviders(<TourSlideCatalog primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Crypto News Daily'));
 
@@ -30,7 +30,7 @@ describe('TourSlideCatalog', () => {
   });
 
   it('calls completeTourTask(0) on channel click', async () => {
-    const { user } = renderWithProviders(<TourSlideCatalog />);
+    const { user } = renderWithProviders(<TourSlideCatalog primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Crypto News Daily'));
 
@@ -40,7 +40,7 @@ describe('TourSlideCatalog', () => {
   });
 
   it('shows task done message in detail view', async () => {
-    const { user } = renderWithProviders(<TourSlideCatalog />);
+    const { user } = renderWithProviders(<TourSlideCatalog primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Crypto News Daily'));
 
@@ -50,7 +50,7 @@ describe('TourSlideCatalog', () => {
   });
 
   it('navigates back to list on back click', async () => {
-    const { user } = renderWithProviders(<TourSlideCatalog />);
+    const { user } = renderWithProviders(<TourSlideCatalog primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Crypto News Daily'));
     await waitFor(() => {
@@ -65,7 +65,7 @@ describe('TourSlideCatalog', () => {
   });
 
   it('hides TaskHint in detail view', async () => {
-    const { user } = renderWithProviders(<TourSlideCatalog />);
+    const { user } = renderWithProviders(<TourSlideCatalog primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Crypto News Daily'));
 
@@ -75,7 +75,7 @@ describe('TourSlideCatalog', () => {
   });
 
   it('shows TaskHint in list view', () => {
-    renderWithProviders(<TourSlideCatalog />);
+    renderWithProviders(<TourSlideCatalog primaryRole="advertiser" />);
 
     expect(screen.getByText(/Tap on 'Crypto News Daily'/)).toBeInTheDocument();
   });

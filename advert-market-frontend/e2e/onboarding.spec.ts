@@ -29,25 +29,23 @@ test.describe('Onboarding Flow', () => {
     // Step 3: Tour slide 1 — Catalog
     await expect(page.getByText('Find Channels')).toBeVisible();
     const nextBtn = page.getByRole('button', { name: 'Next' });
-    await expect(nextBtn).toBeDisabled();
+    await expect(nextBtn).toBeEnabled();
 
     await page.getByText('Crypto News Daily', { exact: true }).click();
     await expect(page.getByText('Post Price')).toBeVisible({ timeout: 10_000 });
-    await expect(nextBtn).toBeEnabled();
     await nextBtn.click();
 
     // Step 3: Tour slide 2 — Deal
     await expect(page.getByText('Secure Deals')).toBeVisible();
-    await expect(nextBtn).toBeDisabled();
+    await expect(nextBtn).toBeEnabled();
 
     await page.getByRole('button', { name: 'Approve' }).click();
     await expect(page.getByText(/Creative approved/)).toBeVisible({ timeout: 10_000 });
-    await expect(nextBtn).toBeEnabled();
     await nextBtn.click();
 
     // Step 3: Tour slide 3 — Wallet
     await expect(page.getByText('Secure Payments')).toBeVisible();
-    const finishBtn = page.getByRole('button', { name: 'Get Started' });
+    const finishBtn = page.getByRole('button', { name: 'Open catalog' });
     await expect(finishBtn).toBeVisible();
 
     await page.getByText('Escrow', { exact: true }).click();
@@ -57,6 +55,21 @@ test.describe('Onboarding Flow', () => {
 
     // Should redirect to catalog
     await page.waitForURL('**/catalog');
+  });
+
+  test('completes onboarding as owner and lands on add channel flow', async ({ page }) => {
+    await page.getByRole('button', { name: 'Get Started' }).click();
+    await page.getByRole('button', { name: /channel owner/i }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByText('Approve and manage deals')).toBeVisible();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByText('Escrow & payout flow')).toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Add channel' })).toBeVisible();
+    await page.getByRole('button', { name: 'Add channel' }).click();
+    await page.waitForURL('**/profile/channels/new');
   });
 
   test('selects both roles and sees hint', async ({ page }) => {
@@ -101,7 +114,7 @@ test.describe('Onboarding Flow', () => {
 
   test('settings sheet opens from welcome screen', async ({ page }) => {
     // Globe button should be visible
-    const settingsBtn = page.getByRole('button', { name: /settings/i });
+    const settingsBtn = page.getByRole('button', { name: /language/i });
     await expect(settingsBtn).toBeVisible();
 
     await settingsBtn.click();

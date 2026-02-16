@@ -4,6 +4,9 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
+import type { OnboardingPrimaryRole } from '@/features/onboarding/store/onboarding-store';
+import { useHaptic } from '@/shared/hooks';
+import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
 import { CheckCircleIcon, CoinIcon, LockIcon, NewspaperIcon } from '@/shared/ui/icons';
 import { ChannelHeader } from './channel-header';
 import { MockupContainer } from './mockup-container';
@@ -73,23 +76,34 @@ function EscrowFlowStep({
 
 const flowIconStyle = { width: 16, height: 16, color: 'var(--color-foreground-secondary)' };
 
-export function TourSlideWallet() {
+type TourSlideWalletProps = {
+  primaryRole: OnboardingPrimaryRole;
+};
+
+export function TourSlideWallet({ primaryRole }: TourSlideWalletProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const [view, setView] = useState<WalletView>('details');
-  const { completeTourTask } = useOnboardingStore();
+  const { completeTourTask, getTaskState } = useOnboardingStore();
+  const isOwnerPrimary = primaryRole === 'owner';
 
   function handleEscrowClick() {
+    const alreadyCompleted = getTaskState(2) === 'completed';
+    haptic.selectionChanged();
     setView('flow');
     completeTourTask(2);
+    if (!alreadyCompleted) {
+      trackOnboardingEvent('tour_task_complete', { task: 'open_escrow' });
+    }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <Text type="title2" weight="bold" align="center">
-        {t('onboarding.tour.slide3.title')}
+        {isOwnerPrimary ? t('onboarding.tour.slide3.titleOwner') : t('onboarding.tour.slide3.titleAdvertiser')}
       </Text>
       <Text type="caption1" color="secondary" align="center">
-        {t('onboarding.tour.slide3.hint')}
+        {isOwnerPrimary ? t('onboarding.tour.slide3.hintOwner') : t('onboarding.tour.slide3.hintAdvertiser')}
       </Text>
 
       <MockupContainer>

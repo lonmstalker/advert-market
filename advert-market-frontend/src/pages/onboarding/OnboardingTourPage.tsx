@@ -1,17 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, Text } from '@telegram-tools/ui-kit';
+import { Button, DialogModal, Text } from '@telegram-tools/ui-kit';
 import { easeOut } from 'motion';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { completeOnboarding } from '@/features/auth';
-import { useOnboardingStore } from '@/features/onboarding';
+import { OnboardingShell } from '@/features/onboarding/components/onboarding-shell';
 import { TourSlideCatalog } from '@/features/onboarding/components/tour-slide-catalog';
 import { TourSlideDeal } from '@/features/onboarding/components/tour-slide-deal';
 import { TourSlideWallet } from '@/features/onboarding/components/tour-slide-wallet';
+import { resolveOnboardingRoute, useOnboardingStore } from '@/features/onboarding/store/onboarding-store';
 import { profileKeys } from '@/shared/api';
-import { pressScale } from '@/shared/ui';
+import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
+import { pressScale, Tappable } from '@/shared/ui';
 
 const SLIDE_COUNT = 3;
 
@@ -22,16 +24,18 @@ const slideVariants = {
 };
 
 const slideComponents = [TourSlideCatalog, TourSlideDeal, TourSlideWallet];
+const slideToStepMap = ['tour-1', 'tour-2', 'tour-3'] as const;
 
 export default function OnboardingTourPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { interests, tourTasksCompleted, reset } = useOnboardingStore();
-  const [activeSlide, setActiveSlide] = useState(0);
+  const { interests, activeSlide, setActiveSlide, getTaskState, getPrimaryRole, reset } = useOnboardingStore();
   const [showError, setShowError] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const isAnimating = useRef(false);
   const hasCompleted = useRef(false);
+  const primaryRole = getPrimaryRole();
 
   useEffect(() => {
     if (interests.size === 0 && !hasCompleted.current) {
@@ -39,12 +43,23 @@ export default function OnboardingTourPage() {
     }
   }, [interests.size, navigate]);
 
+  useEffect(() => {
+    const step = slideToStepMap[activeSlide] ?? 'tour-1';
+    trackOnboardingEvent('onboarding_view', { step });
+  }, [activeSlide]);
+
+  function completeAndNavigate() {
+    setShowError(false);
+    mutation.mutate();
+  }
+
   const mutation = useMutation({
     mutationFn: () => completeOnboarding([...interests]),
     onSuccess: (updatedProfile) => {
       hasCompleted.current = true;
       queryClient.setQueryData(profileKeys.me, updatedProfile);
-      navigate('/catalog', { replace: true });
+      trackOnboardingEvent('onboarding_complete', { role: primaryRole, variant: 'direct_replace' });
+      navigate(resolveOnboardingRoute(primaryRole), { replace: true });
       reset();
     },
     onError: () => {
@@ -53,17 +68,21 @@ export default function OnboardingTourPage() {
   });
 
   const isLastSlide = activeSlide === SLIDE_COUNT - 1;
-  const taskDone = tourTasksCompleted.has(activeSlide);
+  const taskState = getTaskState(activeSlide);
+  const taskDone = taskState === 'completed';
+  const finishText = primaryRole === 'owner' ? t('onboarding.tour.finishOwner') : t('onboarding.tour.finishAdvertiser');
 
   function handleNext() {
     if (isAnimating.current || mutation.isPending) return;
 
+    const step = slideToStepMap[activeSlide] ?? 'tour-1';
+    trackOnboardingEvent('onboarding_primary_click', { step });
+
     if (isLastSlide) {
-      setShowError(false);
-      mutation.mutate();
+      completeAndNavigate();
     } else {
       isAnimating.current = true;
-      setActiveSlide((prev) => prev + 1);
+      setActiveSlide(activeSlide + 1);
     }
   }
 
@@ -77,24 +96,62 @@ export default function OnboardingTourPage() {
   if (!SlideComponent) return null;
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 'calc(var(--am-viewport-stable-height) - var(--am-onboarding-top-chrome-height, 40px))',
-        padding: '0 16px',
-      }}
-    >
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
+    <>
+      <OnboardingShell
+        topAction={
+          <Tappable
+            onClick={() => setShowSkipConfirm(true)}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--color-foreground-secondary)',
+              minHeight: 36,
+              minWidth: 44,
+              padding: '8px 0',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            aria-label={t('onboarding.tour.skip')}
+          >
+            <Text type="subheadline2" color="secondary">
+              {t('onboarding.tour.skip')}
+            </Text>
+          </Tappable>
+        }
+        contentStyle={{
           justifyContent: 'center',
           position: 'relative',
           overflow: 'hidden',
-          padding: '8px 0',
+          paddingTop: 8,
         }}
+        footer={
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <motion.div {...pressScale}>
+              <Button
+                text={isLastSlide ? finishText : t('onboarding.tour.next')}
+                type="primary"
+                loading={mutation.isPending}
+                onClick={handleNext}
+              />
+            </motion.div>
+
+            {!isLastSlide && (
+              <output aria-live="polite" style={{ textAlign: 'center', display: 'block' }}>
+                <Text type="caption1" color={taskDone ? 'accent' : 'secondary'}>
+                  {taskDone ? t('onboarding.tour.taskStatus.completed') : t('onboarding.tour.taskStatus.recommended')}
+                </Text>
+              </output>
+            )}
+
+            {showError && (
+              <div role="alert" style={{ textAlign: 'center' }}>
+                <Text type="caption1" color="danger">
+                  {t('onboarding.tour.error')}
+                </Text>
+              </div>
+            )}
+          </div>
+        }
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -106,96 +163,57 @@ export default function OnboardingTourPage() {
             transition={{ duration: 0.25, ease: easeOut }}
             onAnimationComplete={handleAnimationComplete}
           >
-            <SlideComponent />
+            <SlideComponent primaryRole={primaryRole} />
           </motion.div>
         </AnimatePresence>
-      </div>
 
-      <div
-        role="tablist"
-        aria-label={t('onboarding.tour.next')}
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '6px',
-          paddingBottom: '16px',
+        <div
+          role="tablist"
+          aria-label={t('onboarding.tour.next')}
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '6px',
+            paddingTop: 12,
+            paddingBottom: 4,
+          }}
+        >
+          {(['catalog', 'deal', 'wallet'] as const).map((key, i) => {
+            const isActive = i === activeSlide;
+            return (
+              <motion.div
+                key={key}
+                role="tab"
+                aria-selected={isActive}
+                aria-label={`${i + 1} / ${SLIDE_COUNT}`}
+                animate={{ width: isActive ? 24 : 8 }}
+                transition={{ duration: 0.25, ease: easeOut }}
+                style={{
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: isActive ? 'var(--color-accent-primary)' : 'var(--color-border-separator)',
+                  transition: 'background-color 0.25s ease',
+                }}
+              />
+            );
+          })}
+        </div>
+      </OnboardingShell>
+
+      <DialogModal
+        active={showSkipConfirm}
+        title={t('onboarding.tour.skipConfirm.title')}
+        description={t('onboarding.tour.skipConfirm.description')}
+        confirmText={t('onboarding.tour.skip')}
+        closeText={t('common.cancel')}
+        onClose={() => setShowSkipConfirm(false)}
+        onConfirm={() => {
+          setShowSkipConfirm(false);
+          const step = slideToStepMap[activeSlide] ?? 'tour-1';
+          trackOnboardingEvent('onboarding_skip', { step });
+          completeAndNavigate();
         }}
-      >
-        {(['catalog', 'deal', 'wallet'] as const).map((key, i) => {
-          const isActive = i === activeSlide;
-          return (
-            <motion.div
-              key={key}
-              role="tab"
-              aria-selected={isActive}
-              aria-label={`${i + 1} / ${SLIDE_COUNT}`}
-              animate={{ width: isActive ? 24 : 8 }}
-              transition={{ duration: 0.25, ease: easeOut }}
-              style={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: isActive ? 'var(--color-accent-primary)' : 'var(--color-border-separator)',
-                transition: 'background-color 0.25s ease',
-              }}
-            />
-          );
-        })}
-      </div>
-
-      <div
-        style={{
-          flexShrink: 0,
-          paddingBottom: 'calc(16px + var(--am-safe-area-bottom))',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 14,
-        }}
-      >
-        <motion.div {...pressScale}>
-          <Button
-            text={isLastSlide ? t('onboarding.tour.finish') : t('onboarding.tour.next')}
-            type="primary"
-            loading={mutation.isPending}
-            disabled={!isLastSlide && !taskDone}
-            onClick={handleNext}
-          />
-        </motion.div>
-
-        <AnimatePresence>
-          {!isLastSlide && !taskDone && (
-            <motion.div
-              role="status"
-              aria-live="polite"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ textAlign: 'center', overflow: 'hidden' }}
-            >
-              <Text type="caption1" color="secondary">
-                {t('onboarding.tour.taskRequired')}
-              </Text>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showError && (
-            <motion.div
-              role="alert"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ textAlign: 'center', overflow: 'hidden' }}
-            >
-              <Text type="caption1" color="danger">
-                {t('onboarding.tour.error')}
-              </Text>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+      />
+    </>
   );
 }

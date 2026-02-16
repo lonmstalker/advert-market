@@ -1,194 +1,195 @@
 # Onboarding
 
-> 3 screens on first launch. Indicated by the `onboardingCompleted == false` flag from the auth response.
+> Direct-replace onboarding flow for Telegram Mini App.  
+> Current UX contract: **welcome -> interest -> tour (3 slides)** with **soft-gated tasks**, **sticky primary CTA**, **skip confirm**, and **role-aware finish route**.
 
-## Navigation
+## Routes
 
 ```
-/onboarding → /onboarding/interest → /onboarding/tour → redirect
+/onboarding -> /onboarding/interest -> /onboarding/tour -> redirect
 ```
 
----
+Guard entry remains unchanged:
+- Onboarding is shown only when `onboardingCompleted == false`.
+- Completion still calls `PUT /api/v1/profile/onboarding`.
 
-## 1.1 Greetings
+## Step 1 — Welcome
 
-| | |
+| Field | Value |
 |---|---|
-| **Route** | `/onboarding` |
-| **Target** | Get to know the platform when you first launch |
-| **Who sees** | User with `onboardingCompleted == false` |
-| **Data** | No |
+| Route | `/onboarding` |
+| Goal | Explain value in <10s and start onboarding |
+| Primary action | `onboarding.welcome.start` |
+| Secondary action | Language action (settings sheet trigger) |
 
-### UI
+### UX Contract
 
-- Illustration (TON/Telegram style)
-- Header: `t('onboarding.welcome.title')` - "Ad Market"
-- Subtitle: `t('onboarding.welcome.subtitle')` - "Safe advertising in Telegram with TON escrow"
-- Button `t('onboarding.welcome.start')` (`primary`, full-width)
+- Uses shared `OnboardingShell` with unified layout and sticky footer.
+- Language action has 44x44 tap target and explicit `aria-label`.
+- Primary CTA is rendered in sticky footer (not Telegram MainButton).
+- Tracks analytics:
+  - `onboarding_view(step=welcome)`
+  - `onboarding_primary_click(step=welcome)`
 
-### Actions
+## Step 2 — Interest Selection
 
-| Action | Result |
-|----------|-----------|
-| "Start" | → `/onboarding/interest` |
-
-### Components
-
-- `Button` (primary)
-- Static illustration (SVG/Lottie)
-
----
-
-## 1.2 Selecting an interest
-
-| | |
+| Field | Value |
 |---|---|
-| **Route** | `/onboarding/interest` |
-| **Target** | Understand User Scenarios for Personalization |
-| **Who sees** | User with `onboardingCompleted == false` |
-| **Data** | No |
+| Route | `/onboarding/interest` |
+| Goal | Capture user role intent |
+| Role cards | `advertiser`, `owner` |
+| Continue button | Enabled when at least one role selected |
 
-### UI
+### UX Contract
 
-- Title: `t('onboarding.interest.title')` - "What are you interested in?"
-- Two large cards (**toggle**, you can choose one or both):
-  - **`t('onboarding.interest.advertiser')`** - "I want advertising" - subtitle: `t('onboarding.interest.advertiser.description')` - "Find channels and place advertising"
-  - **`t('onboarding.interest.owner')`** - "I own the channel" - subtitle: `t('onboarding.interest.owner.description')` - "Receive orders for advertising"
-- Small text: `t('onboarding.interest.hint')` - "You can choose both options"
-- Button `t('common.continue')` (`primary`, full-width) - active when at least one card is selected
+- Multi-select role cards are preserved.
+- `selectionChanged` haptic is fired on role toggle.
+- `role_selected` analytics fires with resolved role:
+  - `advertiser`, `owner`, `both`.
+- Continue action sets tour slide to `0` and navigates to `/onboarding/tour`.
 
-### Actions
+## Step 3 — Tour (3 slides)
 
-| Action | Result |
-|----------|-----------|
-| Tap on card | Toggle selection (on/off). The card is highlighted when selected |
-| "Continue" | → `/onboarding/tour` |
+| Slide | Task | Completion signal |
+|---|---|---|
+| Catalog | Open channel detail | `taskStatus.completed` |
+| Deal | Tap Approve | `taskStatus.completed` |
+| Wallet | Open escrow info | `taskStatus.completed` |
 
-### State
+### Soft-Gated Behavior (Current)
 
-```typescript
-type OnboardingInterest = 'advertiser' | 'owner' | 'both';
+- Next is always enabled on every slide.
+- Task completion is recommended, not mandatory.
+- Task status line is shown for slides 1-2:
+  - `onboarding.tour.taskStatus.recommended`
+  - `onboarding.tour.taskStatus.completed`
+- Dot progress indicator remains visual-only (no hard gate on dots).
 
-// Local state, sent to the server when onboarding is completed
-const [selected, setSelected] = useState<Set<'advertiser' | 'owner'>>(new Set());
+### Skip / Finish Contract
 
-// Result:
-// selected = {'advertiser'} → 'advertiser'
-// selected = {'owner'} → 'owner'
-// selected = {'advertiser', 'owner'} → 'both'
+- `Skip tutorial` action is always visible in tour header.
+- Skip opens confirmation dialog (`skipConfirm` keys).
+- Skip confirmation and Finish both run the same completion pipeline:
+  1. `PUT /api/v1/profile/onboarding` with `interests: string[]`
+  2. update profile cache
+  3. navigate by role resolver
+  4. reset onboarding local session state
+
+### Role-Aware Finish
+
+Resolved primary role:
+
+```ts
+type OnboardingPrimaryRole = 'advertiser' | 'owner' | 'both';
 ```
 
-### Components
+Route resolver:
 
-- Custom choice cards with toggle behavior (not `GroupItem` - large format with icons)
+```ts
+owner -> /profile/channels/new
+advertiser|both -> /catalog
+```
 
----
+Finish button text:
 
-## 1.3 Features overview
+- owner: `onboarding.tour.finishOwner`
+- advertiser/both: `onboarding.tour.finishAdvertiser`
 
-| | |
-|---|---|
-| **Route** | `/onboarding/tour` |
-| **Target** | A Quick Tour of 3 Key Features |
-| **Who sees** | User with `onboardingCompleted == false` |
-| **Data** | `selected` interest from the previous step |
+### Completion Error Handling
 
-### UI
+- Unified on tour page:
+  - inline error state in footer (`onboarding.tour.error`)
+  - retry via the same primary button action.
 
-Swipeable carousel of 3 slides:
+## Shared State and Resume
 
-| # | Header (i18n) | Description (i18n) |
-|---|------------------|-----------------|
-| 1 | `t('onboarding.tour.slide1.title')` | `t('onboarding.tour.slide1.description')` |
-| 2 | `t('onboarding.tour.slide2.title')` | `t('onboarding.tour.slide2.description')` |
-| 3 | `t('onboarding.tour.slide3.title')` | `t('onboarding.tour.slide3.description')` |
+Store: `src/features/onboarding/store/onboarding-store.ts`
 
-- Dot indicator
-- Button `t('onboarding.tour.finish')` (`primary`, full-width) - visible on the last slide
-- Button `t('onboarding.tour.skip')` (`link`, `secondary`) - visible on slides 1 and 2
+### Persisted in `sessionStorage`
 
-### Actions
+- `interests`
+- `activeSlide`
+- `completedTasks`
 
-| Action | Result |
-|----------|-----------|
-| Swipe | Transition between slides |
-| "Finish" / "Skip" | `PUT /api/v1/profile/onboarding` → redirect by interest |
+Storage key:
 
-### Saving on the server
+```ts
+const ONBOARDING_RESUME_KEY = 'am_onboarding_resume_v1';
+```
+
+### Store API (current additions)
+
+- `setActiveSlide(slideIndex)`
+- `getTaskState(slideIndex): 'pending' | 'completed'`
+- `getPrimaryRole(): OnboardingPrimaryRole`
+- `rehydrateFromSession()`
+- `reset()` (also clears session storage)
+
+## API Contract (unchanged)
 
 ```
 PUT /api/v1/profile/onboarding
 ```
 
-```typescript
+Payload:
+
+```json
 {
-  interest: 'advertiser' | 'owner' | 'both';
+  "interests": ["advertiser", "owner"]
 }
 ```
 
-The server sets `onboardingCompleted = true` + stores `interest` in the user profile.
+Notes:
+- Backend contract remains unchanged in this redesign.
+- No analytics server contract introduced in this iteration.
 
-### Redirect logic
+## Analytics (frontend typed hook)
 
-```typescript
-const interest = getOnboardingInterest(); // from state of the previous step
+Module:
+- `src/shared/lib/analytics/onboarding.ts`
 
-switch (interest) {
-  case 'advertiser':
-    navigate('/catalog');
-    break;
-  case 'owner':
-    navigate('/profile/channels/new');
-    break;
-  case 'both':
-    navigate('/catalog'); // main scenario - searching for channels
-    break;
-}
-```
+Events:
+- `onboarding_view`
+- `onboarding_primary_click`
+- `onboarding_skip`
+- `role_selected`
+- `tour_task_complete`
+- `onboarding_complete`
 
-### Components
+Transport:
+- No-op by default.
+- Dev mode logs diagnostics to console.
 
-- Carousel (swipeable, touch-friendly)
-- Dot indicator
-- `Button` (primary + link)
+## Layout and Safe Area
 
----
+Tokens in `src/app/global.css`:
+- `--am-onboarding-max-width`
+- `--am-onboarding-page-padding`
+- `--am-onboarding-footer-padding-bottom`
+- safe area via `--am-safe-area-bottom`
 
-## General notes
+Behavior:
+- Sticky footer always padded by safe area.
+- Desktop and mobile use the same shell contract with tokenized spacing.
 
-### Guard route
+## Accessibility and Motion
 
-The user has **already been created** with the `/start` command in the bot or with `POST /api/v1/auth/login` (upsert). Onboarding is shown **only** if `onboardingCompleted == false` is in the auth response.
+- Language action target >= 44x44.
+- Task status uses `aria-live="polite"`.
+- Heavy/infinite effects replaced by bounded animations:
+  - no infinite logo spin loop
+  - no box-shadow pulse animation for timeline
+  - motion-safe behavior for reduced-motion users.
 
-```typescript
-// In the root router
-const { data: authData } = useAuth();
+## Test Coverage (expected baseline)
 
-if (!authData.onboardingCompleted) {
-  return <Navigate to="/onboarding" />;
-}
-```
-
-After onboarding is completed (`PUT /api/v1/profile/onboarding`) - auth query invalidation, guard allows the user to continue.
-
-### Animations
-
-- Fade-in on first appearance
-- Slide-transition between screens
-- Carousel with momentum scrolling
-
-### Error states
-
-| Error | UI |
-|--------|----|
-| `PUT /api/v1/profile/onboarding` failed | Toast `t('errors.network')` + retry |
-| Offline | Banner `t('errors.offline')` |
-
-### File structure
-
-```
-src/pages/onboarding/
-  OnboardingPage.tsx        # Route: /onboarding
-  OnboardingInterestPage.tsx # Route: /onboarding/interest
-  OnboardingTourPage.tsx     # Route: /onboarding/tour
-```
+- Unit:
+  - Welcome/Interest/Tour page contracts
+  - store persistence/resume/reset and route resolver
+  - slide-level task completion UI behavior
+- E2E:
+  - advertiser flow -> `/catalog`
+  - owner flow -> `/profile/channels/new`
+  - both flow -> `/catalog`
+  - skip confirm from tour
+  - tour progression without hard-gating.

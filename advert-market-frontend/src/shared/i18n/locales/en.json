@@ -34,36 +34,54 @@
       "ownerPreview2": "Receive deals",
       "ownerPreview3": "Earn in TON"
     },
-    "tour": {
-      "skip": "Skip tutorial",
+  "tour": {
+    "skip": "Skip tutorial",
       "skipConfirm": {
         "title": "Skip tutorial?",
         "description": "You can open it later in Profile."
       },
-      "next": "Next",
-      "finish": "Get Started",
-      "error": "Something went wrong. Tap to try again.",
-      "taskRequired": "Complete the task to continue",
-      "slide1": {
-        "title": "Find Channels",
-        "hint": "Tap a channel to see its details",
-        "taskHint": "Tap on 'Crypto News Daily'",
-        "taskDone": "That's what channel details look like!"
-      },
-      "slide2": {
-        "title": "Secure Deals",
-        "hint": "Approve the creative to see deal progress",
-        "taskHint": "Tap 'Approve' to advance to the next stage",
-        "taskDone": "Creative approved! Moving to publication.",
+    "next": "Next",
+    "finish": "Get Started",
+    "finishAdvertiser": "Open catalog",
+    "finishOwner": "Add channel",
+    "error": "Something went wrong. Tap to try again.",
+    "taskRequired": "Complete the task to continue",
+    "taskStatus": {
+      "recommended": "Recommended: complete the action in this slide",
+      "completed": "Done: you can continue or explore more"
+    },
+    "slide1": {
+      "title": "Find Channels",
+      "titleAdvertiser": "Find Channels",
+      "titleOwner": "Find demand for your channel",
+      "hint": "Tap a channel to see its details",
+      "hintAdvertiser": "Tap a channel to see its details",
+      "hintOwner": "Open a channel card to see how buyers evaluate listings",
+      "taskHint": "Tap on 'Crypto News Daily'",
+      "taskDone": "That's what channel details look like!"
+    },
+    "slide2": {
+      "title": "Secure Deals",
+      "titleAdvertiser": "Secure Deals",
+      "titleOwner": "Approve and manage deals",
+      "hint": "Approve the creative to see deal progress",
+      "hintAdvertiser": "Approve the creative to see deal progress",
+      "hintOwner": "Approve the creative to move the deal to publication",
+      "taskHint": "Tap 'Approve' to advance to the next stage",
+      "taskDone": "Creative approved! Moving to publication.",
         "previewText": "Sponsored post draft:\n\nLaunch your product to 125K crypto readers.\n\nLearn more →",
         "replay": "Replay demo"
       },
-      "slide3": {
-        "title": "Secure Payments",
-        "hint": "Tap escrow to see the flow",
-        "taskHint": "Tap on 'Escrow'",
-        "taskDone": "That's how secure escrow works!"
-      },
+    "slide3": {
+      "title": "Secure Payments",
+      "titleAdvertiser": "Secure Payments",
+      "titleOwner": "Escrow & payout flow",
+      "hint": "Tap escrow to see the flow",
+      "hintAdvertiser": "Tap escrow to see the flow",
+      "hintOwner": "Tap escrow to see when and how payout is released",
+      "taskHint": "Tap on 'Escrow'",
+      "taskDone": "That's how secure escrow works!"
+    },
       "mockup": {
         "dealTimeline": "Deal timeline",
         "statusCompleted": "completed",

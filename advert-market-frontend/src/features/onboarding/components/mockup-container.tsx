@@ -8,6 +8,9 @@ export function MockupContainer({ children }: MockupContainerProps) {
   return (
     <div
       style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
         borderRadius: '16px',
         border: '1px solid var(--color-border-separator)',
         backgroundColor: 'var(--color-background-secondary)',

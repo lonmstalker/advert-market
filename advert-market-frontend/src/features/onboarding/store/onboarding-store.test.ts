@@ -1,7 +1,8 @@
-import { useOnboardingStore } from './onboarding-store';
+import { resolveOnboardingPrimaryRole, resolveOnboardingRoute, useOnboardingStore } from './onboarding-store';
 
 describe('useOnboardingStore', () => {
   beforeEach(() => {
+    sessionStorage.clear();
     useOnboardingStore.getState().reset();
   });
 
@@ -63,10 +64,66 @@ describe('useOnboardingStore', () => {
     expect(useOnboardingStore.getState().tourTasksCompleted.size).toBe(1);
   });
 
+  it('tracks activeSlide and persists it in session storage', () => {
+    useOnboardingStore.getState().setActiveSlide(2);
+
+    expect(useOnboardingStore.getState().activeSlide).toBe(2);
+    expect(JSON.parse(sessionStorage.getItem('am_onboarding_resume_v1') ?? '{}')).toMatchObject({
+      activeSlide: 2,
+    });
+  });
+
+  it('loads resume state from session storage', () => {
+    sessionStorage.setItem(
+      'am_onboarding_resume_v1',
+      JSON.stringify({
+        interests: ['owner'],
+        activeSlide: 1,
+        completedTasks: [0],
+      }),
+    );
+
+    useOnboardingStore.getState().rehydrateFromSession();
+
+    const { interests, activeSlide, tourTasksCompleted } = useOnboardingStore.getState();
+    expect(interests.has('owner')).toBe(true);
+    expect(activeSlide).toBe(1);
+    expect(tourTasksCompleted.has(0)).toBe(true);
+  });
+
   it('reset clears tourTasksCompleted', () => {
     useOnboardingStore.getState().completeTourTask(0);
     useOnboardingStore.getState().completeTourTask(1);
+    useOnboardingStore.getState().setActiveSlide(2);
     useOnboardingStore.getState().reset();
     expect(useOnboardingStore.getState().tourTasksCompleted.size).toBe(0);
+    expect(useOnboardingStore.getState().activeSlide).toBe(0);
+    expect(sessionStorage.getItem('am_onboarding_resume_v1')).toBeNull();
+  });
+});
+
+describe('onboarding role resolution', () => {
+  it('resolves advertiser role', () => {
+    expect(resolveOnboardingPrimaryRole(new Set(['advertiser']))).toBe('advertiser');
+  });
+
+  it('resolves owner role', () => {
+    expect(resolveOnboardingPrimaryRole(new Set(['owner']))).toBe('owner');
+  });
+
+  it('resolves both role', () => {
+    expect(resolveOnboardingPrimaryRole(new Set(['advertiser', 'owner']))).toBe('both');
+  });
+
+  it('resolves owner route', () => {
+    expect(resolveOnboardingRoute('owner')).toBe('/profile/channels/new');
+  });
+
+  it('resolves advertiser route', () => {
+    expect(resolveOnboardingRoute('advertiser')).toBe('/catalog');
+  });
+
+  it('resolves both route', () => {
+    expect(resolveOnboardingRoute('both')).toBe('/catalog');
   });
 });

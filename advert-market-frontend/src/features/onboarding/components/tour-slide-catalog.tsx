@@ -3,29 +3,43 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@/features/onboarding';
+import type { OnboardingPrimaryRole } from '@/features/onboarding/store/onboarding-store';
+import { useHaptic } from '@/shared/hooks';
+import { trackOnboardingEvent } from '@/shared/lib/analytics/onboarding';
 import { NewspaperIcon } from '@/shared/ui/icons';
 import { MockupContainer } from './mockup-container';
 import { MockupSearchBar } from './mockup-search-bar';
 import { MockupTextButton } from './mockup-text-button';
 import { TaskHint } from './task-hint';
 
-export function TourSlideCatalog() {
+type TourSlideCatalogProps = {
+  primaryRole: OnboardingPrimaryRole;
+};
+
+export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const [showDetail, setShowDetail] = useState(false);
-  const { completeTourTask } = useOnboardingStore();
+  const { completeTourTask, getTaskState } = useOnboardingStore();
+  const isOwnerPrimary = primaryRole === 'owner';
 
   function handleChannelClick() {
+    const alreadyCompleted = getTaskState(0) === 'completed';
+    haptic.selectionChanged();
     setShowDetail(true);
     completeTourTask(0);
+    if (!alreadyCompleted) {
+      trackOnboardingEvent('tour_task_complete', { task: 'open_channel_detail' });
+    }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <Text type="title2" weight="bold" align="center">
-        {t('onboarding.tour.slide1.title')}
+        {isOwnerPrimary ? t('onboarding.tour.slide1.titleOwner') : t('onboarding.tour.slide1.titleAdvertiser')}
       </Text>
       <Text type="caption1" color="secondary" align="center">
-        {t('onboarding.tour.slide1.hint')}
+        {isOwnerPrimary ? t('onboarding.tour.slide1.hintOwner') : t('onboarding.tour.slide1.hintAdvertiser')}
       </Text>
 
       <MockupContainer>

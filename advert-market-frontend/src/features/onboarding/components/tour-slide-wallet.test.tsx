@@ -12,14 +12,14 @@ describe('TourSlideWallet', () => {
   });
 
   it('renders details view initially', () => {
-    renderWithProviders(<TourSlideWallet />);
+    renderWithProviders(<TourSlideWallet primaryRole="advertiser" />);
 
     expect(screen.getByText('Escrow')).toBeInTheDocument();
     expect(screen.getAllByText('5.00 TON').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows escrow flow on escrow click', async () => {
-    const { user } = renderWithProviders(<TourSlideWallet />);
+    const { user } = renderWithProviders(<TourSlideWallet primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Escrow'));
 
@@ -29,7 +29,7 @@ describe('TourSlideWallet', () => {
   });
 
   it('calls completeTourTask(2) on escrow click', async () => {
-    const { user } = renderWithProviders(<TourSlideWallet />);
+    const { user } = renderWithProviders(<TourSlideWallet primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Escrow'));
 
@@ -39,7 +39,7 @@ describe('TourSlideWallet', () => {
   });
 
   it('shows task done in flow view', async () => {
-    const { user } = renderWithProviders(<TourSlideWallet />);
+    const { user } = renderWithProviders(<TourSlideWallet primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Escrow'));
 
@@ -49,7 +49,7 @@ describe('TourSlideWallet', () => {
   });
 
   it('navigates to policy view', async () => {
-    const { user } = renderWithProviders(<TourSlideWallet />);
+    const { user } = renderWithProviders(<TourSlideWallet primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Escrow'));
     await waitFor(() => {
@@ -64,7 +64,7 @@ describe('TourSlideWallet', () => {
   });
 
   it('navigates back from policy to flow', async () => {
-    const { user } = renderWithProviders(<TourSlideWallet />);
+    const { user } = renderWithProviders(<TourSlideWallet primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Escrow'));
     await waitFor(() => {
@@ -84,7 +84,7 @@ describe('TourSlideWallet', () => {
   });
 
   it('hides TaskHint in flow view', async () => {
-    const { user } = renderWithProviders(<TourSlideWallet />);
+    const { user } = renderWithProviders(<TourSlideWallet primaryRole="advertiser" />);
 
     await user.click(screen.getByText('Escrow'));
 

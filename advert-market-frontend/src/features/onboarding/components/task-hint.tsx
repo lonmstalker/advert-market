@@ -1,15 +1,17 @@
 import { Text } from '@telegram-tools/ui-kit';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 
 type TaskHintProps = {
   text: string;
 };
 
 export function TaskHint({ text }: TaskHintProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      animate={{ opacity: [1, 0.5, 1] }}
-      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+      animate={shouldReduceMotion ? undefined : { opacity: [1, 0.6, 1] }}
+      transition={shouldReduceMotion ? undefined : { duration: 1.2, repeat: 2, ease: 'easeInOut' }}
       style={{
         textAlign: 'center',
         padding: '12px 0',
