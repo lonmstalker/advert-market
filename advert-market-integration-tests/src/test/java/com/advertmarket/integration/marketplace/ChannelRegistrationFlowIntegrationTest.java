@@ -77,7 +77,7 @@ class ChannelRegistrationFlowIntegrationTest {
 
     private static final long TEST_USER_ID = 1L;
     private static final long OTHER_USER_ID = 2L;
-    private static final long BOT_USER_ID = 2L;
+    private static final long BOT_USER_ID = 10_002L;
     private static final long CHAN_TG_ID = -100L;
     private static final String CHAN_TITLE = "Test Registration Channel";
     private static final String CHAN_UNAME = "test_reg_chan";
@@ -175,7 +175,7 @@ class ChannelRegistrationFlowIntegrationTest {
     void myChannelsReturnsOwnedChannels() {
         String ownerToken = TestDataFactory.jwt(
                 jwtTokenProvider, TEST_USER_ID);
-        verifyChannel(ownerToken);
+        registerChannel(ownerToken);
 
         var myChannels = webClient.get()
                 .uri("/api/v1/channels/my")
@@ -206,8 +206,7 @@ class ChannelRegistrationFlowIntegrationTest {
                     .getResponseBody();
 
         assertThat(otherChannels).isNotNull();
-        assertThat(otherChannels).hasSize(1);
-        assertThat(otherChannels.getFirst().title()).isEqualTo(CHAN_TITLE);
+        assertThat(otherChannels).isEmpty();
     }
 
     @Test
@@ -218,7 +217,7 @@ class ChannelRegistrationFlowIntegrationTest {
         String newOwnerToken = TestDataFactory.jwt(
                 jwtTokenProvider, OTHER_USER_ID);
 
-        verifyChannel(oldOwnerToken);
+        registerChannel(oldOwnerToken);
 
         when(telegramChannelPort.getChatAdministrators(CHAN_TG_ID))
                 .thenReturn(List.of(admin(OTHER_USER_ID), botAdmin()));
@@ -315,7 +314,19 @@ class ChannelRegistrationFlowIntegrationTest {
         assertThat(verifyBody.channelId()).isEqualTo(CHAN_TG_ID);
         assertThat(verifyBody.botStatus().isAdmin()).isTrue();
 
-        // 2. Register fallback after successful autosync
+        // 2. Register
+        webClient.post()
+                .uri("/api/v1/channels")
+                .headers(h -> h.setBearerAuth(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ChannelRegistrationRequest(
+                        CHAN_TG_ID, List.of("tech"), null))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(CHAN_TG_ID);
+
+        // 2b. Duplicate register should fail
         webClient.post()
                 .uri("/api/v1/channels")
                 .headers(h -> h.setBearerAuth(token))
@@ -373,16 +384,6 @@ class ChannelRegistrationFlowIntegrationTest {
                         CHAN_TG_ID, List.of("tech"), null))
                 .exchange()
                 .expectStatus().isCreated();
-    }
-
-    private void verifyChannel(String token) {
-        webClient.post()
-                .uri("/api/v1/channels/verify")
-                .headers(h -> h.setBearerAuth(token))
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new ChannelVerifyRequest(CHAN_UNAME))
-                .exchange()
-                .expectStatus().isOk();
     }
 
     private void configureMocks() {

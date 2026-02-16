@@ -95,8 +95,8 @@ public class ChannelService {
     @Transactional
     public ChannelResponse update(long channelId,
                                   @NonNull ChannelUpdateRequest request) {
-        requireManageListings(channelId);
         channelAutoSyncPort.syncFromTelegram(channelId);
+        requireManageListings(channelId);
         return channelRepository.update(channelId, request)
                 .orElseThrow(() -> new DomainException(
                         ErrorCodes.CHANNEL_NOT_FOUND,
@@ -112,8 +112,8 @@ public class ChannelService {
      */
     @Transactional
     public void deactivate(long channelId) {
-        requireManageListings(channelId);
         channelAutoSyncPort.syncFromTelegram(channelId);
+        requireManageListings(channelId);
         boolean deactivated = channelRepository.deactivate(channelId);
         if (!deactivated) {
             throw new DomainException(

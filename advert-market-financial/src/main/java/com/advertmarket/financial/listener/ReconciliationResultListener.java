@@ -1,4 +1,4 @@
-package com.advertmarket.app.listener;
+package com.advertmarket.financial.listener;
 
 import com.advertmarket.financial.api.event.ReconciliationResultEvent;
 import com.advertmarket.financial.api.port.ReconciliationResultPort;

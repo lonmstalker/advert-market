@@ -4,7 +4,9 @@ import com.advertmarket.communication.api.notification.NotificationPort;
 import com.advertmarket.communication.api.notification.NotificationRequest;
 import com.advertmarket.communication.bot.internal.builder.MarkdownV2Util;
 import com.advertmarket.communication.bot.internal.sender.TelegramSender;
+import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.i18n.LocalizationService;
+import com.advertmarket.shared.model.UserId;
 import java.util.Locale;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +23,11 @@ import org.springframework.stereotype.Component;
 public class TelegramNotificationService
         implements NotificationPort {
 
+    private static final String DEFAULT_LOCALE = "en";
+
     private final TelegramSender sender;
     private final LocalizationService i18n;
+    private final UserRepository userRepository;
 
     @Override
     public boolean send(NotificationRequest request) {
@@ -30,8 +35,8 @@ public class TelegramNotificationService
             String key = "notification."
                     + request.type().name()
                             .toLowerCase(Locale.ROOT);
-            // Default to Russian until user locale is stored
-            String template = i18n.msg(key, "ru");
+            String locale = resolveLocale(request.recipientUserId());
+            String template = i18n.msg(key, locale);
             String rendered = substituteVariables(
                     template, request.variables());
             sender.send(request.recipientUserId(), rendered);
@@ -41,6 +46,19 @@ public class TelegramNotificationService
                     + "to user={}", request.type(),
                     request.recipientUserId(), e);
             return false;
+        }
+    }
+
+    private String resolveLocale(long recipientUserId) {
+        try {
+            return userRepository.findById(new UserId(recipientUserId))
+                    .map(user -> user.languageCode().trim())
+                    .filter(lang -> !lang.isEmpty())
+                    .orElse(DEFAULT_LOCALE);
+        } catch (IllegalArgumentException ex) {
+            log.debug("Invalid recipient id for locale lookup: {}",
+                    recipientUserId, ex);
+            return DEFAULT_LOCALE;
         }
     }
 

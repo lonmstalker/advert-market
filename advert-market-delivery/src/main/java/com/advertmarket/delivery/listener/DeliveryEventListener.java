@@ -1,4 +1,4 @@
-package com.advertmarket.app.listener;
+package com.advertmarket.delivery.listener;
 
 import com.advertmarket.delivery.api.event.DeliveryFailedEvent;
 import com.advertmarket.delivery.api.event.DeliveryVerifiedEvent;

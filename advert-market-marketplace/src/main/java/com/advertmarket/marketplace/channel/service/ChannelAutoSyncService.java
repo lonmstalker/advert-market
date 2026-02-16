@@ -15,6 +15,7 @@ import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.shared.exception.DomainException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,7 +67,7 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
                 .fetchOne(CHANNELS.OWNER_ID);
 
         upsertChannel(chatInfo, memberCount, newOwnerId);
-        syncMemberships(channelId, newOwnerId, administrators);
+        syncMemberships(channelId, newOwnerId);
 
         boolean ownerChanged = oldOwnerId != null
                 && oldOwnerId != newOwnerId;
@@ -115,7 +116,7 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
             ChatInfo chatInfo,
             int memberCount,
             long ownerId) {
-        var now = OffsetDateTime.now();
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
         dsl.insertInto(CHANNELS)
                 .set(CHANNELS.ID, chatInfo.id())
                 .set(CHANNELS.TITLE, chatInfo.title())
@@ -137,18 +138,7 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
                 .execute();
     }
 
-    private void syncMemberships(
-            long channelId,
-            long ownerId,
-            List<ChatMemberInfo> administrators) {
-        var adminIds = administrators.stream()
-                .map(ChatMemberInfo::userId)
-                .collect(java.util.stream.Collectors.toCollection(
-                        LinkedHashSet::new));
-
-        var managerIds = new LinkedHashSet<>(adminIds);
-        managerIds.remove(ownerId);
-
+    private void syncMemberships(long channelId, long ownerId) {
         // Replace stale owner rows first to keep owner uniqueness invariant.
         dsl.deleteFrom(CHANNEL_MEMBERSHIPS)
                 .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
@@ -173,34 +163,5 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
                 .set(CHANNEL_MEMBERSHIPS.VERSION,
                         CHANNEL_MEMBERSHIPS.VERSION.plus(1))
                 .execute();
-
-        for (Long managerId : managerIds) {
-            dsl.insertInto(CHANNEL_MEMBERSHIPS)
-                    .set(CHANNEL_MEMBERSHIPS.CHANNEL_ID, channelId)
-                    .set(CHANNEL_MEMBERSHIPS.USER_ID, managerId)
-                    .set(CHANNEL_MEMBERSHIPS.ROLE,
-                            ChannelMembershipRole.MANAGER.name())
-                    .set(CHANNEL_MEMBERSHIPS.RIGHTS, EMPTY_RIGHTS)
-                    .onConflict(
-                            CHANNEL_MEMBERSHIPS.CHANNEL_ID,
-                            CHANNEL_MEMBERSHIPS.USER_ID)
-                    .doUpdate()
-                    .set(CHANNEL_MEMBERSHIPS.ROLE,
-                            ChannelMembershipRole.MANAGER.name())
-                    .set(CHANNEL_MEMBERSHIPS.RIGHTS, EMPTY_RIGHTS)
-                    .set(CHANNEL_MEMBERSHIPS.VERSION,
-                            CHANNEL_MEMBERSHIPS.VERSION.plus(1))
-                    .execute();
-        }
-
-        var staleDelete = dsl.deleteFrom(CHANNEL_MEMBERSHIPS)
-                .where(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(channelId))
-                .and(CHANNEL_MEMBERSHIPS.ROLE.eq(
-                        ChannelMembershipRole.MANAGER.name()));
-        if (!managerIds.isEmpty()) {
-            staleDelete = staleDelete.and(
-                    CHANNEL_MEMBERSHIPS.USER_ID.notIn(managerIds));
-        }
-        staleDelete.execute();
     }
 }

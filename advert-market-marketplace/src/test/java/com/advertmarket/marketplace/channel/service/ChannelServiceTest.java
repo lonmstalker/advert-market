@@ -153,7 +153,7 @@ class ChannelServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(ErrorCodes.CHANNEL_NOT_OWNED);
-        verify(channelAutoSyncPort, never()).syncFromTelegram(CHANNEL_ID);
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test
@@ -181,7 +181,7 @@ class ChannelServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(ErrorCodes.CHANNEL_NOT_OWNED);
-        verify(channelAutoSyncPort, never()).syncFromTelegram(CHANNEL_ID);
+        verify(channelAutoSyncPort).syncFromTelegram(CHANNEL_ID);
     }
 
     @Test

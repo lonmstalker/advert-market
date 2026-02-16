@@ -48,8 +48,8 @@ public class PricingRuleService {
     @Transactional
     public PricingRuleDto create(long channelId,
                                  @NonNull PricingRuleCreateRequest request) {
-        requireManageListings(channelId);
         channelAutoSyncPort.syncFromTelegram(channelId);
+        requireManageListings(channelId);
         return pricingRuleRepository.insert(channelId, request);
     }
 
@@ -65,8 +65,8 @@ public class PricingRuleService {
     @Transactional
     public PricingRuleDto update(long channelId, long ruleId,
                                  @NonNull PricingRuleUpdateRequest request) {
-        requireManageListings(channelId);
         channelAutoSyncPort.syncFromTelegram(channelId);
+        requireManageListings(channelId);
         return pricingRuleRepository.update(ruleId, request)
                 .orElseThrow(() -> new DomainException(
                         ErrorCodes.PRICING_RULE_NOT_FOUND,
@@ -81,8 +81,8 @@ public class PricingRuleService {
      */
     @Transactional
     public void delete(long channelId, long ruleId) {
-        requireManageListings(channelId);
         channelAutoSyncPort.syncFromTelegram(channelId);
+        requireManageListings(channelId);
         boolean deleted = pricingRuleRepository.deactivate(ruleId);
         if (!deleted) {
             throw new DomainException(

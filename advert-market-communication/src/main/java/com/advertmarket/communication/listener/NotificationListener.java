@@ -1,4 +1,4 @@
-package com.advertmarket.app.listener;
+package com.advertmarket.communication.listener;
 
 import com.advertmarket.communication.api.event.NotificationEvent;
 import com.advertmarket.communication.api.notification.NotificationPort;

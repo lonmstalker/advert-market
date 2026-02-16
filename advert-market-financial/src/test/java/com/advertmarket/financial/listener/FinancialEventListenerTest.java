@@ -1,4 +1,4 @@
-package com.advertmarket.app.listener;
+package com.advertmarket.financial.listener;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -6,11 +6,12 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.advertmarket.delivery.api.event.DeliveryFailedEvent;
-import com.advertmarket.delivery.api.event.DeliveryFailureReason;
-import com.advertmarket.delivery.api.event.DeliveryVerifiedEvent;
-import com.advertmarket.delivery.api.event.PublicationResultEvent;
-import com.advertmarket.delivery.api.port.DeliveryEventPort;
+import com.advertmarket.financial.api.event.DepositConfirmedEvent;
+import com.advertmarket.financial.api.event.DepositFailedEvent;
+import com.advertmarket.financial.api.event.DepositFailureReason;
+import com.advertmarket.financial.api.event.PayoutCompletedEvent;
+import com.advertmarket.financial.api.event.RefundCompletedEvent;
+import com.advertmarket.financial.api.port.FinancialEventPort;
 import com.advertmarket.shared.event.EventEnvelope;
 import com.advertmarket.shared.event.EventEnvelopeDeserializer;
 import com.advertmarket.shared.event.EventTypes;
@@ -28,94 +29,112 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
 
-@DisplayName("DeliveryEventListener")
+@DisplayName("FinancialEventListener")
 @ExtendWith(MockitoExtension.class)
-class DeliveryEventListenerTest {
+class FinancialEventListenerTest {
 
     @Mock
     private EventEnvelopeDeserializer deserializer;
     @Mock
-    private DeliveryEventPort deliveryEventPort;
+    private FinancialEventPort financialEventPort;
     @Mock
     private MetricsFacade metrics;
     @Mock
     private Acknowledgment ack;
     @InjectMocks
-    private DeliveryEventListener listener;
+    private FinancialEventListener listener;
 
     private static final DealId DEAL_ID = DealId.of(UUID.randomUUID());
 
     @Test
-    @DisplayName("Dispatches PUBLICATION_RESULT to port")
-    void dispatchesPublicationResult() {
-        var payload = new PublicationResultEvent(
-                true, 42L, -1001234567890L,
-                "hash", Instant.now(), null, null);
+    @DisplayName("Dispatches DEPOSIT_CONFIRMED to port")
+    void dispatchesDepositConfirmed() {
+        var payload = new DepositConfirmedEvent(
+                "tx1", 1_000_000_000L, 1_000_000_000L,
+                3, "from", "deposit");
         var envelope = EventEnvelope.create(
-                EventTypes.PUBLICATION_RESULT, DEAL_ID, payload);
+                EventTypes.DEPOSIT_CONFIRMED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
         doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
-        verify(deliveryEventPort).onPublicationResult(any());
+        verify(financialEventPort).onDepositConfirmed(any());
         verify(ack).acknowledge();
         verify(metrics).incrementCounter(
                 eq(MetricNames.WORKER_EVENT_RECEIVED),
-                eq("type"), eq(EventTypes.PUBLICATION_RESULT));
+                eq("type"), eq(EventTypes.DEPOSIT_CONFIRMED));
     }
 
     @Test
-    @DisplayName("Dispatches DELIVERY_VERIFIED to port")
-    void dispatchesDeliveryVerified() {
-        var payload = new DeliveryVerifiedEvent(
-                42L, 3, 0, "hash");
+    @DisplayName("Dispatches DEPOSIT_FAILED to port")
+    void dispatchesDepositFailed() {
+        var payload = new DepositFailedEvent(
+                DepositFailureReason.TIMEOUT, 1_000_000_000L, 0L);
         var envelope = EventEnvelope.create(
-                EventTypes.DELIVERY_VERIFIED, DEAL_ID, payload);
+                EventTypes.DEPOSIT_FAILED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
         doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
-        verify(deliveryEventPort).onDeliveryVerified(any());
+        verify(financialEventPort).onDepositFailed(any());
         verify(ack).acknowledge();
     }
 
     @Test
-    @DisplayName("Dispatches DELIVERY_FAILED to port")
-    void dispatchesDeliveryFailed() {
-        var payload = new DeliveryFailedEvent(
-                42L, DeliveryFailureReason.POST_DELETED,
-                1, Instant.now());
+    @DisplayName("Dispatches PAYOUT_COMPLETED to port")
+    void dispatchesPayoutCompleted() {
+        var payload = new PayoutCompletedEvent(
+                "tx2", 900_000_000L, 50_000_000L, "toAddr", 5);
         var envelope = EventEnvelope.create(
-                EventTypes.DELIVERY_FAILED, DEAL_ID, payload);
+                EventTypes.PAYOUT_COMPLETED, DEAL_ID, payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
         doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
-        verify(deliveryEventPort).onDeliveryFailed(any());
+        verify(financialEventPort).onPayoutCompleted(any());
+        verify(ack).acknowledge();
+    }
+
+    @Test
+    @DisplayName("Dispatches REFUND_COMPLETED to port")
+    void dispatchesRefundCompleted() {
+        var payload = new RefundCompletedEvent(
+                "tx3", 500_000_000L, "refundAddr", 3);
+        var envelope = EventEnvelope.create(
+                EventTypes.REFUND_COMPLETED, DEAL_ID, payload);
+        var record = new ConsumerRecord<>("topic", 0, 0L,
+                "key", "json");
+        doReturn(envelope).when(deserializer).deserialize("json");
+
+        listener.onMessage(record, ack);
+
+        verify(financialEventPort).onRefundCompleted(any());
         verify(ack).acknowledge();
     }
 
     @Test
     @DisplayName("Unknown type does not invoke port")
     void unknownType_doesNotInvokePort() {
-        var payload = new DeliveryVerifiedEvent(
-                42L, 3, 0, "hash");
+        var payload = new DepositConfirmedEvent(
+                "tx1", 1_000_000_000L, 1_000_000_000L,
+                3, "from", "deposit");
         var envelope = new EventEnvelope<>(
                 UUID.randomUUID(), "UNKNOWN_TYPE", DEAL_ID,
-                Instant.now(), 1, UUID.randomUUID(), payload);
+                Instant.now(), 1,
+                UUID.randomUUID(), payload);
         var record = new ConsumerRecord<>("topic", 0, 0L,
                 "key", "json");
         doReturn(envelope).when(deserializer).deserialize("json");
 
         listener.onMessage(record, ack);
 
-        verifyNoInteractions(deliveryEventPort);
+        verifyNoInteractions(financialEventPort);
         verify(ack).acknowledge();
     }
 }

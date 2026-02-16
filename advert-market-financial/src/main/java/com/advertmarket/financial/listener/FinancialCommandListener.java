@@ -1,10 +1,9 @@
-package com.advertmarket.app.listener;
+package com.advertmarket.financial.listener;
 
-import com.advertmarket.financial.api.event.DepositConfirmedEvent;
-import com.advertmarket.financial.api.event.DepositFailedEvent;
-import com.advertmarket.financial.api.event.PayoutCompletedEvent;
-import com.advertmarket.financial.api.event.RefundCompletedEvent;
-import com.advertmarket.financial.api.port.FinancialEventPort;
+import com.advertmarket.financial.api.event.ExecutePayoutCommand;
+import com.advertmarket.financial.api.event.ExecuteRefundCommand;
+import com.advertmarket.financial.api.port.PayoutExecutorPort;
+import com.advertmarket.financial.api.port.RefundExecutorPort;
 import com.advertmarket.shared.event.ConsumerGroups;
 import com.advertmarket.shared.event.EventEnvelope;
 import com.advertmarket.shared.event.EventEnvelopeDeserializer;
@@ -20,28 +19,29 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 /**
- * Kafka listener for financial result events from workers.
+ * Kafka listener for financial commands (payout, refund).
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FinancialEventListener {
+public class FinancialCommandListener {
 
     private final EventEnvelopeDeserializer deserializer;
-    private final FinancialEventPort financialEventPort;
+    private final PayoutExecutorPort payoutExecutor;
+    private final RefundExecutorPort refundExecutor;
     private final MetricsFacade metrics;
 
-    /** Consumes financial events from Kafka. */
+    /** Consumes financial commands from Kafka. */
     @SuppressWarnings("fenum")
     @KafkaListener(
-            topics = TopicNames.FINANCIAL_EVENTS,
-            groupId = ConsumerGroups.FINANCIAL_EVENT_HANDLER,
+            topics = TopicNames.FINANCIAL_COMMANDS,
+            groupId = ConsumerGroups.FINANCIAL_COMMAND_HANDLER,
             containerFactory = "financialKafkaListenerContainerFactory")
     public void onMessage(
             ConsumerRecord<String, String> record,
             Acknowledgment ack) {
         var envelope = deserializer.deserialize(record.value());
-        log.info("Financial event received: type={}, eventId={}, dealId={}",
+        log.info("Financial command received: type={}, eventId={}, dealId={}",
                 envelope.eventType(), envelope.eventId(),
                 envelope.dealId());
 
@@ -55,20 +55,14 @@ public class FinancialEventListener {
     @SuppressWarnings({"unchecked", "fenum"})
     private void dispatch(EventEnvelope<?> envelope) {
         switch (envelope.eventType()) {
-            case EventTypes.DEPOSIT_CONFIRMED ->
-                    financialEventPort.onDepositConfirmed(
-                            (EventEnvelope<DepositConfirmedEvent>) envelope);
-            case EventTypes.DEPOSIT_FAILED ->
-                    financialEventPort.onDepositFailed(
-                            (EventEnvelope<DepositFailedEvent>) envelope);
-            case EventTypes.PAYOUT_COMPLETED ->
-                    financialEventPort.onPayoutCompleted(
-                            (EventEnvelope<PayoutCompletedEvent>) envelope);
-            case EventTypes.REFUND_COMPLETED ->
-                    financialEventPort.onRefundCompleted(
-                            (EventEnvelope<RefundCompletedEvent>) envelope);
+            case EventTypes.EXECUTE_PAYOUT ->
+                    payoutExecutor.executePayout(
+                            (EventEnvelope<ExecutePayoutCommand>) envelope);
+            case EventTypes.EXECUTE_REFUND ->
+                    refundExecutor.executeRefund(
+                            (EventEnvelope<ExecuteRefundCommand>) envelope);
             default -> log.warn(
-                    "Unknown financial event type: {}",
+                    "Unhandled financial command type: {}",
                     envelope.eventType());
         }
     }
