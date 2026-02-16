@@ -2,12 +2,12 @@ import { ToastProvider } from '@telegram-tools/ui-kit';
 import i18n from 'i18next';
 import { Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { updateLanguage, updateSettings } from '@/features/profile/api/profile-api';
+import { updateLanguage, updateSettings } from '@/shared/api/profile';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import LocaleCurrencyPage from '../LocaleCurrencyPage';
 
-vi.mock('@/features/profile/api/profile-api', () => ({
+vi.mock('@/shared/api/profile', () => ({
   updateLanguage: vi.fn(),
   updateSettings: vi.fn(),
 }));
