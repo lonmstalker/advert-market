@@ -1,7 +1,7 @@
 import { Sheet } from '@telegram-tools/ui-kit';
 import { useEffect } from 'react';
-import { LocaleCurrencyEditor } from '@/features/profile/components/LocaleCurrencyEditor';
 import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
+import { LocaleCurrencyEditor } from '@/shared/ui';
 
 type LocaleCurrencyStepSheetProps = {
   open: boolean;

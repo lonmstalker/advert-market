@@ -13,6 +13,7 @@ export { FilterButton } from './components/filter-button';
 export { FixedBottomBar } from './components/fixed-bottom-bar';
 export { FormattedPrice } from './components/formatted-price';
 export { LanguageBadge } from './components/language-badge';
+export { LocaleCurrencyEditor } from './components/locale-currency-editor';
 export { PageLoader } from './components/page-loader';
 export { Popover } from './components/popover';
 export { PulsingDot } from './components/pulsing-dot';

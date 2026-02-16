@@ -1,6 +1,7 @@
 export type { CurrencyMode, NotificationSettings, UserProfile } from './auth';
 export { completeOnboarding, fetchProfile, login, userProfileSchema } from './auth';
 export { api } from './client';
+export { updateLanguage, updateSettings } from './profile';
 export {
   authKeys,
   channelKeys,
