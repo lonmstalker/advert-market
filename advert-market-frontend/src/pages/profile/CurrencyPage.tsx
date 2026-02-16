@@ -6,6 +6,7 @@ import { updateSettings } from '@/features/profile/api/profile-api';
 import { profileKeys } from '@/shared/api';
 import { useToast } from '@/shared/hooks';
 import { CURRENCIES } from '@/shared/lib/constants/currencies';
+import { preserveLanguageOnSettingsUpdate } from '@/shared/lib/profile-settings';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { BackButtonHandler } from '@/shared/ui';
 import { pressScale, slideFromRight, staggerChildren } from '@/shared/ui/animations';
@@ -26,8 +27,10 @@ export default function CurrencyPage() {
       return { prev };
     },
     onSuccess: (updatedProfile) => {
-      setFromProfile(updatedProfile);
-      queryClient.setQueryData(profileKeys.me, updatedProfile);
+      const currentLanguageCode = useSettingsStore.getState().languageCode;
+      const nextProfile = preserveLanguageOnSettingsUpdate(updatedProfile, currentLanguageCode);
+      setFromProfile(nextProfile);
+      queryClient.setQueryData(profileKeys.me, nextProfile);
     },
     onError: (_error, _currency, context) => {
       if (context?.prev) setDisplayCurrency(context.prev);

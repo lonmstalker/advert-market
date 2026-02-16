@@ -8,6 +8,7 @@ import type { NotificationSettings } from '@/shared/api';
 import { profileKeys } from '@/shared/api';
 import { useToast } from '@/shared/hooks';
 import { useHaptic } from '@/shared/hooks/use-haptic';
+import { preserveLanguageOnSettingsUpdate } from '@/shared/lib/profile-settings';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 import { AppPageShell, AppSectionHeader, BackButtonHandler } from '@/shared/ui';
 import { slideFromRight, staggerChildren } from '@/shared/ui/animations';
@@ -27,8 +28,10 @@ export default function NotificationsPage() {
   const mutation = useMutation({
     mutationFn: (settings: NotificationSettings) => updateSettings({ notificationSettings: settings }),
     onSuccess: (updatedProfile) => {
-      setFromProfile(updatedProfile);
-      queryClient.setQueryData(profileKeys.me, updatedProfile);
+      const currentLanguageCode = useSettingsStore.getState().languageCode;
+      const nextProfile = preserveLanguageOnSettingsUpdate(updatedProfile, currentLanguageCode);
+      setFromProfile(nextProfile);
+      queryClient.setQueryData(profileKeys.me, nextProfile);
     },
     onError: () => {
       showError(t('common.toast.saveFailed'));
