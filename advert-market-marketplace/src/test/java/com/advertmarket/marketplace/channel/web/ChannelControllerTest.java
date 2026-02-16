@@ -335,7 +335,7 @@ class ChannelControllerTest {
     @Test
     @DisplayName("Should return 200 with user's own channels")
     void shouldReturnMyChannels() throws Exception {
-        when(channelService.findByOwnerId(USER_ID))
+        when(channelService.findByMemberUserId(USER_ID))
                 .thenReturn(List.of(channelResponse()));
 
         mockMvc.perform(get("/api/v1/channels/my"))

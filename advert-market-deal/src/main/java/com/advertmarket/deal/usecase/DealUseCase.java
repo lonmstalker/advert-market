@@ -8,6 +8,8 @@ import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.service.DealService;
+import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.deal.web.CreateDealRequest;
 import com.advertmarket.deal.web.DealTransitionRequest;
 import com.advertmarket.deal.web.DealTransitionResponse;
@@ -34,6 +36,8 @@ public class DealUseCase {
 
     private final DealService dealService;
     private final DealAuthorizationPort dealAuthorizationPort;
+    private final ChannelAutoSyncPort channelAutoSyncPort;
+    private final ChannelAuthorizationPort channelAuthorizationPort;
 
     /**
      * Creates a new deal for the current authenticated user.
@@ -95,8 +99,7 @@ public class DealUseCase {
     }
 
     private ActorType resolveActorType(DealId dealId) {
-        // Verify deal exists first (throws 404 if not found)
-        dealAuthorizationPort.getChannelId(dealId);
+        long channelId = dealAuthorizationPort.getChannelId(dealId);
 
         if (SecurityContextUtil.isOperator()) {
             return ActorType.PLATFORM_OPERATOR;
@@ -104,8 +107,14 @@ public class DealUseCase {
         if (dealAuthorizationPort.isAdvertiser(dealId)) {
             return ActorType.ADVERTISER;
         }
-        if (dealAuthorizationPort.isOwner(dealId)) {
+
+        channelAutoSyncPort.syncFromTelegram(channelId);
+
+        if (channelAuthorizationPort.isOwner(channelId)) {
             return ActorType.CHANNEL_OWNER;
+        }
+        if (channelAuthorizationPort.hasRight(channelId, "moderate")) {
+            return ActorType.CHANNEL_ADMIN;
         }
         throw new DomainException(ErrorCodes.DEAL_NOT_PARTICIPANT,
                 "User is not a participant of deal " + dealId);

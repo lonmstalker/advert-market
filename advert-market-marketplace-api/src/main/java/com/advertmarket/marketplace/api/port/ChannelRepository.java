@@ -48,6 +48,10 @@ public interface ChannelRepository {
     @NonNull
     List<ChannelResponse> findByOwnerId(long ownerId);
 
+    /** Finds all active channels where the given user is a member. */
+    @NonNull
+    List<ChannelResponse> findByMemberUserId(long userId);
+
     /** Deactivates a channel (sets is_active = false). */
     boolean deactivate(long channelId);
 }

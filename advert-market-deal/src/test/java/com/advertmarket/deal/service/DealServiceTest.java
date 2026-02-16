@@ -18,7 +18,9 @@ import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
+import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
@@ -54,7 +56,11 @@ class DealServiceTest {
     @Mock
     private DealTransitionService dealTransitionService;
     @Mock
+    private ChannelAutoSyncPort channelAutoSyncPort;
+    @Mock
     private ChannelRepository channelRepository;
+    @Mock
+    private JsonFacade jsonFacade;
 
     private DealService service;
 
@@ -63,8 +69,8 @@ class DealServiceTest {
         service = new DealService(
                 dealRepository, dealEventRepository,
                 dealAuthorizationPort, dealTransitionService,
-                channelRepository,
-                Mappers.getMapper(DealDtoMapper.class));
+                channelAutoSyncPort, channelRepository,
+                Mappers.getMapper(DealDtoMapper.class), jsonFacade);
     }
 
     private ChannelDetailResponse channelDetail(long channelId, long ownerId) {

@@ -14,7 +14,6 @@ import com.advertmarket.marketplace.api.model.ChannelMembershipRole;
 import com.advertmarket.marketplace.api.port.CategoryRepository;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.channel.mapper.ChannelRecordMapper;
-import com.advertmarket.marketplace.pricing.mapper.PricingRuleRecordMapper;
 import com.advertmarket.marketplace.pricing.repository.JooqPricingRuleRepository;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +33,6 @@ public class JooqChannelRepository implements ChannelRepository {
 
     private final DSLContext dsl;
     private final ChannelRecordMapper channelMapper;
-    private final PricingRuleRecordMapper pricingRuleMapper;
     private final CategoryRepository categoryRepository;
     private final JooqPricingRuleRepository pricingRuleRepository;
 
@@ -154,6 +152,25 @@ public class JooqChannelRepository implements ChannelRepository {
                     var categories = categoryRepository
                             .findCategorySlugsForChannel(r.get(CHANNELS.ID));
                     return channelMapper.toResponse(r, categories);
+                });
+    }
+
+    @Override
+    @NonNull
+    public List<ChannelResponse> findByMemberUserId(long userId) {
+        return dsl.select(CHANNELS.asterisk())
+                .from(CHANNELS)
+                .join(CHANNEL_MEMBERSHIPS)
+                .on(CHANNEL_MEMBERSHIPS.CHANNEL_ID.eq(CHANNELS.ID))
+                .where(CHANNEL_MEMBERSHIPS.USER_ID.eq(userId))
+                .and(CHANNELS.IS_ACTIVE.isTrue())
+                .orderBy(CHANNELS.CREATED_AT.desc())
+                .fetch(r -> {
+                    var categories = categoryRepository
+                            .findCategorySlugsForChannel(
+                                    r.get(CHANNELS.ID));
+                    return channelMapper.toResponse(
+                            r.into(CHANNELS), categories);
                 });
     }
 

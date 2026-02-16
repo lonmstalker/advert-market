@@ -81,7 +81,7 @@ public class ChannelController {
     @ApiResponse(responseCode = "200", description = "User's channels")
     public List<ChannelResponse> myChannels() {
         long userId = SecurityContextUtil.currentUserId().value();
-        return channelService.findByOwnerId(userId);
+        return channelService.findByMemberUserId(userId);
     }
 
     /**
