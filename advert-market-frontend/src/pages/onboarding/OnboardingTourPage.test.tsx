@@ -114,6 +114,22 @@ describe('OnboardingTourPage', () => {
     });
   });
 
+  it('redirects both roles to catalog after completion', async () => {
+    act(() => {
+      useOnboardingStore.getState().reset();
+      useOnboardingStore.getState().toggleInterest('advertiser');
+      useOnboardingStore.getState().toggleInterest('owner');
+      useOnboardingStore.getState().setActiveSlide(2);
+    });
+
+    const { user } = renderPage();
+    await user.click(screen.getByRole('button', { name: 'Open catalog' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('catalog-page')).toBeInTheDocument();
+    });
+  });
+
   it('redirects to /onboarding/interest when interests are empty', () => {
     act(() => {
       useOnboardingStore.getState().reset();

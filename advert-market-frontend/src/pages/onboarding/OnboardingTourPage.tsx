@@ -70,7 +70,12 @@ export default function OnboardingTourPage() {
   const isLastSlide = activeSlide === SLIDE_COUNT - 1;
   const taskState = getTaskState(activeSlide);
   const taskDone = taskState === 'completed';
-  const finishText = primaryRole === 'owner' ? t('onboarding.tour.finishOwner') : t('onboarding.tour.finishAdvertiser');
+  const finishText =
+    primaryRole === 'owner'
+      ? t('onboarding.tour.finishOwner')
+      : primaryRole === 'both'
+        ? t('onboarding.tour.finishBoth')
+        : t('onboarding.tour.finishAdvertiser');
 
   function handleNext() {
     if (isAnimating.current || mutation.isPending) return;

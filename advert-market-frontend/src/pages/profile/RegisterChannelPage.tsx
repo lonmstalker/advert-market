@@ -152,7 +152,7 @@ export default function RegisterChannelPage() {
     if (step === 2) {
       setStep(1);
     } else {
-      navigate(-1);
+      navigate('/profile', { replace: true });
     }
   }, [step, navigate]);
 

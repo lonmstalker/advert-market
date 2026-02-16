@@ -53,7 +53,7 @@ describe('OnboardingInterestPage', () => {
     const { user } = renderPage();
     await user.click(screen.getByRole('button', { name: /advertiser/i }));
     await user.click(screen.getByRole('button', { name: /channel owner/i }));
-    expect(screen.getByText("Great! You'll see features for both roles")).toBeInTheDocument();
+    expect(screen.getByText("We'll start from Catalog. Owner tools stay available in Profile.")).toBeInTheDocument();
   });
 
   it('Continue button becomes disabled after toggling off', async () => {

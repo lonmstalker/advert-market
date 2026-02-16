@@ -75,6 +75,27 @@ test.describe('Onboarding Flow', () => {
     await page.waitForURL('**/catalog');
   });
 
+  test('with both roles selected, flow lands on catalog', async ({ page }) => {
+    await page.getByRole('button', { name: /^(Continue|Продолжить)$/ }).click();
+    await page.getByRole('button', { name: /^(Get Started|Начать)$/ }).click();
+
+    await page.getByRole('button', { name: /(advertiser|рекламодатель)/i }).click();
+    await page.getByRole('button', { name: /(channel owner|владелец канала)/i }).click();
+    await expect(
+      page.getByText(
+        /(We'll start from Catalog\. Owner tools stay available in Profile\.|Стартуем с каталога\. Инструменты владельца доступны в профиле\.)/,
+      ),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: /^(Continue|Продолжить)$/ }).click();
+    await page.getByRole('button', { name: /(skip tutorial|пропустить обучение)/i }).click();
+    const dialog = page.locator('[class*="dialogModalActive"]').first();
+    await expect(dialog).toBeVisible();
+    await dialog.locator('[class*="dialogModalContentFooterButton"]').nth(1).click();
+
+    await page.waitForURL('**/catalog');
+  });
+
   test('redirects to interest page when navigating directly to tour', async ({ page }) => {
     try {
       await page.goto('/onboarding/tour', { waitUntil: 'domcontentloaded' });
