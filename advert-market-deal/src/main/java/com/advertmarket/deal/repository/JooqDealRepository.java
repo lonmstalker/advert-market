@@ -12,6 +12,7 @@ import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
 import com.advertmarket.shared.pagination.CursorCodec;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -199,13 +200,16 @@ public class JooqDealRepository implements DealRepository {
 
     @Override
     @NonNull
-    public List<DealRecord> findExpiredDeals(int batchSize) {
+    public List<DealRecord> findExpiredDeals(
+            int batchSize,
+            @NonNull Duration gracePeriod) {
         var terminalStatuses = List.of(
                 DealStatus.COMPLETED_RELEASED.name(),
                 DealStatus.CANCELLED.name(),
                 DealStatus.REFUNDED.name(),
                 DealStatus.PARTIALLY_REFUNDED.name(),
                 DealStatus.EXPIRED.name());
+        var deadlineThreshold = OffsetDateTime.now().minus(gracePeriod);
 
         return dsl.select(
                         DEALS.ID.as("id"),
@@ -235,7 +239,7 @@ public class JooqDealRepository implements DealRepository {
                         DEALS.CREATED_AT.as("createdAt"),
                         DEALS.UPDATED_AT.as("updatedAt"))
                 .from(DEALS)
-                .where(DEALS.DEADLINE_AT.le(OffsetDateTime.now()))
+                .where(DEALS.DEADLINE_AT.le(deadlineThreshold))
                 .and(DEALS.STATUS.notIn(terminalStatuses))
                 .orderBy(DEALS.DEADLINE_AT.asc())
                 .limit(batchSize)

@@ -215,7 +215,7 @@ public class DealTransitionService {
                 DealStatus.CANCELLED, DealStatus.EXPIRED));
         map.put(DealStatus.CREATIVE_SUBMITTED, EnumSet.of(
                 DealStatus.CREATIVE_APPROVED, DealStatus.FUNDED,
-                DealStatus.DISPUTED));
+                DealStatus.DISPUTED, DealStatus.EXPIRED));
         map.put(DealStatus.CREATIVE_APPROVED, EnumSet.of(
                 DealStatus.SCHEDULED, DealStatus.PUBLISHED,
                 DealStatus.CANCELLED, DealStatus.EXPIRED));
@@ -302,6 +302,8 @@ public class DealTransitionService {
                 EnumSet.of(ActorType.ADVERTISER));
         map.put(new TransitionKey(DealStatus.CREATIVE_SUBMITTED, DealStatus.DISPUTED),
                 EnumSet.of(ActorType.ADVERTISER));
+        map.put(new TransitionKey(DealStatus.CREATIVE_SUBMITTED, DealStatus.EXPIRED),
+                EnumSet.of(ActorType.SYSTEM));
 
         // CREATIVE_APPROVED
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.SCHEDULED),

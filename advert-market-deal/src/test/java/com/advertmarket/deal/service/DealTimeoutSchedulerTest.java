@@ -76,7 +76,7 @@ class DealTimeoutSchedulerTest {
 
             scheduler.processExpiredDeals();
 
-            verify(dealRepository, never()).findExpiredDeals(anyInt());
+            verify(dealRepository, never()).findExpiredDeals(anyInt(), any());
         }
 
         @Test
@@ -84,8 +84,9 @@ class DealTimeoutSchedulerTest {
         void expiresOfferPendingWithoutRefund() {
             acquireLock();
             var deal = dealRecord(DealStatus.OFFER_PENDING, false);
-            when(dealRepository.findExpiredDeals(50))
+            when(dealRepository.findExpiredDeals(eq(50), any()))
                     .thenReturn(List.of(deal));
+            when(dealRepository.findById(any())).thenReturn(Optional.of(deal));
             when(dealTransitionService.transition(any()))
                     .thenReturn(new DealTransitionResult.Success(DealStatus.EXPIRED));
 
@@ -103,8 +104,9 @@ class DealTimeoutSchedulerTest {
         void expiresFundedWithRefund() {
             acquireLock();
             var deal = dealRecord(DealStatus.FUNDED, true);
-            when(dealRepository.findExpiredDeals(50))
+            when(dealRepository.findExpiredDeals(eq(50), any()))
                     .thenReturn(List.of(deal));
+            when(dealRepository.findById(any())).thenReturn(Optional.of(deal));
             when(dealTransitionService.transition(any()))
                     .thenReturn(new DealTransitionResult.Success(DealStatus.EXPIRED));
 
@@ -121,8 +123,9 @@ class DealTimeoutSchedulerTest {
         void handlesAlreadyTransitioned() {
             acquireLock();
             var deal = dealRecord(DealStatus.OFFER_PENDING, false);
-            when(dealRepository.findExpiredDeals(50))
+            when(dealRepository.findExpiredDeals(eq(50), any()))
                     .thenReturn(List.of(deal));
+            when(dealRepository.findById(any())).thenReturn(Optional.of(deal));
             when(dealTransitionService.transition(any()))
                     .thenReturn(new DealTransitionResult.AlreadyInTargetState(
                             DealStatus.EXPIRED));
@@ -138,8 +141,11 @@ class DealTimeoutSchedulerTest {
             acquireLock();
             var deal1 = dealRecord(DealStatus.OFFER_PENDING, false);
             var deal2 = dealRecord(DealStatus.NEGOTIATING, false);
-            when(dealRepository.findExpiredDeals(50))
+            when(dealRepository.findExpiredDeals(eq(50), any()))
                     .thenReturn(List.of(deal1, deal2));
+            when(dealRepository.findById(any()))
+                    .thenReturn(Optional.of(deal1))
+                    .thenReturn(Optional.of(deal2));
             when(dealTransitionService.transition(any()))
                     .thenThrow(new RuntimeException("CAS conflict"))
                     .thenReturn(new DealTransitionResult.Success(DealStatus.EXPIRED));
@@ -154,7 +160,7 @@ class DealTimeoutSchedulerTest {
         @DisplayName("Should process empty batch without errors")
         void handlesEmptyBatch() {
             acquireLock();
-            when(dealRepository.findExpiredDeals(50))
+            when(dealRepository.findExpiredDeals(eq(50), any()))
                     .thenReturn(List.of());
 
             scheduler.processExpiredDeals();
@@ -167,7 +173,7 @@ class DealTimeoutSchedulerTest {
         void releasesLock() {
             when(lockPort.tryLock(any(), any()))
                     .thenReturn(Optional.of("token-123"));
-            when(dealRepository.findExpiredDeals(50))
+            when(dealRepository.findExpiredDeals(eq(50), any()))
                     .thenReturn(List.of());
 
             scheduler.processExpiredDeals();

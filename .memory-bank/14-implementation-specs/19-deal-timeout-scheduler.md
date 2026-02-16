@@ -145,6 +145,23 @@ When user takes action before deadline:
 
 ---
 
+## Implementation Notes (2026-02-17)
+
+- Expired candidate query uses grace threshold:
+  `deadline_at <= now() - grace_period`.
+- Scheduler uses two lock layers:
+  - global scheduler lock: `scheduler:deal-timeout`
+  - per-deal lock: `lock:deal:{deal_id}`
+- Each locked deal is re-read before transition to avoid stale processing.
+- After successful timeout transition (or idempotent already-target result),
+  scheduler clears `deals.deadline_at` immediately.
+- Timeout action mapping in code:
+  - `OFFER_PENDING`, `NEGOTIATING`, `AWAITING_PAYMENT`, `FUNDED`,
+    `CREATIVE_SUBMITTED`, `CREATIVE_APPROVED`, `SCHEDULED` -> `EXPIRED`
+  - `DELIVERY_VERIFYING` -> `DISPUTED`
+
+---
+
 ## Related Documents
 
 - [Deal State Machine](../06-deal-state-machine.md)

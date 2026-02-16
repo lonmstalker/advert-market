@@ -4,6 +4,7 @@ import com.advertmarket.deal.api.dto.DealListCriteria;
 import com.advertmarket.deal.api.dto.DealRecord;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -76,10 +77,11 @@ public interface DealRepository {
      * Uses {@code FOR UPDATE SKIP LOCKED} to prevent concurrent processing.
      *
      * @param batchSize maximum number of deals to return
+     * @param gracePeriod grace window after deadline to avoid races
      * @return list of expired deals locked for processing
      */
     @NonNull
-    List<DealRecord> findExpiredDeals(int batchSize);
+    List<DealRecord> findExpiredDeals(int batchSize, @NonNull Duration gracePeriod);
 
     /**
      * Sets the deadline timestamp on a deal.

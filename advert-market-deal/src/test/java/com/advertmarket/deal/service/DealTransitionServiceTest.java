@@ -499,6 +499,10 @@ class DealTransitionServiceTest {
                         DealStatus.CREATIVE_SUBMITTED,
                         DealStatus.DISPUTED,
                         ActorType.ADVERTISER),
+                Arguments.of(
+                        DealStatus.CREATIVE_SUBMITTED,
+                        DealStatus.EXPIRED,
+                        ActorType.SYSTEM),
                 // CREATIVE_APPROVED
                 Arguments.of(
                         DealStatus.CREATIVE_APPROVED,
