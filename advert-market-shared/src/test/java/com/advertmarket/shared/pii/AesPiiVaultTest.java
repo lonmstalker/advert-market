@@ -3,6 +3,7 @@ package com.advertmarket.shared.pii;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import javax.crypto.KeyGenerator;
@@ -95,7 +96,7 @@ class AesPiiVaultTest {
             var keyGen = KeyGenerator.getInstance("AES");
             keyGen.init(256, new SecureRandom());
             return keyGen.generateKey().getEncoded();
-        } catch (Exception ex) {
+        } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("Cannot generate AES key", ex);
         }
     }

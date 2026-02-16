@@ -6,14 +6,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
-import com.advertmarket.identity.api.dto.CurrencyMode;
-import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;

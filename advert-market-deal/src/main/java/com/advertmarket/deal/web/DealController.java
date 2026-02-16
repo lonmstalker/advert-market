@@ -3,7 +3,6 @@ package com.advertmarket.deal.web;
 import com.advertmarket.deal.api.dto.DealDetailDto;
 import com.advertmarket.deal.api.dto.DealDto;
 import com.advertmarket.deal.usecase.DealUseCase;
-import com.advertmarket.shared.model.DealStatus;
 import com.advertmarket.shared.pagination.CursorPage;
 import jakarta.validation.Valid;
 import java.util.UUID;

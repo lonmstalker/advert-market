@@ -9,11 +9,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
-import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.UserPort;
 import com.advertmarket.shared.model.UserId;

@@ -59,6 +59,10 @@ dependencies {
         api 'org.checkerframework:checker-qual:3.53.1'
         api 'org.checkerframework:checker:3.53.1'
 
+        // Error Prone
+        api 'com.google.errorprone:error_prone_core:2.47.0'
+        api 'com.google.errorprone:error_prone_annotations:2.47.0'
+
         // spring-properties-md
         api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-api:v0.3.0'
         api 'com.github.lonmstalker.spring-properties-md:spring-properties-md-processor:v0.3.0'

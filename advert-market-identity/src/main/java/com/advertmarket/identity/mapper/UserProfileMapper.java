@@ -1,8 +1,8 @@
 package com.advertmarket.identity.mapper;
 
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.UserProfile;
-import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.shared.json.JsonFacade;
 import java.time.Instant;
 import java.time.OffsetDateTime;

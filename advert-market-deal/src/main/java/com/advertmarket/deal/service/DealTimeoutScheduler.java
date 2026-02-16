@@ -37,6 +37,7 @@ public class DealTimeoutScheduler {
     private final MetricsFacade metrics;
     private final DealTimeoutProperties props;
 
+    /** Polls for expired deals and transitions them to EXPIRED status. */
     @Scheduled(fixedDelayString = "${app.deal.timeout.poll-interval:60000}")
     public void processExpiredDeals() {
         var token = lockPort.tryLock(LOCK_KEY, props.lockTtl());

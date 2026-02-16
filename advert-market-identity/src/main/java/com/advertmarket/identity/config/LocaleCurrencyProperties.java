@@ -35,6 +35,7 @@ public record LocaleCurrencyProperties(
         )
         @NonNull Map<String, String> languageMap
 ) {
+    /** Compact constructor that makes the language map immutable. */
     public LocaleCurrencyProperties {
         languageMap = Map.copyOf(languageMap);
     }

@@ -2,10 +2,10 @@ package com.advertmarket.identity.adapter;
 
 import static com.advertmarket.db.generated.tables.Users.USERS;
 
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.NotificationSettings;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.dto.UserProfile;
-import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.mapper.UserProfileMapper;
 import com.advertmarket.identity.mapper.UserProfileRow;

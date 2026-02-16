@@ -16,7 +16,6 @@ import com.advertmarket.deal.config.DealTimeoutProperties;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.ActorType;
-import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
 import java.time.Duration;
 import java.time.Instant;

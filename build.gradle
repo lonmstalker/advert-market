@@ -15,6 +15,7 @@ plugins {
     id 'com.github.spotbugs' version '6.4.8' apply false
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0' apply false
     id 'de.thetaphi.forbiddenapis' version '3.10' apply false
+    id 'net.ltgt.errorprone' version '5.0.0' apply false
     id 'org.jooq.jooq-codegen-gradle' version '3.20.11' apply false
     id 'org.checkerframework' version '0.6.61' apply false
 }
@@ -140,6 +141,7 @@ subprojects {
         // --- SpotBugs + FindSecBugs ---
         apply plugin: 'com.github.spotbugs'
         spotbugs {
+            ignoreFailures = false
             effort = com.github.spotbugs.snom.Effort.valueOf('MAX')
             reportLevel = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
             excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
@@ -169,6 +171,31 @@ subprojects {
         // Disable forbidden-apis for test source sets
         tasks.matching { it.name == 'forbiddenApisTest' }.configureEach {
             enabled = false
+        }
+
+        // --- Error Prone ---
+        apply plugin: 'net.ltgt.errorprone'
+        dependencies {
+            errorprone 'com.google.errorprone:error_prone_core'
+        }
+        tasks.withType(JavaCompile).configureEach {
+            options.errorprone {
+                disableWarningsInGeneratedCode = true
+                excludedPaths = '.*/build/generated/.*'
+                error('MissingOverride')
+                error('UnusedVariable')
+                error('ClassCanBeStatic')
+                error('UnnecessaryLambda')
+                error('ReturnAtTheEndOfVoidFunction')
+                error('ImmutableEnumChecker')
+                error('BadImport')
+            }
+        }
+        tasks.named('compileTestJava').configure {
+            options.errorprone {
+                disable('UnusedVariable')
+                disable('ImpossibleNullComparison')
+            }
         }
 
         tasks.withType(Test).configureEach {

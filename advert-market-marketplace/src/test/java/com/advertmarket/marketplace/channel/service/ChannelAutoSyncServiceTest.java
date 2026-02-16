@@ -1,6 +1,5 @@
 package com.advertmarket.marketplace.channel.service;
 
-import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
 import static com.advertmarket.db.generated.tables.Users.USERS;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_INACCESSIBLE;
@@ -8,8 +7,6 @@ import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

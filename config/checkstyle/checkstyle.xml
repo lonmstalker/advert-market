@@ -489,6 +489,27 @@
       <property name="ignoreOverriddenMethods" value="true"/>
     </module>
 
+    <!-- Phase 3: dead code & import hygiene -->
+    <module name="UnusedLocalVariable"/>
+    <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
+
+    <!-- Phase 3a: equality & boolean safety -->
+    <module name="EqualsHashCode"/>
+    <module name="StringLiteralEquality"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="CovariantEquals"/>
+
+    <!-- Phase 3b: control flow & style -->
+    <module name="DefaultComesLast"/>
+    <module name="NestedIfDepth">
+      <property name="max" value="2"/>
+    </module>
+    <module name="AvoidDoubleBraceInitialization"/>
+    <module name="NoClone"/>
+    <module name="UnnecessaryParentheses"/>
+
     <!-- Phase 2b: complexity & API hygiene -->
     <module name="CyclomaticComplexity">
       <property name="max" value="10"/>

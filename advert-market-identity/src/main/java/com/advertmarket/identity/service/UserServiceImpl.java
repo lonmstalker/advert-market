@@ -1,10 +1,10 @@
 package com.advertmarket.identity.service;
 
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
-import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.port.UserPort;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.exception.DomainException;

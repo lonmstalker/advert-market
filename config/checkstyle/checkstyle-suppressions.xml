@@ -49,4 +49,16 @@
     <!-- Test file: HMAC helper wraps checked exceptions -->
     <suppress checks="IllegalCatch"
               files="TelegramInitDataValidatorTest\.java"/>
+
+    <!-- DealTimeoutScheduler: scheduler loop safety net -->
+    <suppress checks="IllegalCatch"
+              files="DealTimeoutScheduler\.java"/>
+
+    <!-- Test files: unused locals are common for setup/assertion helpers -->
+    <suppress checks="UnusedLocalVariable"
+              files=".*Tests?\.java$"/>
+
+    <!-- Test files: unnecessary parentheses in assertions are fine -->
+    <suppress checks="UnnecessaryParentheses"
+              files=".*Tests?\.java$"/>
 </suppressions>

@@ -2,7 +2,6 @@ package com.advertmarket.delivery.api.event;
 
 import com.advertmarket.shared.event.DomainEvent;
 import java.time.Instant;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
