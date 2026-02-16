@@ -92,7 +92,8 @@ public final class MetricNames {
             "channel.bot.status.change";
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_DEACTIVATED_TOTAL =
             "channel.deactivated.total";
-    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_CYCLE_DURATION =
+    public static final @Fenum(FenumGroup.METRIC_NAME) String
+            CHANNEL_STATS_COLLECTOR_CYCLE_DURATION =
             "channel.stats.collector.cycle.duration";
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_BATCH_SIZE =
             "channel.stats.collector.batch.size";

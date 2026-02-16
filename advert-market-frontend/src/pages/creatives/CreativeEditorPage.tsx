@@ -1,18 +1,23 @@
+import { mainButton } from '@telegram-apps/sdk-react';
 import { Button, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import {
   CreativeForm,
   CreativeHistorySheet,
-  type InlineButton,
   type MediaItem,
+  type MediaType,
+  type TelegramKeyboardRow,
+  ensureButtonId,
   useCreateCreative,
+  useDeleteCreativeMedia,
   useCreativeDetail,
   useCreativeVersions,
   useEntities,
   useUpdateCreative,
+  useUploadCreativeMedia,
 } from '@/features/creatives';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { BackButtonHandler, FixedBottomBar, Tappable, TelegramChatSimulator } from '@/shared/ui';
@@ -32,6 +37,8 @@ export default function CreativeEditorPage() {
   const { data: versions } = useCreativeVersions(creativeId);
   const createMutation = useCreateCreative();
   const updateMutation = useUpdateCreative(creativeId ?? '');
+  const uploadMediaMutation = useUploadCreativeMedia();
+  const deleteMediaMutation = useDeleteCreativeMedia();
 
   const [activeTab, setActiveTab] = useState<EditorTab>('editor');
   const [showHistory, setShowHistory] = useState(false);
@@ -43,11 +50,40 @@ export default function CreativeEditorPage() {
   const [title, setTitle] = useState(creative?.title ?? '');
   const [text, setText] = useState(creative?.draft.text ?? '');
   const [media, setMedia] = useState<MediaItem[]>(creative?.draft.media ?? []);
-  const [buttons, setButtons] = useState<InlineButton[]>(creative?.draft.buttons ?? []);
+  const [buttons, setButtons] = useState<TelegramKeyboardRow[]>(creative?.draft.buttons ?? []);
   const [disableWebPagePreview, setDisableWebPagePreview] = useState(creative?.draft.disableWebPagePreview ?? false);
-  const { entities, toggleEntity, isActive } = useEntities(creative?.draft.entities ?? []);
+  const { entities, replaceEntities, toggleEntity, isActive } = useEntities(creative?.draft.entities ?? []);
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const supportsMainButton = useMemo(() => {
+    try {
+      return mainButton.setParams.isAvailable();
+    } catch {
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!creative) return;
+    setTitle(creative.title);
+    setText(creative.draft.text);
+    setMedia(creative.draft.media);
+    setButtons(creative.draft.buttons);
+    setDisableWebPagePreview(creative.draft.disableWebPagePreview);
+    replaceEntities(creative.draft.entities);
+  }, [creative, replaceEntities]);
+
+  const validButtonRows = useMemo(
+    () =>
+      buttons
+        .map((row) =>
+          row
+            .map((button) => ensureButtonId(button))
+            .filter((button) => button.text.trim().length > 0 && Boolean(button.url)),
+        )
+        .filter((row) => row.length > 0),
+    [buttons],
+  );
 
   const handleSubmit = useCallback(() => {
     if (!title.trim() || !text.trim()) return;
@@ -58,7 +94,7 @@ export default function CreativeEditorPage() {
       text,
       entities,
       media,
-      buttons: buttons.filter((b) => b.text && b.url),
+      buttons: validButtonRows,
       disableWebPagePreview,
     };
 
@@ -76,7 +112,7 @@ export default function CreativeEditorPage() {
     text,
     entities,
     media,
-    buttons,
+    validButtonRows,
     disableWebPagePreview,
     isEditing,
     createMutation,
@@ -84,6 +120,41 @@ export default function CreativeEditorPage() {
     navigate,
     haptic,
   ]);
+
+  useEffect(() => {
+    if (!supportsMainButton) return;
+    try {
+      if (mainButton.mount.isAvailable() && !mainButton.isMounted()) {
+        mainButton.mount();
+      }
+    } catch {
+      return;
+    }
+
+    const clickHandler = () => handleSubmit();
+    mainButton.onClick.ifAvailable(clickHandler);
+    mainButton.setParams.ifAvailable({
+      text: t('common.save'),
+      isVisible: true,
+      isEnabled: !isPending && !!title.trim() && !!text.trim(),
+      isLoaderVisible: isPending,
+    });
+
+    return () => {
+      mainButton.offClick.ifAvailable(clickHandler);
+      mainButton.setParams.ifAvailable({
+        isVisible: false,
+        isLoaderVisible: false,
+      });
+    };
+  }, [handleSubmit, isPending, supportsMainButton, t, text, title]);
+
+  const handleUploadMedia = useCallback(
+    (file: File, mediaType: MediaType) => uploadMediaMutation.mutateAsync({ file, mediaType }),
+    [uploadMediaMutation],
+  );
+
+  const handleDeleteMedia = useCallback((mediaId: string) => deleteMediaMutation.mutateAsync(mediaId), [deleteMediaMutation]);
 
   if (isEditing && isLoading) {
     return (
@@ -101,12 +172,11 @@ export default function CreativeEditorPage() {
     { value: 'preview' as const, label: t('creatives.tabs.preview') },
   ];
 
-  const filteredButtons = buttons.filter((b) => b.text && b.url);
   const bottomInset = 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))';
 
   const previewContent = (
     <div className="rounded-xl overflow-hidden bg-bg-secondary">
-      <TelegramChatSimulator text={text} entities={entities} media={media} buttons={filteredButtons} />
+      <TelegramChatSimulator text={text} entities={entities} media={media} buttons={validButtonRows} />
     </div>
   );
 
@@ -150,6 +220,8 @@ export default function CreativeEditorPage() {
                 onMediaChange={setMedia}
                 buttons={buttons}
                 onButtonsChange={setButtons}
+                onUploadMedia={handleUploadMedia}
+                onDeleteMedia={handleDeleteMedia}
                 toggleEntity={toggleEntity}
                 isActive={isActive}
                 disableWebPagePreview={disableWebPagePreview}
@@ -178,6 +250,8 @@ export default function CreativeEditorPage() {
               onMediaChange={setMedia}
               buttons={buttons}
               onButtonsChange={setButtons}
+              onUploadMedia={handleUploadMedia}
+              onDeleteMedia={handleDeleteMedia}
               toggleEntity={toggleEntity}
               isActive={isActive}
               disableWebPagePreview={disableWebPagePreview}
@@ -191,20 +265,24 @@ export default function CreativeEditorPage() {
         </div>
       </div>
 
-      {/* Reserve space for the fixed Save bar so content can scroll above it even on short forms. */}
-      <div aria-hidden="true" style={{ height: bottomInset }} /> {/* dynamic calc — must stay inline */}
+      {!supportsMainButton && (
+        <>
+          {/* Reserve space for the fixed Save bar so content can scroll above it even on short forms. */}
+          <div aria-hidden="true" style={{ height: bottomInset }} />
 
-      <FixedBottomBar>
-        <motion.div {...pressScale}>
-          <Button
-            text={t('common.save')}
-            type="primary"
-            loading={isPending}
-            disabled={isPending || !title.trim() || !text.trim()}
-            onClick={handleSubmit}
-          />
-        </motion.div>
-      </FixedBottomBar>
+          <FixedBottomBar>
+            <motion.div {...pressScale}>
+              <Button
+                text={t('common.save')}
+                type="primary"
+                loading={isPending}
+                disabled={isPending || !title.trim() || !text.trim()}
+                onClick={handleSubmit}
+              />
+            </motion.div>
+          </FixedBottomBar>
+        </>
+      )}
 
       {versions && (
         <CreativeHistorySheet open={showHistory} onClose={() => setShowHistory(false)} versions={versions} />

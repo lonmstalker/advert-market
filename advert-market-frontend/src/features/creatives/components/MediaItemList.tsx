@@ -1,84 +1,96 @@
 import { GroupItem, Text } from '@telegram-tools/ui-kit';
-import { motion } from 'motion/react';
-import type { ComponentType, CSSProperties, SVGProps } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tappable } from '@/shared/ui';
-import { pulse } from '@/shared/ui/animations';
 import { FileIcon, ImageIcon, VideoIcon } from '@/shared/ui/icons';
-import type { MediaItem } from '../types/creative';
+import type { MediaItem, MediaType } from '../types/creative';
+import { ensureMediaDefaults, toMediaTypeByMime } from '../types/creative';
 
 type MediaItemListProps = {
   media: MediaItem[];
   onChange: (media: MediaItem[]) => void;
+  onUploadMedia?: (file: File, mediaType: MediaType) => Promise<MediaItem>;
+  onDeleteMedia?: (mediaId: string) => Promise<void>;
 };
 
-const MEDIA_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+const MEDIA_ICON_BY_TYPE = {
   PHOTO: ImageIcon,
-  VIDEO: VideoIcon,
   GIF: ImageIcon,
+  VIDEO: VideoIcon,
   DOCUMENT: FileIcon,
-};
+} as const;
 
-const mediaIconStyle = { width: 20, height: 20, color: 'var(--color-foreground-secondary)' };
+function formatFileSize(sizeBytes: number): string {
+  if (sizeBytes < 1024) return `${sizeBytes} B`;
+  const kb = sizeBytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  const mb = kb / 1024;
+  return `${mb.toFixed(1)} MB`;
+}
 
-const dropZoneStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 8,
-  padding: '28px 16px',
-  borderRadius: 12,
-  border: '2px dashed color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
-  background: 'color-mix(in srgb, var(--color-accent-primary) 5%, transparent)',
-  cursor: 'default',
-  position: 'relative',
-  overflow: 'hidden',
-};
-
-const comingSoonBadge: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  padding: '2px 10px',
-  borderRadius: 20,
-  background: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
-  fontSize: 11,
-  fontWeight: 600,
-  color: 'var(--color-accent-primary)',
-  letterSpacing: 0.5,
-  textTransform: 'uppercase',
-};
-
-export function MediaItemList({ media, onChange }: MediaItemListProps) {
+export function MediaItemList({ media, onChange, onUploadMedia, onDeleteMedia }: MediaItemListProps) {
   const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const removeMedia = (index: number) => {
-    onChange(media.filter((_, i) => i !== index));
+  const removeMedia = async (index: number) => {
+    const target = media[index];
+    if (target && onDeleteMedia) {
+      try {
+        await onDeleteMedia(target.id);
+      } catch {
+        // Keep the form responsive even if backend deletion fails.
+      }
+    }
+    onChange(media.filter((_, idx) => idx !== index));
+  };
+
+  const addMediaFromFile = async (file: File) => {
+    const mediaType = toMediaTypeByMime(file.type);
+    if (onUploadMedia) {
+      setIsUploading(true);
+      try {
+        const uploaded = await onUploadMedia(file, mediaType);
+        onChange([...media, uploaded]);
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    onChange([
+      ...media,
+      ensureMediaDefaults({
+        type: mediaType,
+        url: objectUrl,
+        fileName: file.name,
+        fileSize: formatFileSize(file.size),
+        mimeType: file.type || 'application/octet-stream',
+        sizeBytes: file.size,
+      }),
+    ]);
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <Text type="subheadline1" weight="medium">
+    <div className="am-section">
+      <Text type="subheadline2" color="secondary">
         {t('creatives.form.media')}
       </Text>
+
       {media.map((item, index) => {
-        const Icon = MEDIA_ICONS[item.type] || FileIcon;
+        const Icon = MEDIA_ICON_BY_TYPE[item.type] ?? FileIcon;
         return (
           <GroupItem
-            key={`${item.fileId}-${index}`}
-            before={<Icon style={mediaIconStyle} />}
-            text={item.type}
-            description={item.caption || item.fileId.slice(0, 20)}
+            key={item.id}
+            before={<Icon style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }} />}
+            text={item.fileName || item.type}
+            description={item.fileSize || formatFileSize(item.sizeBytes)}
             after={
               <Tappable
-                onClick={() => removeMedia(index)}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  color: 'var(--color-state-destructive)',
-                  cursor: 'pointer',
-                  fontSize: 14,
-                }}
+                onClick={() => void removeMedia(index)}
+                className="border-0 bg-transparent text-sm text-destructive"
+                aria-label={t('creatives.form.removeMedia')}
               >
                 {t('common.cancel')}
               </Tappable>
@@ -86,15 +98,28 @@ export function MediaItemList({ media, onChange }: MediaItemListProps) {
           />
         );
       })}
-      <div style={dropZoneStyle}>
-        <motion.div {...pulse}>
-          <ImageIcon style={{ width: 32, height: 32, color: 'var(--color-accent-primary)', opacity: 0.5 }} />
-        </motion.div>
-        <Text type="caption1" color="secondary">
-          {t('creatives.form.addMedia')}
-        </Text>
-        <span style={comingSoonBadge}>Coming soon</span>
-      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        className="hidden"
+        accept="image/*,video/*,application/pdf,.doc,.docx,.zip,.txt"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            void addMediaFromFile(file);
+          }
+          event.currentTarget.value = '';
+        }}
+      />
+
+      <Tappable
+        onClick={() => inputRef.current?.click()}
+        className="flex items-center justify-center rounded-row border border-separator bg-bg-base px-4 py-3 text-sm text-accent"
+        disabled={isUploading}
+      >
+        {isUploading ? t('common.loading') : `+ ${t('creatives.form.addMedia')}`}
+      </Tappable>
     </div>
   );
 }

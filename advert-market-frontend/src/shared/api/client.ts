@@ -100,7 +100,9 @@ async function request<T>(method: string, path: string, options?: RequestOptions
   }
 
   if (options?.body) {
-    headers['Content-Type'] = 'application/json';
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
   }
 
   const canaryKey = deriveCanaryKey(initData);
@@ -116,7 +118,11 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     response = await fetch(url.toString(), {
       method,
       headers,
-      body: options?.body ? JSON.stringify(options.body) : undefined,
+      body: options?.body
+        ? options.body instanceof FormData
+          ? options.body
+          : JSON.stringify(options.body)
+        : undefined,
       signal: controller.signal,
     });
   } catch (err) {
@@ -176,6 +182,10 @@ export const api = {
 
   post<T>(path: string, body?: unknown, options?: { schema?: z.ZodType<T> }) {
     return request<T>('POST', path, { body, schema: options?.schema });
+  },
+
+  postForm<T>(path: string, formData: FormData, options?: { schema?: z.ZodType<T> }) {
+    return request<T>('POST', path, { body: formData, schema: options?.schema });
   },
 
   put<T>(path: string, body?: unknown, options?: { schema?: z.ZodType<T> }) {

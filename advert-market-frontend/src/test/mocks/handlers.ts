@@ -67,11 +67,321 @@ function currencyForLanguage(languageCode: string): string {
   return 'USD';
 }
 
+type MockTextEntity = {
+  type: string;
+  offset: number;
+  length: number;
+  url?: string;
+  language?: string;
+};
+
+type MockInlineButton = {
+  id?: string | null;
+  text: string;
+  url?: string | null;
+};
+
+type MockKeyboardRow = MockInlineButton[];
+
+type MockMediaAsset = {
+  id?: string;
+  type: 'PHOTO' | 'VIDEO' | 'GIF' | 'DOCUMENT';
+  url: string;
+  thumbnailUrl?: string;
+  fileName?: string;
+  fileSize?: string;
+  mimeType: string;
+  sizeBytes: number;
+  caption?: string;
+};
+
+type MockCreativeDraft = {
+  text: string;
+  entities: MockTextEntity[];
+  media: MockMediaAsset[];
+  keyboardRows: MockKeyboardRow[];
+  disableWebPagePreview: boolean;
+};
+
+type MockCreativeTemplate = {
+  id: string;
+  title: string;
+  draft: MockCreativeDraft;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type MockCreativeVersion = {
+  version: number;
+  draft: MockCreativeDraft;
+  createdAt: string;
+};
+
+const MOCK_VISUAL_DATA_URL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a6cAAAAASUVORK5CYII=';
+
+function normalizeMediaType(value: unknown): MockMediaAsset['type'] {
+  if (value === 'PHOTO' || value === 'VIDEO' || value === 'GIF' || value === 'DOCUMENT') return value;
+  return 'DOCUMENT';
+}
+
+function inferMediaTypeFromMime(mimeType: string): MockMediaAsset['type'] {
+  if (mimeType.startsWith('image/gif')) return 'GIF';
+  if (mimeType.startsWith('image/')) return 'PHOTO';
+  if (mimeType.startsWith('video/')) return 'VIDEO';
+  return 'DOCUMENT';
+}
+
+function defaultMimeByMediaType(type: MockMediaAsset['type']): string {
+  if (type === 'PHOTO') return 'image/jpeg';
+  if (type === 'GIF') return 'image/gif';
+  if (type === 'VIDEO') return 'video/mp4';
+  return 'application/octet-stream';
+}
+
+function defaultFileNameByMediaType(type: MockMediaAsset['type'], index: number): string {
+  if (type === 'PHOTO') return `photo-${index + 1}.jpg`;
+  if (type === 'GIF') return `gif-${index + 1}.gif`;
+  if (type === 'VIDEO') return `video-${index + 1}.mp4`;
+  return `document-${index + 1}.bin`;
+}
+
+function formatFileSize(sizeBytes: number): string {
+  if (sizeBytes < 1024) return `${sizeBytes} B`;
+  const kb = sizeBytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
+
+async function readFormDataSafe(request: Request, timeoutMs = 300): Promise<FormData | null> {
+  try {
+    const result = await Promise.race([
+      request.formData(),
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), timeoutMs);
+      }),
+    ]);
+    return result instanceof FormData ? result : null;
+  } catch {
+    return null;
+  }
+}
+
+async function readBodyTextSafe(request: Request, timeoutMs = 300): Promise<string | null> {
+  try {
+    const clone = request.clone();
+    const result = await Promise.race([
+      clone.text(),
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), timeoutMs);
+      }),
+    ]);
+    return typeof result === 'string' ? result : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fileToDataUrl(file: File): Promise<string | null> {
+  try {
+    const buffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (const byte of bytes) {
+      binary += String.fromCharCode(byte);
+    }
+    const mimeType = file.type || 'application/octet-stream';
+    return `data:${mimeType};base64,${btoa(binary)}`;
+  } catch {
+    return null;
+  }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function parseMultipartField(body: string, fieldName: string): string | null {
+  const pattern = new RegExp(`name="${escapeRegExp(fieldName)}"\\r\\n\\r\\n([^\\r\\n]+)`, 'm');
+  const match = body.match(pattern);
+  return match?.[1] ?? null;
+}
+
+function parseMultipartFileMeta(body: string): { fileName?: string; mimeType?: string; sizeBytes?: number } {
+  const match = body.match(/name="file"; filename="([^"]*)"\r\nContent-Type: ([^\r\n]+)\r\n\r\n([\s\S]*?)\r\n--/m);
+  if (!match) return {};
+  return {
+    fileName: match[1] || undefined,
+    mimeType: match[2] || undefined,
+    sizeBytes: match[3]?.length ?? undefined,
+  };
+}
+
+function normalizeKeyboardRows(rawDraft: unknown): MockKeyboardRow[] {
+  if (typeof rawDraft !== 'object' || rawDraft === null) return [];
+  const draft = rawDraft as { keyboardRows?: unknown; buttons?: unknown };
+
+  const source = Array.isArray(draft.keyboardRows)
+    ? draft.keyboardRows
+    : Array.isArray(draft.buttons)
+      ? Array.isArray(draft.buttons[0])
+        ? draft.buttons
+        : [draft.buttons]
+      : [];
+
+  return source
+    .filter(Array.isArray)
+    .map((row, rowIndex) =>
+      row
+        .map((button, buttonIndex) => {
+          if (typeof button !== 'object' || button === null) return null;
+          const rawButton = button as { id?: unknown; text?: unknown; url?: unknown };
+          const text = typeof rawButton.text === 'string' ? rawButton.text.trim() : '';
+          if (!text) return null;
+          const id =
+            typeof rawButton.id === 'string' && rawButton.id.trim()
+              ? rawButton.id
+              : `btn-${rowIndex + 1}-${buttonIndex + 1}`;
+          const url = typeof rawButton.url === 'string' && rawButton.url ? rawButton.url : undefined;
+          return { id, text, ...(url ? { url } : {}) };
+        })
+        .filter((button): button is MockInlineButton => button !== null)
+        .slice(0, 5),
+    )
+    .filter((row) => row.length > 0)
+    .slice(0, 5);
+}
+
+function normalizeMediaAssets(rawDraft: unknown, creativeId: string): MockMediaAsset[] {
+  if (typeof rawDraft !== 'object' || rawDraft === null) return [];
+  const draft = rawDraft as { media?: unknown };
+  if (!Array.isArray(draft.media)) return [];
+
+  return draft.media
+    .map((rawItem, index) => {
+      if (typeof rawItem !== 'object' || rawItem === null) return null;
+      const item = rawItem as {
+        id?: unknown;
+        type?: unknown;
+        url?: unknown;
+        thumbnailUrl?: unknown;
+        fileName?: unknown;
+        fileSize?: unknown;
+        mimeType?: unknown;
+        sizeBytes?: unknown;
+        caption?: unknown;
+        fileId?: unknown;
+      };
+
+      const type = normalizeMediaType(item.type);
+      const id = typeof item.id === 'string' && item.id.trim() ? item.id : `${creativeId}-media-${index + 1}`;
+      const fileId = typeof item.fileId === 'string' && item.fileId.trim() ? item.fileId : undefined;
+      const url =
+        typeof item.url === 'string' && item.url.startsWith('http')
+          ? item.url
+          : type === 'DOCUMENT'
+            ? `https://cdn.mock.example/${fileId ?? id}`
+            : MOCK_VISUAL_DATA_URL;
+      const mimeType =
+        typeof item.mimeType === 'string' && item.mimeType.trim() ? item.mimeType : defaultMimeByMediaType(type);
+      const sizeBytes = typeof item.sizeBytes === 'number' && item.sizeBytes >= 0 ? item.sizeBytes : 1024;
+      const fileName =
+        typeof item.fileName === 'string' && item.fileName.trim()
+          ? item.fileName
+          : defaultFileNameByMediaType(type, index);
+      const fileSize = typeof item.fileSize === 'string' && item.fileSize.trim() ? item.fileSize : formatFileSize(sizeBytes);
+      const thumbnailUrl =
+        typeof item.thumbnailUrl === 'string' && item.thumbnailUrl.startsWith('http')
+          ? item.thumbnailUrl
+          : type === 'VIDEO'
+            ? MOCK_VISUAL_DATA_URL
+            : undefined;
+      const caption = typeof item.caption === 'string' ? item.caption : undefined;
+
+      return {
+        id,
+        type,
+        url,
+        ...(thumbnailUrl ? { thumbnailUrl } : {}),
+        fileName,
+        fileSize,
+        mimeType,
+        sizeBytes,
+        ...(caption ? { caption } : {}),
+      };
+    })
+    .filter((item): item is MockMediaAsset => item !== null)
+    .slice(0, 10);
+}
+
+function toCreativeDraft(rawDraft: unknown, creativeId: string): MockCreativeDraft {
+  if (typeof rawDraft !== 'object' || rawDraft === null) {
+    return {
+      text: '',
+      entities: [],
+      media: [],
+      keyboardRows: [],
+      disableWebPagePreview: false,
+    };
+  }
+
+  const draft = rawDraft as {
+    text?: unknown;
+    entities?: unknown;
+    disableWebPagePreview?: unknown;
+  };
+
+  const entities = Array.isArray(draft.entities)
+    ? draft.entities.filter((entity): entity is MockTextEntity => typeof entity === 'object' && entity !== null)
+    : [];
+
+  return {
+    text: typeof draft.text === 'string' ? draft.text : '',
+    entities,
+    media: normalizeMediaAssets(rawDraft, creativeId),
+    keyboardRows: normalizeKeyboardRows(rawDraft),
+    disableWebPagePreview: Boolean(draft.disableWebPagePreview),
+  };
+}
+
+function toCreativeTemplate(rawTemplate: unknown): MockCreativeTemplate {
+  const template =
+    typeof rawTemplate === 'object' && rawTemplate !== null ? (rawTemplate as Record<string, unknown>) : {};
+  const id = typeof template.id === 'string' && template.id.trim() ? template.id : `creative-${Date.now()}`;
+  return {
+    id,
+    title: typeof template.title === 'string' ? template.title : 'Untitled',
+    draft: toCreativeDraft(template.draft, id),
+    version: typeof template.version === 'number' ? template.version : 1,
+    createdAt: typeof template.createdAt === 'string' ? template.createdAt : new Date().toISOString(),
+    updatedAt: typeof template.updatedAt === 'string' ? template.updatedAt : new Date().toISOString(),
+  };
+}
+
+function toCreativeVersion(rawVersion: unknown, creativeId: string): MockCreativeVersion {
+  const version = typeof rawVersion === 'object' && rawVersion !== null ? (rawVersion as Record<string, unknown>) : {};
+  return {
+    version: typeof version.version === 'number' ? version.version : 1,
+    draft: toCreativeDraft(version.draft, creativeId),
+    createdAt: typeof version.createdAt === 'string' ? version.createdAt : new Date().toISOString(),
+  };
+}
+
+let creativeTemplates: MockCreativeTemplate[] = mockCreativeTemplates.map((template) => toCreativeTemplate(template));
+let creativeVersionsById: Record<string, MockCreativeVersion[]> = {
+  'creative-3': mockCreativeVersions.map((version) => toCreativeVersion(version, 'creative-3')),
+};
+
 export function resetMockState(): void {
   profile = { ...mockProfile };
   deals = mockDeals.map((d) => ({ ...d }));
   registeredChannels = [];
   depositChecks.clear();
+  creativeTemplates = mockCreativeTemplates.map((template) => toCreativeTemplate(template));
+  creativeVersionsById = {
+    'creative-3': mockCreativeVersions.map((version) => toCreativeVersion(version, 'creative-3')),
+  };
 
   if (!hasSessionStorage()) return;
   sessionStorage.removeItem(STORAGE_KEYS.profile);
@@ -244,12 +554,17 @@ export const handlers = [
     }
     const body = (await request.json()) as { action: string };
     const statusMap: Record<string, string> = {
-      accept: 'ACCEPTED',
-      reject: 'CANCELLED',
-      cancel: 'CANCELLED',
-      approve_creative: 'CREATIVE_APPROVED',
-      publish: 'PUBLISHED',
-      schedule: 'SCHEDULED',
+      SUBMIT_OFFER: 'OFFER_PENDING',
+      ACCEPT: 'ACCEPTED',
+      REQUEST_REVISION: 'NEGOTIATING',
+      PAY: 'AWAITING_PAYMENT',
+      CANCEL: 'CANCELLED',
+      DISPUTE: 'DISPUTED',
+      PUBLISH: 'PUBLISHED',
+      SCHEDULE: 'SCHEDULED',
+      RESOLVE_RELEASE: 'COMPLETED_RELEASED',
+      RESOLVE_REFUND: 'REFUNDED',
+      RESOLVE_PARTIAL_REFUND: 'PARTIALLY_REFUNDED',
     };
     const newStatus = statusMap[body.action] ?? deal.status;
     const updated = { ...deal, status: newStatus, updatedAt: new Date().toISOString() };
@@ -573,11 +888,11 @@ export const handlers = [
 
     let startIndex = 0;
     if (cursor) {
-      startIndex = mockCreativeTemplates.findIndex((c) => c.id === cursor) + 1;
+      startIndex = creativeTemplates.findIndex((c) => c.id === cursor) + 1;
     }
 
-    const page = mockCreativeTemplates.slice(startIndex, startIndex + limit);
-    const hasNext = startIndex + limit < mockCreativeTemplates.length;
+    const page = creativeTemplates.slice(startIndex, startIndex + limit);
+    const hasNext = startIndex + limit < creativeTemplates.length;
     const nextCursor = hasNext ? (page.at(-1)?.id ?? null) : null;
 
     return HttpResponse.json({ items: page, nextCursor, hasNext });
@@ -585,7 +900,7 @@ export const handlers = [
 
   // GET /creatives/:id — creative detail
   http.get(`${API_BASE}/creatives/:id`, ({ params }) => {
-    const creative = mockCreativeTemplates.find((c) => c.id === params.id);
+    const creative = creativeTemplates.find((c) => c.id === params.id);
     if (!creative) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
@@ -594,50 +909,155 @@ export const handlers = [
 
   // POST /creatives — create creative
   http.post(`${API_BASE}/creatives`, async ({ request }) => {
-    const body = (await request.json()) as { title: string; text: string };
-    return HttpResponse.json(
+    const body = (await request.json()) as {
+      title?: unknown;
+      text?: unknown;
+      entities?: unknown;
+      media?: unknown;
+      keyboardRows?: unknown;
+      disableWebPagePreview?: unknown;
+    };
+
+    const id = `creative-${Date.now()}`;
+    const draft = toCreativeDraft(
       {
-        id: `creative-${Date.now()}`,
-        title: body.title,
-        draft: { text: body.text, entities: [], media: [], buttons: [], disableWebPagePreview: false },
-        version: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        text: typeof body.text === 'string' ? body.text : '',
+        entities: Array.isArray(body.entities) ? body.entities : [],
+        media: Array.isArray(body.media) ? body.media : [],
+        keyboardRows: Array.isArray(body.keyboardRows) ? body.keyboardRows : [],
+        disableWebPagePreview: Boolean(body.disableWebPagePreview),
       },
-      { status: 201 },
+      id,
     );
+
+    const created: MockCreativeTemplate = {
+      id,
+      title: typeof body.title === 'string' && body.title.trim() ? body.title : 'Untitled',
+      draft,
+      version: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    creativeTemplates.unshift(created);
+
+    return HttpResponse.json(created, { status: 201 });
   }),
 
   // PUT /creatives/:id — update creative
   http.put(`${API_BASE}/creatives/:id`, async ({ params, request }) => {
-    const creative = mockCreativeTemplates.find((c) => c.id === params.id);
+    const creative = creativeTemplates.find((c) => c.id === params.id);
     if (!creative) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
-    const body = (await request.json()) as Record<string, unknown>;
-    return HttpResponse.json({
+
+    const body = (await request.json()) as {
+      title?: unknown;
+      text?: unknown;
+      entities?: unknown;
+      media?: unknown;
+      keyboardRows?: unknown;
+      disableWebPagePreview?: unknown;
+    };
+
+    const nextDraft = toCreativeDraft(
+      {
+        text: typeof body.text === 'string' ? body.text : creative.draft.text,
+        entities: Array.isArray(body.entities) ? body.entities : creative.draft.entities,
+        media: Array.isArray(body.media) ? body.media : creative.draft.media,
+        keyboardRows: Array.isArray(body.keyboardRows) ? body.keyboardRows : creative.draft.keyboardRows,
+        disableWebPagePreview:
+          typeof body.disableWebPagePreview === 'boolean'
+            ? body.disableWebPagePreview
+            : creative.draft.disableWebPagePreview,
+      },
+      creative.id,
+    );
+
+    const updated: MockCreativeTemplate = {
       ...creative,
-      ...body,
+      title: typeof body.title === 'string' && body.title.trim() ? body.title : creative.title,
+      draft: nextDraft,
       version: creative.version + 1,
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    creativeTemplates = creativeTemplates.map((item) => (item.id === creative.id ? updated : item));
+    creativeVersionsById[creative.id] = [
+      {
+        version: updated.version,
+        draft: updated.draft,
+        createdAt: updated.updatedAt,
+      },
+      ...(creativeVersionsById[creative.id] ?? []),
+    ];
+
+    return HttpResponse.json(updated);
   }),
 
   // DELETE /creatives/:id — delete creative
   http.delete(`${API_BASE}/creatives/:id`, ({ params }) => {
-    const creative = mockCreativeTemplates.find((c) => c.id === params.id);
+    const creative = creativeTemplates.find((c) => c.id === params.id);
     if (!creative) {
       return HttpResponse.json({ type: 'about:blank', title: 'Not Found', status: 404 }, { status: 404 });
     }
+    creativeTemplates = creativeTemplates.filter((item) => item.id !== creative.id);
     return new HttpResponse(null, { status: 204 });
   }),
 
   // GET /creatives/:id/versions — version history
   http.get(`${API_BASE}/creatives/:id/versions`, ({ params }) => {
-    if (params.id === 'creative-3') {
-      return HttpResponse.json(mockCreativeVersions);
+    const id = params.id as string;
+    return HttpResponse.json(creativeVersionsById[id] ?? []);
+  }),
+
+  // POST /creatives/media — upload media asset
+  http.post(`${API_BASE}/creatives/media`, async ({ request }) => {
+    const formData = await readFormDataSafe(request);
+    const fileEntry = formData?.get('file');
+    const file = fileEntry instanceof File ? fileEntry : null;
+    const bodyText = formData ? null : await readBodyTextSafe(request);
+    const requestedType = formData?.get('mediaType') ?? (bodyText ? parseMultipartField(bodyText, 'mediaType') : null);
+    const fallbackFileMeta = bodyText ? parseMultipartFileMeta(bodyText) : {};
+    const type = typeof requestedType === 'string' && requestedType
+      ? normalizeMediaType(requestedType)
+      : file
+        ? inferMediaTypeFromMime(file.type || 'application/octet-stream')
+        : fallbackFileMeta.mimeType
+          ? inferMediaTypeFromMime(fallbackFileMeta.mimeType)
+        : 'PHOTO';
+    const id = `media-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    const mimeType = file?.type || fallbackFileMeta.mimeType || defaultMimeByMediaType(type);
+    const sizeBytes = file?.size ?? fallbackFileMeta.sizeBytes ?? 1024;
+    const captionValue = formData?.get('caption') ?? (bodyText ? parseMultipartField(bodyText, 'caption') : null);
+    const caption = typeof captionValue === 'string' && captionValue.trim() ? captionValue : undefined;
+    const fileName = file?.name || fallbackFileMeta.fileName || defaultFileNameByMediaType(type, 0);
+    const uploadedDataUrl = file && type !== 'DOCUMENT' ? await fileToDataUrl(file) : null;
+
+    const media: MockMediaAsset = {
+      id,
+      type,
+      url:
+        type === 'DOCUMENT'
+          ? `https://cdn.mock.example/uploads/${id}/${encodeURIComponent(fileName)}`
+          : (uploadedDataUrl ?? MOCK_VISUAL_DATA_URL),
+      ...(type === 'VIDEO' ? { thumbnailUrl: uploadedDataUrl ?? MOCK_VISUAL_DATA_URL } : {}),
+      fileName,
+      fileSize: formatFileSize(sizeBytes),
+      mimeType,
+      sizeBytes,
+      ...(caption ? { caption } : {}),
+    };
+
+    return HttpResponse.json(media, { status: 201 });
+  }),
+
+  // DELETE /creatives/media/:mediaId — delete uploaded media asset
+  http.delete(`${API_BASE}/creatives/media/:mediaId`, ({ params }) => {
+    if (!params.mediaId) {
+      return HttpResponse.json({ type: 'about:blank', title: 'Bad Request', status: 400 }, { status: 400 });
     }
-    return HttpResponse.json([]);
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /deals — create a new deal

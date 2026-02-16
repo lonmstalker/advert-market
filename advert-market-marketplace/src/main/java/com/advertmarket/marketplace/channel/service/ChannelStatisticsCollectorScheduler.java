@@ -11,6 +11,8 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -151,13 +153,15 @@ public class ChannelStatisticsCollectorScheduler {
         if (backoffMs <= 0) {
             return true;
         }
-        try {
-            Thread.sleep(backoffMs);
-            return true;
-        } catch (InterruptedException ex) {
+        if (Thread.currentThread().isInterrupted()) {
+            return false;
+        }
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(backoffMs));
+        if (Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
             return false;
         }
+        return true;
     }
 
     private void markSuccess() {

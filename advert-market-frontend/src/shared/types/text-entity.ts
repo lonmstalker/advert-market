@@ -21,13 +21,23 @@ export type TextEntity = {
 export type MediaType = 'PHOTO' | 'VIDEO' | 'GIF' | 'DOCUMENT';
 
 export type MediaItem = {
+  id: string;
   type: MediaType;
-  fileId: string;
+  url: string;
+  thumbnailUrl?: string;
+  fileName?: string;
+  fileSize?: string;
+  mimeType: string;
+  sizeBytes: number;
   caption?: string;
-  url?: string;
+  // Legacy transitional field for old mocked payloads.
+  fileId?: string;
 };
 
 export type InlineButton = {
+  id: string;
   text: string;
-  url: string;
+  url?: string;
 };
+
+export type TelegramKeyboardRow = InlineButton[];

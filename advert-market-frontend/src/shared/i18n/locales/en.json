@@ -429,6 +429,7 @@
       "accept": "Accept",
       "reject": "Reject",
       "cancel": "Cancel",
+      "dispute": "Dispute",
       "counterOffer": "Counter-offer",
       "reply": "Reply",
       "pay": "Pay",
@@ -479,7 +480,8 @@
     "confirm": {
       "title": "Are you sure?",
       "reject": "This deal will be rejected. The advertiser will be notified.",
-      "cancel": "This deal will be cancelled. This action cannot be undone."
+      "cancel": "This deal will be cancelled. This action cannot be undone.",
+      "dispute": "This deal will move to dispute resolution."
     },
     "create": {
       "title": "Create deal",
@@ -700,8 +702,14 @@
       "textPlaceholder": "Enter ad post text...",
       "media": "Media",
       "addMedia": "Add media",
+      "removeMedia": "Remove media",
       "buttons": "Buttons",
       "addButton": "Add button",
+      "addRow": "Add row",
+      "rowLabel": "Row {{index}}",
+      "removeRow": "Remove row",
+      "buttonLabel": "Button {{index}}",
+      "removeButton": "Remove button",
       "buttonText": "Button text",
       "buttonUrl": "Link URL",
       "selectTextHint": "Select text to format",

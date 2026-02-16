@@ -5,6 +5,7 @@ import { formatRelativeTime } from '@/shared/lib/date-format';
 import { pressScale } from '@/shared/ui/animations';
 import { ImageIcon, LinkIcon } from '@/shared/ui/icons';
 import type { CreativeTemplate } from '../types/creative';
+import { countButtons } from '../types/creative';
 
 type CreativeListItemProps = {
   creative: CreativeTemplate;
@@ -14,7 +15,7 @@ type CreativeListItemProps = {
 export function CreativeListItem({ creative, onClick }: CreativeListItemProps) {
   const { t, i18n } = useTranslation();
   const mediaCount = creative.draft.media.length;
-  const buttonCount = creative.draft.buttons.filter((b) => b.text && b.url).length;
+  const buttonCount = countButtons(creative.draft.buttons);
   const textPreview = creative.draft.text.length > 60 ? `${creative.draft.text.slice(0, 60)}...` : creative.draft.text;
 
   const chips: string[] = [];

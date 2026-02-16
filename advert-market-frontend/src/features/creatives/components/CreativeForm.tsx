@@ -2,7 +2,7 @@ import { Input, Text, Toggle } from '@telegram-tools/ui-kit';
 import { type RefObject, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/shared/ui';
-import type { InlineButton, MediaItem, TextEntityType } from '../types/creative';
+import type { MediaItem, MediaType, TelegramKeyboardRow, TextEntityType } from '../types/creative';
 import { ButtonBuilder } from './ButtonBuilder';
 import { FormattingToolbar } from './FormattingToolbar';
 import { LinkInputSheet } from './LinkInputSheet';
@@ -15,8 +15,10 @@ type CreativeFormProps = {
   onTextChange: (text: string) => void;
   media: MediaItem[];
   onMediaChange: (media: MediaItem[]) => void;
-  buttons: InlineButton[];
-  onButtonsChange: (buttons: InlineButton[]) => void;
+  buttons: TelegramKeyboardRow[];
+  onButtonsChange: (buttons: TelegramKeyboardRow[]) => void;
+  onUploadMedia?: (file: File, mediaType: MediaType) => Promise<MediaItem>;
+  onDeleteMedia?: (mediaId: string) => Promise<void>;
   toggleEntity: (type: TextEntityType, selection: { start: number; end: number }, extra?: { url?: string }) => void;
   isActive: (type: TextEntityType, cursorPos: number) => boolean;
   disableWebPagePreview: boolean;
@@ -35,6 +37,8 @@ export function CreativeForm({
   onMediaChange,
   buttons,
   onButtonsChange,
+  onUploadMedia,
+  onDeleteMedia,
   toggleEntity,
   isActive,
   disableWebPagePreview,
@@ -78,7 +82,7 @@ export function CreativeForm({
   const handleLinkSubmit = useCallback(
     (url: string) => {
       if (!pendingSelection) return;
-      toggleEntity('TEXT_LINK' as TextEntityType, pendingSelection, { url });
+      toggleEntity('TEXT_LINK', pendingSelection, { url });
       setPendingSelection(null);
       textareaRef.current?.focus();
     },
@@ -159,6 +163,8 @@ export function CreativeForm({
           placeholder={t('creatives.form.textPlaceholder')}
           maxLength={MAX_TEXT_LENGTH}
           rows={6}
+          autoResize
+          style={{ resize: 'none', minHeight: 140 }}
           onFocus={() => {
             setIsFocused(true);
             syncSelection();
@@ -174,7 +180,12 @@ export function CreativeForm({
         />
       </div>
 
-      <MediaItemList media={media} onChange={onMediaChange} />
+      <MediaItemList
+        media={media}
+        onChange={onMediaChange}
+        onUploadMedia={onUploadMedia}
+        onDeleteMedia={onDeleteMedia}
+      />
       <ButtonBuilder buttons={buttons} onChange={onButtonsChange} />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

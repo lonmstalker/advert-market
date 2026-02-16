@@ -3,8 +3,10 @@ import { creativeLibraryKeys } from '@/shared/api/query-keys';
 import {
   type CreateCreativeRequest,
   createCreative,
+  deleteCreativeMedia,
   deleteCreative,
   type UpdateCreativeRequest,
+  uploadCreativeMedia,
   updateCreative,
 } from '../api/creatives-api';
 
@@ -38,5 +40,25 @@ export function useDeleteCreative() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: creativeLibraryKeys.all });
     },
+  });
+}
+
+export function useUploadCreativeMedia() {
+  return useMutation({
+    mutationFn: ({
+      file,
+      mediaType,
+      caption,
+    }: {
+      file: File;
+      mediaType: 'PHOTO' | 'VIDEO' | 'GIF' | 'DOCUMENT';
+      caption?: string;
+    }) => uploadCreativeMedia(file, mediaType, caption),
+  });
+}
+
+export function useDeleteCreativeMedia() {
+  return useMutation({
+    mutationFn: (mediaId: string) => deleteCreativeMedia(mediaId),
   });
 }
