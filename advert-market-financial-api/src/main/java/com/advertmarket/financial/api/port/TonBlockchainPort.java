@@ -25,7 +25,7 @@ public interface TonBlockchainPort {
     long getAddressBalance(@NonNull String address);
 
     /** Returns the current seqno of a wallet contract. */
-    int getSeqno(@NonNull String address);
+    long getSeqno(@NonNull String address);
 
     /** Estimates transaction fee in nanoTON. */
     long estimateFee(@NonNull String address, @NonNull String base64Body);

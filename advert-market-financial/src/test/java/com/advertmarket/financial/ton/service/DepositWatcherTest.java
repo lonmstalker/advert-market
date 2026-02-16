@@ -57,7 +57,7 @@ class DepositWatcherTest {
         metrics = mock(MetricsFacade.class);
 
         var deposit = new TonProperties.Deposit(
-                Duration.ofSeconds(10), Duration.ofMinutes(30), 100);
+                Duration.ofSeconds(10), Duration.ofMinutes(30), 100, 5);
 
         watcher = new DepositWatcher(
                 blockchainPort, txRepository, confirmationPolicy,
@@ -112,7 +112,7 @@ class DepositWatcherTest {
             when(blockchainPort.getMasterchainSeqno()).thenReturn(105L);
             when(txRepository.updateConfirmed(
                     eq(1L), eq("txhash1"), anyInt(),
-                    eq(1000L), any(OffsetDateTime.class)))
+                    eq(1000L), any(OffsetDateTime.class), eq(0)))
                     .thenReturn(true);
             when(jsonFacade.toJson(any())).thenReturn("{}");
 
@@ -120,7 +120,7 @@ class DepositWatcherTest {
 
             verify(txRepository).updateConfirmed(
                     eq(1L), eq("txhash1"), anyInt(),
-                    eq(1000L), any(OffsetDateTime.class));
+                    eq(1000L), any(OffsetDateTime.class), eq(0));
             verify(outboxRepository).save(any(OutboxEntry.class));
             verify(lockPort).unlock(anyString(), eq("token-1"));
         }
@@ -130,7 +130,7 @@ class DepositWatcherTest {
         void skipsInsufficientConfirmations() {
             var record = createPendingRecord(
                     2L, UUID.randomUUID(), "UQaddr2", 500_000_000_000L);
-            record.setSeqno(200); // seqno when TX was first seen
+            record.setSeqno(200L); // seqno when TX was first seen
 
             when(lockPort.tryLock(anyString(), any(Duration.class)))
                     .thenReturn(Optional.of("token-1"));
@@ -149,7 +149,7 @@ class DepositWatcherTest {
 
             verify(txRepository, never()).updateConfirmed(
                     anyLong(), anyString(), anyInt(),
-                    anyLong(), any(OffsetDateTime.class));
+                    anyLong(), any(OffsetDateTime.class), anyInt());
             verify(outboxRepository, never()).save(any());
         }
 
@@ -184,6 +184,182 @@ class DepositWatcherTest {
         }
 
         @Test
+        @DisplayName("Should not publish event when CAS version conflict in updateConfirmed")
+        void shouldNotPublishEventWhenCASFails() {
+            var record = createPendingRecord(
+                    5L, UUID.randomUUID(), "UQaddr5", 10_000_000_000L);
+            record.setVersion(3);
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(10_000_000_000L))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQaddr5", 10))
+                    .thenReturn(List.of(new TonTransactionInfo(
+                            "txhash5", 400L, "fromAddr", "UQaddr5",
+                            10_000_000_000L, 500L, nowSecs() - 30)));
+            when(blockchainPort.getMasterchainSeqno()).thenReturn(105L);
+            // CAS fails — another instance already confirmed
+            when(txRepository.updateConfirmed(
+                    eq(5L), eq("txhash5"), anyInt(),
+                    eq(500L), any(OffsetDateTime.class), eq(3)))
+                    .thenReturn(false);
+
+            watcher.pollDeposits();
+
+            // No outbox event published
+            verify(outboxRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should pass record version to updateConfirmed for CAS")
+        void shouldPassVersionToUpdateConfirmed() {
+            var record = createPendingRecord(
+                    6L, UUID.randomUUID(), "UQaddr6", 5_000_000_000L);
+            record.setVersion(7);
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(5_000_000_000L))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQaddr6", 10))
+                    .thenReturn(List.of(new TonTransactionInfo(
+                            "txhash6", 500L, "fromAddr", "UQaddr6",
+                            5_000_000_000L, 300L, nowSecs() - 20)));
+            when(blockchainPort.getMasterchainSeqno()).thenReturn(510L);
+            when(txRepository.updateConfirmed(
+                    eq(6L), eq("txhash6"), anyInt(),
+                    eq(300L), any(OffsetDateTime.class), eq(7)))
+                    .thenReturn(true);
+            when(jsonFacade.toJson(any())).thenReturn("{}");
+
+            watcher.pollDeposits();
+
+            // Verify version 7 was passed to CAS
+            verify(txRepository).updateConfirmed(
+                    eq(6L), eq("txhash6"), anyInt(),
+                    eq(300L), any(OffsetDateTime.class), eq(7));
+        }
+
+        @Test
+        @DisplayName("Should save seqno on first detection and return 0 confirmations")
+        void savesSeqnoOnFirstDetection() {
+            var record = createPendingRecord(
+                    7L, UUID.randomUUID(), "UQaddr7", 1_000_000_000L);
+            record.setSeqno(null); // first detection — no seqno yet
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(1_000_000_000L))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQaddr7", 10))
+                    .thenReturn(List.of(new TonTransactionInfo(
+                            "txhash7", 600L, "fromAddr", "UQaddr7",
+                            1_000_000_000L, 500L, nowSecs() - 10)));
+            when(blockchainPort.getMasterchainSeqno()).thenReturn(300L);
+
+            watcher.pollDeposits();
+
+            // Seqno saved
+            verify(txRepository).updateSeqno(7L, 300L, 0);
+            // 0 confirmations < 1 required, so no confirm
+            verify(txRepository, never()).updateConfirmed(
+                    anyLong(), anyString(), anyInt(),
+                    anyLong(), any(OffsetDateTime.class), anyInt());
+        }
+
+        @Test
+        @DisplayName("Should not match transaction with zero amount")
+        void shouldNotMatchZeroAmount() {
+            // expectedAmount = 0 to specifically test the > 0 guard
+            var record = createPendingRecord(
+                    8L, UUID.randomUUID(), "UQaddr8", 0L);
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(anyLong()))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQaddr8", 10))
+                    .thenReturn(List.of(new TonTransactionInfo(
+                            "txhash8", 600L, "fromAddr", "UQaddr8",
+                            0L, 500L, nowSecs() - 10)));
+
+            watcher.pollDeposits();
+
+            verify(txRepository, never()).updateConfirmed(
+                    anyLong(), anyString(), anyInt(),
+                    anyLong(), any(OffsetDateTime.class), anyInt());
+        }
+
+        @Test
+        @DisplayName("Should not match transaction with negative amount")
+        void shouldNotMatchNegativeAmount() {
+            // expectedAmount = 0 to specifically test the > 0 guard
+            var record = createPendingRecord(
+                    9L, UUID.randomUUID(), "UQaddr9", 0L);
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(anyLong()))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQaddr9", 10))
+                    .thenReturn(List.of(new TonTransactionInfo(
+                            "txhash9", 700L, "fromAddr", "UQaddr9",
+                            -1L, 500L, nowSecs() - 10)));
+
+            watcher.pollDeposits();
+
+            verify(txRepository, never()).updateConfirmed(
+                    anyLong(), anyString(), anyInt(),
+                    anyLong(), any(OffsetDateTime.class), anyInt());
+        }
+
+        @Test
+        @DisplayName("Should select most recent transaction by lt when multiple match")
+        void shouldSelectMostRecentByLt() {
+            var record = createPendingRecord(
+                    12L, UUID.randomUUID(), "UQaddrLt", 1_000_000_000L);
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(anyLong()))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQaddrLt", 10))
+                    .thenReturn(List.of(
+                            new TonTransactionInfo(
+                                    "oldTx", 100L, "from", "UQaddrLt",
+                                    1_000_000_000L, 500L, nowSecs() - 120),
+                            new TonTransactionInfo(
+                                    "newTx", 200L, "from", "UQaddrLt",
+                                    1_000_000_000L, 500L, nowSecs() - 60)));
+            when(blockchainPort.getMasterchainSeqno()).thenReturn(200L);
+            when(txRepository.updateConfirmed(
+                    eq(12L), eq("newTx"), anyInt(),
+                    eq(500L), any(OffsetDateTime.class), eq(0)))
+                    .thenReturn(true);
+            when(jsonFacade.toJson(any())).thenReturn("{}");
+
+            watcher.pollDeposits();
+
+            // Must select "newTx" (lt=200) over "oldTx" (lt=100)
+            verify(txRepository).updateConfirmed(
+                    eq(12L), eq("newTx"), anyInt(),
+                    eq(500L), any(OffsetDateTime.class), eq(0));
+        }
+
+        @Test
         @DisplayName("Should continue processing other deposits when one fails")
         void continuesOnError() {
             var record1 = createPendingRecord(
@@ -206,7 +382,7 @@ class DepositWatcherTest {
             when(blockchainPort.getMasterchainSeqno()).thenReturn(305L);
             when(txRepository.updateConfirmed(
                     eq(11L), anyString(), anyInt(),
-                    anyLong(), any(OffsetDateTime.class)))
+                    anyLong(), any(OffsetDateTime.class), eq(0)))
                     .thenReturn(true);
             when(jsonFacade.toJson(any())).thenReturn("{}");
 
@@ -215,7 +391,56 @@ class DepositWatcherTest {
             // Second deposit still processed despite first failing
             verify(txRepository).updateConfirmed(
                     eq(11L), eq("txOk"), anyInt(),
-                    eq(500L), any(OffsetDateTime.class));
+                    eq(500L), any(OffsetDateTime.class), eq(0));
+        }
+
+        @Test
+        @DisplayName("Should mark deposit as FAILED after max retries exceeded")
+        void shouldMarkFailedAfterMaxRetries() {
+            var record = createPendingRecord(
+                    13L, UUID.randomUUID(), "UQfailRetry", 1_000_000_000L);
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(anyLong()))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQfailRetry", 10))
+                    .thenThrow(new RuntimeException("API error"));
+            // retry_count is already at max (5)
+            when(txRepository.incrementRetryCount(13L)).thenReturn(6);
+            when(txRepository.updateStatus(eq(13L), eq("FAILED"), eq(0), eq(0)))
+                    .thenReturn(true);
+            when(jsonFacade.toJson(any())).thenReturn("{}");
+
+            watcher.pollDeposits();
+
+            verify(txRepository).incrementRetryCount(13L);
+            verify(txRepository).updateStatus(13L, "FAILED", 0, 0);
+        }
+
+        @Test
+        @DisplayName("Should increment retry count but not fail when under max retries")
+        void shouldIncrementRetryCountUnderMax() {
+            var record = createPendingRecord(
+                    14L, UUID.randomUUID(), "UQretry", 1_000_000_000L);
+
+            when(lockPort.tryLock(anyString(), any(Duration.class)))
+                    .thenReturn(Optional.of("token-1"));
+            when(txRepository.findPendingDeposits(anyInt()))
+                    .thenReturn(List.of(record));
+            when(confirmationPolicy.requiredConfirmations(anyLong()))
+                    .thenReturn(new ConfirmationRequirement(1, false));
+            when(blockchainPort.getTransactions("UQretry", 10))
+                    .thenThrow(new RuntimeException("API error"));
+            when(txRepository.incrementRetryCount(14L)).thenReturn(2);
+
+            watcher.pollDeposits();
+
+            verify(txRepository).incrementRetryCount(14L);
+            verify(txRepository, never()).updateStatus(
+                    anyLong(), eq("FAILED"), anyInt(), anyInt());
         }
     }
 
@@ -230,7 +455,7 @@ class DepositWatcherTest {
         record.setStatus("PENDING");
         record.setConfirmations(0);
         record.setVersion(0);
-        record.setSeqno(100);
+        record.setSeqno(100L);
         record.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
         return record;
     }

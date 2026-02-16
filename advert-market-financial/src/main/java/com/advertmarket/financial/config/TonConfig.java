@@ -127,7 +127,7 @@ public class TonConfig {
         }
 
         @Override
-        public int getSeqno(String address) {
+        public long getSeqno(String address) {
             return Bulkhead.decorateSupplier(bulkhead,
                     CircuitBreaker.decorateSupplier(circuitBreaker,
                             () -> delegate.getSeqno(address))).get();

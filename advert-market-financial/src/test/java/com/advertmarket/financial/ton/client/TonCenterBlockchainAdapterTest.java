@@ -81,6 +81,123 @@ class TonCenterBlockchainAdapterTest {
         }
 
         @Test
+        @DisplayName("Should filter out transactions with null txId hash")
+        void filtersNullTxIdHash() {
+            var validTx = createValidTx("hash1", "100", "1000000000");
+
+            var nullHashTxId = new TransactionResponse.TransactionId();
+            nullHashTxId.setHash(null);
+            nullHashTxId.setLt("200");
+            var nullHashInMsg = new TransactionResponse.Message();
+            nullHashInMsg.setSource("EQSrc");
+            nullHashInMsg.setDestination("EQDst");
+            nullHashInMsg.setValue("2000000000");
+            var nullHashTx = new TransactionResponse();
+            nullHashTx.setTransactionId(nullHashTxId);
+            nullHashTx.setInMsg(nullHashInMsg);
+            nullHashTx.setFee("1000");
+            nullHashTx.setUtime(1700000000L);
+
+            var response = okResponse(List.of(nullHashTx, validTx));
+            when(tonCenter.getTransactions("EQDst", 10)).thenReturn(response);
+
+            List<TonTransactionInfo> result = adapter.getTransactions("EQDst", 10);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.getFirst().txHash()).isEqualTo("hash1");
+        }
+
+        @Test
+        @DisplayName("Should filter out transactions with null txId")
+        void filtersNullTxId() {
+            var validTx = createValidTx("hash2", "300", "3000000000");
+
+            var nullIdTx = new TransactionResponse();
+            nullIdTx.setTransactionId(null);
+            var nullIdInMsg = new TransactionResponse.Message();
+            nullIdInMsg.setSource("EQ1");
+            nullIdInMsg.setDestination("EQ2");
+            nullIdInMsg.setValue("500");
+            nullIdTx.setInMsg(nullIdInMsg);
+            nullIdTx.setFee("100");
+            nullIdTx.setUtime(1700000001L);
+
+            var response = okResponse(List.of(nullIdTx, validTx));
+            when(tonCenter.getTransactions("EQ2", 10)).thenReturn(response);
+
+            List<TonTransactionInfo> result = adapter.getTransactions("EQ2", 10);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.getFirst().txHash()).isEqualTo("hash2");
+        }
+
+        @Test
+        @DisplayName("Should filter out transactions with null inMsg")
+        void filtersNullInMsg() {
+            var validTx = createValidTx("hash3", "400", "4000000000");
+
+            var nullMsgTxId = new TransactionResponse.TransactionId();
+            nullMsgTxId.setHash("hashNoMsg");
+            nullMsgTxId.setLt("500");
+            var nullMsgTx = new TransactionResponse();
+            nullMsgTx.setTransactionId(nullMsgTxId);
+            nullMsgTx.setInMsg(null);
+            nullMsgTx.setFee("200");
+            nullMsgTx.setUtime(1700000002L);
+
+            var response = okResponse(List.of(nullMsgTx, validTx));
+            when(tonCenter.getTransactions("EQDst", 10)).thenReturn(response);
+
+            List<TonTransactionInfo> result = adapter.getTransactions("EQDst", 10);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.getFirst().txHash()).isEqualTo("hash3");
+        }
+
+        @Test
+        @DisplayName("Should return empty list when all transactions are filtered")
+        void returnsEmptyWhenAllFiltered() {
+            var nullIdTx = new TransactionResponse();
+            nullIdTx.setTransactionId(null);
+            nullIdTx.setFee("0");
+            nullIdTx.setUtime(0L);
+
+            var response = okResponse(List.of(nullIdTx));
+            when(tonCenter.getTransactions("EQAddr", 5)).thenReturn(response);
+
+            List<TonTransactionInfo> result = adapter.getTransactions("EQAddr", 5);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should return empty list for empty result")
+        void returnsEmptyForEmptyResult() {
+            var response = okResponse(List.<TransactionResponse>of());
+            when(tonCenter.getTransactions("EQAddr", 10)).thenReturn(response);
+
+            List<TonTransactionInfo> result = adapter.getTransactions("EQAddr", 10);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should throw DomainException when response ok=false")
+        void throwsOnNotOkResponse() {
+            var response = new TonResponse<List<TransactionResponse>>();
+            response.setOk(false);
+            response.setError("rate limited");
+            when(tonCenter.getTransactions("EQAddr", 10)).thenReturn(response);
+
+            assertThatThrownBy(() -> adapter.getTransactions("EQAddr", 10))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("getTransactions");
+
+            verify(metrics).incrementCounter(MetricNames.TON_API_ERROR,
+                    "method", "getTransactions");
+        }
+
+        @Test
         @DisplayName("Should throw DomainException on TonCenterException")
         void throwsOnApiError() {
             when(tonCenter.getTransactions(anyString(), any(Integer.class)))
@@ -155,9 +272,20 @@ class TonCenterBlockchainAdapterTest {
         void delegatesGetSeqno() {
             when(tonCenter.getSeqno("EQAddr")).thenReturn(7L);
 
-            int seqno = adapter.getSeqno("EQAddr");
+            long seqno = adapter.getSeqno("EQAddr");
 
-            assertThat(seqno).isEqualTo(7);
+            assertThat(seqno).isEqualTo(7L);
+        }
+
+        @Test
+        @DisplayName("Should return long value exceeding Integer.MAX_VALUE")
+        void returnsLongExceedingIntMax() {
+            long largeSeqno = Integer.MAX_VALUE + 1L;
+            when(tonCenter.getSeqno("EQAddr")).thenReturn(largeSeqno);
+
+            long seqno = adapter.getSeqno("EQAddr");
+
+            assertThat(seqno).isEqualTo(largeSeqno);
         }
 
         @Test
@@ -202,5 +330,22 @@ class TonCenterBlockchainAdapterTest {
         response.setOk(true);
         response.setResult(result);
         return response;
+    }
+
+    private static TransactionResponse createValidTx(
+            String hash, String lt, String value) {
+        var txId = new TransactionResponse.TransactionId();
+        txId.setHash(hash);
+        txId.setLt(lt);
+        var inMsg = new TransactionResponse.Message();
+        inMsg.setSource("EQSource");
+        inMsg.setDestination("EQDst");
+        inMsg.setValue(value);
+        var tx = new TransactionResponse();
+        tx.setTransactionId(txId);
+        tx.setInMsg(inMsg);
+        tx.setFee("1000");
+        tx.setUtime(1700000000L);
+        return tx;
     }
 }

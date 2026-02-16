@@ -1,8 +1,10 @@
 package com.advertmarket.financial.escrow.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,6 +61,22 @@ class EscrowServiceTest {
             assertThat(result.subwalletId()).isEqualTo(42L);
             verify(txRepository).save(any());
         }
+
+        @Test
+        @DisplayName("Should throw when subwalletId exceeds Integer.MAX_VALUE")
+        void rejectsSubwalletIdOverflow() {
+            var dealId = DealId.generate();
+            long overflowId = Integer.MAX_VALUE + 1L;
+            when(tonWalletPort.generateDepositAddress(dealId))
+                    .thenReturn(new DepositAddressInfo("UQaddr", overflowId));
+
+            assertThatThrownBy(() ->
+                    service.generateDepositAddress(dealId, 5_000_000_000L))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Subwallet ID overflow");
+
+            verify(txRepository, never()).save(any());
+        }
     }
 
     @Nested
@@ -82,6 +100,27 @@ class EscrowServiceTest {
             assertThat(request.dealId()).isEqualTo(dealId);
             assertThat(request.idempotencyKey().value())
                     .isEqualTo("deposit:txhash1");
+        }
+
+        @Test
+        @DisplayName("Should use deterministic idempotency key based on txHash")
+        void idempotencyKeyBasedOnTxHash() {
+            var dealId = DealId.generate();
+            var existingTxRef = UUID.randomUUID();
+            when(ledgerPort.transfer(any())).thenReturn(existingTxRef);
+
+            service.confirmDeposit(dealId, "txhash_dup",
+                    10_000_000_000L, 3, "fromAddr");
+            service.confirmDeposit(dealId, "txhash_dup",
+                    10_000_000_000L, 3, "fromAddr");
+
+            var captor = ArgumentCaptor.forClass(TransferRequest.class);
+            verify(ledgerPort, org.mockito.Mockito.times(2))
+                    .transfer(captor.capture());
+
+            assertThat(captor.getAllValues())
+                    .extracting(r -> r.idempotencyKey().value())
+                    .containsOnly("deposit:txhash_dup");
         }
     }
 
@@ -107,6 +146,25 @@ class EscrowServiceTest {
             assertThat(request.idempotencyKey().value())
                     .isEqualTo("release:" + dealId.value());
         }
+
+        @Test
+        @DisplayName("Should use deterministic idempotency key based on dealId")
+        void idempotencyKeyBasedOnDealId() {
+            var dealId = DealId.generate();
+            var ownerId = new UserId(123L);
+            when(ledgerPort.transfer(any())).thenReturn(UUID.randomUUID());
+
+            service.releaseEscrow(dealId, ownerId, 10_000_000_000L, 500);
+            service.releaseEscrow(dealId, ownerId, 10_000_000_000L, 500);
+
+            var captor = ArgumentCaptor.forClass(TransferRequest.class);
+            verify(ledgerPort, org.mockito.Mockito.times(2))
+                    .transfer(captor.capture());
+
+            assertThat(captor.getAllValues())
+                    .extracting(r -> r.idempotencyKey().value())
+                    .containsOnly("release:" + dealId.value());
+        }
     }
 
     @Nested
@@ -128,6 +186,24 @@ class EscrowServiceTest {
             assertThat(request.legs()).hasSize(2);
             assertThat(request.idempotencyKey().value())
                     .isEqualTo("refund:" + dealId.value());
+        }
+
+        @Test
+        @DisplayName("Should use deterministic idempotency key based on dealId")
+        void idempotencyKeyBasedOnDealId() {
+            var dealId = DealId.generate();
+            when(ledgerPort.transfer(any())).thenReturn(UUID.randomUUID());
+
+            service.refundEscrow(dealId, 5_000_000_000L);
+            service.refundEscrow(dealId, 5_000_000_000L);
+
+            var captor = ArgumentCaptor.forClass(TransferRequest.class);
+            verify(ledgerPort, org.mockito.Mockito.times(2))
+                    .transfer(captor.capture());
+
+            assertThat(captor.getAllValues())
+                    .extracting(r -> r.idempotencyKey().value())
+                    .containsOnly("refund:" + dealId.value());
         }
     }
 }

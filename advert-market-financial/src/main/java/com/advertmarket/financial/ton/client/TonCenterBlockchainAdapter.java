@@ -35,15 +35,27 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
             var response = tonCenter.getTransactions(address, limit);
             checkResponse(response, "getTransactions");
             return response.getResult().stream()
+                    .filter(tx -> {
+                        var txId = tx.getTransactionId();
+                        if (txId == null || txId.getHash() == null) {
+                            log.warn("Skipping TON transaction with missing txId/hash for address={}", address);
+                            return false;
+                        }
+                        if (tx.getInMsg() == null) {
+                            log.warn("Skipping TON transaction with missing inMsg: txHash={}", txId.getHash());
+                            return false;
+                        }
+                        return true;
+                    })
                     .map(tx -> {
                         var txId = tx.getTransactionId();
                         var inMsg = tx.getInMsg();
                         return new TonTransactionInfo(
-                                txId != null ? txId.getHash() : null,
-                                txId != null ? parseLong(txId.getLt()) : 0L,
-                                inMsg != null ? inMsg.getSource() : null,
-                                inMsg != null ? inMsg.getDestination() : address,
-                                inMsg != null ? parseLong(inMsg.getValue()) : 0L,
+                                txId.getHash(),
+                                parseLong(txId.getLt()),
+                                inMsg.getSource(),
+                                inMsg.getDestination() != null ? inMsg.getDestination() : address,
+                                parseLong(inMsg.getValue()),
                                 parseLong(tx.getFee()),
                                 tx.getUtime() != null ? tx.getUtime() : 0L
                         );
@@ -91,10 +103,10 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
     }
 
     @Override
-    public int getSeqno(@NonNull String address) {
+    public long getSeqno(@NonNull String address) {
         metrics.incrementCounter(MetricNames.TON_API_REQUEST, "method", "getSeqno");
         try {
-            return (int) tonCenter.getSeqno(address);
+            return tonCenter.getSeqno(address);
         } catch (TonCenterException ex) {
             throw wrapException("getSeqno", ex);
         }

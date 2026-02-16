@@ -44,6 +44,11 @@ public class EscrowService implements EscrowPort {
             @NonNull DealId dealId, long amountNano) {
         var addressInfo = tonWalletPort.generateDepositAddress(dealId);
 
+        if (addressInfo.subwalletId() > Integer.MAX_VALUE) {
+            throw new IllegalStateException(
+                    "Subwallet ID overflow: " + addressInfo.subwalletId());
+        }
+
         var record = new TonTransactionsRecord();
         record.setDealId(dealId.value());
         record.setDirection("IN");

@@ -20,6 +20,7 @@ import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import com.advertmarket.shared.outbox.OutboxStatus;
+import java.util.Comparator;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -100,9 +101,21 @@ public class DepositWatcher {
         } catch (RuntimeException ex) {
             log.warn("Failed to process deposit id={}: {}",
                     record.getId(), ex.getMessage());
+            handleRetry(record);
         }
     }
     // CHECKSTYLE.ON: IllegalCatch
+
+    private void handleRetry(TonTransactionsRecord record) {
+        int newRetryCount = txRepository.incrementRetryCount(record.getId());
+        if (newRetryCount > depositProps.maxRetries()) {
+            txRepository.updateStatus(record.getId(), "FAILED",
+                    0, record.getVersion());
+            metrics.incrementCounter(MetricNames.TON_DEPOSIT_FAILED);
+            log.error("Deposit id={} permanently failed after {} retries",
+                    record.getId(), newRetryCount);
+        }
+    }
 
     private void processOne(TonTransactionsRecord record,
                              long masterSeqno) {
@@ -147,8 +160,9 @@ public class DepositWatcher {
                 toAddress, TX_FETCH_LIMIT);
 
         return txs.stream()
-                .filter(tx -> tx.amountNano() >= expectedAmount)
-                .findFirst()
+                .filter(tx -> tx.amountNano() > 0
+                        && tx.amountNano() >= expectedAmount)
+                .max(Comparator.comparingLong(TonTransactionInfo::lt))
                 .orElse(null);
     }
 

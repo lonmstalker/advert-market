@@ -72,6 +72,8 @@ public final class MetricNames {
             "ton.deposit.confirmed";
     public static final @Fenum(FenumGroup.METRIC_NAME) String TON_DEPOSIT_TIMEOUT =
             "ton.deposit.timeout";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String TON_DEPOSIT_FAILED =
+            "ton.deposit.permanently_failed";
 
     // --- Channel ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_REGISTERED =

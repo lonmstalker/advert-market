@@ -126,6 +126,21 @@ public class JooqTonTransactionRepository {
     }
 
     /**
+     * Increments retry_count and returns the new value.
+     *
+     * @return new retry count after increment
+     */
+    public int incrementRetryCount(long id) {
+        return Objects.requireNonNull(
+                dsl.update(TON_TRANSACTIONS)
+                        .set(TON_TRANSACTIONS.RETRY_COUNT,
+                                TON_TRANSACTIONS.RETRY_COUNT.plus(1))
+                        .where(TON_TRANSACTIONS.ID.eq(id))
+                        .returning(TON_TRANSACTIONS.RETRY_COUNT)
+                        .fetchSingle(TON_TRANSACTIONS.RETRY_COUNT));
+    }
+
+    /**
      * Sets the transaction hash after submission.
      *
      * @return true if exactly one row was updated

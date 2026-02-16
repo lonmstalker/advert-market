@@ -127,7 +127,13 @@ public record TonProperties(
                     description = "Number of pending deposits per poll batch",
                     required = Requirement.OPTIONAL
             )
-            @Positive @DefaultValue("100") int batchSize
+            @Positive @DefaultValue("100") int batchSize,
+
+            @PropertyDoc(
+                    description = "Max retries before marking deposit as permanently failed",
+                    required = Requirement.OPTIONAL
+            )
+            @Positive @DefaultValue("5") int maxRetries
     ) {
     }
 

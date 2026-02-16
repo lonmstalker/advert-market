@@ -108,7 +108,7 @@ public class TonWalletService implements TonWalletPort {
                 .build();
 
         String walletAddress = wallet.getAddress().toBounceable();
-        int seqno = blockchainPort.getSeqno(walletAddress);
+        long seqno = blockchainPort.getSeqno(walletAddress);
 
         WalletV4R2Config txConfig = WalletV4R2Config.builder()
                 .walletId(subwalletId)
@@ -141,12 +141,14 @@ public class TonWalletService implements TonWalletPort {
         return txHash;
     }
 
+    @SuppressWarnings("ThrowInsideCatchWithoutCause") // security: prevent mnemonic leak via exception chain
     private static TweetNaclFast.Signature.KeyPair deriveKeyPair(String mnemonic) {
         try {
             var pair = Mnemonic.toKeyPair(Arrays.asList(mnemonic.split("\\s+")));
             return TweetNaclFast.Signature.keyPair_fromSeed(pair.getSecretKey());
         } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
-            throw new IllegalStateException("Failed to derive key pair from mnemonic", ex);
+            log.error("Failed to derive key pair: invalid mnemonic format");
+            throw new IllegalStateException("Failed to derive key pair from mnemonic");
         }
     }
 }

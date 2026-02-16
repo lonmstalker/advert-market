@@ -2,10 +2,13 @@ package com.advertmarket.financial.ton.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,12 +20,15 @@ import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.sequence.SequenceAllocator;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.ton.ton4j.mnemonic.Mnemonic;
 
 @DisplayName("TonWalletService — wallet operations")
 class TonWalletServiceTest {
@@ -48,12 +54,61 @@ class TonWalletServiceTest {
         var api = new TonProperties.Api("test-key", true);
         var wallet = new TonProperties.Wallet(TEST_MNEMONIC, 50);
         var deposit = new TonProperties.Deposit(
-                Duration.ofSeconds(10), Duration.ofMinutes(30), 100);
+                Duration.ofSeconds(10), Duration.ofMinutes(30), 100, 5);
         var props = new TonProperties(api, wallet, deposit, "testnet",
                 new TonProperties.Confirmation());
 
         service = new TonWalletService(blockchainPort, lockPort,
                 sequenceAllocator, metrics, props);
+    }
+
+    @Nested
+    @DisplayName("security")
+    class Security {
+
+        @Test
+        @DisplayName("Should not expose mnemonic in exception when key derivation fails")
+        void shouldNotExposeMnemonicInException() {
+            String toxicMnemonic = "supersecret_word1 supersecret_word2 supersecret_word3";
+
+            var api = new TonProperties.Api("key", true);
+            var wallet = new TonProperties.Wallet(toxicMnemonic, 50);
+            var deposit = new TonProperties.Deposit(
+                    Duration.ofSeconds(10), Duration.ofMinutes(30), 100, 5);
+            var props = new TonProperties(api, wallet, deposit, "testnet",
+                    new TonProperties.Confirmation());
+
+            try (var mnemonicMock = mockStatic(Mnemonic.class)) {
+                mnemonicMock.when(() ->
+                                Mnemonic.toKeyPair(any(List.class)))
+                        .thenThrow(new NoSuchAlgorithmException(
+                                "simulated: mnemonic=" + toxicMnemonic));
+
+                assertThatThrownBy(() -> new TonWalletService(
+                        blockchainPort, lockPort, sequenceAllocator, metrics, props))
+                        .isInstanceOf(IllegalStateException.class)
+                        .satisfies(ex -> {
+                            String fullTrace = getFullExceptionChain(ex);
+                            assertThat(fullTrace)
+                                    .doesNotContain("supersecret_word1")
+                                    .doesNotContain("supersecret_word2")
+                                    .doesNotContain("supersecret_word3");
+                        });
+            }
+        }
+
+        private String getFullExceptionChain(Throwable ex) {
+            var sb = new StringBuilder();
+            Throwable current = ex;
+            while (current != null) {
+                sb.append(current.getClass().getName())
+                        .append(": ")
+                        .append(current.getMessage())
+                        .append("\n");
+                current = current.getCause();
+            }
+            return sb.toString();
+        }
     }
 
     @Nested
@@ -111,7 +166,7 @@ class TonWalletServiceTest {
             int subwalletId = 42;
             when(lockPort.withLock(anyString(), any(Duration.class), any()))
                     .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
-            when(blockchainPort.getSeqno(anyString())).thenReturn(5);
+            when(blockchainPort.getSeqno(anyString())).thenReturn(5L);
             when(blockchainPort.sendBoc(anyString())).thenReturn("txhash_abc");
 
             String txHash = service.submitTransaction(subwalletId,
