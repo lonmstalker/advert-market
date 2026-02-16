@@ -1,6 +1,6 @@
 # Ralph Progress: frontend-visual-overhaul
 
-## Status: 7/11 IN PROGRESS
+## Status: 8/11 IN PROGRESS
 
 ## Stories
 - US-001 ✅ CSS variable fallbacks (CRITICAL blocker)
@@ -10,7 +10,7 @@
 - US-005 ✅ Wallet page — transactions + group list Tailwind, action icons 24px
 - US-006 ✅ Profile page — avatar ring bg-accent, verified dark/light
 - US-007 ✅ Onboarding flow — inline styles → Tailwind, contentClassName refactor
-- US-008 ⏳ Channel detail page
+- US-008 ✅ Channel detail page — stats/pricing inline styles to Tailwind, am-pricing-badge
 - US-009 ⏳ Glass blur / pressScale / haptic audit
 - US-010 ⏳ Eruda positioning
 - US-011 ⏳ Playwright visual regression tests

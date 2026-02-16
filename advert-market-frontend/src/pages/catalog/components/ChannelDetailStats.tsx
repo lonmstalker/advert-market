@@ -20,9 +20,9 @@ export function ChannelDetailStats({ channel }: ChannelDetailStatsProps) {
   const cells: ReactNode[] = [];
 
   cells.push(
-    <div key="subs" style={statCellStyle}>
+    <div key="subs" className="flex-1 p-3 text-center">
       <Text type="title2" weight="bold">
-        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatLocaleNumber(channel.subscriberCount)}</span>
+        <span className="am-tabnum">{formatLocaleNumber(channel.subscriberCount)}</span>
       </Text>
       <Text type="caption1" color="secondary">
         {t('catalog.channel.subscribersStat')}
@@ -32,16 +32,16 @@ export function ChannelDetailStats({ channel }: ChannelDetailStatsProps) {
 
   if (channel.avgReach != null) {
     cells.push(
-      <div key="reach" style={statCellStyle}>
+      <div key="reach" className="flex-1 p-3 text-center">
         <Text type="title2" weight="bold">
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCompactNumber(channel.avgReach)}</span>
+          <span className="am-tabnum">{formatCompactNumber(channel.avgReach)}</span>
         </Text>
         <Text type="caption1" color="secondary">
           {t('catalog.channel.avgReach')}
         </Text>
         {reachRate != null && (
           <Text type="caption1" color="tertiary">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{reachRate.toFixed(0)}% reach</span>
+            <span className="am-tabnum">{reachRate.toFixed(0)}% reach</span>
           </Text>
         )}
       </div>,
@@ -50,9 +50,9 @@ export function ChannelDetailStats({ channel }: ChannelDetailStatsProps) {
 
   if (channel.engagementRate != null) {
     cells.push(
-      <div key="er" style={statCellStyle}>
+      <div key="er" className="flex-1 p-3 text-center">
         <Text type="title2" weight="bold">
-          <span style={{ fontVariantNumeric: 'tabular-nums', color: engagementRateColor(channel.engagementRate) }}>
+          <span className="am-tabnum" style={{ color: engagementRateColor(channel.engagementRate) }}>
             {channel.engagementRate.toFixed(1)}%
           </span>
         </Text>
@@ -66,34 +66,14 @@ export function ChannelDetailStats({ channel }: ChannelDetailStatsProps) {
   const items: ReactNode[] = [];
   for (let i = 0; i < cells.length; i++) {
     if (i > 0) {
-      items.push(<div key={`div-${i}`} style={dividerStyle} />);
+      items.push(<div key={`div-${i}`} className="w-px self-stretch bg-separator" />);
     }
     items.push(cells[i]);
   }
 
   return (
-    <motion.div {...slideUp} style={{ padding: '16px 16px 0' }}>
-      <div style={statsContainerStyle}>{items}</div>
+    <motion.div {...slideUp} className="px-4 pt-4">
+      <div className="flex bg-bg-base border border-separator rounded-[14px] overflow-hidden">{items}</div>
     </motion.div>
   );
 }
-
-const statsContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  background: 'var(--color-background-base)',
-  border: '1px solid var(--color-border-separator)',
-  borderRadius: 14,
-  overflow: 'hidden',
-};
-
-const statCellStyle: React.CSSProperties = {
-  flex: 1,
-  padding: 12,
-  textAlign: 'center',
-};
-
-const dividerStyle: React.CSSProperties = {
-  width: 1,
-  alignSelf: 'stretch',
-  background: 'var(--color-border-separator)',
-};

@@ -24,24 +24,24 @@ export function ChannelPricingTab({ channel, minPrice, heroCpm }: ChannelPricing
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      style={{ padding: '0 16px 16px' }}
+      className="px-4 pb-4"
     >
       {minPrice != null && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+        <div className="mb-4">
+          <div className="flex items-baseline gap-2 flex-wrap">
             <Text type="title1" weight="bold">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              <span className="am-tabnum">
                 {t('catalog.channel.from', { price: formatTon(minPrice) })}
               </span>
             </Text>
             <Text type="caption1" color="secondary">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(minPrice)}</span>
+              <span className="am-tabnum">{formatFiat(minPrice)}</span>
             </Text>
           </div>
           {heroCpm != null && (
-            <div style={{ marginTop: 4 }}>
+            <div className="mt-1">
               <Text type="subheadline2" color="secondary">
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                <span className="am-tabnum">
                   {'\u2248 '}
                   {formatCpm(heroCpm)} TON {t('catalog.channel.perThousandViews')}
                 </span>
@@ -60,57 +60,43 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
   const { t } = useTranslation();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="flex flex-col gap-2">
       {rules.map((rule) => {
         const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
         const primaryType = rule.postTypes[0] ?? 'NATIVE';
         const localizedType = t(`catalog.channel.postType.${primaryType}`, { defaultValue: rule.name });
         const overlap = buildOverlapLabel(channel.postFrequencyHours, undefined, t);
         return (
-          <div key={rule.id} style={pricingCardStyle}>
-            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={postTypeIconContainerStyle}>
-                <PostTypeIcon
-                  postType={primaryType}
-                  style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }}
-                />
+          <div key={rule.id} className="bg-bg-base border border-separator rounded-[14px] overflow-hidden">
+            <div className="py-3.5 px-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-[10px] bg-bg-secondary flex items-center justify-center shrink-0">
+                <PostTypeIcon postType={primaryType} className="w-5 h-5 text-fg-secondary" />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
                   <Text type="body" weight="medium">
-                    <span
-                      style={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        display: 'block',
-                      }}
-                    >
-                      {localizedType}
-                    </span>
+                    <span className="am-truncate">{localizedType}</span>
                   </Text>
                   {rule.description && (
                     <Popover
                       content={
-                        <div style={{ whiteSpace: 'pre-wrap', maxWidth: 220 }}>
+                        <div className="whitespace-pre-wrap max-w-[220px]">
                           <Text type="caption1" color="secondary">
                             {rule.description}
                           </Text>
                         </div>
                       }
                     >
-                      <InfoIcon
-                        style={{ width: 14, height: 14, color: 'var(--color-foreground-tertiary)', flexShrink: 0 }}
-                      />
+                      <InfoIcon className="w-3.5 h-3.5 text-fg-tertiary shrink-0" />
                     </Popover>
                   )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   {overlap &&
                     (overlap.hasTooltip ? (
                       <Popover
                         content={
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <div className="flex flex-col gap-0.5">
                             <Text type="caption1" color="secondary">
                               {t('catalog.channel.overlapTooltipLine1', { freq: overlap.freq })}
                             </Text>
@@ -120,16 +106,16 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
                           </div>
                         }
                       >
-                        <span style={overlapBadgeStyle}>
+                        <span className="am-pricing-badge">
                           {overlap.label}
-                          <InfoIcon style={{ width: 12, height: 12, color: 'var(--color-foreground-tertiary)' }} />
+                          <InfoIcon className="w-3 h-3 text-fg-tertiary" />
                         </span>
                       </Popover>
                     ) : (
-                      <span style={overlapBadgeStyle}>{overlap.label}</span>
+                      <span className="am-pricing-badge">{overlap.label}</span>
                     ))}
                   {ruleCpm != null && (
-                    <span style={cpmBadgeStyle}>
+                    <span className="am-pricing-badge">
                       <Text type="caption1" color="secondary">
                         {t('catalog.channel.cpmShort', { value: formatCpm(ruleCpm) })}
                       </Text>
@@ -137,12 +123,12 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
                   )}
                 </div>
               </div>
-              <div style={{ flexShrink: 0, textAlign: 'right' }}>
+              <div className="shrink-0 text-right">
                 <Text type="callout" weight="bold">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(rule.priceNano)}</span>
+                  <span className="am-tabnum">{formatTon(rule.priceNano)}</span>
                 </Text>
                 <Text type="caption1" color="tertiary">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(rule.priceNano)}</span>
+                  <span className="am-tabnum">{formatFiat(rule.priceNano)}</span>
                 </Text>
               </div>
             </div>
@@ -152,42 +138,3 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
     </div>
   );
 }
-
-const pricingCardStyle: React.CSSProperties = {
-  background: 'var(--color-background-base)',
-  border: '1px solid var(--color-border-separator)',
-  borderRadius: 14,
-  overflow: 'hidden',
-};
-
-const postTypeIconContainerStyle: React.CSSProperties = {
-  width: 40,
-  height: 40,
-  borderRadius: 10,
-  background: 'var(--color-background-secondary)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-};
-
-const overlapBadgeStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 4,
-  padding: '2px 8px',
-  borderRadius: 6,
-  background: 'var(--color-background-secondary)',
-  fontSize: 12,
-  fontWeight: 600,
-  color: 'var(--color-foreground-secondary)',
-  fontVariantNumeric: 'tabular-nums',
-};
-
-const cpmBadgeStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  padding: '2px 8px',
-  borderRadius: 6,
-  background: 'var(--color-background-secondary)',
-  fontVariantNumeric: 'tabular-nums',
-};

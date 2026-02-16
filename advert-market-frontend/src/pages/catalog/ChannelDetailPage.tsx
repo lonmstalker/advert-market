@@ -56,7 +56,7 @@ export default function ChannelDetailPage() {
       <>
         <BackButtonHandler />
         <EmptyState
-          icon={<SearchOffIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+          icon={<SearchOffIcon className="w-7 h-7 text-fg-tertiary" />}
           title={t('errors.notFound')}
           description={t('catalog.empty.description')}
           actionLabel={t('common.back')}
@@ -88,12 +88,12 @@ export default function ChannelDetailPage() {
   return (
     <>
       <BackButtonHandler />
-      <div style={{ paddingBottom: 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))' }}>
+      <div className="pb-[calc(var(--am-fixed-bottom-bar-base,92px)+var(--am-safe-area-bottom))]">
         <ChannelDetailHeader channel={channel} isOwner={isOwner} onShare={handleShare} />
 
         {channel.nextAvailableSlot && <ChannelNextSlot nextAvailableSlot={channel.nextAvailableSlot} />}
 
-        <div style={{ padding: '8px 16px 12px' }}>
+        <div className="pt-2 px-4 pb-3">
           <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
         </div>
 

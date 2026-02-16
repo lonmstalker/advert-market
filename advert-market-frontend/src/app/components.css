@@ -392,6 +392,12 @@
     color: var(--color-accent-primary);
   }
 
+  .am-pricing-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-xs font-semibold text-fg-secondary;
+    background: var(--color-background-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Telegram post preview (isolated chat-only surface) */
   .am-tg-chat-window {
     position: relative;
@@ -400,6 +406,12 @@
     min-height: 500px;
     background: var(--am-tg-chat-bg);
     padding: 12px;
+  }
+
+  .am-tg-chat-window--web-light {
+    --am-tg-chat-bg: var(--am-tg-chat-bg-light);
+    --am-tg-bubble-bg: var(--am-tg-bubble-bg-light);
+    --am-tg-inline-btn-bg: var(--am-tg-inline-btn-bg-light);
   }
 
   .am-tg-chat-pattern {
@@ -782,6 +794,15 @@
     :root:not([theme-mode]):not([data-theme]) .am-tg-message-text {
       color: color-mix(in srgb, var(--color-static-white) 96%, transparent);
     }
+  }
+
+  .am-tg-chat-window--web-light .am-tg-message-bubble {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  .am-tg-chat-window--web-light .am-tg-document-name,
+  .am-tg-chat-window--web-light .am-tg-message-text {
+    color: var(--color-static-black);
   }
 }
 
