@@ -44,53 +44,28 @@ export const TransactionListItem = memo(function TransactionListItem({
       {...listItem}
       {...pressScale}
       onClick={handleClick}
-      style={{
-        cursor: 'pointer',
-        background: 'color-mix(in srgb, var(--am-card-surface) 94%, transparent)',
-        border: '1px solid var(--am-card-border)',
-        borderRadius: 16,
-        boxShadow: 'var(--am-card-shadow)',
-        padding: '0 14px',
-      }}
+      className="cursor-pointer bg-card-surface border border-card-border rounded-[16px] shadow-card px-3.5"
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 0',
-        }}
-      >
+      <div className="flex items-center gap-3 py-3">
         <span
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: getTransactionTypeTint(transaction.type),
-            border: '1px solid color-mix(in srgb, var(--am-card-border) 90%, transparent)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
+          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-card-border"
+          style={{ background: getTransactionTypeTint(transaction.type) }}
         >
-          <Icon style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }} />
+          <Icon className="w-5 h-5 text-fg-secondary" />
         </span>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0">
           <Text type="body" weight="medium">
-            <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {t(config.i18nKey)}
-            </span>
+            <span className="am-truncate">{t(config.i18nKey)}</span>
           </Text>
           <Text type="caption1" color="tertiary">
             {transaction.channelTitle ?? transaction.description}
           </Text>
         </div>
 
-        <div style={{ flexShrink: 0, textAlign: 'right' }}>
+        <div className="shrink-0 text-right">
           <Text type="callout" weight="bold">
-            <span style={{ fontVariantNumeric: 'tabular-nums', color: amountColor }}>{formattedAmount} TON</span>
+            <span className="am-tabnum" style={{ color: amountColor }}>{formattedAmount} TON</span>
           </Text>
           <Text type="caption1" color="tertiary">
             {time}

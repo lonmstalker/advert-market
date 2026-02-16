@@ -100,7 +100,7 @@ export default function WalletPage() {
             >
               <div className="flex-center flex-col gap-2">
                 <div className="am-wallet-actionIcon flex-center">
-                  <Icon size={19} />
+                  <Icon size={24} strokeWidth={1.5} />
                 </div>
                 <Text type="caption1" weight="medium">
                   {label}
