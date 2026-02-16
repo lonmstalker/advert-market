@@ -107,16 +107,7 @@ export default function OnboardingTourPage() {
         topAction={
           <Tappable
             onClick={() => setShowSkipConfirm(true)}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--color-foreground-secondary)',
-              minHeight: 36,
-              minWidth: 44,
-              padding: '8px 0',
-              display: 'flex',
-              alignItems: 'center',
-            }}
+            className="border-none bg-transparent text-fg-secondary min-h-9 min-w-11 py-2 flex items-center"
             aria-label={t('onboarding.tour.skip')}
           >
             <Text type="subheadline2" color="secondary">
@@ -124,14 +115,9 @@ export default function OnboardingTourPage() {
             </Text>
           </Tappable>
         }
-        contentStyle={{
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-          paddingTop: 8,
-        }}
+        contentClassName="justify-center relative overflow-hidden pt-2"
         footer={
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="flex flex-col gap-3">
             <motion.div {...pressScale}>
               <Button
                 text={isLastSlide ? finishText : t('onboarding.tour.next')}
@@ -142,7 +128,7 @@ export default function OnboardingTourPage() {
             </motion.div>
 
             {!isLastSlide && (
-              <output aria-live="polite" style={{ textAlign: 'center', display: 'block' }}>
+              <output aria-live="polite" className="text-center block">
                 <Text type="caption1" color={taskDone ? 'accent' : 'secondary'}>
                   {taskDone ? t('onboarding.tour.taskStatus.completed') : t('onboarding.tour.taskStatus.recommended')}
                 </Text>
@@ -150,7 +136,7 @@ export default function OnboardingTourPage() {
             )}
 
             {showError && (
-              <div role="alert" style={{ textAlign: 'center' }}>
+              <div role="alert" className="text-center">
                 <Text type="caption1" color="danger">
                   {t('onboarding.tour.error')}
                 </Text>
@@ -176,13 +162,7 @@ export default function OnboardingTourPage() {
         <div
           role="tablist"
           aria-label={t('onboarding.tour.next')}
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '6px',
-            paddingTop: 12,
-            paddingBottom: 4,
-          }}
+          className="flex justify-center gap-1.5 pt-3 pb-1"
         >
           {(['catalog', 'deal', 'wallet'] as const).map((key, i) => {
             const isActive = i === activeSlide;
@@ -194,12 +174,7 @@ export default function OnboardingTourPage() {
                 aria-label={`${i + 1} / ${SLIDE_COUNT}`}
                 animate={{ width: isActive ? 24 : 8 }}
                 transition={{ duration: 0.25, ease: easeOut }}
-                style={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: isActive ? 'var(--color-accent-primary)' : 'var(--color-border-separator)',
-                  transition: 'background-color 0.25s ease',
-                }}
+                className={`h-2 rounded-sm transition-colors duration-250 ease-in-out ${isActive ? 'bg-accent' : 'bg-separator'}`}
               />
             );
           })}

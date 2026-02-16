@@ -35,10 +35,7 @@ export function StepIndicator() {
                   initial={false}
                   animate={{ width: i < currentStep ? '100%' : '0%' }}
                   transition={{ duration: 0.3, ease: easeOut }}
-                  style={{
-                    height: '100%',
-                    backgroundColor: 'var(--color-accent-primary)',
-                  }}
+                  className="h-full bg-accent"
                 />
               </div>
             )}

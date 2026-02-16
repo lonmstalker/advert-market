@@ -39,12 +39,9 @@ export default function OnboardingPage() {
         testId="onboarding-locale-step"
         centerContent
         footer={null}
-        contentStyle={{
-          justifyContent: 'center',
-          gap: '16px',
-        }}
+        contentClassName="justify-center gap-4"
       >
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="flex justify-center">
           <OnboardingLogo testId="onboarding-locale-logo" />
         </div>
         <AppSurfaceCard>
@@ -80,7 +77,7 @@ export default function OnboardingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            style={{ textAlign: 'center', marginTop: '12px' }}
+            className="text-center mt-3"
           >
             <Text type="caption1" color="secondary">
               {t('onboarding.welcome.timeHint')}
@@ -88,24 +85,9 @@ export default function OnboardingPage() {
           </motion.div>
         </>
       }
-      contentStyle={{
-        textAlign: 'center',
-        gap: '12px',
-      }}
+      contentClassName="text-center gap-3"
     >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          minHeight: 0,
-          overflowY: 'auto',
-          paddingBottom: 8,
-          overflowX: 'hidden',
-        }}
-      >
+      <div className="flex flex-col items-center justify-center gap-3 min-h-0 overflow-y-auto pb-2 overflow-x-hidden">
         <OnboardingLogo />
 
         <motion.div
@@ -122,7 +104,7 @@ export default function OnboardingPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.25 }}
-          style={{ maxWidth: '320px' }}
+          className="max-w-80"
         >
           <Text type="body" color="secondary" align="center">
             {t('onboarding.welcome.subtitle')}
@@ -133,16 +115,8 @@ export default function OnboardingPage() {
           {...staggerChildren}
           initial="initial"
           animate="animate"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            marginTop: '16px',
-            width: '100%',
-            padding: 10,
-            borderRadius: 24,
-            background: 'var(--am-hero-gradient-accent)',
-          }}
+          className="flex flex-col gap-3 mt-4 w-full p-2.5 rounded-[24px]"
+          style={{ background: 'var(--am-hero-gradient-accent)' }}
         >
           <FeatureCard
             icon={<SearchIcon size={24} />}

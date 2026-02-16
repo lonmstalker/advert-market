@@ -117,7 +117,7 @@ export function TourSlideCatalog({ primaryRole }: TourSlideCatalogProps) {
                       aria-hidden="true"
                       className="size-9 rounded-full bg-bg-secondary flex items-center justify-center"
                     >
-                      <NewspaperIcon style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }} />
+                      <NewspaperIcon className="w-5 h-5 text-fg-secondary" />
                     </div>
                   }
                 />

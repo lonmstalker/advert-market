@@ -37,7 +37,7 @@ export function OnboardingLogo({ testId }: OnboardingLogoProps) {
           padding: '1px',
         }}
       />
-      <MegaphoneIcon width={56} height={56} style={{ color: 'var(--color-accent-primary)' }} />
+      <MegaphoneIcon width={56} height={56} className="text-accent" />
     </motion.div>
   );
 }

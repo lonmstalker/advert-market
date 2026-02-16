@@ -21,15 +21,9 @@ export function RoleCard({ icon, title, hint, isSelected, onToggle, children }: 
   return (
     <motion.div {...pressScale} data-testid="role-card-root">
       <Tappable
-        className="focusable flex flex-col p-0 rounded-[12px] cursor-pointer text-left w-full overflow-hidden transition-[border-color,background-color] duration-150 ease-in-out [-webkit-tap-highlight-color:transparent]"
+        className={`focusable flex flex-col p-0 rounded-[12px] cursor-pointer text-left w-full overflow-hidden transition-[border-color,background-color] duration-150 ease-in-out [-webkit-tap-highlight-color:transparent] border ${isSelected ? 'border-accent bg-soft-accent' : 'border-separator bg-bg-base'}`}
         data-testid="role-card-trigger"
         onClick={onToggle}
-        style={{
-          border: `1px solid ${isSelected ? 'var(--color-accent-primary)' : 'var(--color-border-separator)'}`,
-          backgroundColor: isSelected
-            ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)'
-            : 'var(--color-background-base)',
-        }}
       >
         <div className="flex items-center gap-4 p-4 w-full">
           <div className="size-14 rounded-[14px] bg-bg-secondary flex items-center justify-center shrink-0 text-accent">

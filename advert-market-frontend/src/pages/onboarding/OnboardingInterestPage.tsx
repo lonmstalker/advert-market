@@ -12,7 +12,7 @@ import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
 import { MonitorIcon, pressScale, SpeakerIcon, slideUp } from '@/shared/ui';
 import { ChartBarIcon, ClipboardIcon, CoinIcon, HandshakeIcon, SearchIcon, TonDiamondIcon } from '@/shared/ui/icons';
 
-const previewIconStyle = { width: 16, height: 16, color: 'var(--color-foreground-secondary)' };
+const previewIconClassName = 'w-4 h-4 text-fg-secondary';
 
 export default function OnboardingInterestPage() {
   const { t } = useTranslation();
@@ -49,9 +49,7 @@ export default function OnboardingInterestPage() {
     <OnboardingShell
       testId="onboarding-interest-step"
       centerContent={false}
-      contentStyle={{
-        paddingTop: 8,
-      }}
+      contentClassName="pt-2"
       footer={
         <motion.div {...pressScale}>
           <Button
@@ -64,18 +62,18 @@ export default function OnboardingInterestPage() {
       }
     >
       <motion.div {...slideUp}>
-        <div style={{ marginBottom: '24px' }}>
+        <div className="mb-6">
           <Text type="title1" weight="bold">
             {t('onboarding.interest.title')}
           </Text>
-          <div style={{ marginTop: '8px' }}>
+          <div className="mt-2">
             <Text type="body" color="secondary">
               {t('onboarding.interest.subtitle')}
             </Text>
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="flex-1 flex flex-col gap-3">
           <RoleCard
             icon={<SpeakerIcon width={28} height={28} />}
             title={t('onboarding.interest.advertiser')}
@@ -84,15 +82,15 @@ export default function OnboardingInterestPage() {
             onToggle={() => handleRoleToggle('advertiser')}
           >
             <RolePreviewItem
-              icon={<SearchIcon style={previewIconStyle} />}
+              icon={<SearchIcon className={previewIconClassName} />}
               text={t('onboarding.interest.advertiserPreview1')}
             />
             <RolePreviewItem
-              icon={<CoinIcon style={previewIconStyle} />}
+              icon={<CoinIcon className={previewIconClassName} />}
               text={t('onboarding.interest.advertiserPreview2')}
             />
             <RolePreviewItem
-              icon={<ChartBarIcon style={previewIconStyle} />}
+              icon={<ChartBarIcon className={previewIconClassName} />}
               text={t('onboarding.interest.advertiserPreview3')}
             />
           </RoleCard>
@@ -105,15 +103,15 @@ export default function OnboardingInterestPage() {
             onToggle={() => handleRoleToggle('owner')}
           >
             <RolePreviewItem
-              icon={<ClipboardIcon style={previewIconStyle} />}
+              icon={<ClipboardIcon className={previewIconClassName} />}
               text={t('onboarding.interest.ownerPreview1')}
             />
             <RolePreviewItem
-              icon={<HandshakeIcon style={previewIconStyle} />}
+              icon={<HandshakeIcon className={previewIconClassName} />}
               text={t('onboarding.interest.ownerPreview2')}
             />
             <RolePreviewItem
-              icon={<TonDiamondIcon style={previewIconStyle} />}
+              icon={<TonDiamondIcon className={previewIconClassName} />}
               text={t('onboarding.interest.ownerPreview3')}
             />
           </RoleCard>
@@ -127,7 +125,7 @@ export default function OnboardingInterestPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
-                style={{ textAlign: 'center', padding: '4px 0' }}
+                className="text-center py-1"
               >
                 <Text type="caption1" color="accent">
                   {t('onboarding.interest.bothRolesHint')}

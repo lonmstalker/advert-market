@@ -14,16 +14,8 @@ const itemVariant = {
 
 export function RolePreviewItem({ icon, text }: RolePreviewItemProps) {
   return (
-    <motion.div
-      variants={itemVariant}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        padding: '4px 0',
-      }}
-    >
-      <span style={{ display: 'flex', flexShrink: 0 }}>{icon}</span>
+    <motion.div variants={itemVariant} className="flex items-center gap-2 py-1">
+      <span className="flex shrink-0">{icon}</span>
       <Text type="caption1" color="secondary">
         {text}
       </Text>
