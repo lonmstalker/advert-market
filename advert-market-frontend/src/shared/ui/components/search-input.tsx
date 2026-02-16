@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { SearchIcon } from '../icons';
 
@@ -9,35 +8,15 @@ type SearchInputProps = {
   onBlur?: () => void;
   placeholder?: string;
   focused?: boolean;
-  style?: CSSProperties;
+  className?: string;
 };
 
-export function SearchInput({ value, onChange, onFocus, onBlur, placeholder, focused, style }: SearchInputProps) {
+export function SearchInput({ value, onChange, onFocus, onBlur, placeholder, focused, className }: SearchInputProps) {
   const haptic = useHaptic();
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '10px 12px',
-        borderRadius: 12,
-        background: 'var(--color-background-base)',
-        border: `1.5px solid ${focused ? 'var(--color-accent-primary)' : 'var(--color-border-separator)'}`,
-        transition: 'border-color 0.2s ease',
-        ...style,
-      }}
-    >
-      <SearchIcon
-        style={{
-          width: 18,
-          height: 18,
-          color: focused ? 'var(--color-accent-primary)' : 'var(--color-foreground-tertiary)',
-          flexShrink: 0,
-          transition: 'color 0.2s ease',
-        }}
-      />
+    <div className={className ? `am-search-input ${className}` : 'am-search-input'} data-focused={focused}>
+      <SearchIcon className="am-search-input__icon" />
       <input
         type="text"
         value={value}
@@ -49,16 +28,7 @@ export function SearchInput({ value, onChange, onFocus, onBlur, placeholder, foc
         }}
         onBlur={() => onBlur?.()}
         placeholder={placeholder}
-        style={{
-          flex: 1,
-          border: 'none',
-          outline: 'none',
-          background: 'transparent',
-          fontSize: 15,
-          color: 'var(--color-foreground-primary)',
-          lineHeight: 1.3,
-          fontFamily: 'inherit',
-        }}
+        className="am-search-input__field"
       />
     </div>
   );

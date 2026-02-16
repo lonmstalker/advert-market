@@ -10,7 +10,7 @@ import { useTransactions } from '@/features/wallet/hooks/useTransactions';
 import type { TransactionFilters } from '@/features/wallet/types/wallet';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
-import { BackButtonHandler, EmptyState, EndOfList, FilterButton } from '@/shared/ui';
+import { AppPageShell, BackButtonHandler, EmptyState, EndOfList, FilterButton } from '@/shared/ui';
 import { fadeIn } from '@/shared/ui/animations';
 import { ScrollIcon } from '@/shared/ui/icons';
 
@@ -39,17 +39,17 @@ export default function HistoryPage() {
   return (
     <>
       <BackButtonHandler />
-      <motion.div {...fadeIn} className="am-finance-page" data-testid="wallet-history-page-shell">
-        <div className="am-finance-stack">
+      <AppPageShell variant="finance" testId="wallet-history-page-shell">
+        <motion.div {...fadeIn}>
           <div className="am-history-header">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="flex items-center justify-between">
               <Text type="title1" weight="bold">
                 {t('wallet.history.title')}
               </Text>
               <FilterButton activeCount={activeFilterCount} onClick={handleFilterClick} />
             </div>
             {activeFilterCount > 0 && (
-              <div style={{ marginTop: 4 }}>
+              <div className="mt-1">
                 <Text type="caption1" color="secondary">
                   {t('wallet.filters.title')}: {activeFilterCount}
                 </Text>
@@ -77,10 +77,10 @@ export default function HistoryPage() {
                   onItemClick={(txId) => navigate(`/wallet/history/${txId}`)}
                 />
 
-                <div ref={sentinelRef} style={{ height: 1 }} />
+                <div ref={sentinelRef} className="h-px" />
 
                 {isFetchingNextPage && (
-                  <div style={{ display: 'flex', justifyContent: 'center', padding: 16 }}>
+                  <div className="flex justify-center p-4">
                     <Spinner size="24px" color="accent" />
                   </div>
                 )}
@@ -89,8 +89,8 @@ export default function HistoryPage() {
               </div>
             )}
           </AnimatePresence>
-        </div>
-      </motion.div>
+        </motion.div>
+      </AppPageShell>
 
       <TransactionFilterSheet
         open={sheetOpen}

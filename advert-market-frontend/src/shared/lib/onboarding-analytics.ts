@@ -10,7 +10,7 @@ type OnboardingEventMap = {
   role_selected: { role: OnboardingPrimaryRole };
   tour_task_complete: { task: TourTask };
   onboarding_complete: { role: OnboardingPrimaryRole; variant: 'direct_replace' };
-  locale_step_shown: { source: 'welcome' };
+  locale_step_shown: { source: 'welcome' | 'onboarding-first-screen' };
   locale_continue: { language: string; currencyMode: CurrencyModeEvent; currency: string };
   language_changed: { language: string };
   currency_mode_changed: { mode: CurrencyModeEvent };

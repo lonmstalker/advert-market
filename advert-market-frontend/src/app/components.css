@@ -77,6 +77,15 @@
     @apply flex flex-col;
   }
 
+  /* Responsive grid: 1 col → 2 col (640px) → 3 col (1200px). */
+  .am-catalog-grid {
+    @apply grid grid-cols-1 gap-3;
+  }
+
+  .am-deal-grid {
+    @apply grid grid-cols-1 gap-3;
+  }
+
   .am-escrow-heading {
     @apply flex flex-col;
   }
@@ -122,5 +131,278 @@
 
   .flex-center {
     @apply flex items-center justify-center;
+  }
+
+  /* Shared components — Phase 3 migration from inline styles. */
+
+  /* Chip — pill and rounded variants. */
+  .am-chip {
+    @apply px-[14px] py-[6px] rounded-chip border border-separator;
+    @apply bg-bg-base text-fg-secondary text-[13px] font-medium;
+    @apply whitespace-nowrap cursor-pointer shrink-0 leading-tight;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .am-chip[data-active="true"] {
+    @apply bg-accent text-white border-transparent;
+  }
+
+  .am-chip--rounded {
+    @apply rounded-[16px];
+  }
+
+  /* SearchInput */
+  .am-search-input {
+    @apply flex items-center gap-am-8 rounded-[12px] bg-bg-base;
+    @apply border-[1.5px] border-separator;
+    @apply px-3 py-2.5;
+    transition: border-color 0.2s ease;
+  }
+
+  .am-search-input[data-focused="true"] {
+    border-color: var(--color-accent-primary);
+  }
+
+  .am-search-input__icon {
+    @apply w-[18px] h-[18px] shrink-0 text-fg-tertiary;
+    transition: color 0.2s ease;
+  }
+
+  .am-search-input[data-focused="true"] .am-search-input__icon {
+    color: var(--color-accent-primary);
+  }
+
+  .am-search-input__field {
+    @apply flex-1 border-0 outline-0 bg-transparent text-[15px] text-fg-primary leading-[1.3];
+    font-family: inherit;
+  }
+
+  /* FixedBottomBar */
+  .am-fixed-bottom-bar {
+    @apply fixed left-0 right-0 bottom-0 z-20;
+    @apply bg-bg-base;
+    padding: 12px 16px calc(16px + var(--am-safe-area-bottom));
+    border-top: 0.5px solid var(--color-border-separator);
+  }
+
+  /* EmptyState */
+  .am-empty-state {
+    @apply flex flex-col items-center justify-center text-center;
+    @apply py-12 px-6 gap-3;
+  }
+
+  .am-empty-state__icon {
+    @apply w-16 h-16 rounded-[20px] bg-bg-base border border-separator;
+    @apply flex items-center justify-center;
+  }
+
+  .am-empty-state__action {
+    @apply mt-3;
+  }
+
+  /* SegmentControl */
+  .am-segment {
+    @apply flex relative rounded-[10px] p-0.5;
+    @apply bg-bg-base border border-separator;
+  }
+
+  .am-segment__tab {
+    @apply flex-1 relative z-1 py-2 px-4 rounded-[8px];
+    @apply border-0 cursor-pointer bg-transparent;
+    @apply text-[14px] font-medium text-fg-secondary;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s ease;
+  }
+
+  .am-segment__tab[data-active="true"] {
+    @apply text-white;
+  }
+
+  .am-segment__pill {
+    @apply absolute inset-0 rounded-[8px] bg-accent;
+    z-index: -1;
+  }
+
+  /* FilterButton */
+  .am-filter-btn {
+    @apply relative w-[42px] h-[42px] rounded-[12px];
+    @apply border border-separator bg-bg-base;
+    @apply flex items-center justify-center;
+    @apply cursor-pointer p-0;
+  }
+
+  .am-filter-btn[data-active="true"] {
+    @apply bg-accent border-transparent;
+  }
+
+  .am-filter-btn__icon {
+    @apply w-5 h-5 text-fg-secondary;
+  }
+
+  .am-filter-btn[data-active="true"] .am-filter-btn__icon {
+    @apply text-white;
+  }
+
+  .am-filter-btn__badge {
+    @apply absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full;
+    @apply bg-destructive text-white text-[11px] font-bold;
+    @apply flex items-center justify-center;
+    border: 2px solid var(--color-background-base);
+  }
+
+  /* ChannelAvatar */
+  .am-avatar {
+    @apply rounded-full flex items-center justify-center;
+  }
+
+  .am-avatar__letter {
+    @apply text-white font-semibold leading-none;
+  }
+
+  .am-avatar__badge {
+    @apply absolute -bottom-0.5 -right-0.5 flex items-center justify-center;
+  }
+
+  .am-avatar__wrapper {
+    @apply relative shrink-0;
+  }
+
+  button.am-avatar__wrapper {
+    @apply cursor-pointer bg-transparent border-0 p-0;
+  }
+
+  /* Bottom tab item */
+  .am-tab-item {
+    @apply flex flex-col items-center justify-center gap-[3px] flex-1 h-full;
+    @apply no-underline rounded-[22px];
+    @apply border border-transparent;
+    transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease, border-color 0.16s ease;
+    color: var(--color-foreground-secondary);
+    background: transparent;
+    transform: translateY(0);
+  }
+
+  .am-tab-item[data-active="true"] {
+    color: var(--am-tabbar-active-color);
+    background: var(--am-tabbar-active-bg);
+    border-color: color-mix(in srgb, var(--am-tabbar-active-color) 35%, transparent);
+    transform: translateY(-1px);
+  }
+
+  /* Hero chip (DealHeroSection) */
+  .am-hero-chip {
+    @apply inline-flex items-center gap-1;
+    @apply px-2.5 py-1 rounded-[8px];
+    @apply bg-bg-secondary border border-separator;
+    @apply text-[13px] font-medium text-fg-primary tabular-nums;
+  }
+
+  /* Icon circle (reusable: 32/36/56px variants) */
+  .am-icon-circle {
+    @apply rounded-full flex items-center justify-center;
+  }
+
+  .am-icon-circle--sm {
+    @apply w-8 h-8;
+  }
+
+  .am-icon-circle--md {
+    @apply w-9 h-9;
+  }
+
+  .am-icon-circle--lg {
+    @apply w-14 h-14;
+  }
+
+  /* Truncated text */
+  .am-truncate {
+    @apply overflow-hidden whitespace-nowrap block;
+    text-overflow: ellipsis;
+  }
+
+  /* Tabular numbers */
+  .am-tabnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Monospace (blockchain addresses, hashes) */
+  .am-mono {
+    font-family: monospace;
+  }
+
+  /* Profile hero card */
+  .am-profile-avatar-ring {
+    @apply w-20 h-20 rounded-full flex items-center justify-center;
+    border: 3px solid var(--color-accent-primary);
+    background: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
+  }
+
+  .am-role-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-chip;
+    @apply text-[12px] font-semibold;
+    background: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+    color: var(--color-accent-primary);
+  }
+
+  /* Icon button (channel detail, explorer link) */
+  .am-icon-button {
+    @apply w-9 h-9 rounded-[10px];
+    @apply border border-separator bg-bg-base;
+    @apply flex items-center justify-center;
+    @apply cursor-pointer p-0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Metric row */
+  .am-metric-row {
+    @apply flex border border-card-border rounded-card bg-card-surface;
+  }
+
+  .am-metric-row__cell {
+    @apply flex-1 text-center;
+    padding: 14px 12px;
+  }
+
+  .am-metric-row__divider {
+    @apply w-px self-stretch;
+    background: var(--am-card-border);
+  }
+
+  /* Deal message block */
+  .am-deal-message {
+    @apply bg-bg-secondary rounded-[10px] px-3.5 py-2.5;
+    @apply whitespace-pre-wrap italic text-center;
+  }
+
+  /* Status pill */
+  .am-status-pill {
+    @apply px-3.5 py-2.5 rounded-[10px] flex items-center gap-2;
+  }
+
+  /* Topic tag (channel detail) */
+  .am-topic-tag {
+    @apply px-2 py-1 rounded-[8px] text-[14px] font-medium;
+    background: color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
+    color: var(--color-accent-primary);
+  }
+}
+
+/* Responsive grid breakpoints (outside @layer to use media queries). */
+@media (min-width: 640px) {
+  .am-catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .am-deal-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .am-catalog-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

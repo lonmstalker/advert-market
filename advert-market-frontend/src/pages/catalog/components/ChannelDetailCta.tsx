@@ -19,20 +19,20 @@ export function ChannelDetailCta({ channelId, minPrice }: ChannelDetailCtaProps)
   const haptic = useHaptic();
 
   return (
-    <FixedBottomBar style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <FixedBottomBar className="am-fixed-bottom-bar flex items-center gap-3">
       {minPrice != null && (
-        <div style={{ flexShrink: 0 }}>
+        <div className="shrink-0">
           <Text type="callout" weight="bold">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <span className="am-tabnum">
               {t('catalog.channel.from', { price: formatTon(minPrice) })}
             </span>
           </Text>
           <Text type="caption1" color="tertiary">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(minPrice)}</span>
+            <span className="am-tabnum">{formatFiat(minPrice)}</span>
           </Text>
         </div>
       )}
-      <div style={{ flex: 1 }}>
+      <div className="flex-1">
         <motion.div {...pressScale}>
           <Button
             text={t('catalog.channel.createDeal')}

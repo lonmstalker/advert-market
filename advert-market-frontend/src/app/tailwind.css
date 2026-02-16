@@ -46,7 +46,9 @@
   --color-soft-secondary: var(--am-soft-secondary-bg);
 
   /* Shadows */
-  --shadow-card: var(--am-card-shadow);
+  --shadow-sm: var(--am-shadow-sm);
+  --shadow-card: var(--am-shadow-card);
+  --shadow-elevated: var(--am-shadow-elevated);
 
   /* Transition durations (-> duration-fast, duration-base, duration-slow) */
   --duration-fast: var(--am-motion-fast);

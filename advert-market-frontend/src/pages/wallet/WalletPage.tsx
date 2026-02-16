@@ -12,7 +12,7 @@ import { WalletSkeleton } from '@/features/wallet/components/WalletSkeleton';
 import { useTransactions } from '@/features/wallet/hooks/useTransactions';
 import { useWalletSummary } from '@/features/wallet/hooks/useWalletSummary';
 import { useHaptic } from '@/shared/hooks';
-import { EmptyState, Tappable } from '@/shared/ui';
+import { AppPageShell, EmptyState, Tappable } from '@/shared/ui';
 import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
 import { ScrollIcon } from '@/shared/ui/icons';
 
@@ -41,7 +41,7 @@ export default function WalletPage() {
 
   if (!hasData) {
     return (
-      <div className="am-finance-page">
+      <AppPageShell variant="finance" testId="wallet-page-shell">
         <EmptyState
           icon={<ScrollIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
           title={t('wallet.empty.title')}
@@ -49,7 +49,7 @@ export default function WalletPage() {
           actionLabel={t('wallet.empty.cta')}
           onAction={() => navigate('/catalog')}
         />
-      </div>
+      </AppPageShell>
     );
   }
 
@@ -63,8 +63,8 @@ export default function WalletPage() {
   ] as const;
 
   return (
-    <motion.div {...fadeIn} className="am-finance-page" data-testid="wallet-page-shell">
-      <div className="am-finance-stack">
+    <AppPageShell variant="finance" testId="wallet-page-shell">
+      <motion.div {...fadeIn}>
         <div className="am-wallet-top">
           <div className="am-wallet-pill">
             <Text type="subheadline2" weight="medium">
@@ -73,12 +73,12 @@ export default function WalletPage() {
           </div>
 
           <div className="am-wallet-segment">
-            <div className="am-wallet-segment-active" style={{ padding: '7px 18px' }}>
+            <div className="am-wallet-segment-active py-[7px] px-[18px]">
               <Text type="subheadline2" weight="bold">
                 {t('wallet.segment.crypto')}
               </Text>
             </div>
-            <div style={{ padding: '7px 18px' }}>
+            <div className="py-[7px] px-[18px]">
               <Text type="subheadline2" weight="bold">
                 {t('wallet.segment.ton')}
               </Text>
@@ -98,7 +98,7 @@ export default function WalletPage() {
               }}
               aria-label={label}
             >
-              <div className="flex-center" style={{ flexDirection: 'column', gap: 8 }}>
+              <div className="flex-center flex-col gap-2">
                 <div className="am-wallet-actionIcon flex-center">
                   <Icon size={19} />
                 </div>
@@ -116,11 +116,11 @@ export default function WalletPage() {
 
         {transactions.length > 0 && (
           <motion.div {...fadeIn} transition={{ delay: 0.3 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div className="flex justify-between items-center mb-2.5">
               <Text type="title3" weight="bold">
                 {t('wallet.recentTransactions')}
               </Text>
-              <motion.div {...pressScale} onClick={() => navigate('/wallet/history')} style={{ cursor: 'pointer' }}>
+              <motion.div {...pressScale} onClick={() => navigate('/wallet/history')} className="cursor-pointer">
                 <Text type="subheadline2" weight="medium" color="accent">
                   {t('wallet.viewAll')}
                 </Text>
@@ -132,7 +132,7 @@ export default function WalletPage() {
             />
           </motion.div>
         )}
-      </div>
-    </motion.div>
+      </motion.div>
+    </AppPageShell>
   );
 }

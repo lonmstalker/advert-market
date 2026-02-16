@@ -17,16 +17,7 @@ export function SegmentControl<T extends string>({ tabs, active, onChange }: Seg
   const id = useId();
   const haptic = useHaptic();
   return (
-    <div
-      style={{
-        display: 'flex',
-        position: 'relative',
-        borderRadius: 10,
-        padding: 2,
-        background: 'var(--color-background-base)',
-        border: '1px solid var(--color-border-separator)',
-      }}
-    >
+    <div className="am-segment">
       {tabs.map((tab) => {
         const isActive = active === tab.value;
         return (
@@ -37,33 +28,13 @@ export function SegmentControl<T extends string>({ tabs, active, onChange }: Seg
               haptic.selectionChanged();
               onChange(tab.value);
             }}
-            style={{
-              flex: 1,
-              position: 'relative',
-              zIndex: 1,
-              padding: '8px 16px',
-              borderRadius: 8,
-              border: 'none',
-              cursor: 'pointer',
-              background: 'transparent',
-              color: isActive ? 'var(--color-static-white)' : 'var(--color-foreground-secondary)',
-              fontSize: 14,
-              fontWeight: 500,
-              fontFamily: 'inherit',
-              WebkitTapHighlightColor: 'transparent',
-              transition: 'color 0.2s ease',
-            }}
+            data-active={isActive}
+            className="am-segment__tab"
           >
             {isActive && (
               <motion.div
                 layoutId={`segment-pill-${id}`}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: 8,
-                  background: 'var(--color-accent-primary)',
-                  zIndex: -1,
-                }}
+                className="am-segment__pill"
                 transition={{ type: 'spring', stiffness: 500, damping: 35 }}
               />
             )}

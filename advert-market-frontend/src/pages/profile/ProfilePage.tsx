@@ -32,18 +32,8 @@ const SETTINGS_ITEMS: { key: string; icon: ComponentType<SVGProps<SVGSVGElement>
 
 function SettingsIcon({ icon: Icon }: { icon: ComponentType<SVGProps<SVGSVGElement>> }) {
   return (
-    <div
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: '50%',
-        background: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <Icon style={{ width: 18, height: 18, color: 'var(--color-accent-primary)' }} />
+    <div className="am-icon-circle am-icon-circle--md bg-soft-accent">
+      <Icon className="w-[18px] h-[18px] text-accent" />
     </div>
   );
 }
@@ -94,7 +84,7 @@ export default function ProfilePage() {
 
   return (
     <AppPageShell testId="profile-page-shell">
-      <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <motion.div {...fadeIn} className="flex flex-col gap-2">
         <ProfileHero
           displayName={displayName}
           username={username || undefined}
@@ -106,7 +96,7 @@ export default function ProfilePage() {
           {...staggerChildren}
           initial="initial"
           animate="animate"
-          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+          className="flex flex-col gap-2"
         >
           <motion.div {...fadeIn}>
             <Group header={t('profile.channels')}>
@@ -131,7 +121,7 @@ export default function ProfilePage() {
                     <GroupItem
                       text={t('profile.channels.empty.cta')}
                       before={
-                        <div className="am-icon-bubble" style={{ fontSize: 18 }}>
+                        <div className="am-icon-bubble text-lg">
                           +
                         </div>
                       }
@@ -142,7 +132,7 @@ export default function ProfilePage() {
                 </>
               ) : (
                 <EmptyState
-                  icon={<SatelliteIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
+                  icon={<SatelliteIcon className="w-7 h-7 text-fg-tertiary" />}
                   title={t('profile.channels.empty.title')}
                   description={t('profile.channels.empty.description')}
                   actionLabel={t('profile.channels.empty.cta')}

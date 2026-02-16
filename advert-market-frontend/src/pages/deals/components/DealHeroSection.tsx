@@ -1,6 +1,5 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DealStatusBadge } from '@/features/deals/components/DealStatusBadge';
 import type { StatusConfig } from '@/features/deals/lib/deal-status';
@@ -21,20 +20,6 @@ type DealHeroSectionProps = {
   countdown: string | null;
 };
 
-const heroChipStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 4,
-  padding: '4px 10px',
-  borderRadius: 8,
-  background: 'var(--color-background-secondary)',
-  border: '1px solid var(--color-border-separator)',
-  fontSize: 13,
-  fontWeight: 500,
-  color: 'var(--color-foreground-primary)',
-  fontVariantNumeric: 'tabular-nums',
-};
-
 export function DealHeroSection({ deal, statusConfig, isTerminal, countdown }: DealHeroSectionProps) {
   const { t, i18n } = useTranslation();
   const statusDescKey = `${statusConfig.i18nKey}Desc`;
@@ -47,52 +32,32 @@ export function DealHeroSection({ deal, statusConfig, isTerminal, countdown }: D
   const dur = overlap?.dur;
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden' }}>
+    <div className="relative overflow-hidden">
       <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 160,
-          background: `linear-gradient(180deg, ${statusBgVar(statusConfig.color)} 0%, transparent 100%)`,
-          pointerEvents: 'none',
-        }}
+        className="absolute top-0 left-0 right-0 h-[160px] pointer-events-none"
+        style={{ background: `linear-gradient(180deg, ${statusBgVar(statusConfig.color)} 0%, transparent 100%)` }}
       />
 
-      <div style={{ position: 'relative', padding: '20px 16px 16px' }}>
+      <div className="relative px-4 pt-5 pb-4">
         {/* Avatar + channel info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div className="flex items-center gap-3 mb-4">
           <motion.div {...(telegramLink ? pressScale : {})}>
             <ChannelAvatar
               title={deal.channelTitle}
               size="xl"
               badge={
                 telegramLink ? (
-                  <div
-                    style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: '50%',
-                      background: 'var(--color-link)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '2px solid var(--color-background-base)',
-                    }}
-                  >
-                    <TelegramIcon style={{ width: 10, height: 10, color: 'var(--color-static-white)' }} />
+                  <div className="am-icon-circle am-icon-circle--sm" style={{ width: 18, height: 18, background: 'var(--color-link)', border: '2px solid var(--color-background-base)' }}>
+                    <TelegramIcon className="w-2.5 h-2.5 text-white" />
                   </div>
                 ) : undefined
               }
               onClick={telegramLink ? () => window.open(telegramLink, '_blank') : undefined}
             />
           </motion.div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex-1 min-w-0">
             <Text type="title2" weight="bold">
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                {deal.channelTitle}
-              </span>
+              <span className="am-truncate">{deal.channelTitle}</span>
             </Text>
             <Text type="subheadline2" color="secondary">
               {deal.channelUsername ? `@${deal.channelUsername}` : ''}
@@ -107,42 +72,26 @@ export function DealHeroSection({ deal, statusConfig, isTerminal, countdown }: D
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
-          style={{ textAlign: 'center', marginBottom: 14 }}
+          className="text-center mb-3.5"
         >
           <Text type="title1" weight="bold">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(deal.priceNano)}</span>
+            <span className="am-tabnum">{formatTon(deal.priceNano)}</span>
           </Text>
-          <div
-            style={{
-              width: 48,
-              height: 3,
-              borderRadius: 2,
-              background: 'var(--color-accent-primary)',
-              margin: '6px auto 4px',
-            }}
-          />
-          <div style={{ marginTop: 2 }}>
+          <div className="w-12 h-[3px] rounded-sm bg-accent mx-auto mt-1.5 mb-1" />
+          <div className="mt-0.5">
             <Text type="caption1" color="secondary">
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(deal.priceNano)}</span>
+              <span className="am-tabnum">{formatFiat(deal.priceNano)}</span>
             </Text>
           </div>
         </motion.div>
 
         {/* Chips row */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            gap: 8,
-            marginBottom: 14,
-          }}
-        >
+        <div className="flex justify-center flex-wrap gap-2 mb-3.5">
           {overlapLabel &&
             (hasOverlapTooltip ? (
               <Popover
                 content={
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div className="flex flex-col gap-0.5">
                     <Text type="caption1" color="secondary">
                       {t('catalog.channel.overlapTooltipLine1', { freq })}
                     </Text>
@@ -152,18 +101,18 @@ export function DealHeroSection({ deal, statusConfig, isTerminal, countdown }: D
                   </div>
                 }
               >
-                <span style={heroChipStyle}>
+                <span className="am-hero-chip">
                   {overlapLabel}
-                  <InfoIcon style={{ width: 12, height: 12, color: 'var(--color-foreground-tertiary)' }} />
+                  <InfoIcon className="w-3 h-3 text-fg-tertiary" />
                 </span>
               </Popover>
             ) : (
-              <span style={heroChipStyle}>{overlapLabel}</span>
+              <span className="am-hero-chip">{overlapLabel}</span>
             ))}
-          <span style={heroChipStyle}>{formatDate(deal.createdAt, i18n.language)}</span>
+          <span className="am-hero-chip">{formatDate(deal.createdAt, i18n.language)}</span>
           {countdown && (
-            <span style={heroChipStyle}>
-              <ClockIcon style={{ width: 14, height: 14, color: 'var(--color-foreground-secondary)' }} />
+            <span className="am-hero-chip">
+              <ClockIcon className="w-3.5 h-3.5 text-fg-secondary" />
               {countdown}
             </span>
           )}
@@ -171,37 +120,19 @@ export function DealHeroSection({ deal, statusConfig, isTerminal, countdown }: D
 
         {/* Deal message */}
         {deal.message && (
-          <div
-            style={{
-              background: 'var(--color-background-secondary)',
-              borderRadius: 10,
-              padding: '10px 14px',
-              marginBottom: 14,
-            }}
-          >
-            <div style={{ whiteSpace: 'pre-wrap', fontStyle: 'italic', textAlign: 'center' }}>
-              <Text type="caption1" color="secondary">
-                &ldquo;{deal.message}&rdquo;
-              </Text>
-            </div>
+          <div className="am-deal-message mb-3.5">
+            <Text type="caption1" color="secondary">
+              &ldquo;{deal.message}&rdquo;
+            </Text>
           </div>
         )}
 
         {/* Status pill */}
-        <div
-          style={{
-            padding: '10px 14px',
-            borderRadius: 10,
-            background: statusBgVar(statusConfig.color),
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
+        <div className="am-status-pill" style={{ background: statusBgVar(statusConfig.color) }}>
           {!isTerminal && <PulsingDot color={statusConfig.color} />}
           <div>
             <DealStatusBadge status={deal.status} />
-            <div style={{ marginTop: 4 }}>
+            <div className="mt-1">
               <Text type="caption1" color="secondary">
                 {t(statusDescKey)}
               </Text>

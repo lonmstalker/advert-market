@@ -22,37 +22,16 @@ export function BalanceCard({ summary, isOwner, isConnectionRestored }: BalanceC
   const gradientVar = isOwner ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)';
 
   return (
-    <div
-      className="am-finance-card"
-      style={{
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-    >
+    <div className="am-finance-card overflow-hidden relative">
       {/* Gradient backdrop */}
       <div
         data-testid="balance-gradient"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 120,
-          background: gradientVar,
-          pointerEvents: 'none',
-        }}
+        className="absolute inset-x-0 top-0 h-[120px] pointer-events-none"
+        style={{ background: gradientVar }}
       />
 
       {/* Header row: label + TON Connect */}
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '16px 16px 0',
-        }}
-      >
+      <div className="relative flex items-center justify-between pt-4 px-4">
         <Text type="subheadline2" weight="medium" color="secondary">
           {heroLabel}
         </Text>
@@ -66,14 +45,14 @@ export function BalanceCard({ summary, isOwner, isConnectionRestored }: BalanceC
       </div>
 
       {/* Balance centered */}
-      <div style={{ position: 'relative', textAlign: 'center', padding: '20px 16px 22px' }}>
+      <div className="relative text-center py-5 px-4 pb-[22px]">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
         >
           <Text type="largeTitle" weight="bold">
-            <span className="am-wallet-headerAmount" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <span className="am-wallet-headerAmount am-tabnum">
               {formatTon(heroAmount)}
             </span>
           </Text>
@@ -83,14 +62,14 @@ export function BalanceCard({ summary, isOwner, isConnectionRestored }: BalanceC
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25, duration: 0.3 }}
-          style={{ marginTop: 4 }}
+          className="mt-1"
         >
           <Text type="subheadline2" color="tertiary">
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(heroAmount)}</span>
+            <span className="am-tabnum">{formatFiat(heroAmount)}</span>
           </Text>
         </motion.div>
 
-        <div style={{ marginTop: 10 }}>
+        <div className="mt-2.5">
           <div className="am-wallet-positiveChip">
             <Text type="caption1" weight="medium">
               {t('wallet.stats.inEscrow')}: {formatTon(contextAmount)}

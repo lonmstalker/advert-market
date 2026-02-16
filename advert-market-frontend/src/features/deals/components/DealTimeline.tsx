@@ -151,7 +151,7 @@ export function DealTimeline({ steps }: DealTimelineProps) {
                     {step.label}
                   </Text>
                   {isCompleted && step.timestamp && (
-                    <span style={{ flexShrink: 0, marginLeft: 8 }}>
+                    <span className="shrink-0 ml-2">
                       <Text type="caption1" color="secondary">
                         {formatTimelineDate(step.timestamp)}
                       </Text>

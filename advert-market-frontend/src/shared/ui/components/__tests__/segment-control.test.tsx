@@ -30,18 +30,18 @@ describe('SegmentControl', () => {
     expect(screen.getAllByRole('button')).toHaveLength(3);
   });
 
-  it('applies active styles to the selected tab', () => {
+  it('applies data-active to the selected tab', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
     const activeButton = screen.getByText('Second');
-    expect(activeButton.style.fontWeight).toBe('500');
-    expect(activeButton.style.color).toBe('var(--color-static-white)');
+    expect(activeButton).toHaveAttribute('data-active', 'true');
+    expect(activeButton).toHaveClass('am-segment__tab');
   });
 
-  it('applies inactive styles to non-selected tabs', () => {
+  it('applies data-active=false to non-selected tabs', () => {
     render(<SegmentControl tabs={[...tabs]} active="tab2" onChange={vi.fn()} />);
     const inactiveButton = screen.getByText('First');
-    expect(inactiveButton.style.fontWeight).toBe('500');
-    expect(inactiveButton.style.background).toBe('transparent');
+    expect(inactiveButton).toHaveAttribute('data-active', 'false');
+    expect(inactiveButton).toHaveClass('am-segment__tab');
   });
 
   it('calls onChange with the tab value when a tab is clicked', async () => {

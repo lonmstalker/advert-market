@@ -39,9 +39,9 @@ export function DealActions({ actions, onAction, isPending }: DealActionsProps) 
 
   return (
     <>
-      <FixedBottomBar style={{ display: 'flex', gap: 8 }}>
+      <FixedBottomBar className="am-fixed-bottom-bar flex gap-2">
         {actions.map((action) => (
-          <motion.div key={action.type} {...pressScale} style={{ flex: 1 }}>
+          <motion.div key={action.type} {...pressScale} className="flex-1">
             <Button
               text={t(action.i18nKey)}
               type={action.variant === 'destructive' ? 'secondary' : action.variant}

@@ -15,7 +15,7 @@ import { copyToClipboard } from '@/shared/lib/clipboard';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { formatFiat } from '@/shared/lib/fiat-format';
 import { formatTon } from '@/shared/lib/ton-format';
-import { BackButtonHandler, EmptyState, PageLoader } from '@/shared/ui';
+import { AppPageShell, BackButtonHandler, EmptyState, PageLoader } from '@/shared/ui';
 import { fadeIn } from '@/shared/ui/animations';
 import { SadFaceIcon, TonDiamondIcon } from '@/shared/ui/icons';
 
@@ -66,45 +66,20 @@ export default function TransactionDetailPage() {
   return (
     <>
       <BackButtonHandler />
-      <motion.div {...fadeIn} className="am-finance-page" data-testid="wallet-transaction-page-shell">
-        <div className="am-finance-stack">
-          <div
-            className="am-finance-card"
-            style={{
-              overflow: 'hidden',
-              position: 'relative',
-              background: 'color-mix(in srgb, var(--am-card-surface) 92%, transparent)',
-            }}
-          >
-            {/* Gradient backdrop — contained inside card */}
+      <AppPageShell variant="finance" withTabsPadding={false} testId="wallet-transaction-page-shell">
+        <motion.div {...fadeIn}>
+          <div className="am-finance-card overflow-hidden relative" style={{ background: 'color-mix(in srgb, var(--am-card-surface) 92%, transparent)' }}>
             <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 110,
-                background:
-                  tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)',
-                pointerEvents: 'none',
-              }}
+              className="absolute top-0 left-0 right-0 h-[110px] pointer-events-none"
+              style={{ background: tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)' }}
             />
 
-            <div style={{ position: 'relative', textAlign: 'center', padding: '28px 16px 20px' }}>
-              {/* Type icon — 56px */}
+            <div className="relative text-center px-4 pt-7 pb-5">
               <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: '50%',
-                  background: getTransactionTypeTint(tx.type),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 12px',
-                }}
+                className="am-icon-circle am-icon-circle--lg mx-auto mb-3"
+                style={{ background: getTransactionTypeTint(tx.type) }}
               >
-                <TypeIcon style={{ width: 30, height: 30, color: 'var(--color-foreground-secondary)' }} />
+                <TypeIcon className="w-[30px] h-[30px] text-fg-secondary" />
               </div>
 
               {/* Amount */}
@@ -114,7 +89,7 @@ export default function TransactionDetailPage() {
                 transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
               >
                 <Text type="largeTitle" weight="bold">
-                  <span className="am-wallet-headerAmount" style={{ color: amountColor }}>
+                  <span className="am-wallet-headerAmount" style={{ color: amountColor }} >
                     {sign}
                     {formatTon(tx.amountNano)}
                   </span>
@@ -126,22 +101,22 @@ export default function TransactionDetailPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.25, duration: 0.3 }}
-                style={{ marginTop: 4 }}
+                className="mt-1"
               >
                 <Text type="subheadline2" color="secondary">
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(tx.amountNano)}</span>
+                  <span className="am-tabnum">{formatFiat(tx.amountNano)}</span>
                 </Text>
               </motion.div>
 
               {/* Status badge */}
-              <div style={{ marginTop: 12 }}>
+              <div className="mt-3">
                 <TransactionStatusBadge status={tx.status} />
               </div>
             </div>
           </div>
 
           {/* Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="flex flex-col gap-4">
             <Group>
               <GroupItem text={t('wallet.detail.type')} after={<Text type="body">{t(config.i18nKey)}</Text>} />
               <GroupItem
@@ -170,7 +145,7 @@ export default function TransactionDetailPage() {
                   text={t('wallet.detail.commission')}
                   after={
                     <Text type="body">
-                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(tx.commissionNano)}</span>
+                      <span className="am-tabnum">{formatTon(tx.commissionNano)}</span>
                     </Text>
                   }
                 />
@@ -186,7 +161,7 @@ export default function TransactionDetailPage() {
                     onClick={() => handleCopy(tx.txHash as string)}
                     after={
                       <Text type="caption2">
-                        <span style={{ fontFamily: 'monospace' }}>{truncateAddress(tx.txHash)}</span>
+                        <span className="am-mono">{truncateAddress(tx.txHash)}</span>
                       </Text>
                     }
                   />
@@ -197,7 +172,7 @@ export default function TransactionDetailPage() {
                     onClick={() => handleCopy(tx.fromAddress as string)}
                     after={
                       <Text type="caption2">
-                        <span style={{ fontFamily: 'monospace' }}>{truncateAddress(tx.fromAddress)}</span>
+                        <span className="am-mono">{truncateAddress(tx.fromAddress)}</span>
                       </Text>
                     }
                   />
@@ -208,7 +183,7 @@ export default function TransactionDetailPage() {
                     onClick={() => handleCopy(tx.toAddress as string)}
                     after={
                       <Text type="caption2">
-                        <span style={{ fontFamily: 'monospace' }}>{truncateAddress(tx.toAddress)}</span>
+                        <span className="am-mono">{truncateAddress(tx.toAddress)}</span>
                       </Text>
                     }
                   />
@@ -222,18 +197,8 @@ export default function TransactionDetailPage() {
                 <Group>
                   <GroupItem
                     before={
-                      <div
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                          background: 'color-mix(in srgb, var(--am-soft-accent-bg) 82%, transparent)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <TonDiamondIcon style={{ width: 16, height: 16, color: 'var(--color-accent-primary)' }} />
+                      <div className="am-icon-circle am-icon-circle--sm bg-soft-accent">
+                        <TonDiamondIcon className="w-4 h-4 text-accent" />
                       </div>
                     }
                     text={
@@ -251,8 +216,8 @@ export default function TransactionDetailPage() {
               </div>
             )}
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </AppPageShell>
     </>
   );
 }

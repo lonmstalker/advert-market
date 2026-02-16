@@ -41,18 +41,18 @@ describe('BalanceCard', () => {
     expect(screen.getByText('Total spent')).toBeInTheDocument();
   });
 
-  it('renders formatted balance amount with tabular-nums', () => {
+  it('renders formatted balance amount with tabular-nums class', () => {
     renderCard();
     const balanceEl = screen.getByText('15 TON');
     expect(balanceEl).toBeInTheDocument();
-    expect(balanceEl).toHaveStyle({ fontVariantNumeric: 'tabular-nums' });
+    expect(balanceEl).toHaveClass('am-tabnum');
   });
 
-  it('renders fiat equivalent with tabular-nums', () => {
+  it('renders fiat equivalent with tabular-nums class', () => {
     renderCard();
     const fiatEl = screen.getByText('~$82.50');
     expect(fiatEl).toBeInTheDocument();
-    expect(fiatEl).toHaveStyle({ fontVariantNumeric: 'tabular-nums' });
+    expect(fiatEl).toHaveClass('am-tabnum');
   });
 
   it('renders TonConnectButton when connection restored', () => {

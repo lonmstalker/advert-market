@@ -174,23 +174,23 @@ export default function RegisterChannelPage() {
 
   return (
     <AppPageShell withTabsPadding={false} testId="profile-register-channel-page">
-      <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 40px)' }}>
+      <motion.div {...fadeIn} className="flex flex-col min-h-[calc(100vh-40px)]">
         <AppSectionHeader title={t('profile.register.title')} />
 
         <AnimatePresence mode="wait">
           {step === 1 && (
-            <motion.div key="step1" {...slideFromLeft} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <motion.div key="step1" {...slideFromLeft} className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col gap-4">
                 {/* Instruction */}
                 <AppSurfaceCard>
-                  <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div className="p-4 flex flex-col gap-3">
                     <Text type="subheadline2" color="secondary">
                       {t('profile.register.addBotInstruction')}
                     </Text>
                     <Text type="caption1" color="secondary">
                       {t('profile.register.autosyncHint')}
                     </Text>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div className="flex gap-2">
                       <Button text={t('profile.register.copyBot')} type="secondary" onClick={handleCopyBot} />
                       <Button text={t('profile.register.openBot')} type="secondary" onClick={handleOpenBot} />
                     </div>
@@ -199,7 +199,7 @@ export default function RegisterChannelPage() {
 
                 {/* Username input */}
                 <div>
-                  <div style={{ marginBottom: 8 }}>
+                  <div className="mb-2">
                     <Text type="subheadline2" color="secondary">
                       {t('profile.register.channelLink')}
                     </Text>
@@ -213,8 +213,8 @@ export default function RegisterChannelPage() {
                     placeholder={t('profile.register.channelPlaceholder')}
                   />
                   {inlineError && (
-                    <motion.div {...fadeIn} style={{ marginTop: 8 }}>
-                      <div style={{ color: 'var(--color-state-destructive)' }}>
+                    <motion.div {...fadeIn} className="mt-2">
+                      <div className="text-destructive">
                         <Text type="caption1">{inlineError}</Text>
                       </div>
                     </motion.div>
@@ -223,7 +223,7 @@ export default function RegisterChannelPage() {
               </div>
 
               {/* Verify button */}
-              <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
+              <div className="shrink-0 pb-8 pt-4">
                 <motion.div {...pressScale}>
                   <Button
                     text={verifyMutation.isPending ? t('profile.register.verifying') : t('profile.register.verify')}
@@ -238,12 +238,12 @@ export default function RegisterChannelPage() {
           )}
 
           {step === 2 && verifyData && (
-            <motion.div key="step2" {...slideFromRight} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <motion.div key="step2" {...slideFromRight} className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col gap-4">
                 {/* Channel info */}
                 <AppSurfaceCard>
-                  <div style={{ padding: 16 }}>
-                    <div style={{ marginBottom: 4 }}>
+                  <div className="p-4">
+                    <div className="mb-1">
                       <Text type="subheadline2" color="secondary">
                         {t('profile.register.channelInfo')}
                       </Text>
@@ -256,7 +256,7 @@ export default function RegisterChannelPage() {
                         @{verifyData.username}
                       </Text>
                     )}
-                    <div style={{ marginTop: 4 }}>
+                    <div className="mt-1">
                       <Text type="subheadline2" color="secondary">
                         {t('profile.register.subscribers', { count: verifyData.subscriberCount })}
                       </Text>
@@ -266,7 +266,7 @@ export default function RegisterChannelPage() {
 
                 {/* Category select */}
                 <div>
-                  <div style={{ marginBottom: 8 }}>
+                  <div className="mb-2">
                     <Text type="subheadline2" color="secondary">
                       {t('profile.register.category')}
                     </Text>
@@ -276,7 +276,7 @@ export default function RegisterChannelPage() {
 
                 {/* Price input */}
                 <div>
-                  <div style={{ marginBottom: 8 }}>
+                  <div className="mb-2">
                     <Text type="subheadline2" color="secondary">
                       {t('profile.register.price')}
                     </Text>
@@ -287,7 +287,7 @@ export default function RegisterChannelPage() {
                     placeholder={t('profile.register.pricePlaceholder')}
                     type="number"
                   />
-                  <div style={{ marginTop: 4 }}>
+                  <div className="mt-1">
                     <Text type="caption1" color="secondary">
                       {t('profile.register.priceHint')}
                     </Text>
@@ -296,7 +296,7 @@ export default function RegisterChannelPage() {
               </div>
 
               {/* Register button */}
-              <div style={{ flexShrink: 0, paddingBottom: 32, paddingTop: 16 }}>
+              <div className="shrink-0 pb-8 pt-4">
                 <motion.div {...pressScale}>
                   <Button
                     text={registerMutation.isPending ? t('profile.register.submitting') : t('profile.register.submit')}

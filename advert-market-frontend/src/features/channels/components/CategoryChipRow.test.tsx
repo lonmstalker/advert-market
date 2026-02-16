@@ -25,7 +25,8 @@ describe('CategoryChipRow', () => {
     renderWithProviders(<CategoryChipRow selected={[]} onSelect={onSelect} />);
 
     const allTopicsChip = await screen.findByRole('button', { name: 'All topics' });
-    expect(allTopicsChip).toHaveStyle({ background: 'var(--color-accent-primary)' });
+    expect(allTopicsChip).toHaveAttribute('data-active', 'true');
+    expect(allTopicsChip).toHaveClass('am-chip');
   });
 
   it('renders category chips after data loads', async () => {

@@ -26,20 +26,16 @@ describe('MetricRow', () => {
     expect(screen.getByText('Completed deals')).toBeInTheDocument();
   });
 
-  it('renders container with 2 cells and divider', () => {
+  it('renders container with divider using CSS class', () => {
     const { container } = renderRow();
     const divider = container.querySelector('[data-testid="metric-divider"]');
     expect(divider).toBeInTheDocument();
-    expect(divider).toHaveStyle({
-      width: '1px',
-      alignSelf: 'stretch',
-      background: 'var(--am-card-border)',
-    });
+    expect(divider).toHaveClass('am-metric-row__divider');
   });
 
-  it('renders escrow value with tabular-nums', () => {
+  it('renders escrow value with am-tabnum class', () => {
     renderRow();
     const escrowVal = screen.getByText('5 TON');
-    expect(escrowVal).toHaveStyle({ fontVariantNumeric: 'tabular-nums' });
+    expect(escrowVal).toHaveClass('am-tabnum');
   });
 });

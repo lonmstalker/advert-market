@@ -66,32 +66,50 @@ body {
   --am-page-max-width: 760px;
   --am-page-padding: 16px;
 
+  /* Semantic color bridge: Telegram theme → app tokens.
+     Primary source is --tg-theme-*; fallback is static hex for non-TMA contexts. */
+  --color-accent-primary: var(--tg-theme-button-color, #007aff);
+  --color-foreground-primary: var(--tg-theme-text-color, #000000);
+  --color-foreground-secondary: var(--tg-theme-hint-color, #8e8e93);
+  --color-foreground-tertiary: var(--tg-theme-hint-color, #5d6872);
+  --color-background-base: var(--tg-theme-bg-color, #ffffff);
+  --color-background-secondary: var(--tg-theme-secondary-bg-color, #f1f3f4);
+  --color-background-modal: var(--tg-theme-bg-color, #ffffff);
+  --color-border-separator: rgba(0, 0, 0, 0.1);
+  --color-link: var(--tg-theme-link-color, #007aff);
+
   /* App surfaces (Telegram Wallet native 2026). */
-  --am-app-background: #f1f3f4;
-  --am-page-background: #f1f3f4;
-  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(0, 122, 255, 0.09) 0%, transparent 72%);
-  --am-card-surface: #ffffff;
-  --am-row-surface: #ffffff;
-  --am-control-surface: #f1f3f4;
-  --am-input-bg: #eef1f5;
-  --am-input-placeholder: #6f7781;
-  --am-header-surface: color-mix(in srgb, #ffffff 88%, transparent);
-  --am-wallet-hero-surface: #ffffff;
+  --am-app-background: var(--tg-theme-secondary-bg-color, #f1f3f4);
+  --am-page-background: var(--tg-theme-secondary-bg-color, #f1f3f4);
+  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, color-mix(in srgb, var(--color-accent-primary) 9%, transparent) 0%, transparent 72%);
+  --am-card-surface: var(--tg-theme-bg-color, #ffffff);
+  --am-row-surface: var(--tg-theme-bg-color, #ffffff);
+  --am-control-surface: var(--tg-theme-secondary-bg-color, #f1f3f4);
+  --am-input-bg: color-mix(in srgb, var(--color-background-secondary) 85%, var(--color-background-base));
+  --am-input-placeholder: var(--color-foreground-secondary);
+  --am-header-surface: color-mix(in srgb, var(--am-card-surface) 88%, transparent);
+  --am-wallet-hero-surface: var(--am-card-surface);
   --am-card-border: rgba(18, 29, 41, 0.08);
   --am-border-strong: rgba(18, 29, 41, 0.16);
-  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.07);
-  --am-tabbar-bg: rgba(255, 255, 255, 0.9);
+
+  /* Shadow system (multi-layer for depth). */
+  --am-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --am-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --am-shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.08);
+  --am-card-shadow: var(--am-shadow-card);
+
+  --am-tabbar-bg: color-mix(in srgb, var(--am-card-surface) 90%, transparent);
   --am-tabbar-border: rgba(0, 0, 0, 0.08);
-  --am-tabbar-shadow: 0 14px 32px rgba(13, 28, 47, 0.12);
-  --am-tabbar-active-bg: rgba(0, 122, 255, 0.12);
-  --am-tabbar-active-color: #007aff;
+  --am-tabbar-shadow: var(--am-shadow-elevated);
+  --am-tabbar-active-bg: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+  --am-tabbar-active-color: var(--color-accent-primary);
   --am-finance-page-max-width: 780px;
   --am-finance-page-padding: 16px;
   --am-finance-page-top-glow:
-    radial-gradient(120% 55% at 50% -12%, rgba(0, 122, 255, 0.18) 0%, transparent 70%);
-  --am-finance-muted: rgba(80, 94, 111, 0.72);
-  --am-finance-success-bg: rgba(53, 199, 89, 0.14);
-  --am-finance-success-text: #2ea14b;
+    radial-gradient(120% 55% at 50% -12%, color-mix(in srgb, var(--color-accent-primary) 18%, transparent) 0%, transparent 70%);
+  --am-finance-muted: var(--color-foreground-secondary);
+  --am-finance-success-bg: color-mix(in srgb, var(--color-state-success) 14%, transparent);
+  --am-finance-success-text: var(--color-state-success);
 
   /* Soft badge backgrounds ("pastel" tints). */
   --am-soft-accent-bg: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
@@ -112,92 +130,52 @@ body {
     transparent 100%
   );
 
-  --am-wallet-top-pill-bg: rgba(255, 255, 255, 0.86);
+  --am-wallet-top-pill-bg: color-mix(in srgb, var(--am-card-surface) 86%, transparent);
   --am-wallet-top-pill-border: rgba(20, 37, 58, 0.1);
-  --am-wallet-segment-bg: rgba(220, 226, 236, 0.72);
-  --am-wallet-segment-active-bg: rgba(255, 255, 255, 0.96);
-  --am-wallet-action-bg: rgba(255, 255, 255, 0.86);
+  --am-wallet-segment-bg: color-mix(in srgb, var(--color-background-secondary) 72%, transparent);
+  --am-wallet-segment-active-bg: color-mix(in srgb, var(--am-card-surface) 96%, transparent);
+  --am-wallet-action-bg: color-mix(in srgb, var(--am-card-surface) 86%, transparent);
   --am-wallet-action-border: rgba(25, 47, 74, 0.1);
-  --am-wallet-action-icon-bg: rgba(10, 132, 255, 0.14);
-  --am-wallet-action-icon: #127de8;
+  --am-wallet-action-icon-bg: color-mix(in srgb, var(--color-accent-primary) 14%, transparent);
+  --am-wallet-action-icon: var(--color-accent-primary);
 }
 
+/* Dark theme overrides.
+   --tg-theme-* is the primary source; these are fallbacks for when
+   Telegram doesn't inject theme vars (e.g. standalone browser testing). */
 [theme-mode='dark'] {
-  --color-background-secondary: #0f161c;
-  --color-background-base: #17212b;
+  --color-background-secondary: var(--tg-theme-secondary-bg-color, #0f161c);
+  --color-background-base: var(--tg-theme-bg-color, #17212b);
   --color-background-modal: #1c2936;
   --color-border-separator: rgba(255, 255, 255, 0.08);
-  --color-foreground-primary: #f5f5f5;
-  --color-foreground-secondary: #889098;
+  --color-foreground-primary: var(--tg-theme-text-color, #f5f5f5);
+  --color-foreground-secondary: var(--tg-theme-hint-color, #889098);
   --color-foreground-tertiary: #5d6872;
-  --color-accent-primary: #50a8eb;
-  --color-link: #50a8eb;
+  --color-accent-primary: var(--tg-theme-button-color, #50a8eb);
+  --color-link: var(--tg-theme-link-color, #50a8eb);
 
-  --am-app-background: #0f161c;
-  --am-page-background: #0f161c;
-  --am-page-atmosphere: radial-gradient(130% 52% at 50% -10%, rgba(80, 168, 235, 0.2) 0%, transparent 74%);
-  --am-card-surface: #17212b;
-  --am-row-surface: #17212b;
-  --am-control-surface: #0f161c;
-  --am-input-bg: #0a0f14;
-  --am-input-placeholder: #58626d;
-  --am-header-surface: color-mix(in srgb, #17212b 88%, transparent);
-  --am-wallet-hero-surface: #1c2936;
   --am-card-border: rgba(255, 255, 255, 0.05);
   --am-border-strong: rgba(255, 255, 255, 0.1);
+  --am-shadow-sm: none;
+  --am-shadow-card: none;
+  --am-shadow-elevated: none;
   --am-card-shadow: none;
-  --am-tabbar-bg: rgba(28, 41, 54, 0.9);
-  --am-tabbar-border: rgba(255, 255, 255, 0.1);
   --am-tabbar-shadow: none;
-  --am-tabbar-active-bg: rgba(80, 168, 235, 0.15);
-  --am-tabbar-active-color: #50a8eb;
-  --am-finance-page-top-glow:
-    radial-gradient(120% 50% at 50% -10%, rgba(80, 168, 235, 0.24) 0%, transparent 72%);
-  --am-finance-muted: #889098;
-  --am-finance-success-bg: rgba(76, 217, 100, 0.2);
-  --am-finance-success-text: #4cd964;
-  --am-soft-accent-bg: rgba(80, 168, 235, 0.15);
-  --am-soft-secondary-bg: rgba(136, 144, 152, 0.2);
-  --am-hero-gradient-accent: linear-gradient(180deg, rgba(80, 168, 235, 0.2) 0%, rgba(80, 168, 235, 0) 100%);
-  --am-hero-gradient-success: linear-gradient(180deg, rgba(76, 217, 100, 0.2) 0%, rgba(76, 217, 100, 0) 100%);
-  --am-wallet-top-pill-bg: rgba(28, 41, 54, 0.92);
+
+  --am-wallet-hero-surface: #1c2936;
   --am-wallet-top-pill-border: rgba(255, 255, 255, 0.1);
-  --am-wallet-segment-bg: rgba(15, 22, 28, 0.96);
-  --am-wallet-segment-active-bg: rgba(28, 41, 54, 0.96);
-  --am-wallet-action-bg: rgba(23, 33, 43, 0.98);
   --am-wallet-action-border: rgba(255, 255, 255, 0.08);
-  --am-wallet-action-icon-bg: rgba(80, 168, 235, 0.18);
-  --am-wallet-action-icon: #50a8eb;
+
   --am-skeleton-base: #232e3c;
   --am-skeleton-highlight: rgba(245, 245, 245, 0.05);
 }
 
+/* Light theme: explicit fallback for standalone (non-TMA) context.
+   In TMA, :root already bridges to --tg-theme-* so these are redundant. */
 [theme-mode='light'] {
-  --color-background-secondary: #f1f3f4;
-  --color-background-base: #ffffff;
-  --color-background-modal: #ffffff;
   --color-border-separator: rgba(0, 0, 0, 0.1);
-  --color-accent-primary: #007aff;
-  --color-link: #007aff;
-
-  --am-app-background: #f1f3f4;
-  --am-page-background: #f1f3f4;
-  --am-page-atmosphere: radial-gradient(120% 56% at 50% -12%, rgba(0, 122, 255, 0.09) 0%, transparent 72%);
-  --am-card-surface: #ffffff;
-  --am-row-surface: #ffffff;
-  --am-control-surface: #f1f3f4;
-  --am-input-bg: #eef1f5;
-  --am-input-placeholder: #6f7781;
-  --am-header-surface: color-mix(in srgb, #ffffff 88%, transparent);
-  --am-wallet-hero-surface: #ffffff;
   --am-card-border: rgba(12, 26, 42, 0.08);
   --am-border-strong: rgba(12, 26, 42, 0.16);
-  --am-card-shadow: 0 10px 24px rgba(13, 28, 47, 0.07);
-  --am-tabbar-bg: rgba(255, 255, 255, 0.9);
-  --am-tabbar-border: rgba(0, 0, 0, 0.08);
-  --am-tabbar-shadow: 0 14px 32px rgba(13, 28, 47, 0.12);
-  --am-tabbar-active-bg: rgba(0, 122, 255, 0.12);
-  --am-tabbar-active-color: #007aff;
 }
 
 /* Unified app page primitives */
@@ -507,7 +485,19 @@ body {
   }
 }
 
-/* Finance page shell */
+/* Finance page variant (used via AppPageShell variant="finance"). */
+.am-page--finance {
+  --am-page-max-width: var(--am-finance-page-max-width);
+  --am-page-padding: var(--am-finance-page-padding);
+}
+
+.am-page--finance::before {
+  height: 160px;
+  background: var(--am-finance-page-top-glow);
+}
+
+/* Legacy: standalone finance page (WalletSkeleton, empty states).
+   Prefer AppPageShell variant="finance" for new code. */
 .am-finance-page {
   position: relative;
   width: min(100%, var(--am-finance-page-max-width));

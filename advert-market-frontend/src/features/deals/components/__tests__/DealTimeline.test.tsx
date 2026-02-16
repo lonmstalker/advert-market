@@ -44,8 +44,12 @@ describe('DealTimeline', () => {
   it('shows formatted date for completed steps with timestamp', () => {
     const steps: TimelineStep[] = [completedStep('Draft', '2026-06-15T12:00:00Z')];
     renderWithProviders(<DealTimeline steps={steps} />);
-    // Intl.DateTimeFormat with { day: 'numeric', month: 'short' } -> "Jun 15" or similar
-    expect(screen.getByText(/Jun/)).toBeInTheDocument();
+    // toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) — locale-dependent
+    const expected = new Date('2026-06-15T12:00:00Z').toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+    });
+    expect(screen.getByText(expected)).toBeInTheDocument();
   });
 
   it('collapses pending steps beyond VISIBLE_PENDING limit and shows expand button', () => {

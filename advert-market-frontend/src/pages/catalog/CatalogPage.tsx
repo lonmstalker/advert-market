@@ -137,7 +137,7 @@ export default function CatalogPage() {
 
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <motion.div key="skeleton" {...fadeIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <motion.div key="skeleton" {...fadeIn} className="am-catalog-grid">
             {[1, 2, 3].map((i) => (
               <ChannelCardSkeleton key={i} />
             ))}
@@ -167,7 +167,7 @@ export default function CatalogPage() {
         ) : (
           <motion.div key="list" {...staggerChildren} initial="initial" animate="animate">
             {summary && (
-              <div style={{ padding: '4px 0' }}>
+              <div className="py-1">
                 <Text type="footnote" color="secondary">
                   {summary.avgCpm != null
                     ? t('catalog.summary', {
@@ -181,7 +181,7 @@ export default function CatalogPage() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="am-catalog-grid">
               {channels.map((channel) => (
                 <ChannelCatalogCard
                   key={channel.id}
@@ -192,12 +192,12 @@ export default function CatalogPage() {
             </div>
 
             {isFetchingNextPage && (
-              <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="am-catalog-grid pt-3">
                 <ChannelCardSkeleton />
               </div>
             )}
 
-            <div ref={observerRef} style={{ height: 1 }} />
+            <div ref={observerRef} className="h-px" />
 
             {!hasNextPage && channels.length > 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>

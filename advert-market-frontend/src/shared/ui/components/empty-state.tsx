@@ -13,34 +13,8 @@ type EmptyStateProps = {
 
 export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <motion.div
-      {...scaleIn}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        padding: '48px 24px',
-        gap: '12px',
-      }}
-    >
-      {icon && (
-        <div
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 20,
-            background: 'var(--color-background-base)',
-            border: '1px solid var(--color-border-separator)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {icon}
-        </div>
-      )}
+    <motion.div {...scaleIn} className="am-empty-state">
+      {icon && <div className="am-empty-state__icon">{icon}</div>}
       <Text type="title2" weight="bold">
         {title}
       </Text>
@@ -48,7 +22,7 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
         {description}
       </Text>
       {actionLabel && onAction && (
-        <div style={{ marginTop: '12px' }}>
+        <div className="am-empty-state__action">
           <motion.div {...pressScale}>
             <Button text={actionLabel} type="primary" onClick={onAction} />
           </motion.div>

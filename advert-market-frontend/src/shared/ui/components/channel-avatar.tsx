@@ -28,17 +28,10 @@ function AvatarContent({ title, size }: { title: string; size: ChannelAvatarSize
 
   return (
     <div
-      style={{
-        width: container,
-        height: container,
-        borderRadius: '50%',
-        background: `hsl(${hue}, 55%, 55%)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className="am-avatar"
+      style={{ width: container, height: container, background: `hsl(${hue}, 55%, 55%)` }}
     >
-      <span style={{ color: 'var(--color-static-white)', fontSize: font, fontWeight: 600, lineHeight: 1 }}>
+      <span className="am-avatar__letter" style={{ fontSize: font }}>
         {letter}
       </span>
     </div>
@@ -46,43 +39,21 @@ function AvatarContent({ title, size }: { title: string; size: ChannelAvatarSize
 }
 
 function BadgeOverlay({ badge }: { badge: ReactNode }) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: -2,
-        right: -2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      {badge}
-    </div>
-  );
+  return <div className="am-avatar__badge">{badge}</div>;
 }
 
 export function ChannelAvatar({ title, size = 'md', badge, onClick }: ChannelAvatarProps) {
   const { container } = sizeMap[size];
-  const wrapperStyle = { position: 'relative' as const, width: container, height: container, flexShrink: 0 };
-
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        style={{ ...wrapperStyle, cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
-      >
-        <AvatarContent title={title} size={size} />
-        {badge && <BadgeOverlay badge={badge} />}
-      </button>
-    );
-  }
+  const Tag = onClick ? 'button' : 'div';
 
   return (
-    <div style={wrapperStyle}>
+    <Tag
+      {...(onClick ? { type: 'button' as const, onClick } : {})}
+      className="am-avatar__wrapper"
+      style={{ width: container, height: container }}
+    >
       <AvatarContent title={title} size={size} />
       {badge && <BadgeOverlay badge={badge} />}
-    </div>
+    </Tag>
   );
 }

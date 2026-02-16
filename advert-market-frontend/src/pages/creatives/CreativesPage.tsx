@@ -169,7 +169,7 @@ export default function CreativesPage() {
               onBlur={() => setSearchFocused(false)}
               placeholder={t('creatives.search.placeholder')}
               focused={searchFocused}
-              style={{ flex: 1 }}
+              className="flex-1"
             />
             <motion.div {...pressScale}>
               <Tappable

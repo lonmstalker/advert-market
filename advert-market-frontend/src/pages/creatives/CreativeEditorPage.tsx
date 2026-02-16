@@ -87,7 +87,7 @@ export default function CreativeEditorPage() {
 
   if (isEditing && isLoading) {
     return (
-      <div style={{ padding: 16, textAlign: 'center' }}>
+      <div className="p-4 text-center">
         <BackButtonHandler />
         <Text type="body" color="secondary">
           {t('common.loading')}
@@ -105,13 +105,7 @@ export default function CreativeEditorPage() {
   const bottomInset = 'calc(var(--am-fixed-bottom-bar-base, 92px) + var(--am-safe-area-bottom))';
 
   const previewContent = (
-    <div
-      style={{
-        borderRadius: 12,
-        overflow: 'hidden',
-        backgroundColor: 'var(--color-background-secondary)',
-      }}
-    >
+    <div className="rounded-xl overflow-hidden bg-bg-secondary">
       <TelegramChatSimulator text={text} entities={entities} media={media} buttons={filteredButtons} />
     </div>
   );
@@ -119,34 +113,18 @@ export default function CreativeEditorPage() {
   return (
     <motion.div
       {...fadeIn}
-      style={{
-        minHeight: 'calc(100vh - 40px)',
-      }}
+      className="min-h-[calc(100vh-40px)]"
     >
       <BackButtonHandler />
 
-      <div
-        style={{
-          padding: '16px 16px 0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
+      <div className="px-4 pt-4 flex justify-between items-center mb-4">
         <Text type="title1" weight="bold">
           {isEditing ? t('creatives.editTitle') : t('creatives.newTitle')}
         </Text>
         {isEditing && versions && versions.length > 0 && (
           <Tappable
             onClick={() => setShowHistory(true)}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--color-accent-primary)',
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
+            className="border-none bg-transparent text-accent cursor-pointer text-sm"
           >
             {t('creatives.history.show')}
           </Tappable>
@@ -154,12 +132,12 @@ export default function CreativeEditorPage() {
       </div>
 
       {/* Mobile: tab switcher */}
-      <div className="creative-editor-mobile" style={{ padding: '0 16px', marginBottom: 16 }}>
+      <div className="creative-editor-mobile px-4 mb-4">
         <SegmentControl tabs={tabs} active={activeTab} onChange={setActiveTab} />
       </div>
 
       {/* Mobile: tabbed content */}
-      <div className="creative-editor-mobile" style={{ padding: '0 16px' }}>
+      <div className="creative-editor-mobile px-4">
         <AnimatePresence mode="wait">
           {activeTab === 'editor' ? (
             <motion.div key="editor" {...slideFromLeft}>
@@ -188,9 +166,9 @@ export default function CreativeEditorPage() {
       </div>
 
       {/* Desktop: split view */}
-      <div className="creative-editor-desktop" style={{ padding: '0 16px' }}>
-        <div style={{ display: 'flex', gap: 24 }}>
-          <div style={{ flex: '1 1 60%', minWidth: 0 }}>
+      <div className="creative-editor-desktop px-4">
+        <div className="flex gap-6">
+          <div className="flex-[1_1_60%] min-w-0">
             <CreativeForm
               title={title}
               onTitleChange={setTitle}
@@ -207,14 +185,14 @@ export default function CreativeEditorPage() {
               textareaRef={textareaRefDesktop}
             />
           </div>
-          <div style={{ flex: '1 1 40%', minWidth: 0, position: 'sticky', top: 16, alignSelf: 'flex-start' }}>
+          <div className="flex-[1_1_40%] min-w-0 sticky top-4 self-start">
             {previewContent}
           </div>
         </div>
       </div>
 
       {/* Reserve space for the fixed Save bar so content can scroll above it even on short forms. */}
-      <div aria-hidden="true" style={{ height: bottomInset }} />
+      <div aria-hidden="true" style={{ height: bottomInset }} /> {/* dynamic calc — must stay inline */}
 
       <FixedBottomBar>
         <motion.div {...pressScale}>

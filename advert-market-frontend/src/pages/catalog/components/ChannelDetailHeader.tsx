@@ -23,25 +23,17 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
 
   return (
     <motion.div {...fadeIn}>
-      <div
-        style={{
-          padding: '16px 16px 14px',
-          background: 'var(--color-background-base)',
-          borderBottom: '1px solid var(--color-border-separator)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <div className="px-4 pt-4 pb-3.5 bg-bg-base border-b border-separator">
+        <div className="flex items-start gap-3">
           <ChannelAvatar title={channel.title} size="lg" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
               <Text type="title2" weight="bold">
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                  {channel.title}
-                </span>
+                <span className="am-truncate">{channel.title}</span>
               </Text>
               {channel.isVerified && (
                 <VerifiedIcon
-                  style={{ width: 16, height: 16, color: 'var(--color-accent-primary)', flexShrink: 0 }}
+                  className="w-4 h-4 text-accent shrink-0"
                   aria-label={t('catalog.channel.verified')}
                   role="img"
                 />
@@ -51,7 +43,7 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
               ))}
             </div>
             <Text type="subheadline1" color="secondary">
-              <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className="am-truncate">
                 {channel.username ? `@${channel.username}` : t('catalog.channel.privateChannel')}
               </span>
             </Text>
@@ -59,43 +51,33 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
               {formatChannelAge(channel.createdAt, t)}
             </Text>
           </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <div className="flex gap-1.5 shrink-0">
             <motion.button
               {...pressScale}
               onClick={onShare}
-              style={iconButtonStyle}
+              className="am-icon-button"
               aria-label={t('catalog.channel.share')}
             >
-              <ShareIcon style={{ width: 16, height: 16, color: 'var(--color-foreground-secondary)' }} />
+              <ShareIcon className="w-4 h-4 text-fg-secondary" />
             </motion.button>
             {isOwner && (
               <motion.button
                 {...pressScale}
                 type="button"
                 onClick={() => navigate(`/profile/channels/${channel.id}/edit`)}
-                style={iconButtonStyle}
+                className="am-icon-button"
                 aria-label={t('catalog.channel.edit')}
               >
-                <EditIcon style={{ width: 16, height: 16, color: 'var(--color-foreground-secondary)' }} />
+                <EditIcon className="w-4 h-4 text-fg-secondary" />
               </motion.button>
             )}
           </div>
         </div>
 
         {channel.topics.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+          <div className="flex flex-wrap gap-1.5 mt-2.5">
             {channel.topics.map((topic) => (
-              <span
-                key={topic.slug}
-                style={{
-                  padding: '4px 12px',
-                  borderRadius: 10,
-                  background: 'var(--color-background-secondary)',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: 'var(--color-foreground-primary)',
-                }}
-              >
+              <span key={topic.slug} className="am-topic-tag">
                 {topic.name}
               </span>
             ))}
@@ -105,17 +87,3 @@ export function ChannelDetailHeader({ channel, isOwner, onShare }: ChannelDetail
     </motion.div>
   );
 }
-
-const iconButtonStyle: React.CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: 10,
-  border: '1px solid var(--color-border-separator)',
-  background: 'var(--color-background-secondary)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  WebkitTapHighlightColor: 'transparent',
-  padding: 0,
-};

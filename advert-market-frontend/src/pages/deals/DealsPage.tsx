@@ -58,7 +58,7 @@ export default function DealsPage() {
           action={<FilterButton activeCount={activeFilterCount} onClick={() => setSheetOpen(true)} />}
         />
 
-        <div className="am-surface-row" style={{ padding: 6 }}>
+        <div className="am-surface-row p-1.5">
           <SegmentControl tabs={translatedTabs} active={activeRole} onChange={setActiveRole} />
         </div>
 
@@ -80,16 +80,16 @@ export default function DealsPage() {
               {...staggerChildren}
               initial="initial"
               animate="animate"
-              style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+              className="am-deal-grid"
             >
               {deals.map((deal) => (
                 <DealListItem key={deal.id} deal={deal} onClick={() => navigate(`/deals/${deal.id}`)} />
               ))}
 
-              <div ref={sentinelRef} style={{ height: 1 }} />
+              <div ref={sentinelRef} className="h-px" />
 
               {isFetchingNextPage && (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: 16 }}>
+                <div className="flex justify-center p-4">
                   <Spinner size="24px" color="accent" />
                 </div>
               )}
