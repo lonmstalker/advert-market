@@ -9,10 +9,12 @@ import com.advertmarket.identity.api.port.LoginRateLimiterPort;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.identity.config.AuthProperties;
+import com.advertmarket.identity.config.LocaleCurrencyProperties;
 import com.advertmarket.identity.config.RateLimiterProperties;
 import com.advertmarket.identity.mapper.UserProfileMapper;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
+import com.advertmarket.identity.service.LocaleCurrencyResolver;
 import com.advertmarket.integration.support.TestExceptionHandler;
 import com.advertmarket.shared.i18n.LocalizationService;
 import com.advertmarket.shared.json.JsonFacade;
@@ -20,6 +22,7 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.UserBlockCheckPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.util.Map;
 import javax.sql.DataSource;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
@@ -103,6 +106,21 @@ public class MarketplaceTestConfig {
     }
 
     @Bean
+    LocaleCurrencyProperties localeCurrencyProperties() {
+        return new LocaleCurrencyProperties(
+                "USD",
+                Map.of(
+                        "ru", "RUB",
+                        "en", "USD"));
+    }
+
+    @Bean
+    LocaleCurrencyResolver localeCurrencyResolver(
+            LocaleCurrencyProperties properties) {
+        return new LocaleCurrencyResolver(properties);
+    }
+
+    @Bean
     MetricsFacade metricsFacade() {
         return new MetricsFacade(new SimpleMeterRegistry());
     }
@@ -113,11 +131,15 @@ public class MarketplaceTestConfig {
     }
 
     @Bean
-    UserRepository userRepository(DSLContext dsl, JsonFacade jsonFacade) {
+    UserRepository userRepository(
+            DSLContext dsl,
+            JsonFacade jsonFacade,
+            LocaleCurrencyResolver localeCurrencyResolver) {
         return new JooqUserRepository(
                 dsl,
                 jsonFacade,
-                Mappers.getMapper(UserProfileMapper.class));
+                Mappers.getMapper(UserProfileMapper.class),
+                localeCurrencyResolver);
     }
 
     @Bean

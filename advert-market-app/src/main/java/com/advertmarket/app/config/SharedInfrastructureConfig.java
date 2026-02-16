@@ -43,7 +43,6 @@ public class SharedInfrastructureConfig {
 
     /** Creates the Redis-backed distributed lock. */
     @Bean
-    @ConditionalOnBean(StringRedisTemplate.class)
     public DistributedLockPort distributedLock(
             StringRedisTemplate redisTemplate,
             MetricsFacade metrics) {

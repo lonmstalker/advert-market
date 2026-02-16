@@ -16,6 +16,23 @@
   └── [Sheet] History filters
 ```
 
+## Visual System (Wallet-native pass)
+
+- Finance routes (`/wallet`, `/wallet/history`, `/wallet/history/:txId`) use a shared shell:
+  - `.am-finance-page`
+  - `.am-finance-stack`
+  - `.am-finance-card`
+- Surface tokens are centralized in `src/app/global.css`:
+  - `--am-card-surface`
+  - `--am-card-border`
+  - `--am-card-shadow`
+  - `--am-app-background`
+- Bottom navigation follows floating capsule pattern with safe-area offset:
+  - `--am-bottom-tabs-height`
+  - `--am-tabbar-bg`
+  - `--am-tabbar-border`
+  - `--am-tabbar-active-bg`
+
 ---
 
 ## API endpoints

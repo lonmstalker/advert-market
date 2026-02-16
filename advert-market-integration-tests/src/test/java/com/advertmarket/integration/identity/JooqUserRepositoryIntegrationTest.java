@@ -3,13 +3,17 @@ package com.advertmarket.integration.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.advertmarket.identity.adapter.JooqUserRepository;
+import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.TelegramUserData;
+import com.advertmarket.identity.config.LocaleCurrencyProperties;
 import com.advertmarket.identity.mapper.UserProfileMapper;
+import com.advertmarket.identity.service.LocaleCurrencyResolver;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.UserId;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Map;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,11 +38,19 @@ class JooqUserRepositoryIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        LocaleCurrencyProperties localeCurrencyProperties =
+                new LocaleCurrencyProperties(
+                        "USD",
+                        Map.of(
+                                "ru", "RUB",
+                                "en", "USD"));
+
         repository = new JooqUserRepository(
                 dsl,
                 new JsonFacade(new ObjectMapper()
                         .findAndRegisterModules()),
-                Mappers.getMapper(UserProfileMapper.class));
+                Mappers.getMapper(UserProfileMapper.class),
+                new LocaleCurrencyResolver(localeCurrencyProperties));
         DatabaseSupport.cleanAllTables(dsl);
     }
 
@@ -76,6 +88,25 @@ class JooqUserRepositoryIntegrationTest {
                 .hasValueSatisfying(profile -> {
                     assertThat(profile.username()).isEqualTo("johnny");
                     assertThat(profile.displayName()).isEqualTo("Johnny D");
+                    assertThat(profile.languageCode()).isEqualTo("en");
+                });
+    }
+
+    @Test
+    @DisplayName("Should derive display currency from language in AUTO mode")
+    void shouldDeriveDisplayCurrencyFromLanguageInAutoMode() {
+        UserId userId = new UserId(42L);
+        repository.upsert(new TelegramUserData(
+                42L, "John", "Doe", "johndoe", "en"));
+        repository.updateCurrencyMode(userId, CurrencyMode.AUTO);
+
+        repository.updateLanguage(userId, "ru");
+
+        assertThat(repository.findById(userId))
+                .isPresent()
+                .hasValueSatisfying(profile -> {
+                    assertThat(profile.currencyMode()).isEqualTo(CurrencyMode.AUTO);
+                    assertThat(profile.displayCurrency()).isEqualTo("RUB");
                 });
     }
 

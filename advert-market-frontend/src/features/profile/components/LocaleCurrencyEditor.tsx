@@ -1,0 +1,341 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button, Group, GroupItem, Icon, Text } from '@telegram-tools/ui-kit';
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { updateLanguage, updateSettings } from '@/features/profile/api/profile-api';
+import { profileKeys } from '@/shared/api';
+import type { CurrencyMode } from '@/shared/api/auth';
+import { useToast } from '@/shared/hooks';
+import { CURRENCIES, LANGUAGES } from '@/shared/lib/constants';
+import { trackOnboardingEvent } from '@/shared/lib/onboarding-analytics';
+import { useSettingsStore } from '@/shared/stores/settings-store';
+
+type LocaleCurrencyEditorMode = 'onboarding' | 'profile';
+type LocaleCurrencyView = 'main' | 'language' | 'currency';
+
+type LocaleCurrencyEditorProps = {
+  mode: LocaleCurrencyEditorMode;
+  onContinue?: () => void;
+};
+
+type UndoState = {
+  previousLanguage: string;
+  previousCurrency: string;
+  nextCurrency: string;
+};
+
+function modeToAnalytics(mode: CurrencyMode): 'auto' | 'manual' {
+  return mode === 'AUTO' ? 'auto' : 'manual';
+}
+
+function normalizeLanguage(code: string): string {
+  return (code.split('-')[0] ?? code).toLowerCase();
+}
+
+export function LocaleCurrencyEditor({ mode, onContinue }: LocaleCurrencyEditorProps) {
+  const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const { showError } = useToast();
+  const [view, setView] = useState<LocaleCurrencyView>('main');
+  const [undoState, setUndoState] = useState<UndoState | null>(null);
+
+  const storedLanguageCode = useSettingsStore((s) => s.languageCode);
+  const displayCurrency = useSettingsStore((s) => s.displayCurrency);
+  const currencyMode = useSettingsStore((s) => s.currencyMode);
+  const setFromProfile = useSettingsStore((s) => s.setFromProfile);
+
+  const languageCode = normalizeLanguage(storedLanguageCode || i18n.language);
+
+  const languageMutation = useMutation({
+    mutationFn: updateLanguage,
+    onMutate: (nextLanguage) => {
+      const previousLanguage = i18n.language;
+      const previousCurrency = displayCurrency;
+      const previousMode = currencyMode;
+      i18n.changeLanguage(nextLanguage);
+      return { previousLanguage, previousCurrency, previousMode };
+    },
+    onSuccess: (updatedProfile, _nextLanguage, context) => {
+      setFromProfile(updatedProfile);
+      queryClient.setQueryData(profileKeys.me, updatedProfile);
+      const updatedLanguage = normalizeLanguage(updatedProfile.languageCode);
+      if (i18n.language !== updatedLanguage) {
+        i18n.changeLanguage(updatedLanguage);
+      }
+
+      if (context?.previousMode === 'AUTO' && context.previousCurrency !== updatedProfile.displayCurrency) {
+        setUndoState({
+          previousLanguage: context.previousLanguage,
+          previousCurrency: context.previousCurrency,
+          nextCurrency: updatedProfile.displayCurrency,
+        });
+
+        if (mode === 'onboarding') {
+          trackOnboardingEvent('currency_changed', {
+            currency: updatedProfile.displayCurrency,
+          });
+        }
+      }
+    },
+    onError: (_error, _nextLanguage, context) => {
+      if (context?.previousLanguage) {
+        i18n.changeLanguage(context.previousLanguage);
+      }
+      showError(t('common.toast.saveFailed'));
+    },
+  });
+
+  const settingsMutation = useMutation({
+    mutationFn: updateSettings,
+    onSuccess: (updatedProfile) => {
+      setFromProfile(updatedProfile);
+      queryClient.setQueryData(profileKeys.me, updatedProfile);
+    },
+    onError: () => {
+      showError(t('common.toast.saveFailed'));
+    },
+  });
+
+  const languageLabel = useMemo(
+    () =>
+      t(`profile.language.${languageCode}`, {
+        defaultValue: languageCode.toUpperCase(),
+      }),
+    [languageCode, t],
+  );
+
+  const currencyLabel = useMemo(() => {
+    if (currencyMode === 'AUTO') {
+      return `${t('profile.localeCurrency.autoByLanguage')} · ${displayCurrency}`;
+    }
+    return displayCurrency;
+  }, [currencyMode, displayCurrency, t]);
+
+  const isPending = languageMutation.isPending || settingsMutation.isPending;
+  const secondaryButtonStyle = {
+    border: 'none',
+    background: 'transparent',
+    color: 'var(--color-accent-primary)',
+    font: 'inherit',
+    padding: 0,
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+  };
+
+  const handleLanguageSelect = (nextLanguage: string) => {
+    if (nextLanguage === languageCode || isPending) {
+      setView('main');
+      return;
+    }
+
+    if (mode === 'onboarding') {
+      trackOnboardingEvent('language_changed', { language: nextLanguage });
+    }
+
+    languageMutation.mutate(nextLanguage);
+    setView('main');
+  };
+
+  const handleSelectAutoMode = () => {
+    if (currencyMode === 'AUTO' || isPending) {
+      setView('main');
+      return;
+    }
+
+    if (mode === 'onboarding') {
+      trackOnboardingEvent('currency_mode_changed', { mode: 'auto' });
+    }
+
+    settingsMutation.mutate(
+      { currencyMode: 'AUTO' },
+      {
+        onSuccess: (updatedProfile) => {
+          if (mode === 'onboarding' && updatedProfile.displayCurrency !== displayCurrency) {
+            trackOnboardingEvent('currency_changed', {
+              currency: updatedProfile.displayCurrency,
+            });
+          }
+        },
+      },
+    );
+    setView('main');
+  };
+
+  const handleSelectManualCurrency = (currency: string) => {
+    if (isPending) return;
+    if (currencyMode === 'MANUAL' && displayCurrency === currency) {
+      setView('main');
+      return;
+    }
+
+    if (mode === 'onboarding') {
+      if (currencyMode !== 'MANUAL') {
+        trackOnboardingEvent('currency_mode_changed', { mode: 'manual' });
+      }
+      trackOnboardingEvent('currency_changed', { currency });
+    }
+
+    settingsMutation.mutate({
+      currencyMode: 'MANUAL',
+      displayCurrency: currency,
+    });
+    setView('main');
+  };
+
+  const handleUndo = () => {
+    if (!undoState || isPending) return;
+    languageMutation.mutate(undoState.previousLanguage);
+    setUndoState(null);
+  };
+
+  const handleContinue = () => {
+    if (mode === 'onboarding') {
+      trackOnboardingEvent('locale_continue', {
+        language: languageCode,
+        currencyMode: modeToAnalytics(currencyMode),
+        currency: displayCurrency,
+      });
+    }
+    onContinue?.();
+  };
+
+  if (view === 'language') {
+    return (
+      <div style={{ padding: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button type="button" style={secondaryButtonStyle} onClick={() => setView('main')}>
+          {t('common.back')}
+        </button>
+
+        <Group header={t('profile.language')}>
+          {LANGUAGES.map(({ code }) => (
+            <GroupItem
+              key={code}
+              text={t(`profile.language.${code}`)}
+              after={languageCode === code ? <Icon name="check" color="accent" /> : undefined}
+              onClick={() => handleLanguageSelect(code)}
+            />
+          ))}
+        </Group>
+      </div>
+    );
+  }
+
+  if (view === 'currency') {
+    return (
+      <div style={{ padding: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button type="button" style={secondaryButtonStyle} onClick={() => setView('main')}>
+          {t('common.back')}
+        </button>
+
+        <Group header={t('profile.currency')}>
+          <GroupItem
+            text={t('profile.localeCurrency.autoByLanguage')}
+            description={t('profile.localeCurrency.autoDescription', {
+              currency: displayCurrency,
+            })}
+            after={currencyMode === 'AUTO' ? <Icon name="check" color="accent" /> : undefined}
+            onClick={handleSelectAutoMode}
+          />
+          {CURRENCIES.map(({ code, labelKey }) => (
+            <GroupItem
+              key={code}
+              text={t(labelKey)}
+              after={
+                currencyMode === 'MANUAL' && displayCurrency === code ? <Icon name="check" color="accent" /> : undefined
+              }
+              onClick={() => handleSelectManualCurrency(code)}
+            />
+          ))}
+        </Group>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {mode === 'onboarding' && (
+        <div style={{ padding: '0 16px' }}>
+          <Text type="title2" weight="bold">
+            {t('onboarding.locale.title')}
+          </Text>
+          <div style={{ marginTop: 6 }}>
+            <Text type="caption1" color="secondary">
+              {t('onboarding.locale.subtitle')}
+            </Text>
+          </div>
+        </div>
+      )}
+
+      <Group>
+        <GroupItem
+          text={t('profile.language')}
+          after={
+            <Text type="body" color="secondary">
+              {languageLabel}
+            </Text>
+          }
+          chevron
+          onClick={() => setView('language')}
+        />
+        <GroupItem
+          text={t('profile.currency')}
+          after={
+            <Text type="body" color="secondary">
+              {currencyLabel}
+            </Text>
+          }
+          chevron
+          onClick={() => setView('currency')}
+        />
+      </Group>
+
+      {currencyMode === 'MANUAL' && (
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Text type="caption1" color="secondary">
+            {t('profile.localeCurrency.manualMicrocopy')}
+          </Text>
+          <button type="button" style={secondaryButtonStyle} disabled={isPending} onClick={handleSelectAutoMode}>
+            {t('profile.localeCurrency.resetAuto')}
+          </button>
+        </div>
+      )}
+
+      {undoState && (
+        <div
+          style={{
+            margin: '0 16px',
+            padding: '10px 12px',
+            borderRadius: 12,
+            background: 'var(--color-background-section)',
+            border: '1px solid var(--color-stroke-primary)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <Text type="caption1" color="secondary">
+            {t('profile.localeCurrency.autoUpdated', {
+              currency: undoState.nextCurrency,
+            })}
+          </Text>
+          <button type="button" style={secondaryButtonStyle} onClick={handleUndo} disabled={isPending}>
+            {t('profile.localeCurrency.undo')}
+          </button>
+        </div>
+      )}
+
+      {mode === 'onboarding' && (
+        <div style={{ padding: '0 16px' }}>
+          <Button
+            text={t('onboarding.locale.continue')}
+            type="primary"
+            onClick={handleContinue}
+            loading={isPending}
+            disabled={isPending}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

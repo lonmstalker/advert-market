@@ -16,6 +16,7 @@ function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
     displayName: 'Test User',
     languageCode: 'en',
     displayCurrency: 'EUR',
+    currencyMode: 'MANUAL',
     notificationSettings: {
       deals: { newOffers: false, acceptReject: true, deliveryStatus: false },
       financial: { deposits: true, payouts: false, escrow: true },
@@ -31,7 +32,9 @@ function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
 describe('useSettingsStore', () => {
   beforeEach(() => {
     useSettingsStore.setState({
+      languageCode: 'en',
       displayCurrency: 'USD',
+      currencyMode: 'AUTO',
       notificationSettings: DEFAULT_NOTIFICATIONS,
       isLoaded: false,
     });
@@ -39,7 +42,9 @@ describe('useSettingsStore', () => {
 
   it('has correct initial values', () => {
     const state = useSettingsStore.getState();
+    expect(state.languageCode).toBe('en');
     expect(state.displayCurrency).toBe('USD');
+    expect(state.currencyMode).toBe('AUTO');
     expect(state.isLoaded).toBe(false);
     expect(state.notificationSettings).toEqual(DEFAULT_NOTIFICATIONS);
   });
@@ -49,7 +54,9 @@ describe('useSettingsStore', () => {
     useSettingsStore.getState().setFromProfile(profile);
 
     const state = useSettingsStore.getState();
+    expect(state.languageCode).toBe('en');
     expect(state.displayCurrency).toBe('EUR');
+    expect(state.currencyMode).toBe('MANUAL');
     expect(state.isLoaded).toBe(true);
     expect(state.notificationSettings).toEqual(profile.notificationSettings);
   });
@@ -68,8 +75,30 @@ describe('useSettingsStore', () => {
     useSettingsStore.getState().setDisplayCurrency('RUB');
 
     const state = useSettingsStore.getState();
+    expect(state.languageCode).toBe('en');
     expect(state.displayCurrency).toBe('RUB');
+    expect(state.currencyMode).toBe('AUTO');
     expect(state.isLoaded).toBe(false);
+    expect(state.notificationSettings).toEqual(DEFAULT_NOTIFICATIONS);
+  });
+
+  it('setCurrencyMode changes only mode', () => {
+    useSettingsStore.getState().setCurrencyMode('MANUAL');
+
+    const state = useSettingsStore.getState();
+    expect(state.languageCode).toBe('en');
+    expect(state.currencyMode).toBe('MANUAL');
+    expect(state.displayCurrency).toBe('USD');
+    expect(state.notificationSettings).toEqual(DEFAULT_NOTIFICATIONS);
+  });
+
+  it('setLanguageCode changes only language', () => {
+    useSettingsStore.getState().setLanguageCode('ru');
+
+    const state = useSettingsStore.getState();
+    expect(state.languageCode).toBe('ru');
+    expect(state.currencyMode).toBe('AUTO');
+    expect(state.displayCurrency).toBe('USD');
     expect(state.notificationSettings).toEqual(DEFAULT_NOTIFICATIONS);
   });
 

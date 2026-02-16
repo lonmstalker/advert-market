@@ -11,6 +11,8 @@ import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
+import com.advertmarket.identity.api.dto.CurrencyMode;
+import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.metric.MetricNames;
@@ -28,11 +30,12 @@ class UserServiceImplTest {
 
     private UserRepository userRepository;
     private MetricsFacade metricsFacade;
+    private LocaleCurrencyResolver localeCurrencyResolver;
     private UserServiceImpl userService;
 
     private static final UserId USER_ID = new UserId(42L);
     private static final UserProfile PROFILE = new UserProfile(
-            42L, "johndoe", "John Doe", "en", "USD",
+            42L, "johndoe", "John Doe", "en", "USD", CurrencyMode.AUTO,
             NotificationSettings.defaults(),
             false, List.of(), Instant.parse("2026-01-01T00:00:00Z"));
 
@@ -40,8 +43,11 @@ class UserServiceImplTest {
     void setUp() {
         userRepository = mock(UserRepository.class);
         metricsFacade = mock(MetricsFacade.class);
+        localeCurrencyResolver = mock(LocaleCurrencyResolver.class);
         userService = new UserServiceImpl(
-                userRepository, metricsFacade);
+                userRepository,
+                metricsFacade,
+                localeCurrencyResolver);
     }
 
     @Test
@@ -68,7 +74,7 @@ class UserServiceImplTest {
     void shouldCompleteOnboarding() {
         List<String> interests = List.of("tech", "gaming");
         UserProfile updatedProfile = new UserProfile(
-                42L, "johndoe", "John Doe", "en", "USD",
+                42L, "johndoe", "John Doe", "en", "USD", CurrencyMode.AUTO,
                 NotificationSettings.defaults(),
                 true, interests,
                 Instant.parse("2026-01-01T00:00:00Z"));
@@ -89,7 +95,7 @@ class UserServiceImplTest {
     @DisplayName("Should update language and return updated profile")
     void shouldUpdateLanguage() {
         UserProfile updated = new UserProfile(
-                42L, "johndoe", "John Doe", "ru", "USD",
+                42L, "johndoe", "John Doe", "ru", "RUB", CurrencyMode.AUTO,
                 NotificationSettings.defaults(),
                 false, List.of(),
                 Instant.parse("2026-01-01T00:00:00Z"));
@@ -104,17 +110,51 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should update display currency via settings")
-    void shouldUpdateDisplayCurrency() {
+    @DisplayName("Should treat legacy displayCurrency update as MANUAL")
+    void shouldTreatLegacyDisplayCurrencyUpdateAsManual() {
         when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(PROFILE));
 
         userService.updateSettings(
                 USER_ID,
-                new UpdateSettingsRequest("EUR", null));
+                new UpdateSettingsRequest("EUR", null, null));
 
+        verify(userRepository).updateCurrencyMode(
+                USER_ID, CurrencyMode.MANUAL);
         verify(userRepository).updateDisplayCurrency(
                 USER_ID, "EUR");
+    }
+
+    @Test
+    @DisplayName("Should resolve AUTO display currency from user language")
+    void shouldResolveAutoDisplayCurrencyFromLanguage() {
+        UserProfile ruProfile = new UserProfile(
+                42L, "johndoe", "John Doe", "ru", "RUB", CurrencyMode.AUTO,
+                NotificationSettings.defaults(),
+                false, List.of(), Instant.parse("2026-01-01T00:00:00Z"));
+        when(userRepository.findById(USER_ID))
+                .thenReturn(Optional.of(ruProfile));
+        when(localeCurrencyResolver.resolve("ru"))
+                .thenReturn("RUB");
+
+        userService.updateSettings(
+                USER_ID,
+                new UpdateSettingsRequest(null, CurrencyMode.AUTO, null));
+
+        verify(userRepository).updateCurrencyMode(
+                USER_ID, CurrencyMode.AUTO);
+        verify(userRepository).updateDisplayCurrency(
+                USER_ID, "RUB");
+    }
+
+    @Test
+    @DisplayName("Should reject MANUAL mode update without display currency")
+    void shouldRejectManualModeWithoutDisplayCurrency() {
+        assertThatThrownBy(() -> userService.updateSettings(
+                USER_ID,
+                new UpdateSettingsRequest(null, CurrencyMode.MANUAL, null)))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("displayCurrency is required");
     }
 
     @Test
@@ -132,7 +172,7 @@ class UserServiceImplTest {
 
         userService.updateSettings(
                 USER_ID,
-                new UpdateSettingsRequest(null, settings));
+                new UpdateSettingsRequest(null, null, settings));
 
         verify(userRepository).updateNotificationSettings(
                 USER_ID, settings);

@@ -1,7 +1,8 @@
 import { Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHaptic } from '@/shared/hooks/use-haptic';
 import { formatTonCompact } from '@/shared/lib/ton-format';
 import { listItem, pressScale } from '@/shared/ui/animations';
 import {
@@ -22,6 +23,7 @@ export const TransactionListItem = memo(function TransactionListItem({
   onClick,
 }: TransactionListItemProps) {
   const { t } = useTranslation();
+  const haptic = useHaptic();
   const config = getTransactionTypeConfig(transaction.type);
   const amountColor = getAmountColor(transaction.type, transaction.direction);
   const formattedAmount = formatAmountWithSign(formatTonCompact(transaction.amountNano), transaction.direction);
@@ -32,8 +34,25 @@ export const TransactionListItem = memo(function TransactionListItem({
 
   const Icon = config.Icon;
 
+  const handleClick = useCallback(() => {
+    haptic.impactOccurred('light');
+    onClick();
+  }, [haptic, onClick]);
+
   return (
-    <motion.div {...listItem} {...pressScale} onClick={onClick} style={{ cursor: 'pointer' }}>
+    <motion.div
+      {...listItem}
+      {...pressScale}
+      onClick={handleClick}
+      style={{
+        cursor: 'pointer',
+        background: 'var(--am-card-surface)',
+        border: '1px solid var(--am-card-border)',
+        borderRadius: 18,
+        boxShadow: 'var(--am-card-shadow)',
+        padding: '0 12px',
+      }}
+    >
       <div
         style={{
           display: 'flex',
@@ -44,17 +63,18 @@ export const TransactionListItem = memo(function TransactionListItem({
       >
         <span
           style={{
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
             background: getTransactionTypeTint(transaction.type),
+            border: '1px solid color-mix(in srgb, var(--color-border-separator) 60%, transparent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
           }}
         >
-          <Icon style={{ width: 18, height: 18, color: 'var(--color-foreground-secondary)' }} />
+          <Icon style={{ width: 20, height: 20, color: 'var(--color-foreground-secondary)' }} />
         </span>
 
         <div style={{ flex: 1, minWidth: 0 }}>

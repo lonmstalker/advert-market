@@ -12,12 +12,14 @@ import com.advertmarket.identity.adapter.RedisTokenBlacklist;
 import com.advertmarket.identity.api.dto.TelegramUserData;
 import com.advertmarket.identity.api.port.TokenBlacklistPort;
 import com.advertmarket.identity.config.AuthProperties;
+import com.advertmarket.identity.config.LocaleCurrencyProperties;
 import com.advertmarket.identity.mapper.LoginResponseMapper;
 import com.advertmarket.identity.mapper.UserProfileMapper;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
 import com.advertmarket.identity.security.JwtTokenProvider;
 import com.advertmarket.identity.security.TelegramAuthentication;
 import com.advertmarket.identity.service.AuthServiceImpl;
+import com.advertmarket.identity.service.LocaleCurrencyResolver;
 import com.advertmarket.identity.service.UserServiceImpl;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.RedisSupport;
@@ -30,6 +32,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,18 +97,28 @@ class IdentityWorkflowIntegrationTest {
 
         var jsonFacade = new JsonFacade(new ObjectMapper()
                 .findAndRegisterModules());
+        var localeCurrencyProperties = new LocaleCurrencyProperties(
+                "USD",
+                Map.of(
+                        "ru", "RUB",
+                        "en", "USD"));
+        var localeCurrencyResolver = new LocaleCurrencyResolver(
+                localeCurrencyProperties);
 
         userRepository = new JooqUserRepository(
                 dsl,
                 jsonFacade,
-                Mappers.getMapper(UserProfileMapper.class));
+                Mappers.getMapper(UserProfileMapper.class),
+                localeCurrencyResolver);
         authService = new AuthServiceImpl(
                 null, userRepository,
                 jwtTokenProvider, tokenBlacklistPort,
                 metricsFacade,
                 Mappers.getMapper(LoginResponseMapper.class));
         userService = new UserServiceImpl(
-                userRepository, metricsFacade);
+                userRepository,
+                metricsFacade,
+                localeCurrencyResolver);
         filter = new JwtAuthenticationFilter(
                 jwtTokenProvider, tokenBlacklistPort,
                 userBlockCheckPort);

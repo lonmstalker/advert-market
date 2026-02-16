@@ -34,6 +34,7 @@ describe('profile-api', () => {
     it('sends PUT /profile/settings with displayCurrency', async () => {
       const profile = await updateSettings({ displayCurrency: 'RUB' });
       expect(profile.displayCurrency).toBe('RUB');
+      expect(profile.currencyMode).toBe('MANUAL');
     });
 
     it('sends PUT /profile/settings with notificationSettings', async () => {
@@ -45,6 +46,11 @@ describe('profile-api', () => {
 
       const profile = await updateSettings({ notificationSettings: notifications });
       expect(profile.notificationSettings).toEqual(notifications);
+    });
+
+    it('sends PUT /profile/settings with currencyMode AUTO', async () => {
+      const profile = await updateSettings({ currencyMode: 'AUTO' });
+      expect(profile.currencyMode).toBe('AUTO');
     });
 
     it('throws on server error', async () => {

@@ -1,6 +1,6 @@
 export { fetchTransactionDetail, fetchTransactions, fetchWalletSummary } from './api/wallet-api';
-export { SummaryHero } from './components/SummaryHero';
-export { SummaryStats } from './components/SummaryStats';
+export { BalanceCard } from './components/BalanceCard';
+export { MetricRow } from './components/MetricRow';
 export { TransactionFilterSheet } from './components/TransactionFilterSheet';
 export { TransactionGroupList } from './components/TransactionGroupList';
 export { TransactionListItem } from './components/TransactionListItem';

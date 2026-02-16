@@ -1,18 +1,22 @@
-import { Spinner, Text } from '@telegram-tools/ui-kit';
-import { TonConnectButton, useIsConnectionRestored } from '@tonconnect/ui-react';
+import { Text } from '@telegram-tools/ui-kit';
+import { useIsConnectionRestored } from '@tonconnect/ui-react';
 import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { SummaryHero } from '@/features/wallet/components/SummaryHero';
-import { SummaryStats } from '@/features/wallet/components/SummaryStats';
+import { BalanceCard } from '@/features/wallet/components/BalanceCard';
+import { MetricRow } from '@/features/wallet/components/MetricRow';
 import { TransactionGroupList } from '@/features/wallet/components/TransactionGroupList';
 import { WalletSkeleton } from '@/features/wallet/components/WalletSkeleton';
 import { useTransactions } from '@/features/wallet/hooks/useTransactions';
 import { useWalletSummary } from '@/features/wallet/hooks/useWalletSummary';
 import { EmptyState } from '@/shared/ui';
-import { fadeIn, pressScale } from '@/shared/ui/animations';
+import { fadeIn, pressScale, slideUp } from '@/shared/ui/animations';
 import { ScrollIcon } from '@/shared/ui/icons';
+
+function isOwnerView(summary: { earnedTotalNano: string }): boolean {
+  return summary.earnedTotalNano !== '0';
+}
 
 export default function WalletPage() {
   const { t } = useTranslation();
@@ -34,10 +38,7 @@ export default function WalletPage() {
 
   if (!hasData) {
     return (
-      <div style={{ padding: '16px' }}>
-        <Text type="title1" weight="bold">
-          {t('wallet.title')}
-        </Text>
+      <div className="am-finance-page">
         <EmptyState
           icon={<ScrollIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-tertiary)' }} />}
           title={t('wallet.empty.title')}
@@ -49,71 +50,37 @@ export default function WalletPage() {
     );
   }
 
+  const isOwner = isOwnerView(summary);
+  const escrowAmount = isOwner ? summary.inEscrowNano : summary.activeEscrowNano;
+
   return (
-    <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-      <div style={{ padding: '16px 16px 0' }}>
-        <Text type="title1" weight="bold">
-          {t('wallet.title')}
-        </Text>
-      </div>
+    <motion.div {...fadeIn} className="am-finance-page">
+      <div className="am-finance-stack">
+        <BalanceCard summary={summary} isOwner={isOwner} isConnectionRestored={isConnectionRestored} />
 
-      <div style={{ padding: '12px 16px 4px' }}>
-        <div
-          style={{
-            padding: '12px 12px',
-            borderRadius: 14,
-            background: 'var(--color-background-secondary)',
-            border: '1px solid var(--color-border-separator)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <Text type="caption1" color="secondary">
-              {t('wallet.connection.title')}
-            </Text>
-            <div style={{ marginTop: 2 }}>
-              <Text type="subheadline2" color="secondary">
-                {t('wallet.connection.hint')}
+        <motion.div {...slideUp} transition={{ delay: 0.2 }}>
+          <MetricRow escrowAmount={escrowAmount} completedDealsCount={summary.completedDealsCount} />
+        </motion.div>
+
+        {transactions.length > 0 && (
+          <motion.div {...fadeIn} transition={{ delay: 0.3 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text type="title3" weight="bold">
+                {t('wallet.recentTransactions')}
               </Text>
+              <motion.div {...pressScale} onClick={() => navigate('/wallet/history')} style={{ cursor: 'pointer' }}>
+                <Text type="subheadline2" weight="medium" color="accent">
+                  {t('wallet.viewAll')}
+                </Text>
+              </motion.div>
             </div>
-          </div>
-          {isConnectionRestored ? (
-            <div data-testid="wallet-ton-connect">
-              <TonConnectButton />
-            </div>
-          ) : (
-            <Spinner size="20px" color="accent" />
-          )}
-        </div>
+            <TransactionGroupList
+              transactions={transactions}
+              onItemClick={(txId) => navigate(`/wallet/history/${txId}`)}
+            />
+          </motion.div>
+        )}
       </div>
-
-      <SummaryHero summary={summary} />
-
-      <div style={{ padding: '0 16px 16px' }}>
-        <SummaryStats summary={summary} />
-      </div>
-
-      {transactions.length > 0 && (
-        <div style={{ padding: '0 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text type="title3" weight="bold">
-              {t('wallet.recentTransactions')}
-            </Text>
-            <motion.div {...pressScale} onClick={() => navigate('/wallet/history')} style={{ cursor: 'pointer' }}>
-              <Text type="subheadline2" weight="medium" color="accent">
-                {t('wallet.viewAll')}
-              </Text>
-            </motion.div>
-          </div>
-          <TransactionGroupList
-            transactions={transactions}
-            onItemClick={(txId) => navigate(`/wallet/history/${txId}`)}
-          />
-        </div>
-      )}
     </motion.div>
   );
 }

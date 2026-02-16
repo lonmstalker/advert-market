@@ -56,6 +56,7 @@
 | [05-patterns-and-decisions/06-ddd-bounded-contexts.md](./05-patterns-and-decisions/06-ddd-bounded-contexts.md) | Bounded contexts and aggregates |
 | [05-patterns-and-decisions/07-idempotency-strategy.md](./05-patterns-and-decisions/07-idempotency-strategy.md) | Idempotency for financial operations |
 | [05-patterns-and-decisions/08-abac.md](./05-patterns-and-decisions/08-abac.md) | ABAC: contextual roles, no fixed user types |
+| [05-patterns-and-decisions/09-agent-identity-memory-safety.md](./05-patterns-and-decisions/09-agent-identity-memory-safety.md) | Repo-local SOUL/STYLE/SKILL/BUILD baseline and safe Hindsight boundaries |
 
 ### Financial System
 
@@ -153,4 +154,4 @@
 
 ---
 
-*Generated from C4 architecture model. 98 files total.*
+*Generated from C4 architecture model. 99 files total.*

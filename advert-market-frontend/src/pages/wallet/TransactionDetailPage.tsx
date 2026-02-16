@@ -58,176 +58,198 @@ export default function TransactionDetailPage() {
 
   const truncateAddress = (addr: string) => `${addr.slice(0, 8)}...${addr.slice(-6)}`;
 
+  const handleCopy = (text: string) => {
+    haptic.impactOccurred('light');
+    copyToClipboard(text);
+  };
+
   return (
     <>
       <BackButtonHandler />
-      <motion.div {...fadeIn} style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 40px)' }}>
-        {/* Hero section with gradient + diamonds */}
-        <div style={{ position: 'relative', overflow: 'hidden' }}>
-          {/* Gradient backdrop — semantic color based on direction */}
+      <motion.div {...fadeIn} className="am-finance-page">
+        <div className="am-finance-stack">
           <div
+            className="am-finance-card"
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 140,
-              background:
-                tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)',
-              pointerEvents: 'none',
+              overflow: 'hidden',
+              position: 'relative',
             }}
-          />
-
-          <div style={{ position: 'relative', textAlign: 'center', padding: '28px 16px 20px' }}>
-            {/* Type icon in container */}
+          >
+            {/* Gradient backdrop — contained inside card */}
             <div
               style={{
-                width: 50,
-                height: 50,
-                borderRadius: '50%',
-                background: getTransactionTypeTint(tx.type),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 12px',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 80,
+                background:
+                  tx.direction === 'income' ? 'var(--am-hero-gradient-success)' : 'var(--am-hero-gradient-accent)',
+                pointerEvents: 'none',
               }}
-            >
-              <TypeIcon style={{ width: 28, height: 28, color: 'var(--color-foreground-secondary)' }} />
-            </div>
+            />
 
-            {/* Amount with animated entry */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
-            >
-              <Text type="largeTitle" weight="bold">
-                <span style={{ fontVariantNumeric: 'tabular-nums', color: amountColor }}>
-                  {sign}
-                  {formatTon(tx.amountNano)}
-                </span>
-              </Text>
-            </motion.div>
+            <div style={{ position: 'relative', textAlign: 'center', padding: '28px 16px 20px' }}>
+              {/* Type icon — 56px */}
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  background: getTransactionTypeTint(tx.type),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 12px',
+                }}
+              >
+                <TypeIcon style={{ width: 30, height: 30, color: 'var(--color-foreground-secondary)' }} />
+              </div>
 
-            {/* Fiat equivalent */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.25, duration: 0.3 }}
-              style={{ marginTop: 4 }}
-            >
-              <Text type="subheadline2" color="secondary">
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(tx.amountNano)}</span>
-              </Text>
-            </motion.div>
+              {/* Amount */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.35, ease: easeOut }}
+              >
+                <Text type="largeTitle" weight="bold">
+                  <span style={{ fontVariantNumeric: 'tabular-nums', color: amountColor }}>
+                    {sign}
+                    {formatTon(tx.amountNano)}
+                  </span>
+                </Text>
+              </motion.div>
 
-            {/* Status badge */}
-            <div style={{ marginTop: 12 }}>
-              <TransactionStatusBadge status={tx.status} />
+              {/* Fiat equivalent */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.25, duration: 0.3 }}
+                style={{ marginTop: 4 }}
+              >
+                <Text type="subheadline2" color="secondary">
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatFiat(tx.amountNano)}</span>
+                </Text>
+              </motion.div>
+
+              {/* Status badge */}
+              <div style={{ marginTop: 12 }}>
+                <TransactionStatusBadge status={tx.status} />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Details */}
-        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Group>
-            <GroupItem text={t('wallet.detail.type')} after={<Text type="body">{t(config.i18nKey)}</Text>} />
-            <GroupItem
-              text={t('wallet.detail.date')}
-              after={<Text type="body">{formatDateTime(tx.createdAt, i18n.language)}</Text>}
-            />
-            {tx.description && (
-              <GroupItem text={t('wallet.detail.description')} after={<Text type="body">{tx.description}</Text>} />
-            )}
-            {tx.channelTitle && (
-              <GroupItem text={t('wallet.detail.channel')} after={<Text type="body">{tx.channelTitle}</Text>} />
-            )}
-            {tx.dealId && (
-              <GroupItem
-                text={t('wallet.detail.deal')}
-                onClick={() => navigate(`/deals/${tx.dealId}`)}
-                after={
-                  <Text type="body" color="accent">
-                    {t('wallet.detail.viewDeal')} →
-                  </Text>
-                }
-              />
-            )}
-            {tx.commissionNano && (
-              <GroupItem
-                text={t('wallet.detail.commission')}
-                after={
-                  <Text type="body">
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(tx.commissionNano)}</span>
-                  </Text>
-                }
-              />
-            )}
-          </Group>
-
-          {/* Blockchain details */}
-          {(tx.txHash || tx.fromAddress || tx.toAddress) && (
+          {/* Details */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Group>
-              {tx.txHash && (
-                <GroupItem
-                  text={t('wallet.detail.txHash')}
-                  onClick={() => copyToClipboard(tx.txHash as string)}
-                  after={<span style={{ fontFamily: 'monospace', fontSize: 13 }}>{truncateAddress(tx.txHash)}</span>}
-                />
+              <GroupItem text={t('wallet.detail.type')} after={<Text type="body">{t(config.i18nKey)}</Text>} />
+              <GroupItem
+                text={t('wallet.detail.date')}
+                after={<Text type="body">{formatDateTime(tx.createdAt, i18n.language)}</Text>}
+              />
+              {tx.description && (
+                <GroupItem text={t('wallet.detail.description')} after={<Text type="body">{tx.description}</Text>} />
               )}
-              {tx.fromAddress && (
+              {tx.channelTitle && (
+                <GroupItem text={t('wallet.detail.channel')} after={<Text type="body">{tx.channelTitle}</Text>} />
+              )}
+              {tx.dealId && (
                 <GroupItem
-                  text={t('wallet.detail.from')}
-                  onClick={() => copyToClipboard(tx.fromAddress as string)}
+                  text={t('wallet.detail.deal')}
+                  onClick={() => navigate(`/deals/${tx.dealId}`)}
                   after={
-                    <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{truncateAddress(tx.fromAddress)}</span>
+                    <Text type="body" color="accent">
+                      {t('wallet.detail.viewDeal')} →
+                    </Text>
                   }
                 />
               )}
-              {tx.toAddress && (
+              {tx.commissionNano && (
                 <GroupItem
-                  text={t('wallet.detail.to')}
-                  onClick={() => copyToClipboard(tx.toAddress as string)}
-                  after={<span style={{ fontFamily: 'monospace', fontSize: 13 }}>{truncateAddress(tx.toAddress)}</span>}
+                  text={t('wallet.detail.commission')}
+                  after={
+                    <Text type="body">
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTon(tx.commissionNano)}</span>
+                    </Text>
+                  }
                 />
               )}
             </Group>
-          )}
 
-          {/* Explorer link */}
-          {tx.txHash && (
-            <div style={{ marginBottom: 24 }}>
+            {/* Blockchain details — using Text caption2 with monospace */}
+            {(tx.txHash || tx.fromAddress || tx.toAddress) && (
               <Group>
-                <GroupItem
-                  before={
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        background: 'var(--am-soft-accent-bg)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <TonDiamondIcon style={{ width: 16, height: 16, color: 'var(--color-accent-primary)' }} />
-                    </div>
-                  }
-                  text={
-                    <Text type="body" weight="medium" color="accent">
-                      {t('wallet.detail.viewInExplorer')}
-                    </Text>
-                  }
-                  chevron
-                  onClick={() => {
-                    haptic.impactOccurred('light');
-                    window.open(`https://tonviewer.com/transaction/${tx.txHash}`, '_blank', 'noopener,noreferrer');
-                  }}
-                />
+                {tx.txHash && (
+                  <GroupItem
+                    text={t('wallet.detail.txHash')}
+                    onClick={() => handleCopy(tx.txHash as string)}
+                    after={
+                      <Text type="caption2">
+                        <span style={{ fontFamily: 'monospace' }}>{truncateAddress(tx.txHash)}</span>
+                      </Text>
+                    }
+                  />
+                )}
+                {tx.fromAddress && (
+                  <GroupItem
+                    text={t('wallet.detail.from')}
+                    onClick={() => handleCopy(tx.fromAddress as string)}
+                    after={
+                      <Text type="caption2">
+                        <span style={{ fontFamily: 'monospace' }}>{truncateAddress(tx.fromAddress)}</span>
+                      </Text>
+                    }
+                  />
+                )}
+                {tx.toAddress && (
+                  <GroupItem
+                    text={t('wallet.detail.to')}
+                    onClick={() => handleCopy(tx.toAddress as string)}
+                    after={
+                      <Text type="caption2">
+                        <span style={{ fontFamily: 'monospace' }}>{truncateAddress(tx.toAddress)}</span>
+                      </Text>
+                    }
+                  />
+                )}
               </Group>
-            </div>
-          )}
+            )}
+
+            {/* Explorer link */}
+            {tx.txHash && (
+              <div>
+                <Group>
+                  <GroupItem
+                    before={
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          background: 'var(--am-soft-accent-bg)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <TonDiamondIcon style={{ width: 16, height: 16, color: 'var(--color-accent-primary)' }} />
+                      </div>
+                    }
+                    text={
+                      <Text type="body" weight="medium" color="accent">
+                        {t('wallet.detail.viewInExplorer')}
+                      </Text>
+                    }
+                    chevron
+                    onClick={() => {
+                      haptic.impactOccurred('light');
+                      window.open(`https://tonviewer.com/transaction/${tx.txHash}`, '_blank', 'noopener,noreferrer');
+                    }}
+                  />
+                </Group>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </>

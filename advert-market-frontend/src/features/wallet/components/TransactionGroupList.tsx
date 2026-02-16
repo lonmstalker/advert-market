@@ -22,11 +22,11 @@ export function TransactionGroupList({ transactions, onItemClick }: TransactionG
       {...staggerChildren}
       initial="initial"
       animate="animate"
-      style={{ display: 'flex', flexDirection: 'column' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
     >
       {groups.map((group) => (
-        <div key={group.date} style={{ marginBottom: 8 }}>
-          <div style={{ padding: '8px 0 4px' }}>
+        <div key={group.date}>
+          <div style={{ padding: '4px 2px 6px' }}>
             <Text type="caption1" weight="bold" color="secondary">
               {group.label}
             </Text>

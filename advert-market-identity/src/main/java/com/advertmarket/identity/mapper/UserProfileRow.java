@@ -15,6 +15,7 @@ public record UserProfileRow(
         @Nullable String lastName,
         @Nullable String languageCode,
         @Nullable String displayCurrency,
+        @Nullable String currencyMode,
         @Nullable JSONB notificationSettings,
         @Nullable Boolean onboardingCompleted,
         @Nullable String[] interests,

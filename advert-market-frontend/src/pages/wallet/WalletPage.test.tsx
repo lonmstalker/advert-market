@@ -38,7 +38,7 @@ function renderPage() {
 }
 
 describe('WalletPage', () => {
-  it('shows spinner during load', () => {
+  it('shows skeleton during load', () => {
     server.use(
       http.get(`${API_BASE}/wallet/summary`, async () => {
         await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -46,6 +46,7 @@ describe('WalletPage', () => {
       }),
     );
     renderPage();
+    // No Finance title during loading — skeleton shown instead
     expect(screen.queryByText('Finance')).not.toBeInTheDocument();
   });
 
@@ -60,22 +61,31 @@ describe('WalletPage', () => {
     expect(await screen.findByText('No transactions yet')).toBeInTheDocument();
   });
 
-  it('renders Finance title', async () => {
+  it('does not render Finance title', async () => {
     renderPage();
-    expect(await screen.findByText('Finance')).toBeInTheDocument();
+    await screen.findByText('Total earned');
+    expect(screen.queryByText('Finance')).not.toBeInTheDocument();
   });
 
-  it('renders SummaryHero with earned amount', async () => {
+  it('renders BalanceCard with earned amount', async () => {
     renderPage();
     expect(await screen.findByText('Total earned')).toBeInTheDocument();
     expect(screen.getByText('15 TON')).toBeInTheDocument();
   });
 
-  it('renders SummaryStats section with 3 GroupItems', async () => {
+  it('renders TonConnectButton inside BalanceCard', async () => {
     renderPage();
     await screen.findByText('Total earned');
-    const items = document.querySelectorAll('[data-group-item]');
-    expect(items.length).toBe(3);
+    expect(screen.getByTestId('ton-connect-button')).toBeInTheDocument();
+  });
+
+  it('renders MetricRow with 2 cells', async () => {
+    renderPage();
+    await screen.findByText('Total earned');
+    expect(screen.getByText('In escrow')).toBeInTheDocument();
+    expect(screen.getByText('Completed deals')).toBeInTheDocument();
+    expect(screen.getByText('5 TON')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
   });
 
   it('shows "View all" link to /wallet/history', async () => {

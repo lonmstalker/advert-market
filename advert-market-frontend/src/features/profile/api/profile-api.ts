@@ -1,4 +1,4 @@
-import type { NotificationSettings } from '@/shared/api';
+import type { CurrencyMode, NotificationSettings } from '@/shared/api';
 import type { UserProfile } from '@/shared/api/auth';
 import { userProfileSchema } from '@/shared/api/auth';
 import { api } from '@/shared/api/client';
@@ -9,6 +9,7 @@ export function updateLanguage(languageCode: string): Promise<UserProfile> {
 
 type UpdateSettingsRequest = {
   displayCurrency?: string;
+  currencyMode?: CurrencyMode;
   notificationSettings?: NotificationSettings;
 };
 

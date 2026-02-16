@@ -44,8 +44,7 @@ const WalletPage = lazyRetry(() => import('@/pages/wallet/WalletPage'));
 const HistoryPage = lazyRetry(() => import('@/pages/wallet/HistoryPage'));
 const TransactionDetailPage = lazyRetry(() => import('@/pages/wallet/TransactionDetailPage'));
 const ProfilePage = lazyRetry(() => import('@/pages/profile/ProfilePage'));
-const LanguagePage = lazyRetry(() => import('@/pages/profile/LanguagePage'));
-const CurrencyPage = lazyRetry(() => import('@/pages/profile/CurrencyPage'));
+const LocaleCurrencyPage = lazyRetry(() => import('@/pages/profile/LocaleCurrencyPage'));
 const NotificationsPage = lazyRetry(() => import('@/pages/profile/NotificationsPage'));
 const RegisterChannelPage = lazyRetry(() => import('@/pages/profile/RegisterChannelPage'));
 const CreativesPage = lazyRetry(() => import('@/pages/creatives/CreativesPage'));
@@ -117,8 +116,9 @@ function AppRoutes() {
             <Route path="/catalog/channels/:channelId" element={<ChannelDetailPage />} />
             <Route path="/wallet/history" element={<HistoryPage />} />
             <Route path="/wallet/history/:txId" element={<TransactionDetailPage />} />
-            <Route path="/profile/language" element={<LanguagePage />} />
-            <Route path="/profile/currency" element={<CurrencyPage />} />
+            <Route path="/profile/locale-currency" element={<LocaleCurrencyPage />} />
+            <Route path="/profile/language" element={<Navigate to="/profile/locale-currency" replace />} />
+            <Route path="/profile/currency" element={<Navigate to="/profile/locale-currency" replace />} />
             <Route path="/profile/notifications" element={<NotificationsPage />} />
             <Route path="/profile/channels/new" element={<RegisterChannelPage />} />
             <Route path="/profile/creatives" element={<CreativesPage />} />

@@ -13,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * @param displayName           computed from first + last name
  * @param languageCode          IETF language tag
  * @param displayCurrency       fiat currency for display
+ * @param currencyMode          currency selection mode
  * @param notificationSettings  notification preferences
  * @param onboardingCompleted   whether onboarding is done
  * @param interests             selected interest tags
@@ -30,6 +31,8 @@ public record UserProfile(
         @NonNull String languageCode,
         @Schema(description = "Fiat display currency", example = "USD")
         @NonNull String displayCurrency,
+        @Schema(description = "Currency mode", example = "AUTO")
+        @NonNull CurrencyMode currencyMode,
         @Schema(description = "Notification preferences")
         @NonNull NotificationSettings notificationSettings,
         @Schema(description = "Whether onboarding is completed")

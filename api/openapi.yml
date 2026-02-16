@@ -63,111 +63,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/CanaryStatus"
-  /api/v1/deals:
-    get:
-      tags:
-      - Deal
-      summary: List deals for current user
-      operationId: listDeals
-      parameters:
-      - name: status
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: cursor
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 20
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/CursorPageDealDto"
-      security:
-      - bearerAuth: []
-    post:
-      tags:
-      - Deal
-      summary: Create a new deal
-      operationId: createDeal
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateDealRequest"
-        required: true
-      responses:
-        "201":
-          description: Deal created
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/DealDto"
-      security:
-      - bearerAuth: []
-  /api/v1/deals/{id}:
-    get:
-      tags:
-      - Deal
-      summary: Get deal detail
-      operationId: getDealDetail
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/DealDetailDto"
-        "404":
-          description: Deal not found
-      security:
-      - bearerAuth: []
-  /api/v1/deals/{id}/transition:
-    post:
-      tags:
-      - Deal
-      summary: Transition deal state
-      operationId: transitionDeal
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DealTransitionRequest"
-        required: true
-      responses:
-        "200":
-          description: Transition result
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/DealTransitionResponse"
-      security:
-      - bearerAuth: []
   /api/v1/profile/settings:
     put:
       tags:
@@ -524,6 +419,95 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/WorkerCallbackResponse"
+  /api/v1/deals:
+    get:
+      tags:
+      - deal-controller
+      operationId: list
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CursorPageDealDto"
+    post:
+      tags:
+      - deal-controller
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDealRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DealDto"
+  /api/v1/deals/{id}/transition:
+    post:
+      tags:
+      - deal-controller
+      operationId: transition
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealTransitionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DealTransitionResponse"
   /api/v1/channels:
     get:
       tags:
@@ -599,7 +583,6 @@ paths:
         required: false
         schema:
           type: string
-          default: SUBSCRIBERS_DESC
       - name: cursor
         in: query
         required: false
@@ -611,7 +594,6 @@ paths:
         schema:
           type: integer
           format: int32
-          default: 20
       responses:
         "200":
           description: Search results
@@ -652,31 +634,13 @@ paths:
                 $ref: "#/components/schemas/ChannelResponse"
       security:
       - bearerAuth: []
-  /api/v1/channels/my:
-    get:
-      tags:
-      - Channels
-      summary: My channels
-      description: Returns channels owned by the authenticated user
-      operationId: myChannels
-      responses:
-        "200":
-          description: User's channels
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ChannelResponse"
-      security:
-      - bearerAuth: []
   /api/v1/channels/{channelId}/team:
     get:
       tags:
       - Channel Team
       summary: List team members
       description: Lists all team members (requires manage_team right)
-      operationId: list
+      operationId: list_1
       parameters:
       - name: channelId
         in: path
@@ -755,7 +719,7 @@ paths:
       - Pricing Rules
       summary: List pricing rules
       description: Lists active pricing rules for a channel
-      operationId: list_1
+      operationId: list_2
       parameters:
       - name: channelId
         in: path
@@ -777,7 +741,7 @@ paths:
       - Pricing Rules
       summary: Create pricing rule
       description: Creates a pricing rule for a channel (owner only)
-      operationId: create
+      operationId: create_1
       parameters:
       - name: channelId
         in: path
@@ -961,6 +925,43 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PostTypeDto"
+  /api/v1/deals/{id}:
+    get:
+      tags:
+      - deal-controller
+      operationId: getDetail_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DealDetailDto"
+  /api/v1/channels/my:
+    get:
+      tags:
+      - Channels
+      summary: My channels
+      description: Returns channels owned by the authenticated user
+      operationId: myChannels
+      responses:
+        "200":
+          description: User's channels
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChannelResponse"
+      security:
+      - bearerAuth: []
   /api/v1/channels/count:
     get:
       tags:
@@ -1126,9 +1127,18 @@ components:
           example: RUB
           maxLength: 3
           minLength: 3
+        currencyMode:
+          type: string
+          description: Currency selection mode
+          enum:
+          - AUTO
+          - MANUAL
+          example: AUTO
         notificationSettings:
           $ref: "#/components/schemas/NotificationSettings"
           description: Notification preferences
+        manualModeValid:
+          type: boolean
     UserProfile:
       type: object
       description: Full user profile
@@ -1154,6 +1164,13 @@ components:
           type: string
           description: Fiat display currency
           example: USD
+        currencyMode:
+          type: string
+          description: Currency mode
+          enum:
+          - AUTO
+          - MANUAL
+          example: AUTO
         notificationSettings:
           $ref: "#/components/schemas/NotificationSettings"
           description: Notification preferences
@@ -1394,6 +1411,142 @@ components:
           format: uuid
         status:
           type: string
+    CreateDealRequest:
+      type: object
+      properties:
+        channelId:
+          type: integer
+          format: int64
+        amountNano:
+          type: integer
+          format: int64
+        pricingRuleId:
+          type: integer
+          format: int64
+        creativeBrief:
+          type: string
+      required:
+      - channelId
+    DealDto:
+      type: object
+      description: Deal summary
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelId:
+          type: integer
+          format: int64
+        advertiserId:
+          type: integer
+          format: int64
+        ownerId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
+        amountNano:
+          type: integer
+          format: int64
+        deadlineAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int32
+    DealTransitionRequest:
+      type: object
+      properties:
+        targetStatus:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
+        reason:
+          type: string
+      required:
+      - targetStatus
+    DealTransitionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        newStatus:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
+        currentStatus:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
     ChannelRegistrationRequest:
       type: object
       description: Channel registration request
@@ -1586,6 +1739,130 @@ components:
           type: object
           additionalProperties:
             type: string
+    CursorPageDealDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealDto"
+        nextCursor:
+          type: string
+        hasNext:
+          type: boolean
+    DealDetailDto:
+      type: object
+      description: Deal detail with event timeline
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelId:
+          type: integer
+          format: int64
+        advertiserId:
+          type: integer
+          format: int64
+        ownerId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
+        amountNano:
+          type: integer
+          format: int64
+        commissionRateBp:
+          type: integer
+          format: int32
+        commissionNano:
+          type: integer
+          format: int64
+        deadlineAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int32
+        timeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealEventDto"
+    DealEventDto:
+      type: object
+      description: Deal event
+      properties:
+        id:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        fromStatus:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
+        toStatus:
+          type: string
+          enum:
+          - DRAFT
+          - OFFER_PENDING
+          - NEGOTIATING
+          - ACCEPTED
+          - AWAITING_PAYMENT
+          - FUNDED
+          - CREATIVE_SUBMITTED
+          - CREATIVE_APPROVED
+          - SCHEDULED
+          - PUBLISHED
+          - DELIVERY_VERIFYING
+          - COMPLETED_RELEASED
+          - DISPUTED
+          - CANCELLED
+          - REFUNDED
+          - PARTIALLY_REFUNDED
+          - EXPIRED
+        actorId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
     ChannelListItem:
       type: object
       description: Channel search result item
@@ -1689,160 +1966,6 @@ components:
         sortOrder:
           type: integer
           format: int32
-    DealStatus:
-      type: string
-      description: Deal lifecycle states
-      enum:
-      - DRAFT
-      - OFFER_PENDING
-      - NEGOTIATING
-      - ACCEPTED
-      - AWAITING_PAYMENT
-      - FUNDED
-      - CREATIVE_SUBMITTED
-      - CREATIVE_APPROVED
-      - SCHEDULED
-      - PUBLISHED
-      - DELIVERY_VERIFYING
-      - COMPLETED_RELEASED
-      - DISPUTED
-      - CANCELLED
-      - REFUNDED
-      - PARTIALLY_REFUNDED
-      - EXPIRED
-    DealEventDto:
-      type: object
-      description: Deal event
-      properties:
-        id:
-          type: integer
-          format: int64
-        eventType:
-          type: string
-        fromStatus:
-          $ref: "#/components/schemas/DealStatus"
-        toStatus:
-          $ref: "#/components/schemas/DealStatus"
-        actorId:
-          type: integer
-          format: int64
-        createdAt:
-          type: string
-          format: date-time
-    DealDto:
-      type: object
-      description: Deal summary
-      properties:
-        id:
-          type: string
-          format: uuid
-        channelId:
-          type: integer
-          format: int64
-        advertiserId:
-          type: integer
-          format: int64
-        ownerId:
-          type: integer
-          format: int64
-        status:
-          $ref: "#/components/schemas/DealStatus"
-        amountNano:
-          type: integer
-          format: int64
-        deadlineAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-        version:
-          type: integer
-          format: int32
-    DealDetailDto:
-      type: object
-      description: Deal detail with event timeline
-      properties:
-        id:
-          type: string
-          format: uuid
-        channelId:
-          type: integer
-          format: int64
-        advertiserId:
-          type: integer
-          format: int64
-        ownerId:
-          type: integer
-          format: int64
-        status:
-          $ref: "#/components/schemas/DealStatus"
-        amountNano:
-          type: integer
-          format: int64
-        commissionRateBp:
-          type: integer
-          format: int32
-        commissionNano:
-          type: integer
-          format: int64
-        deadlineAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-        version:
-          type: integer
-          format: int32
-        timeline:
-          type: array
-          items:
-            $ref: "#/components/schemas/DealEventDto"
-    CreateDealRequest:
-      type: object
-      description: REST request body for creating a deal
-      properties:
-        channelId:
-          type: integer
-          format: int64
-        amountNano:
-          type: integer
-          format: int64
-        pricingRuleId:
-          type: integer
-          format: int64
-        creativeBrief:
-          type: string
-    DealTransitionRequest:
-      type: object
-      description: REST request body for transitioning a deal status
-      properties:
-        targetStatus:
-          $ref: "#/components/schemas/DealStatus"
-        reason:
-          type: string
-    DealTransitionResponse:
-      type: object
-      description: REST response for a deal transition result
-      properties:
-        status:
-          type: string
-        newStatus:
-          $ref: "#/components/schemas/DealStatus"
-        currentStatus:
-          $ref: "#/components/schemas/DealStatus"
-    CursorPageDealDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/DealDto"
-        nextCursor:
-          type: string
-        hasNext:
-          type: boolean
   securitySchemes:
     bearerAuth:
       type: http

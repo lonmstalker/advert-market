@@ -147,6 +147,14 @@ model {
         description 'Telegram initData HMAC + anti-replay + session tokens + ABAC policy evaluation (contextual roles, not fixed user types)'
       }
 
+      profileService = service 'User Profile Service' {
+        description 'Profile read/update endpoints: language, effective display currency, and AUTO/MANUAL currency mode'
+      }
+
+      localeCurrencyResolver = service 'Locale/Currency Preference Resolver' {
+        description 'Server-driven mapping from language to effective currency with AUTO/MANUAL behavior'
+      }
+
       abacService = service 'ABAC Service' {
         description 'Attribute-Based Access Control: evaluates permissions from resource relationships (advertiser=deal.advertiser_id, owner=channel_memberships.role)'
       }
@@ -255,7 +263,7 @@ model {
 
       // Core domain tables
       users = component 'users' {
-        description 'PK = Telegram user ID (BIGINT). No fixed role column — actor role is contextual (ABAC). is_operator flag for platform admins'
+        description 'PK = Telegram user ID (BIGINT). No fixed role column — actor role is contextual (ABAC). Stores language_code + display_currency + currency_mode (AUTO/MANUAL) and is_operator flag'
       }
 
       channels = component 'channels' {
@@ -411,6 +419,7 @@ model {
   adMarketplace.miniApp.disputeUi -[sync]-> adMarketplace.backendApi.disputeService 'POST dispute, upload evidence'
   adMarketplace.miniApp.teamManagementUi -[sync]-> adMarketplace.backendApi.channelTeamService 'Invite, assign rights, revoke'
   adMarketplace.miniApp -[sync]-> adMarketplace.backendApi.authService 'Validate initData, get session'
+  adMarketplace.miniApp -[sync]-> adMarketplace.backendApi.profileService 'GET/PUT profile, language, locale-currency settings'
 
   // Backend API internal — Deal Domain (sync)
   adMarketplace.backendApi.dealController -[sync]-> adMarketplace.backendApi.dealTransitionService 'Trigger state transition'
@@ -436,6 +445,9 @@ model {
 
   // Backend API internal — Identity (sync)
   adMarketplace.backendApi.authService -[reads]-> adMarketplace.primaryDb.channelMemberships 'Check channel team rights'
+  adMarketplace.backendApi.profileService -[sync]-> adMarketplace.backendApi.localeCurrencyResolver 'Resolve effective currency for AUTO mode'
+  adMarketplace.backendApi.profileService -[reads]-> adMarketplace.primaryDb.users 'Load language + currency preferences'
+  adMarketplace.backendApi.profileService -[stores]-> adMarketplace.primaryDb.users 'Persist language + display_currency + currency_mode'
   adMarketplace.backendApi.abacService -[reads]-> adMarketplace.primaryDb.channelMemberships 'Evaluate ownership/membership'
   adMarketplace.backendApi.channelTeamService -[stores]-> adMarketplace.primaryDb.channelMemberships 'Manage team memberships'
   adMarketplace.backendApi.piiVault -[stores]-> adMarketplace.primaryDb.piiStore 'Encrypt and store PII'

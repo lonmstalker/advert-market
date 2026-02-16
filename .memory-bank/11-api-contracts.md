@@ -38,7 +38,7 @@ Rules:
 | `GET` | `/api/v1/profile` | `advert-market-identity` | User profile |
 | `PUT` | `/api/v1/profile/onboarding` | `advert-market-identity` | Complete onboarding |
 | `PUT` | `/api/v1/profile/language` | `advert-market-identity` | Update language |
-| `PUT` | `/api/v1/profile/settings` | `advert-market-identity` | Update settings (currency, notifications) |
+| `PUT` | `/api/v1/profile/settings` | `advert-market-identity` | Update settings (`currencyMode`, `displayCurrency`, notifications) |
 | `DELETE` | `/api/v1/profile` | `advert-market-identity` | Delete account |
 
 ### Marketplace Catalog
@@ -157,6 +157,17 @@ Frontend normalizes both legacy `{members:[...]}` and list payload into a single
 Backend profile payload does not include a separate `telegramId` field.
 Frontend treats `telegramId` as optional and falls back to `id`.
 
+Profile payload includes:
+
+- `displayCurrency`: effective display currency (always resolved value for UI)
+- `currencyMode`: `AUTO | MANUAL`
+
+`PUT /api/v1/profile/settings` contract:
+
+- `currencyMode=AUTO` can omit `displayCurrency` (server resolves by language mapping)
+- `currencyMode=MANUAL` requires `displayCurrency`
+- Backward compatibility: `displayCurrency` without `currencyMode` is treated as manual override (`MANUAL`)
+
 ### OpenAPI Sync Pipeline
 
 - OpenAPI artifact is exported from backend endpoint `/v3/api-docs.yaml` via:
@@ -167,6 +178,11 @@ Frontend treats `telegramId` as optional and falls back to `id`.
   - `TELEGRAM_BOT_TOKEN`
   - `TELEGRAM_WEBHOOK_SECRET`
   - `APP_MARKETPLACE_CHANNEL_BOT_USER_ID`
+  - `TON_API_KEY`
+  - `TON_WALLET_MNEMONIC`
+  - `PII_ENCRYPTION_KEY` (base64 for 32-byte key)
+- If local PostgreSQL doesn't have `pg_search` extension, run docs generation with:
+  - `SPRING_LIQUIBASE_ENABLED=false`
 - Frontend types are regenerated from `api/openapi.yml`:
   - `cd advert-market-frontend && npm run api:types`
 

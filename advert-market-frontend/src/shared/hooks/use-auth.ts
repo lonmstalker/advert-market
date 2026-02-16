@@ -1,12 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { authKeys, profileKeys } from '@/shared/api';
 import type { UserProfile } from '@/shared/api/auth';
 import { fetchProfile, login } from '@/shared/api/auth';
 import { getTelegramInitData } from '@/shared/lib/telegram-init-data';
 import { useSettingsStore } from '@/shared/stores/settings-store';
 
+function normalizeLanguage(code: string): string {
+  return (code.split('-')[0] ?? code).toLowerCase();
+}
+
 export function useAuth() {
+  const { i18n } = useTranslation();
+
   const sessionQuery = useQuery({
     queryKey: authKeys.session,
     queryFn: async () => {
@@ -30,13 +37,18 @@ export function useAuth() {
   });
 
   const setFromProfile = useSettingsStore((s) => s.setFromProfile);
-  const isLoaded = useSettingsStore((s) => s.isLoaded);
 
   useEffect(() => {
-    if (profileQuery.data && !isLoaded) {
-      setFromProfile(profileQuery.data);
+    if (!profileQuery.data) return;
+
+    setFromProfile(profileQuery.data);
+
+    const nextLanguage = normalizeLanguage(profileQuery.data.languageCode);
+    const currentLanguage = normalizeLanguage(i18n.language);
+    if (nextLanguage !== currentLanguage) {
+      i18n.changeLanguage(nextLanguage);
     }
-  }, [profileQuery.data, isLoaded, setFromProfile]);
+  }, [profileQuery.data, i18n, setFromProfile]);
 
   return {
     isAuthenticated: !!sessionQuery.data?.accessToken,

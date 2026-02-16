@@ -17,7 +17,7 @@ vi.mock('@/shared/hooks/use-toast', () => ({
 const mockShowError = vi.fn();
 
 function renderPage(initialCurrency = 'USD') {
-  useSettingsStore.setState({ displayCurrency: initialCurrency, isLoaded: true });
+  useSettingsStore.setState({ languageCode: 'en', displayCurrency: initialCurrency, isLoaded: true });
 
   return renderWithProviders(
     <Routes>

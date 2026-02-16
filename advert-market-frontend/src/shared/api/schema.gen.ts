@@ -22,58 +22,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/deals': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List deals for current user */
-    get: operations['listDeals'];
-    put?: never;
-    /** Create a new deal */
-    post: operations['createDeal'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/deals/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get deal detail */
-    get: operations['getDealDetail'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/deals/{id}/transition': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Transition deal state */
-    post: operations['transitionDeal'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/profile/settings': {
     parameters: {
       query?: never;
@@ -217,6 +165,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/deals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['list'];
+    put?: never;
+    post: operations['create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/deals/{id}/transition': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['transition'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/channels': {
     parameters: {
       query?: never;
@@ -241,26 +221,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/channels/my': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * My channels
-     * @description Returns channels owned by the authenticated user
-     */
-    get: operations['myChannels'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/channels/{channelId}/team': {
     parameters: {
       query?: never;
@@ -272,7 +232,7 @@ export interface paths {
      * List team members
      * @description Lists all team members (requires manage_team right)
      */
-    get: operations['list'];
+    get: operations['list_1'];
     put?: never;
     /**
      * Invite team member
@@ -296,13 +256,13 @@ export interface paths {
      * List pricing rules
      * @description Lists active pricing rules for a channel
      */
-    get: operations['list_1'];
+    get: operations['list_2'];
     put?: never;
     /**
      * Create pricing rule
      * @description Creates a pricing rule for a channel (owner only)
      */
-    post: operations['create'];
+    post: operations['create_1'];
     delete?: never;
     options?: never;
     head?: never;
@@ -420,6 +380,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/deals/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getDetail_1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/channels/my': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * My channels
+     * @description Returns channels owned by the authenticated user
+     */
+    get: operations['myChannels'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/channels/count': {
     parameters: {
       query?: never;
@@ -506,8 +502,15 @@ export interface components {
        * @example RUB
        */
       displayCurrency?: string;
+      /**
+       * @description Currency selection mode
+       * @example AUTO
+       * @enum {string}
+       */
+      currencyMode?: 'AUTO' | 'MANUAL';
       /** @description Notification preferences */
       notificationSettings?: components['schemas']['NotificationSettings'];
+      manualModeValid?: boolean;
     };
     /** @description Full user profile */
     UserProfile: {
@@ -537,6 +540,12 @@ export interface components {
        * @example USD
        */
       displayCurrency?: string;
+      /**
+       * @description Currency mode
+       * @example AUTO
+       * @enum {string}
+       */
+      currencyMode?: 'AUTO' | 'MANUAL';
       /** @description Notification preferences */
       notificationSettings?: components['schemas']['NotificationSettings'];
       /** @description Whether onboarding is completed */
@@ -677,6 +686,116 @@ export interface components {
       correlationId?: string;
       status?: string;
     };
+    CreateDealRequest: {
+      /** Format: int64 */
+      channelId: number;
+      /** Format: int64 */
+      amountNano?: number;
+      /** Format: int64 */
+      pricingRuleId?: number;
+      creativeBrief?: string;
+    };
+    /** @description Deal summary */
+    DealDto: {
+      /** Format: uuid */
+      id?: string;
+      /** Format: int64 */
+      channelId?: number;
+      /** Format: int64 */
+      advertiserId?: number;
+      /** Format: int64 */
+      ownerId?: number;
+      /** @enum {string} */
+      status?:
+        | 'DRAFT'
+        | 'OFFER_PENDING'
+        | 'NEGOTIATING'
+        | 'ACCEPTED'
+        | 'AWAITING_PAYMENT'
+        | 'FUNDED'
+        | 'CREATIVE_SUBMITTED'
+        | 'CREATIVE_APPROVED'
+        | 'SCHEDULED'
+        | 'PUBLISHED'
+        | 'DELIVERY_VERIFYING'
+        | 'COMPLETED_RELEASED'
+        | 'DISPUTED'
+        | 'CANCELLED'
+        | 'REFUNDED'
+        | 'PARTIALLY_REFUNDED'
+        | 'EXPIRED';
+      /** Format: int64 */
+      amountNano?: number;
+      /** Format: date-time */
+      deadlineAt?: string;
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: int32 */
+      version?: number;
+    };
+    DealTransitionRequest: {
+      /** @enum {string} */
+      targetStatus:
+        | 'DRAFT'
+        | 'OFFER_PENDING'
+        | 'NEGOTIATING'
+        | 'ACCEPTED'
+        | 'AWAITING_PAYMENT'
+        | 'FUNDED'
+        | 'CREATIVE_SUBMITTED'
+        | 'CREATIVE_APPROVED'
+        | 'SCHEDULED'
+        | 'PUBLISHED'
+        | 'DELIVERY_VERIFYING'
+        | 'COMPLETED_RELEASED'
+        | 'DISPUTED'
+        | 'CANCELLED'
+        | 'REFUNDED'
+        | 'PARTIALLY_REFUNDED'
+        | 'EXPIRED';
+      reason?: string;
+    };
+    DealTransitionResponse: {
+      status?: string;
+      /** @enum {string} */
+      newStatus?:
+        | 'DRAFT'
+        | 'OFFER_PENDING'
+        | 'NEGOTIATING'
+        | 'ACCEPTED'
+        | 'AWAITING_PAYMENT'
+        | 'FUNDED'
+        | 'CREATIVE_SUBMITTED'
+        | 'CREATIVE_APPROVED'
+        | 'SCHEDULED'
+        | 'PUBLISHED'
+        | 'DELIVERY_VERIFYING'
+        | 'COMPLETED_RELEASED'
+        | 'DISPUTED'
+        | 'CANCELLED'
+        | 'REFUNDED'
+        | 'PARTIALLY_REFUNDED'
+        | 'EXPIRED';
+      /** @enum {string} */
+      currentStatus?:
+        | 'DRAFT'
+        | 'OFFER_PENDING'
+        | 'NEGOTIATING'
+        | 'ACCEPTED'
+        | 'AWAITING_PAYMENT'
+        | 'FUNDED'
+        | 'CREATIVE_SUBMITTED'
+        | 'CREATIVE_APPROVED'
+        | 'SCHEDULED'
+        | 'PUBLISHED'
+        | 'DELIVERY_VERIFYING'
+        | 'COMPLETED_RELEASED'
+        | 'DISPUTED'
+        | 'CANCELLED'
+        | 'REFUNDED'
+        | 'PARTIALLY_REFUNDED'
+        | 'EXPIRED';
+    };
     /** @description Channel registration request */
     ChannelRegistrationRequest: {
       /**
@@ -816,6 +935,102 @@ export interface components {
         [key: string]: string;
       };
     };
+    CursorPageDealDto: {
+      items?: components['schemas']['DealDto'][];
+      nextCursor?: string;
+      hasNext?: boolean;
+    };
+    /** @description Deal detail with event timeline */
+    DealDetailDto: {
+      /** Format: uuid */
+      id?: string;
+      /** Format: int64 */
+      channelId?: number;
+      /** Format: int64 */
+      advertiserId?: number;
+      /** Format: int64 */
+      ownerId?: number;
+      /** @enum {string} */
+      status?:
+        | 'DRAFT'
+        | 'OFFER_PENDING'
+        | 'NEGOTIATING'
+        | 'ACCEPTED'
+        | 'AWAITING_PAYMENT'
+        | 'FUNDED'
+        | 'CREATIVE_SUBMITTED'
+        | 'CREATIVE_APPROVED'
+        | 'SCHEDULED'
+        | 'PUBLISHED'
+        | 'DELIVERY_VERIFYING'
+        | 'COMPLETED_RELEASED'
+        | 'DISPUTED'
+        | 'CANCELLED'
+        | 'REFUNDED'
+        | 'PARTIALLY_REFUNDED'
+        | 'EXPIRED';
+      /** Format: int64 */
+      amountNano?: number;
+      /** Format: int32 */
+      commissionRateBp?: number;
+      /** Format: int64 */
+      commissionNano?: number;
+      /** Format: date-time */
+      deadlineAt?: string;
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: int32 */
+      version?: number;
+      timeline?: components['schemas']['DealEventDto'][];
+    };
+    /** @description Deal event */
+    DealEventDto: {
+      /** Format: int64 */
+      id?: number;
+      eventType?: string;
+      /** @enum {string} */
+      fromStatus?:
+        | 'DRAFT'
+        | 'OFFER_PENDING'
+        | 'NEGOTIATING'
+        | 'ACCEPTED'
+        | 'AWAITING_PAYMENT'
+        | 'FUNDED'
+        | 'CREATIVE_SUBMITTED'
+        | 'CREATIVE_APPROVED'
+        | 'SCHEDULED'
+        | 'PUBLISHED'
+        | 'DELIVERY_VERIFYING'
+        | 'COMPLETED_RELEASED'
+        | 'DISPUTED'
+        | 'CANCELLED'
+        | 'REFUNDED'
+        | 'PARTIALLY_REFUNDED'
+        | 'EXPIRED';
+      /** @enum {string} */
+      toStatus?:
+        | 'DRAFT'
+        | 'OFFER_PENDING'
+        | 'NEGOTIATING'
+        | 'ACCEPTED'
+        | 'AWAITING_PAYMENT'
+        | 'FUNDED'
+        | 'CREATIVE_SUBMITTED'
+        | 'CREATIVE_APPROVED'
+        | 'SCHEDULED'
+        | 'PUBLISHED'
+        | 'DELIVERY_VERIFYING'
+        | 'COMPLETED_RELEASED'
+        | 'DISPUTED'
+        | 'CANCELLED'
+        | 'REFUNDED'
+        | 'PARTIALLY_REFUNDED'
+        | 'EXPIRED';
+      /** Format: int64 */
+      actorId?: number;
+      /** Format: date-time */
+      createdAt?: string;
+    };
     /** @description Channel search result item */
     ChannelListItem: {
       /** Format: int64 */
@@ -875,111 +1090,6 @@ export interface components {
       /** Format: int32 */
       sortOrder?: number;
     };
-    /**
-     * @description Deal lifecycle states
-     * @enum {string}
-     */
-    DealStatus:
-      | 'DRAFT'
-      | 'OFFER_PENDING'
-      | 'NEGOTIATING'
-      | 'ACCEPTED'
-      | 'AWAITING_PAYMENT'
-      | 'FUNDED'
-      | 'CREATIVE_SUBMITTED'
-      | 'CREATIVE_APPROVED'
-      | 'SCHEDULED'
-      | 'PUBLISHED'
-      | 'DELIVERY_VERIFYING'
-      | 'COMPLETED_RELEASED'
-      | 'DISPUTED'
-      | 'CANCELLED'
-      | 'REFUNDED'
-      | 'PARTIALLY_REFUNDED'
-      | 'EXPIRED';
-    /** @description Deal event */
-    DealEventDto: {
-      /** Format: int64 */
-      id?: number;
-      eventType?: string;
-      fromStatus?: components['schemas']['DealStatus'];
-      toStatus?: components['schemas']['DealStatus'];
-      /** Format: int64 */
-      actorId?: number;
-      /** Format: date-time */
-      createdAt?: string;
-    };
-    /** @description Deal summary */
-    DealDto: {
-      /** Format: uuid */
-      id?: string;
-      /** Format: int64 */
-      channelId?: number;
-      /** Format: int64 */
-      advertiserId?: number;
-      /** Format: int64 */
-      ownerId?: number;
-      status?: components['schemas']['DealStatus'];
-      /** Format: int64 */
-      amountNano?: number;
-      /** Format: date-time */
-      deadlineAt?: string;
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: int32 */
-      version?: number;
-    };
-    /** @description Deal detail with event timeline */
-    DealDetailDto: {
-      /** Format: uuid */
-      id?: string;
-      /** Format: int64 */
-      channelId?: number;
-      /** Format: int64 */
-      advertiserId?: number;
-      /** Format: int64 */
-      ownerId?: number;
-      status?: components['schemas']['DealStatus'];
-      /** Format: int64 */
-      amountNano?: number;
-      /** Format: int32 */
-      commissionRateBp?: number;
-      /** Format: int64 */
-      commissionNano?: number;
-      /** Format: date-time */
-      deadlineAt?: string;
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: int32 */
-      version?: number;
-      timeline?: components['schemas']['DealEventDto'][];
-    };
-    /** @description REST request body for creating a deal */
-    CreateDealRequest: {
-      /** Format: int64 */
-      channelId?: number;
-      /** Format: int64 */
-      amountNano?: number;
-      /** Format: int64 */
-      pricingRuleId?: number;
-      creativeBrief?: string;
-    };
-    /** @description REST request body for transitioning a deal status */
-    DealTransitionRequest: {
-      targetStatus?: components['schemas']['DealStatus'];
-      reason?: string;
-    };
-    /** @description REST response for a deal transition result */
-    DealTransitionResponse: {
-      status?: string;
-      newStatus?: components['schemas']['DealStatus'];
-      currentStatus?: components['schemas']['DealStatus'];
-    };
-    CursorPageDealDto: {
-      items?: components['schemas']['DealDto'][];
-      nextCursor?: string;
-      hasNext?: boolean;
-    };
   };
   responses: never;
   parameters: never;
@@ -1033,109 +1143,6 @@ export interface operations {
         };
         content: {
           '*/*': components['schemas']['CanaryStatus'];
-        };
-      };
-    };
-  };
-  listDeals: {
-    parameters: {
-      query?: {
-        status?: string;
-        cursor?: string;
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          '*/*': components['schemas']['CursorPageDealDto'];
-        };
-      };
-    };
-  };
-  createDeal: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['CreateDealRequest'];
-      };
-    };
-    responses: {
-      /** @description Deal created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          '*/*': components['schemas']['DealDto'];
-        };
-      };
-    };
-  };
-  getDealDetail: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          '*/*': components['schemas']['DealDetailDto'];
-        };
-      };
-      /** @description Deal not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  transitionDeal: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['DealTransitionRequest'];
-      };
-    };
-    responses: {
-      /** @description Transition result */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          '*/*': components['schemas']['DealTransitionResponse'];
         };
       };
     };
@@ -1559,6 +1566,97 @@ export interface operations {
       };
     };
   };
+  list: {
+    parameters: {
+      query?: {
+        status?:
+          | 'DRAFT'
+          | 'OFFER_PENDING'
+          | 'NEGOTIATING'
+          | 'ACCEPTED'
+          | 'AWAITING_PAYMENT'
+          | 'FUNDED'
+          | 'CREATIVE_SUBMITTED'
+          | 'CREATIVE_APPROVED'
+          | 'SCHEDULED'
+          | 'PUBLISHED'
+          | 'DELIVERY_VERIFYING'
+          | 'COMPLETED_RELEASED'
+          | 'DISPUTED'
+          | 'CANCELLED'
+          | 'REFUNDED'
+          | 'PARTIALLY_REFUNDED'
+          | 'EXPIRED';
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['CursorPageDealDto'];
+        };
+      };
+    };
+  };
+  create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateDealRequest'];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['DealDto'];
+        };
+      };
+    };
+  };
+  transition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DealTransitionRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['DealTransitionResponse'];
+        };
+      };
+    };
+  };
   search: {
     parameters: {
       query?: {
@@ -1636,27 +1734,7 @@ export interface operations {
       };
     };
   };
-  myChannels: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description User's channels */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          '*/*': components['schemas']['ChannelResponse'][];
-        };
-      };
-    };
-  };
-  list: {
+  list_1: {
     parameters: {
       query?: never;
       header?: never;
@@ -1740,7 +1818,7 @@ export interface operations {
       };
     };
   };
-  list_1: {
+  list_2: {
     parameters: {
       query?: never;
       header?: never;
@@ -1762,7 +1840,7 @@ export interface operations {
       };
     };
   };
-  create: {
+  create_1: {
     parameters: {
       query?: never;
       header?: never;
@@ -2009,6 +2087,48 @@ export interface operations {
         };
         content: {
           '*/*': components['schemas']['PostTypeDto'][];
+        };
+      };
+    };
+  };
+  getDetail_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['DealDetailDto'];
+        };
+      };
+    };
+  };
+  myChannels: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User's channels */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ChannelResponse'][];
         };
       };
     };
