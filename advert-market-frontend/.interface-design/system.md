@@ -19,14 +19,24 @@
 
 ## Signature: Deal Timeline
 
-The product's unique element. A vertical timeline showing deal progress through 16 states.
+Two complementary timeline views:
 
+**DealTimeline** (vertical, detailed) — `src/features/deals/components/DealTimeline.tsx`
+- Shows all 17 individual statuses on the deal detail page
 - Current state: accent-colored node with label
 - Completed states: muted checkmark nodes
 - Future states: dimmed, smaller nodes
-- Connects to role-specific action buttons below the timeline
+- Connects to role-specific action buttons below
 
-This appears on every deal detail page. It's the first thing users look at.
+**MiniTimeline** (horizontal, compact) — `src/features/deals/components/MiniTimeline.tsx`
+- 3 macro-stages: Agreement → Payment → Publication
+- Fits inside deal list cards for at-a-glance progress
+- Completed: CheckCircleIcon (accent), Active: PulsingDot (accent), Pending: dimmed circle
+- Uses `deal-macro-stage.ts` mapper (17 → 3+1 via `satisfies Record<DealStatus, MacroStage>`)
+
+### VerifiedBadge
+
+`src/shared/ui/icons/verified-badge.tsx` — Telegram brand verified checkmark. Hardcoded `#3390EC` (Telegram Blue). Props: `size` (default 16), `className`.
 
 ---
 

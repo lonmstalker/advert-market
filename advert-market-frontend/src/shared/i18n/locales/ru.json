@@ -423,6 +423,11 @@
       "refundedDesc": "Средства полностью возвращены",
       "partiallyRefundedDesc": "Частичный возврат средств"
     },
+    "macro": {
+      "negotiation": "Согласование",
+      "payment": "Оплата",
+      "publication": "Публикация"
+    },
     "actions": {
       "accept": "Принять",
       "reject": "Отклонить",

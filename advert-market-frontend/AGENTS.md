@@ -257,6 +257,35 @@ const mutation = useMutation({
 6. **Pagination**: pass `{ params: { cursor, limit } }` to `api.get`
 7. **Financial queries**: use `{ networkMode: 'online', staleTime: 0 }` — NEVER serve from cache
 
+## Tailwind CSS v4
+
+Project uses **Tailwind CSS v4** with CSS-first configuration. NO `tailwind.config.ts`.
+
+### CSS Files
+
+| File | Purpose |
+|------|---------|
+| `src/styles/tailwind.css` | `@import "tailwindcss"` + `@theme {}` bridge tokens |
+| `src/styles/components.css` | `@layer components {}` for reusable patterns |
+| `src/styles/global.css` | Design tokens, `.am-*` classes, keyframes |
+
+### CSS Import Order (in `main.tsx`)
+
+```
+ui-kit.css → tailwind.css → components.css → global.css
+```
+
+### Rules
+
+1. **Utility-first** — prefer Tailwind classes over inline `style={{}}`
+2. **`@theme {}` for tokens** — bridge CSS variables to Tailwind utilities
+3. **`@layer components {}`** for reusable class patterns
+4. **`@apply`** only inside `@layer components {}` — never in component files
+5. **`data-*` attributes** for state variants
+6. **NO `tailwind.config.ts`** — all config is CSS-based
+7. **NO `@keyframes` inside `@theme`** — keyframes go in `global.css`
+8. **`joinClasses()`** for conditional class merging (NOT `cn()` or `clsx`)
+
 ## General Rules
 
 - Linter/formatter: **Biome** (NOT ESLint). `npm run lint` / `npm run lint:fix` / `npm run format`
@@ -270,3 +299,5 @@ const mutation = useMutation({
 - Financial values: BigInt only, never Number
 - All strings through i18next `t()` function
 - MSW for API mocking in tests
+- Motion: `import { motion } from 'motion/react'` (NOT `framer-motion`)
+- Haptics: `useHaptic()` from `@/shared/hooks/use-haptic`

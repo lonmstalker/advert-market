@@ -420,6 +420,11 @@
       "refundedDesc": "Funds fully refunded",
       "partiallyRefundedDesc": "Partially refunded"
     },
+    "macro": {
+      "negotiation": "Agreement",
+      "payment": "Payment",
+      "publication": "Publication"
+    },
     "actions": {
       "accept": "Accept",
       "reject": "Reject",

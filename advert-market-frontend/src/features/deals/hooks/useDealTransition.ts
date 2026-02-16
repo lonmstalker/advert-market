@@ -4,7 +4,20 @@ import { dealKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useToast } from '@/shared/hooks/use-toast';
 import { negotiateDeal, transitionDeal } from '../api/deals';
-import type { NegotiateRequest, TransitionRequest } from '../types/deal';
+import { EXPECTED_NEXT_STATUS } from '../lib/deal-status';
+import type { Deal, DealStatus, NegotiateRequest, TransitionRequest } from '../types/deal';
+
+const FINANCIAL_STATUSES = new Set<DealStatus>([
+  'AWAITING_PAYMENT',
+  'FUNDED',
+  'COMPLETED_RELEASED',
+  'REFUNDED',
+  'PARTIALLY_REFUNDED',
+]);
+
+function isFinancialTransition(currentStatus: DealStatus | undefined): boolean {
+  return currentStatus != null && FINANCIAL_STATUSES.has(currentStatus);
+}
 
 export function useDealTransition(dealId: string) {
   const { t } = useTranslation();
@@ -20,14 +33,37 @@ export function useDealTransition(dealId: string) {
 
   const transitionMutation = useMutation({
     mutationFn: (request: TransitionRequest) => transitionDeal(dealId, request),
-    onSuccess: () => {
-      haptic.notificationOccurred('success');
-      showSuccess(t('deals.transition.success'));
-      invalidate();
+    async onMutate() {
+      const detailKey = dealKeys.detail(dealId);
+      const previous = queryClient.getQueryData<Deal>(detailKey);
+
+      if (previous && !isFinancialTransition(previous.status)) {
+        const nextStatus = EXPECTED_NEXT_STATUS[previous.status];
+        if (nextStatus) {
+          await queryClient.cancelQueries({ queryKey: detailKey });
+          queryClient.setQueryData<Deal>(detailKey, { ...previous, status: nextStatus });
+          haptic.notificationOccurred('success');
+          return { previous };
+        }
+      }
+
+      return { previous: undefined };
     },
-    onError: () => {
+    onSuccess(_data, _variables, context) {
+      if (!context?.previous) {
+        haptic.notificationOccurred('success');
+      }
+      showSuccess(t('deals.transition.success'));
+    },
+    onError(_error, _variables, context) {
+      if (context?.previous) {
+        queryClient.setQueryData(dealKeys.detail(dealId), context.previous);
+      }
       haptic.notificationOccurred('error');
       showError(t('deals.transition.error'));
+    },
+    onSettled() {
+      invalidate();
     },
   });
 

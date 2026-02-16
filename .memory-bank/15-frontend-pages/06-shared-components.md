@@ -509,6 +509,35 @@ errors.timeout
 
 ---
 
+## Tailwind CSS v4 Integration
+
+Project migrated to Tailwind CSS v4 (commit `dfc1a73`). No `tailwind.config.ts`.
+
+| File | Purpose |
+|------|---------|
+| `src/styles/tailwind.css` | `@import "tailwindcss"` + `@theme {}` bridge |
+| `src/styles/components.css` | `@layer components {}` |
+| `src/styles/global.css` | Design tokens, `.am-*` classes |
+
+CSS import order: `ui-kit.css` → `tailwind.css` → `components.css` → `global.css`
+
+Rules: utility-first, `@theme` for tokens, `@apply` only in components.css, `joinClasses()` for merging.
+
+---
+
+## Progressive Disclosure (Deal Macro-Stages)
+
+17 deal statuses → 3 visible macro-stages: Agreement, Payment, Publication.
+
+| File | Purpose |
+|------|---------|
+| `src/features/deals/lib/deal-macro-stage.ts` | Status → macro-stage mapper (`satisfies Record<DealStatus, MacroStage>`) |
+| `src/features/deals/components/MiniTimeline.tsx` | Compact 3-node horizontal progress bar |
+| `src/features/deals/lib/deal-status.ts` | `EXPECTED_NEXT_STATUS` for optimistic updates |
+| `src/features/deals/hooks/useDealTransition.ts` | Optimistic deal transitions (non-financial only) |
+
+---
+
 ## Verification
 
 ### 1. Deal state machine - all 16 statuses are covered in matrix 3.2

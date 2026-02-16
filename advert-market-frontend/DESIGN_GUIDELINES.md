@@ -1,66 +1,134 @@
-# Design Guidelines
+# Design Guidelines — 2026 Edition
 
-> Living design system document for advert-market. Based on analysis of TON Wallet (reference) and ADMINOTEKA (anti-patterns).
-> Bound to `@telegram-tools/ui-kit` 0.2.4+ and `animations.ts`.
+> Living design system for advert-market Telegram Mini App.
+> Bound to `@telegram-tools/ui-kit` 0.2.4+, Tailwind CSS v4, `motion/react`, and `global.css` token system.
 
 ---
 
 ## 1. Fundamental Principles
 
-### Telegram-native
+### Telegram-Native
 
 The app must feel like a part of Telegram, not a separate website.
 
-- Colors and backgrounds **only** via UI Kit CSS variables (`--color-*`). No hardcoded hex/rgb
-- For semi-transparent tints use `color-mix(in srgb, var(--color-*) N%, transparent)` — **never** `rgba(var(--*-rgb), alpha)`. Pre-defined tints are available in `global.css` (`--am-soft-*-bg`)
-- `ThemeProvider` auto-syncs theme with Telegram — custom dark mode is forbidden
+- Colors **only** via CSS variables (`--color-*`). No hardcoded hex/rgb (exception: brand colors like Telegram Blue `#3390EC` for `VerifiedBadge`)
+- Semi-transparent tints: `color-mix(in srgb, var(--color-*) N%, transparent)`. Pre-defined tints in `global.css` (`--am-soft-*-bg`)
+- `ThemeProvider` auto-syncs with Telegram theme — custom dark mode forbidden
 - `body` uses `var(--color-background-secondary)` (see `global.css`)
-- Back navigation — via `backButton.show()` from TMA SDK, no custom back arrows
+- Back navigation via `backButton.show()` from TMA SDK, no custom back arrows
 
 ### Minimal Information Per Screen
 
 - One screen — one question or one action
-- Maximum **4 data points** per list item (e.g.: avatar + name + subscribers + price)
-- Details — on a separate page accessible via `chevron`
+- Maximum **4 data points** per list item
+- Details — on a separate page via `chevron`
 
 ### Financial Data is Sacred
 
-- Balance — the **largest** element on screen (`hero` or `title1 bold`)
-- `font-variant-numeric: tabular-nums` for all amounts (equal-width digits)
+- Balance — **largest** element on screen (`hero` or `title1 bold`)
+- `font-variant-numeric: tabular-nums` for **all** numeric displays (NO `proportional-nums` — causes layout shift on live-updating balances)
 - Green (`--color-state-success`) — only for profit/income
 - Red (`--color-state-destructive`) — only for expense/loss/error
 - BigInt arithmetic, format: `50.00 TON` (number + space + symbol)
 
-> **Anti-pattern (ADMINOTEKA):** Background darker than Telegram — the app feels foreign. Channel cards are overloaded (price + subscribers + views + rating + 3 tags simultaneously).
+### Progressive Disclosure
+
+Complex processes are presented as simple macro-stages. Users see the big picture first, details on demand.
+
+- Deal flow: 17 technical statuses → 3 visible stages: **Agreement → Payment → Publication**
+- Macro-stage mapper: `src/features/deals/lib/deal-macro-stage.ts`
+- `MiniTimeline` (compact horizontal progress): `src/features/deals/components/MiniTimeline.tsx`
+- Full `DealTimeline` (vertical, detailed): `src/features/deals/components/DealTimeline.tsx`
+- Status aggregation uses exhaustive `satisfies Record<DealStatus, MacroStage>` for compile-time safety
 
 ---
 
-## 2. Layout System
+## 2. Atmospheric Glass
+
+The visual layer that gives depth and spatial awareness.
+
+### Page Atmosphere
+
+Every page has a subtle radial gradient background via `::before` pseudo-element on `.am-page` / `.am-finance-page` (defined in `global.css`). Implemented in `AppPageShell` (`src/shared/ui/layout/app-page-shell.tsx`).
+
+### Glass Blur Rules
+
+| Element | Blur | Implementation |
+|---------|------|----------------|
+| Cards / surfaces | `blur(12px)` | `.am-surface-card` — `AppSurfaceCard` |
+| Bottom tabs | `blur(20px)` | `.am-bottom-tabs` |
+| Headers / navigation | `blur(20px)` | Page headers |
+| Modals | `blur(12px)` | Standard glass surface |
+
+**NEVER** use `blur(20px)` for content cards — GPU-expensive on budget Android (~70% of audience). Keep `blur(12px)` for cards, reserve `blur(20px)` for persistent chrome (tabs, headers).
+
+### Deep Gunmetal OLED Theme
+
+Dark mode uses Deep Gunmetal (`#1C1C1E` base), not pure black. OLED-safe with sufficient contrast. Defined in `global.css` dark theme variables.
+
+---
+
+## 3. Tailwind CSS v4 Conventions
+
+The project uses **Tailwind CSS v4** with CSS-first configuration. There is no `tailwind.config.ts`.
+
+### Architecture
+
+| File | Purpose |
+|------|---------|
+| `src/styles/tailwind.css` | `@import "tailwindcss"` + `@theme {}` bridge tokens |
+| `src/styles/components.css` | `@layer components {}` for reusable patterns |
+| `src/styles/global.css` | Design tokens, `.am-*` classes, keyframes |
+| `@telegram-tools/ui-kit/dist/index.css` | UI Kit base styles |
+
+### CSS Import Order (in `main.tsx`)
+
+```
+ui-kit.css → tailwind.css → components.css → global.css
+```
+
+### Rules
+
+1. **Utility-first** — prefer Tailwind classes over inline `style={{}}`
+2. **`@theme {}` for tokens** — bridge CSS variables to Tailwind utilities
+3. **`@layer components {}`** for reusable class patterns (in `components.css`)
+4. **`@apply`** only inside `@layer components {}` — never in component files
+5. **`data-*` attributes** for state variants: `data-[active=true]:bg-accent`
+6. **NO `tailwind.config.ts`** — all config is CSS-based
+7. **NO `@keyframes` inside `@theme`** — keyframes go in `global.css`
+8. **`joinClasses()`** for conditional class merging (NOT `cn()` or `clsx`)
+
+### Token Example
+
+```css
+/* tailwind.css */
+@theme {
+  --color-accent: var(--color-accent-primary);
+  --color-surface: var(--color-background-base);
+}
+```
+
+---
+
+## 4. Layout System
 
 ### Page Anatomy
 
 ```
-[Telegram Header]           <- managed by Telegram, do not touch
-[Scrollable Content]        <- padding: 16px, overflow-y: auto
-[Bottom Tab Bar]            <- fixed, 4 tabs
+[Telegram Header]           ← managed by Telegram
+[Scrollable Content]        ← padding: 16px, overflow-y: auto
+[Bottom Tab Bar]            ← fixed, 4 tabs, blur(20px)
 ```
 
 ### Tabs
 
-4 tabs (not 5 — 5 tabs are cramped on small screens):
-
-| Tab | Icon | Purpose |
-|-----|------|---------|
-| Catalog | search | Channel discovery |
-| Deals | document | Active and completed |
-| Wallet | wallet | Balance, history, top-up |
-| Profile | person | Settings, channels, statistics |
+4 tabs: Catalog | Deals | Wallet | Profile
 
 ### Spacing
 
-- Between `<Group>` sections: **16px** (`marginTop: '16px'`)
+- Between `<Group>` sections: **16px**
 - Page inner padding: **16px**
-- Between paired buttons: **12px** (`gap: '12px'`)
+- Between paired buttons: **12px** gap
 - Between form and CTA: **16px**
 
 ### Sub-pages
@@ -70,37 +138,31 @@ The app must feel like a part of Telegram, not a separate website.
 
 ---
 
-## 3. Navigation
+## 5. Navigation
 
 ### Hierarchy
 
 ```
-Tab -> List -> Detail -> Action Sheet/Dialog
+Tab → List → Detail → Action Sheet/Dialog
 ```
 
 ### Rules
 
-- `<GroupItem chevron />` — element navigates to another page
+- `<GroupItem chevron />` — navigates to another page
 - `<GroupItem />` without `chevron` — informational (value in `after`)
-- `<GroupItem after={<Toggle />} />` — toggle switch, no `chevron`
+- `<GroupItem after={<Toggle />} />` — toggle, no `chevron`
 
 ### MainButton
 
-For single-action form pages (e.g., `CreateDealPage`, `RegisterChannelPage`), prefer the native Telegram `mainButton` over `<FixedBottomBar>`. Multi-action layouts (Accept/Decline) remain in `<FixedBottomBar>`.
+For single-action form pages, prefer Telegram `mainButton` over `<FixedBottomBar>`. Multi-action layouts (Accept/Decline) use `<FixedBottomBar>`.
 
 ### Filters
 
-**Pattern (Wallet):** Single "Filter" button -> `<Sheet>` with options -> "Done" button at the bottom of the sheet.
-
-```tsx
-<Button text="Filter" type="secondary" icon={filterIcon} onClick={openSheet} />
-```
-
-> **Anti-pattern (ADMINOTEKA):** Multiple dropdown filters visible simultaneously on the page. Overloads the interface, steals vertical space from content.
+Single "Filter" button → `<Sheet>` with options → "Done" button.
 
 ---
 
-## 4. Typography
+## 6. Typography
 
 ### Scale (UI Kit `<Text type="...">`)
 
@@ -108,128 +170,146 @@ For single-action form pages (e.g., `CreateDealPage`, `RegisterChannelPage`), pr
 |------|------|----------|
 | `hero` | 88px | Wallet balance (main screen) |
 | `largeTitle` | 34px | Full-screen empty state heading |
-| `title1` | 28px | Balance (compact variant), detail page heading |
-| `title2` | 22px | Form heading, section heading on detail |
-| `title3` | 20px | Empty state heading, detail subheading |
-| `title4` | 18px | Not used in lists, reserved |
-| `body` | 17px | Body text, values in `GroupItem.after` |
-| `callout` | 16px | Amounts in lists, channel price |
-| `subheadline1` | 15px | `GroupItem.description`, secondary info |
+| `title1` | 28px | Balance (compact), detail page heading |
+| `title2` | 22px | Form heading, section heading |
+| `title3` | 20px | Empty state heading, subheading |
+| `body` | 17px | Body text, `GroupItem.after` values |
+| `callout` | 16px | Amounts in lists |
+| `subheadline1` | 15px | `GroupItem.description` |
 | `subheadline2` | 14px | Metadata, timestamps |
 | `footnote` | 13px | `Group.footer`, tab labels |
 | `caption1` | 12px | Badges, labels |
-| `caption2` | 11px | Legal text, fine print |
+| `caption2` | 11px | Legal text |
 
 ### Three-Level Rule
 
-Maximum **3 typography levels** in a single viewport. For example:
-- `title2` (heading) + `body` (content) + `caption1` (metadata)
+Maximum **3 typography levels** per viewport.
 
-### Weights (`weight`)
+### Weights
 
 | Weight | Purpose |
 |--------|---------|
 | `regular` | Body text, descriptions |
-| `medium` | Emphasis in lists (`GroupItem.text`) |
+| `medium` | Emphasis in lists |
 | `bold` | Headings, amounts, balance |
-
-> **Anti-pattern (ADMINOTEKA):** All text in one weight — nothing stands out visually, the eye has nothing to anchor on.
 
 ---
 
-## 5. Color System
+## 7. Color System
 
-### Semantic Variables (use in code)
+### Semantic Variables
 
 | Variable | Purpose |
 |----------|---------|
 | `--color-accent-primary` | CTA buttons, links, active elements |
-| `--color-state-success` | Profit, completed deals, confirmation |
-| `--color-state-destructive` | Expense, cancellation, error, deletion |
+| `--color-state-success` | Profit, completed deals |
+| `--color-state-destructive` | Expense, cancellation, error |
 | `--color-state-warning` | Pending, warning |
 | `--color-foreground-primary` | Primary text |
-| `--color-foreground-secondary` | Secondary text, descriptions |
+| `--color-foreground-secondary` | Secondary text |
 | `--color-foreground-tertiary` | Hints, placeholder |
 | `--color-background-base` | Card/section background |
 | `--color-background-secondary` | Page background |
-| `--color-background-section` | Background inside `Group` |
-| `--color-background-modal` | Modal background |
-| `--color-background-overlay` | Dimming behind modal/sheet |
 | `--color-border-separator` | List separators |
-| `--color-link` | Clickable links in text |
 
-### Background Layers (bottom to top)
+### Background Layers
 
 ```
 page (--color-background-secondary)
-  -> card/section (--color-background-base / --color-background-section)
-    -> modal (--color-background-modal)
-      -> overlay (--color-background-overlay)
+  → card (--color-background-base)
+    → modal (--color-background-modal)
+      → overlay (--color-background-overlay)
 ```
 
-Z-index layers: `--z-base` < `--z-content` < `--z-sheet` < `--z-modal` < `--z-overlay` < `--z-toast`
+### Static Colors
 
-### Static Colors (theme-independent)
+`--color-static-white`, `--color-static-black` — for colors that must not invert with theme.
 
-`--color-static-white`, `--color-static-black` and the `--color-static-*` palette — for cases where color should not invert (e.g., text over a colored background).
-
-> Never use `--palette-*` variables directly in components — they are low-level. Use only `--color-*`.
+> Never use `--palette-*` directly in components — use only `--color-*`.
 
 ---
 
-## 6. Cards and Lists
+## 8. Icon Conventions
+
+### Source
+
+All icons from `lucide-react`, re-exported with domain aliases from `src/shared/ui/icons/index.ts`. Custom SVGs for domain-specific icons (post types, TON diamond, verified badge).
+
+### StrokeWidth Rules
+
+| Icon Size | `strokeWidth` | Context |
+|-----------|---------------|---------|
+| 24px+ | `1.5` | Page headers, empty states |
+| 18–22px | `2` (default) | List items, buttons, inline |
+| < 18px | `2` | Badges, compact UI |
+
+Pass `strokeWidth` as a prop at usage site — no mass refactor.
+
+### Custom Icons
+
+| Icon | File | Usage |
+|------|------|-------|
+| `TonDiamondIcon` | `src/shared/ui/icons/ton-diamond-icon.tsx` | TON amount display |
+| `VerifiedBadge` | `src/shared/ui/icons/verified-badge.tsx` | Channel verification (hardcoded `#3390EC`) |
+| `PulsingDot` | `src/shared/ui/components/pulsing-dot.tsx` | Active status indicator |
+| Post type icons | `src/shared/ui/icons/post-type-icons.tsx` | Deal/channel post types |
+
+---
+
+## 9. Cards and Lists
 
 ### Standard List Item
 
-```
-[icon/avatar]  [title + subtitle]  ...  [value/action]  [chevron?]
-```
-
-Implementation:
 ```tsx
 <GroupItem
   text="Title"
   description="Description"
-  before={<Image src={avatar} width="40px" height="40px" borderRadius="50%" />}
+  before={<Image src={avatar} ... />}
   after={<Text type="callout" color="accent">50 TON</Text>}
   chevron
   onClick={navigateToDetail}
 />
 ```
 
-### Channel Card (marketplace)
+### Channel Card — 4 fields max
 
-**Only 4 fields:** avatar + name + subscribers + price. Everything else (views, ER, topic, description) — on the detail page.
+Avatar + name + subscribers + price. Details on separate page.
 
-```tsx
-<GroupItem
-  text={channel.name}
-  description={`${formatNumber(channel.subscribers)} subscribers`}
-  before={<Image src={channel.avatar} width="40px" height="40px" borderRadius="50%" />}
-  after={<Text type="callout" color="accent">{formatTon(channel.price)} TON</Text>}
-  chevron
-/>
-```
+### Deal Card — 4 fields + MiniTimeline
 
-### Deal Card
-
-**4 fields:** channel avatar + channel name + post type + status badge.
-
-```tsx
-<GroupItem
-  text={deal.channelName}
-  description={deal.postType}
-  before={<Image src={deal.channelAvatar} width="40px" height="40px" borderRadius="50%" />}
-  after={<StatusBadge status={deal.status} />}
-  chevron
-/>
-```
-
-> **Anti-pattern (ADMINOTEKA):** 6+ data points in a single card. Dashed borders around statistics. Custom cards instead of `Group`/`GroupItem`.
+Channel avatar + channel name + status badge + MiniTimeline (3 macro-stages).
 
 ---
 
-## 7. Forms and Input
+## 10. Escrow Safety
+
+Financial and destructive actions require extra confirmation.
+
+### Rules
+
+- **Destructive actions** (cancel deal, reject offer) → `<DialogModal>` confirmation
+- **Payment button** → requires connected wallet + displays commission
+- **Deposit/release/refund** → `<DialogModal>` with amount and escrow address
+- **Optimistic updates** → NEVER for financial operations (deposit, release, refund)
+- **Payment UI** → `networkMode: 'online'`, `staleTime: 0` — never serve from cache
+
+### Pattern
+
+```tsx
+<DialogModal
+  active={showConfirm}
+  title={t('deals.confirm.title')}
+  description={t('deals.confirm.cancel')}
+  confirmText={t('deals.actions.cancel')}
+  closeText={t('common.back')}
+  onConfirm={handleCancel}
+  onClose={() => setShowConfirm(false)}
+/>
+```
+
+---
+
+## 11. Forms and Input
 
 ### Amounts
 
@@ -237,312 +317,172 @@ Implementation:
 <Input value={amount} onChange={setAmount} placeholder="0.00" numeric />
 ```
 
-Validation — Zod schema on blur, error via `error` prop.
-
 ### Form Structure
 
 ```
-[Heading (title2 bold)]
-  16px gap
-[Input fields]
-  16px gap
-[CTA button — full-width, primary]
+[Heading (title2 bold)]  →  16px gap  →  [Input fields]  →  16px gap  →  [CTA button]
 ```
 
-CTA button is **always at the bottom** of the form, full-width.
-
-### Components
-
-| Component | When to use |
-|-----------|-------------|
-| `<Input>` | Text input, amounts (`numeric`) |
-| `<Select>` | Inline list selection (within a form) |
-| `<Dropdown>` | Contextual options (on trigger click) |
-| `<Toggle>` | On/off settings |
+CTA is **always** full-width at the bottom.
 
 ---
 
-## 8. Modals and Sheets
-
-### When to Use What
+## 12. Modals and Sheets
 
 | Component | Purpose | Example |
 |-----------|---------|---------|
-| `<Sheet>` | Content-rich interactions | Filters, channel preview, list selection |
-| `<DialogModal>` | Binary decisions (yes/no) | Payment confirmation, deal cancellation |
-| `<Toast>` (via `useToast`) | Transient feedback | "Deal created", "Payment error" |
+| `<Sheet>` | Content-rich | Filters, previews |
+| `<DialogModal>` | Binary yes/no | Payment confirm, deal cancel |
+| `<Toast>` | Transient feedback | "Deal created", "Error" |
 
 ### Rules
 
-- **Never** nest a modal inside a modal (Sheet -> DialogModal is the only acceptable exception for confirmations within a sheet)
-- Sheet closes by swiping down or "Done"/"Close" button
-- DialogModal — only `onConfirm` + `onClose`, no additional buttons
-- Toast: `success` (green), `error` (red), `info` (neutral), duration 3 sec
+- Never nest modal inside modal (Sheet → DialogModal is the only exception)
+- Toast: `success`, `error`, `info`, duration 3s
 
 ---
 
-## 9. Empty States
+## 13. Empty States
 
-### Required Structure
+Every list **must** have an empty state with heading + description + CTA button.
 
-Every list **must** have an empty state:
-
-```tsx
-<motion.div {...scaleIn} style={{ textAlign: 'center', padding: '40px 20px' }}>
-  <Text type="title1" style={{ fontSize: '48px' }}>
-    {emoji}
-  </Text>
-  <Text type="title3" weight="bold" style={{ marginTop: '16px' }}>
-    {title}           {/* 3-5 words */}
-  </Text>
-  <Text type="body" color="secondary" style={{ marginTop: '8px' }}>
-    {description}     {/* 1 sentence */}
-  </Text>
-  <div style={{ marginTop: '24px' }}>
-    <motion.div {...pressScale}>
-      <Button text={ctaText} type="primary" />
-    </motion.div>
-  </div>
-</motion.div>
-```
-
-### Empty States Table
-
-| Screen | Emoji | Title | CTA |
-|--------|-------|-------|-----|
-| Deals | :mailbox_with_no_mail: | No deals yet | Find a channel |
-| Catalog (search) | :mag: | Nothing found | Reset filters |
-| Wallet (history) | :scroll: | No transactions | Top up |
-| Creatives | :art: | No creatives | Create creative |
-| Channels (profile) | :satellite_antenna: | No channels | Add channel |
-| Disputes | :balance_scale: | No disputes | — (no CTA) |
-
-> **Anti-pattern (ADMINOTEKA):** Empty state without a CTA button — user hits a dead end.
+| Screen | Title | CTA |
+|--------|-------|-----|
+| Deals | No deals yet | Find a channel |
+| Catalog | Nothing found | Reset filters |
+| Wallet | No transactions | Top up |
+| Creatives | No creatives | Create creative |
+| Channels | No channels | Add channel |
 
 ---
 
-## 10. Data Display and Statuses
+## 14. Data Display
 
-### Deal Status Badge
+### Deal Status
 
-Mapping of 16 statuses to colors (implemented as an exhaustive `Record<DealStatus, StatusConfig>`):
-
-| Group | Statuses | Color (Text `color`) |
-|-------|----------|----------------------|
-| New | `CREATED`, `NEGOTIATION` | `accent` |
-| Awaiting payment | `PENDING_DEPOSIT`, `DEPOSIT_CONFIRMING` | `secondary` |
-| In progress | `ACTIVE`, `CONTENT_SUBMITTED`, `CONTENT_REVIEW` | `accent` |
-| Publication | `SCHEDULED`, `PUBLISHED`, `STATS_COLLECTING` | `accent` |
-| Completion | `COMPLETED`, `PAYOUT_PENDING`, `PAYOUT_SENT` | success (green) |
-| Issues | `DISPUTED` | `danger` |
-| Cancelled | `CANCELLED`, `REFUNDED` | `secondary` |
+17 statuses mapped to colors via `Record<DealStatus, StatusConfig>` in `src/features/deals/lib/deal-status.ts`.
 
 ### Financial Values
 
-| Context | Typography | Example |
-|---------|------------|---------|
-| Balance (main) | `hero` or `title1 bold` | **1 250.00 TON** |
-| Amount in list | `callout` color `accent` | 50.00 TON |
-| Amount in detail | `title2 bold` | 50.00 TON |
-| Change (positive) | `callout` color success | +10.00 TON |
-| Change (negative) | `callout` color danger | -5.00 TON |
+| Context | Typography |
+|---------|------------|
+| Balance (main) | `hero` or `title1 bold` |
+| Amount in list | `callout` color `accent` |
+| Amount in detail | `title2 bold` |
+| Positive change | `callout` color `success` |
+| Negative change | `callout` color `destructive` |
 
-Style: `font-variant-numeric: tabular-nums`. Format: number + space + symbol (`50.00 TON`).
+`font-variant-numeric: tabular-nums` on **all** numeric content. Format: `50.00 TON`.
 
 ### Numbers
 
 - Thousands separator: space (RU locale) — `1 250 000`
 - In lists: abbreviations — `125K`, `1.2M`
-- On detail page: full numbers — `125 000`
-
-### Channel Statistics
-
-Via `<GroupItem>`, not custom cards:
-
-```tsx
-<Group header="Statistics">
-  <GroupItem text="Subscribers" after={<Text type="body" weight="medium">125 000</Text>} />
-  <GroupItem text="Post reach" after={<Text type="body" weight="medium">45 000</Text>} />
-  <GroupItem text="ER" after={<Text type="body" weight="medium">3.6%</Text>} />
-</Group>
-```
-
-> **Anti-pattern (ADMINOTEKA):** Statistics in custom cards with dashed borders and inconsistent styles.
+- Detail page: full numbers — `125 000`
 
 ---
 
-## 11. Action Buttons
+## 15. Action Buttons
+
+- **One primary CTA** per viewport
+- Loading: `<Button loading />`, not `disabled` + separate spinner
+- `pressScale` on **all** interactive elements
+- Action pair: Primary (positive) + Secondary (negative), `flex: 1` each with `gap-3`
+
+---
+
+## 16. Animations
+
+All presets in `src/shared/ui/animations.ts`. Import from `motion/react` (NOT `framer-motion`).
+
+### Preset Map
+
+| Preset | When |
+|--------|------|
+| `fadeIn` | Loading → content fallback |
+| `slideUp` | Card/section appearance |
+| `scaleIn` | Empty state, modal content |
+| `slideFromRight` | Push navigation |
+| `slideFromBottom` | Sheet appearance |
+| `staggerChildren` + `listItem` | Animated list (max 8–10 items) |
+| `pressScale` | All interactive elements (spring stiffness 400, damping 17) |
+| `shimmer` | Skeleton loading |
+| `pulse` | Active process indicator |
+| `toast` | Toast show/hide |
 
 ### Rules
 
-- **One primary CTA** per viewport maximum
-- Loading: `<Button loading />`, not `disabled` + separate `<Spinner>`
-
-### Single Action
-
-```tsx
-<motion.div {...pressScale}>
-  <Button text="Confirm" type="primary" />
-</motion.div>
-```
-
-### Action Pair
-
-Primary (positive) + Secondary (negative), both `flex: 1`:
-
-```tsx
-<div style={{ display: 'flex', gap: '12px' }}>
-  <motion.div {...pressScale} style={{ flex: 1 }}>
-    <Button text="Decline" type="secondary" />
-  </motion.div>
-  <motion.div {...pressScale} style={{ flex: 1 }}>
-    <Button text="Accept" type="primary" />
-  </motion.div>
-</div>
-```
+- `pressScale` on **all** buttons and clickable cards
+- `AnimatePresence mode="wait"` for loading → content
+- No animations during scroll — only mount/unmount
+- Spring animations via `motion/react` (NOT CSS `linear()` — JS spring is better for interruptible animations)
 
 ---
 
-## 12. Animations
+## 17. Haptic Feedback
 
-All presets are defined in `src/shared/ui/animations.ts`. Use via `motion/react`.
+Use `useHaptic()` from `src/shared/hooks/use-haptic.ts`.
 
-### Preset-to-Use-Case Mapping
-
-| Preset | Parameters | When to use |
-|--------|-----------|-------------|
-| `fadeIn` | opacity 0->1, 200ms | Loading -> content transition (fallback) |
-| `slideUp` | opacity + y:20->0, 250ms | Card/section appearance |
-| `slideDown` | opacity + y:-20->0, 250ms | Dropdown notifications |
-| `scaleIn` | opacity + scale:0.9->1, 200ms | Empty state, modal content |
-| `slideFromRight` | opacity + x:30->0, 250ms | Push navigation (new page) |
-| `slideFromBottom` | y:100%->0, 300ms, custom ease | `<Sheet>` appearance |
-| `staggerChildren` | stagger: 50ms | Container for animated list |
-| `listItem` | opacity + x:-10->0, 200ms | Each item in a stagger list |
-| `tapScale` | scale->0.97, 100ms | Light press feedback (small elements) |
-| `pressScale` | scale->0.95, spring | Primary press feedback (buttons, cards) |
-| `shimmer` | backgroundPosition cycle, 1.5s loop | Skeleton elements during loading |
-| `pulse` | opacity 1->0.5->1, 1.5s loop | Active process indicator |
-| `toast` | opacity + y:-40->0 + scale:0.95->1, 250ms | Toast show/hide |
+| Method | When | Examples |
+|--------|------|---------|
+| `selectionChanged()` | Tab switch, segment toggle | `BottomTabs`, `SegmentControl` |
+| `impactOccurred('light')` | Card tap, chip, filter | `DealListItem`, `CategoryChipRow` |
+| `impactOccurred('medium')` | CTA button press | Payment confirm, major action |
+| `notificationOccurred('success')` | Action success | Deal transition, negotiate |
+| `notificationOccurred('error')` | Action failure | API error, validation |
 
 ### Rules
 
-- `pressScale` on **all** interactive elements (buttons, cards with `onClick`)
-- `staggerChildren` + `listItem` for lists on first load (maximum **8-10** items, beyond that — no animation)
-- `AnimatePresence mode="wait"` for loading -> content transitions
-- **No animations** during scroll — only on mount/unmount
-- Sheet: `slideFromBottom`, Dialog: `scaleIn`, Toast: `toast`
-
-### Rules
-
-- `staggerChildren` containers **MUST** include `initial="initial" animate="animate"` (built into the preset via `variants`, but explicit props are acceptable for clarity)
-
-### Example: Animated List
-
-```tsx
-<motion.div {...staggerChildren} initial="initial" animate="animate">
-  <Group header="Channels">
-    {channels.map(ch => (
-      <motion.div key={ch.id} {...listItem}>
-        <GroupItem text={ch.name} chevron />
-      </motion.div>
-    ))}
-  </Group>
-</motion.div>
-```
+- Every card/list item `onClick` → `impactOccurred('light')`
+- CTA buttons → `impactOccurred('medium')`
+- Tab/segment switches → `selectionChanged()`
+- Optimistic updates: success haptic fires in `onMutate` (before server response)
+- Never double-fire haptic
 
 ---
 
-## 13. Loading and Skeletons
+## 18. Loading and Skeletons
 
-### Loading Hierarchy
+| Level | Component |
+|-------|-----------|
+| App init | `<Spinner size="40px" color="accent" />` centered |
+| Section | `<Group skeleton={{ show: isLoading }}>` |
+| Custom | `<SkeletonElement>` matching content shape |
+| Inline | `<Spinner size="20px">` |
+| Button | `<Button loading />` |
 
-| Level | Component | When |
-|-------|-----------|------|
-| App initialization | `<Spinner size="40px" color="accent" />` centered | First launch only |
-| Section | `<Group skeleton={{ show: isLoading }}>` | Section data loading |
-| Custom card | `<SkeletonElement>` matching content shape | Complex layouts |
-| Inline | `<Spinner size="20px">` | Inside a button or row |
-| Button | `<Button loading />` | Form submission |
-
-### Rules
-
-- **Never** use bare `<Spinner>` as the sole page-level loading indicator — use skeleton components that mirror the content shape
-- **Never** show a blank screen — always a placeholder matching the content shape
-- Skeleton must mirror the layout of future content (height, width, position)
-- Skeleton -> content transition via `<AnimatePresence mode="wait">`
-
-### Example
-
-```tsx
-<AnimatePresence mode="wait">
-  {isLoading ? (
-    <motion.div key="skeleton" {...fadeIn}>
-      <Group skeleton={{ show: true }}>
-        <GroupItem text="" />
-        <GroupItem text="" />
-        <GroupItem text="" />
-      </Group>
-    </motion.div>
-  ) : (
-    <motion.div key="content" {...scaleIn}>
-      <Group header="My Deals">
-        {deals.map(d => <GroupItem key={d.id} text={d.title} chevron />)}
-      </Group>
-    </motion.div>
-  )}
-</AnimatePresence>
-```
+Skeleton must mirror future content layout. Transition via `<AnimatePresence mode="wait">`.
 
 ---
 
-## 14. Border Radius Tokens
+## 19. Border Radius Tokens
 
-| Element | Radius | Notes |
-|---------|--------|-------|
-| Cards / containers | **14px** | `DealListItem`, `ChannelDetailStats`, `PricingCard` |
-| CTA buttons | **12px** | UI Kit standard, do not override |
-| Inputs | **12px** | UI Kit standard |
-| Chips / pills | **100** (`borderRadius: 100`) | `CategoryChipRow`, filter chips |
-| Avatars / icon circles | **50%** | Transaction type icon, user avatar |
-| Timeline active highlight | **8px** | `DealTimeline` active step background |
-| Overlap / CPM badges | **6px** | Small inline badges |
-
----
-
-## 15. Haptic Feedback
-
-Use `useHaptic()` from `@/shared/hooks/use-haptic` for tactile feedback on interactions.
-
-### Patterns
-
-| Method | When to use | Examples |
-|--------|-------------|---------|
-| `selectionChanged()` | Tab switch, segment toggle, navigation between items | `BottomTabs`, `SegmentControl` |
-| `impactOccurred('light')` | Tap on a card, chip, or filter element | `DealListItem`, `CategoryChipRow`, `CreativesPage` sort |
-| `notificationOccurred('success')` | Successful action completion | `DealActions` confirm, `NegotiateSheet` submit |
-| `notificationOccurred('error')` | Action failure | Form validation error, API error feedback |
-
-### Rules
-
-- Every `onClick` on a card or list item should trigger `impactOccurred('light')`
-- Tab/segment switches use `selectionChanged()` — not `impactOccurred`
-- Success haptic fires **before** the action handler (optimistic feel)
-- Never double-fire haptic (e.g., don't fire on both button press and action callback)
+| Element | Radius |
+|---------|--------|
+| Cards / containers | `14px` |
+| CTA buttons | `12px` (UI Kit standard) |
+| Inputs | `12px` |
+| Chips / pills | `9999px` |
+| Avatars | `50%` |
+| Timeline highlight | `8px` |
+| Small badges | `6px` |
 
 ---
 
-## 16. Pre-Release Screen Checklist
+## 20. Pre-Release Checklist
 
-Before every PR that adds or modifies a screen, verify:
-
-- [ ] **Information overload** — no more than 4 data points per list item
-- [ ] **Typographic hierarchy** — maximum 3 typography levels in viewport, balance/amounts are bold
-- [ ] **Single primary CTA** — no more than one primary button on screen
-- [ ] **Hardcoded colors** — no hex/rgb in code, only `--color-*` variables or Text `color` prop
-- [ ] **Empty state** — every list has an empty state with CTA
-- [ ] **Skeleton** — every async content has a loading skeleton matching its shape
-- [ ] **Spacing** — 16px between `Group` sections, 12px gap between paired buttons
-- [ ] **Animations** — `pressScale` on interactive elements, `staggerChildren` on lists
-- [ ] **Telegram-native** — background from Telegram, BackButton instead of custom arrows
-- [ ] **Financial data** — `tabular-nums`, BigInt, `networkMode: 'online'`, format `XX.XX TON`
+- [ ] **Information overload** — max 4 data points per list item
+- [ ] **Typography** — max 3 levels per viewport, balance is bold
+- [ ] **Single primary CTA** — one primary button per screen
+- [ ] **No hardcoded colors** — only `--color-*` vars (except brand colors)
+- [ ] **Empty state** — every list has one with CTA
+- [ ] **Skeleton** — async content has loading skeleton
+- [ ] **Spacing** — 16px between Groups, 12px button gap
+- [ ] **Animations** — `pressScale` on interactive, `stagger` on lists
+- [ ] **Telegram-native** — theme from Telegram, BackButton from SDK
+- [ ] **Financial data** — `tabular-nums`, BigInt, `networkMode: 'online'`
+- [ ] **Haptics** — appropriate haptic on every interaction
+- [ ] **Glass blur** — 12px for cards, 20px for chrome only
+- [ ] **Progressive disclosure** — macro-stages on deal cards, detail on separate page
+- [ ] **Escrow safety** — DialogModal for destructive/financial actions
+- [ ] **Tailwind** — utility classes, no inline styles for layout

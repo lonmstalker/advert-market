@@ -175,3 +175,17 @@ export function statusColorVar(color: StatusColor): string {
 export function statusBgVar(color: StatusColor): string {
   return COLOR_BG_MAP[color];
 }
+
+/**
+ * Happy-path expected next status for optimistic updates.
+ * Only non-financial, idempotent transitions are included.
+ * Financial operations (deposit/release/refund) are intentionally excluded.
+ */
+export const EXPECTED_NEXT_STATUS: Partial<Record<DealStatus, DealStatus>> = {
+  OFFER_PENDING: 'ACCEPTED',
+  NEGOTIATING: 'ACCEPTED',
+  ACCEPTED: 'AWAITING_PAYMENT',
+  CREATIVE_SUBMITTED: 'CREATIVE_APPROVED',
+  CREATIVE_APPROVED: 'SCHEDULED',
+  SCHEDULED: 'PUBLISHED',
+};

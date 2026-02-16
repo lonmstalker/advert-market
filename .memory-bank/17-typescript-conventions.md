@@ -147,3 +147,52 @@ Financial data NEVER served from cache without revalidation:
 | `noDefaultExport` | `error` (except `src/pages/**`) |
 | `useImportType` | `error` |
 | Restricted imports | Redux, axios forbidden |
+
+## 6. Optimistic Updates
+
+### Pattern (TanStack Query v5)
+
+For non-financial deal transitions:
+
+```typescript
+useMutation({
+  mutationFn,
+  async onMutate() {
+    const previous = queryClient.getQueryData(key);
+    if (previous && !isFinancialTransition(previous.status)) {
+      const nextStatus = EXPECTED_NEXT_STATUS[previous.status];
+      if (nextStatus) {
+        await queryClient.cancelQueries({ queryKey: key });
+        queryClient.setQueryData(key, { ...previous, status: nextStatus });
+        haptic.notificationOccurred('success'); // before server response
+        return { previous };
+      }
+    }
+    return { previous: undefined };
+  },
+  onError(_err, _vars, context) {
+    if (context?.previous) queryClient.setQueryData(key, context.previous);
+    haptic.notificationOccurred('error');
+  },
+  onSettled() { invalidateQueries(); },
+});
+```
+
+### Rules
+
+- NEVER for financial operations (deposit, release, refund)
+- `EXPECTED_NEXT_STATUS` is a `Partial<Record<DealStatus, DealStatus>>` for happy-path only
+- Haptic success fires in `onMutate`, haptic error in `onError`
+- Always invalidate in `onSettled` (regardless of success/error)
+
+## 7. Exhaustive Macro-Stage Mapping
+
+Map complex domain statuses to user-friendly stages using `satisfies Record<>`:
+
+```typescript
+const MAP = { ... } as const satisfies Record<DealStatus, MacroStage>;
+```
+
+- Compile-time safety: adding a new status forces updating the map
+- Used for MiniTimeline (3 macro-stages) on deal list cards
+- Separate from detailed `StatusConfig` map which covers colors and i18n

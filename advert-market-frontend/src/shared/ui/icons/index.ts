@@ -62,3 +62,4 @@ export {
 } from './post-type-icons';
 export { TelegramIcon } from './telegram-icon';
 export { TonDiamondIcon } from './ton-diamond-icon';
+export { VerifiedBadge } from './verified-badge';
