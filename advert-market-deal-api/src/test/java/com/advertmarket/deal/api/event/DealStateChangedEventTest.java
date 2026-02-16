@@ -19,7 +19,9 @@ class DealStateChangedEventTest {
                 null,
                 ActorType.SYSTEM,
                 1_000_000_000L,
-                -1001234567890L);
+                -1001234567890L,
+                null,
+                null);
 
         assertThat(event.actorId()).isNull();
         assertThat(event.actorType())
@@ -35,7 +37,9 @@ class DealStateChangedEventTest {
                 12345L,
                 ActorType.ADVERTISER,
                 500_000_000L,
-                -1001234567890L);
+                -1001234567890L,
+                null,
+                null);
 
         assertThat(event.actorId()).isEqualTo(12345L);
         assertThat(event.actorType())
