@@ -8,6 +8,7 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -51,7 +52,7 @@ public class S3CreativeMediaStorage implements CreativeMediaStorage {
                     file.getContentType(),
                     file.getSize(),
                     originalName);
-        } catch (S3Exception | IOException ex) {
+        } catch (S3Exception | SdkClientException | IOException ex) {
             throw new DomainException(
                     ErrorCodes.SERVICE_UNAVAILABLE,
                     "Failed to upload creative media",

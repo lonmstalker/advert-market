@@ -40,6 +40,7 @@ dependencies {
     testImplementation 'io.github.resilience4j:resilience4j-circuitbreaker'
     testImplementation 'io.github.resilience4j:resilience4j-bulkhead'
     testImplementation 'com.github.ben-manes.caffeine:caffeine'
+    testImplementation 'software.amazon.awssdk:s3'
 }
 
 // Integration tests are opt-in to keep default build non-blocking.

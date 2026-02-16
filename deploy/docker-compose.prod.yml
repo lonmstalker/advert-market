@@ -59,6 +59,44 @@ services:
       retries: 10
       start_period: 30s
 
+  minio:
+    image: minio/minio:latest
+    container_name: am-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${CREATIVES_STORAGE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${CREATIVES_STORAGE_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio-data:/data
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: am-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        until mc alias set local http://minio:9000 ${CREATIVES_STORAGE_ACCESS_KEY} ${CREATIVES_STORAGE_SECRET_KEY} >/dev/null 2>&1; do
+          echo "Waiting for MinIO..."
+          sleep 1
+        done
+        mc mb --ignore-existing local/${CREATIVES_STORAGE_BUCKET:-creative-media}
+
   # ── Application: Blue-Green ───────────────────────────
   app-blue:
     image: ${APP_IMAGE:-advertmarket:latest}
@@ -87,6 +125,14 @@ services:
       CANARY_ADMIN_TOKEN: ${CANARY_ADMIN_TOKEN}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
+      CREATIVES_STORAGE_ENABLED: ${CREATIVES_STORAGE_ENABLED:-true}
+      CREATIVES_STORAGE_ENDPOINT: http://minio:9000
+      CREATIVES_STORAGE_REGION: ${CREATIVES_STORAGE_REGION:-us-east-1}
+      CREATIVES_STORAGE_BUCKET: ${CREATIVES_STORAGE_BUCKET:-creative-media}
+      CREATIVES_STORAGE_ACCESS_KEY: ${CREATIVES_STORAGE_ACCESS_KEY}
+      CREATIVES_STORAGE_SECRET_KEY: ${CREATIVES_STORAGE_SECRET_KEY}
+      CREATIVES_STORAGE_PUBLIC_BASE_URL: ${CREATIVES_STORAGE_PUBLIC_BASE_URL:-https://teleinsight.in/creative-media}
+      CREATIVES_STORAGE_KEY_PREFIX: ${CREATIVES_STORAGE_KEY_PREFIX:-creatives}
       INSTANCE_ID: blue
       DEPLOY_COLOR: blue
     mem_limit: 1200m
@@ -97,6 +143,10 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/readiness"]
       interval: 10s
@@ -135,6 +185,14 @@ services:
       CANARY_ADMIN_TOKEN: ${CANARY_ADMIN_TOKEN}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_MARKETPLACE_CHANNEL_BOT_USER_ID: ${APP_MARKETPLACE_CHANNEL_BOT_USER_ID}
+      CREATIVES_STORAGE_ENABLED: ${CREATIVES_STORAGE_ENABLED:-true}
+      CREATIVES_STORAGE_ENDPOINT: http://minio:9000
+      CREATIVES_STORAGE_REGION: ${CREATIVES_STORAGE_REGION:-us-east-1}
+      CREATIVES_STORAGE_BUCKET: ${CREATIVES_STORAGE_BUCKET:-creative-media}
+      CREATIVES_STORAGE_ACCESS_KEY: ${CREATIVES_STORAGE_ACCESS_KEY}
+      CREATIVES_STORAGE_SECRET_KEY: ${CREATIVES_STORAGE_SECRET_KEY}
+      CREATIVES_STORAGE_PUBLIC_BASE_URL: ${CREATIVES_STORAGE_PUBLIC_BASE_URL:-https://teleinsight.in/creative-media}
+      CREATIVES_STORAGE_KEY_PREFIX: ${CREATIVES_STORAGE_KEY_PREFIX:-creatives}
       INSTANCE_ID: green
       DEPLOY_COLOR: green
     mem_limit: 1200m
@@ -145,6 +203,10 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/readiness"]
       interval: 10s
@@ -180,3 +242,4 @@ services:
 
 volumes:
   pgdata:
+  minio-data:

@@ -11,7 +11,7 @@ Mini App / Telegram ──HTTPS──▶ nginx
 stable_backend + canary_backend resolve to app-blue/app-green via:
 - nginx/upstream-active.conf (managed by switch-color.sh)
 
-Both app containers share: PostgreSQL / Redis / Kafka
+Both app containers share: PostgreSQL / Redis / Kafka / MinIO
 ```
 
 - **Blue-green**: Two app containers behind nginx. Only one receives traffic at a time.
@@ -53,6 +53,10 @@ export COMPOSE_PROJECT_NAME=advert-market
 | `CANARY_ADMIN_TOKEN` | Yes | Bearer token for canary admin endpoint |
 | `INTERNAL_API_KEY` | Yes | Shared key for internal endpoints |
 | `APP_MARKETPLACE_CHANNEL_BOT_USER_ID` | Yes | Telegram bot user id (numeric) |
+| `CREATIVES_STORAGE_ACCESS_KEY` | Yes | MinIO access key (S3 key id) |
+| `CREATIVES_STORAGE_SECRET_KEY` | Yes | MinIO secret key |
+| `CREATIVES_STORAGE_BUCKET` | No | Bucket name (default: `creative-media`) |
+| `CREATIVES_STORAGE_PUBLIC_BASE_URL` | No | Public media base URL (default: `https://teleinsight.in/creative-media`) |
 | `APP_IMAGE` | No | Docker image tag (default: `advertmarket:latest`) |
 
 ---
@@ -67,7 +71,7 @@ cd .. && ./gradlew :advert-market-app:bootJar && docker build -t advertmarket:la
 cd deploy
 
 # Start infrastructure + blue
-docker compose -f docker-compose.prod.yml up -d postgres redis kafka
+docker compose -f docker-compose.prod.yml up -d postgres redis kafka minio minio-init
 # Wait for health
 docker compose -f docker-compose.prod.yml up -d app-blue nginx
 

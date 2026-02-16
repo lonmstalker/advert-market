@@ -5,6 +5,9 @@ import static com.advertmarket.db.generated.tables.ChannelCategories.CHANNEL_CAT
 import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 import static com.advertmarket.db.generated.tables.ChannelPricingRules.CHANNEL_PRICING_RULES;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
+import static com.advertmarket.db.generated.tables.CreativeMediaAssets.CREATIVE_MEDIA_ASSETS;
+import static com.advertmarket.db.generated.tables.CreativeTemplateVersions.CREATIVE_TEMPLATE_VERSIONS;
+import static com.advertmarket.db.generated.tables.CreativeTemplates.CREATIVE_TEMPLATES;
 import static com.advertmarket.db.generated.tables.DealEvents.DEAL_EVENTS;
 import static com.advertmarket.db.generated.tables.Deals.DEALS;
 import static com.advertmarket.db.generated.tables.DisputeEvidence.DISPUTE_EVIDENCE;
@@ -22,7 +25,6 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
 /**
@@ -77,6 +79,7 @@ public final class DatabaseSupport {
     public static void cleanAllTables(DSLContext dsl) {
         cleanDealTables(dsl);
         cleanFinancialTables(dsl);
+        cleanCreativeTables(dsl);
         dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
         dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
         dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
@@ -101,6 +104,7 @@ public final class DatabaseSupport {
      * Deletes marketplace tables (no USERS/NOTIFICATION_OUTBOX).
      */
     public static void cleanMarketplaceTables(DSLContext dsl) {
+        cleanCreativeTables(dsl);
         dsl.deleteFrom(PRICING_RULE_POST_TYPES).execute();
         dsl.deleteFrom(CHANNEL_PRICING_RULES).execute();
         dsl.deleteFrom(CHANNEL_CATEGORIES).execute();
@@ -120,6 +124,15 @@ public final class DatabaseSupport {
         dsl.deleteFrom(TON_TRANSACTIONS).execute();
         dsl.truncate(DEAL_EVENTS).cascade().execute();
         dsl.deleteFrom(DEALS).execute();
+    }
+
+    /**
+     * Cleans creative library tables in FK-safe order.
+     */
+    public static void cleanCreativeTables(DSLContext dsl) {
+        dsl.deleteFrom(CREATIVE_TEMPLATE_VERSIONS).execute();
+        dsl.deleteFrom(CREATIVE_MEDIA_ASSETS).execute();
+        dsl.deleteFrom(CREATIVE_TEMPLATES).execute();
     }
 
     /**
