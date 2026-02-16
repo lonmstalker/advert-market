@@ -4,6 +4,7 @@ import static com.advertmarket.db.generated.tables.AccountBalances.ACCOUNT_BALAN
 import static org.jooq.impl.DSL.val;
 
 import com.advertmarket.shared.model.AccountId;
+import java.util.List;
 import java.util.Objects;
 import java.util.OptionalLong;
 import lombok.RequiredArgsConstructor;
@@ -86,5 +87,22 @@ public class JooqAccountBalanceRepository {
                 .where(ACCOUNT_BALANCES.ACCOUNT_ID.eq(accountId.value()))
                 .fetchOne(ACCOUNT_BALANCES.BALANCE_NANO);
         return balance != null ? balance : 0L;
+    }
+
+    /**
+     * Finds commission accounts (prefix "COMMISSION:") with balance above the given threshold.
+     *
+     * @param thresholdNano minimum balance in nanoTON (exclusive)
+     * @param limit max number of accounts to return
+     * @return list of account IDs with balance above threshold
+     */
+    public @NonNull List<AccountId> findCommissionAccountsAboveThreshold(
+            long thresholdNano, int limit) {
+        return dsl.select(ACCOUNT_BALANCES.ACCOUNT_ID)
+                .from(ACCOUNT_BALANCES)
+                .where(ACCOUNT_BALANCES.ACCOUNT_ID.startsWith("COMMISSION:"))
+                .and(ACCOUNT_BALANCES.BALANCE_NANO.gt(thresholdNano))
+                .limit(limit)
+                .fetch(r -> new AccountId(r.value1()));
     }
 }

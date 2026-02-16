@@ -3,6 +3,7 @@ package com.advertmarket.identity.api.port;
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
+import com.advertmarket.identity.api.dto.UpdateTonAddressRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.model.UserId;
@@ -58,6 +59,18 @@ public interface UserPort {
     UserProfile updateSettings(
             @NonNull UserId userId,
             @NonNull UpdateSettingsRequest request);
+
+    /**
+     * Updates the user's TON wallet address.
+     *
+     * @param userId  user identifier
+     * @param request TON address update data
+     * @return updated user profile
+     */
+    @NonNull
+    UserProfile updateTonAddress(
+            @NonNull UserId userId,
+            @NonNull UpdateTonAddressRequest request);
 
     /**
      * Soft-deletes the user account and clears PII.

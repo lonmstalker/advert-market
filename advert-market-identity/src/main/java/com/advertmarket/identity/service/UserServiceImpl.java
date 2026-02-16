@@ -4,6 +4,7 @@ import com.advertmarket.identity.api.dto.CurrencyMode;
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
+import com.advertmarket.identity.api.dto.UpdateTonAddressRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.UserPort;
 import com.advertmarket.identity.api.port.UserRepository;
@@ -93,6 +94,14 @@ public class UserServiceImpl implements UserPort {
             userRepository.updateNotificationSettings(
                     userId, notificationSettings);
         }
+        return getProfile(userId);
+    }
+
+    @Override
+    public @NonNull UserProfile updateTonAddress(
+            @NonNull UserId userId,
+            @NonNull UpdateTonAddressRequest request) {
+        userRepository.updateTonAddress(userId, request.tonAddress());
         return getProfile(userId);
     }
 

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Full user profile.
@@ -17,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * @param notificationSettings  notification preferences
  * @param onboardingCompleted   whether onboarding is done
  * @param interests             selected interest tags
+ * @param tonAddress            TON wallet address (non-bounceable raw format)
  * @param createdAt             registration timestamp
  */
 @Schema(description = "Full user profile")
@@ -39,6 +41,8 @@ public record UserProfile(
         boolean onboardingCompleted,
         @Schema(description = "Selected interest tags")
         @NonNull List<String> interests,
+        @Schema(description = "TON wallet address", example = "UQBx...")
+        @Nullable String tonAddress,
         @Schema(description = "Registration timestamp")
         @NonNull Instant createdAt
 ) {

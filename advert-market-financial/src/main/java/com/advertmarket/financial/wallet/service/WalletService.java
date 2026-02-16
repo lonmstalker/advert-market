@@ -1,32 +1,50 @@
 package com.advertmarket.financial.wallet.service;
 
+import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.api.model.LedgerEntry;
+import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.model.WalletSummary;
+import com.advertmarket.financial.api.model.WithdrawalResponse;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.WalletPort;
+import com.advertmarket.identity.api.port.UserRepository;
+import com.advertmarket.shared.exception.DomainException;
+import com.advertmarket.shared.exception.ErrorCodes;
+import com.advertmarket.shared.metric.MetricNames;
+import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
+import com.advertmarket.shared.model.EntryType;
+import com.advertmarket.shared.model.Money;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
+import com.advertmarket.shared.util.IdempotencyKey;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Implements user wallet queries via the ledger.
+ * Implements user wallet queries and withdrawal via the ledger.
  *
  * <p>NOT {@code @Component} — wired via
  * {@link com.advertmarket.financial.wallet.config.WalletConfig}.
  */
+@Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class WalletService implements WalletPort {
 
     private final LedgerPort ledgerPort;
+    private final UserRepository userRepository;
+    private final MetricsFacade metrics;
+    private final long minWithdrawalNano;
 
     @Override
     public @NonNull WalletSummary getSummary(@NonNull UserId userId) {
         var ownerPendingAccount = AccountId.ownerPending(userId);
         long availableBalance = ledgerPort.getBalance(ownerPendingAccount);
-
         return new WalletSummary(0L, availableBalance, 0L);
     }
 
@@ -36,6 +54,60 @@ public class WalletService implements WalletPort {
             @Nullable String cursor,
             int limit) {
         var ownerPendingAccount = AccountId.ownerPending(userId);
-        return ledgerPort.getEntriesByAccount(ownerPendingAccount, cursor, limit);
+        return ledgerPort.getEntriesByAccount(
+                ownerPendingAccount, cursor, limit);
+    }
+
+    @Override
+    public @NonNull WithdrawalResponse withdraw(
+            @NonNull UserId userId,
+            long amountNano,
+            @NonNull String idempotencyKey) {
+        if (amountNano < minWithdrawalNano) {
+            throw new DomainException(
+                    ErrorCodes.WITHDRAWAL_MIN_AMOUNT,
+                    "Minimum withdrawal is " + minWithdrawalNano
+                            + " nanoTON");
+        }
+
+        var tonAddress = userRepository.findTonAddress(userId)
+                .orElseThrow(() -> new DomainException(
+                        ErrorCodes.WALLET_ADDRESS_REQUIRED,
+                        "TON address required for withdrawal"));
+
+        var ownerAccount = AccountId.ownerPending(userId);
+        long available = ledgerPort.getBalance(ownerAccount);
+        if (available < amountNano) {
+            throw new DomainException(
+                    ErrorCodes.INSUFFICIENT_BALANCE,
+                    "Available: " + available
+                            + ", requested: " + amountNano);
+        }
+
+        var amount = Money.ofNano(amountNano);
+        var withdrawalKey = new IdempotencyKey(
+                "withdrawal:" + idempotencyKey);
+        var transfer = new TransferRequest(
+                null,
+                withdrawalKey,
+                List.of(
+                        new Leg(ownerAccount,
+                                EntryType.OWNER_WITHDRAWAL, amount,
+                                Leg.Side.DEBIT),
+                        new Leg(AccountId.externalTon(),
+                                EntryType.OWNER_WITHDRAWAL, amount,
+                                Leg.Side.CREDIT)),
+                "Manual withdrawal by user " + userId.value());
+
+        UUID txRef = ledgerPort.transfer(transfer);
+        metrics.incrementCounter(MetricNames.WITHDRAWAL_REQUESTED);
+
+        log.info("Withdrawal initiated: user={}, amount={}, "
+                        + "address={}, txRef={}",
+                userId.value(), amountNano, tonAddress, txRef);
+
+        return new WithdrawalResponse(
+                txRef.toString(), "PENDING",
+                amountNano, tonAddress);
     }
 }

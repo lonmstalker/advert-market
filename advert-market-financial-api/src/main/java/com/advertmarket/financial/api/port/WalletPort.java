@@ -2,6 +2,7 @@ package com.advertmarket.financial.api.port;
 
 import com.advertmarket.financial.api.model.LedgerEntry;
 import com.advertmarket.financial.api.model.WalletSummary;
+import com.advertmarket.financial.api.model.WithdrawalResponse;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.pagination.CursorPage;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -32,4 +33,17 @@ public interface WalletPort {
             @NonNull UserId userId,
             @Nullable String cursor,
             int limit);
+
+    /**
+     * Initiates a withdrawal from the user's available balance.
+     *
+     * @param userId         the user requesting withdrawal
+     * @param amountNano     amount in nanoTON
+     * @param idempotencyKey client-provided idempotency key
+     * @return withdrawal response with ID and status
+     */
+    @NonNull WithdrawalResponse withdraw(
+            @NonNull UserId userId,
+            long amountNano,
+            @NonNull String idempotencyKey);
 }

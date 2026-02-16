@@ -14,6 +14,8 @@ import com.advertmarket.financial.api.event.DepositFailedEvent;
 import com.advertmarket.financial.api.event.ExecutePayoutCommand;
 import com.advertmarket.financial.api.event.ExecuteRefundCommand;
 import com.advertmarket.financial.api.event.PayoutCompletedEvent;
+import com.advertmarket.financial.api.event.PayoutDeferredEvent;
+import com.advertmarket.financial.api.event.RefundDeferredEvent;
 import com.advertmarket.financial.api.event.ReconciliationResultEvent;
 import com.advertmarket.financial.api.event.ReconciliationStartEvent;
 import com.advertmarket.financial.api.event.RefundCompletedEvent;
@@ -71,8 +73,12 @@ public class KafkaEventTypeConfig {
 
         registry.register(EventTypes.PAYOUT_COMPLETED,
                 PayoutCompletedEvent.class);
+        registry.register(EventTypes.PAYOUT_DEFERRED,
+                PayoutDeferredEvent.class);
         registry.register(EventTypes.REFUND_COMPLETED,
                 RefundCompletedEvent.class);
+        registry.register(EventTypes.REFUND_DEFERRED,
+                RefundDeferredEvent.class);
         registry.register(EventTypes.PUBLICATION_RESULT,
                 PublicationResultEvent.class);
         registry.register(EventTypes.RECONCILIATION_RESULT,

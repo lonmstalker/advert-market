@@ -82,9 +82,29 @@ public final class EventTypes {
     public static final @Fenum(FenumGroup.EVENT_TYPE) String
             PAYOUT_COMPLETED = "PAYOUT_COMPLETED";
 
+    /** Payout deferred (no TON address). */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            PAYOUT_DEFERRED = "PAYOUT_DEFERRED";
+
+    /** Payout permanently failed. */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            PAYOUT_FAILED = "PAYOUT_FAILED";
+
     /** Refund confirmed on blockchain. */
     public static final @Fenum(FenumGroup.EVENT_TYPE) String
             REFUND_COMPLETED = "REFUND_COMPLETED";
+
+    /** Refund deferred (no TON address). */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            REFUND_DEFERRED = "REFUND_DEFERRED";
+
+    /** Refund permanently failed. */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            REFUND_FAILED = "REFUND_FAILED";
+
+    /** Withdrawal command from wallet. */
+    public static final @Fenum(FenumGroup.EVENT_TYPE) String
+            EXECUTE_WITHDRAWAL = "EXECUTE_WITHDRAWAL";
 
     /** Post publication result (success or failure). */
     public static final @Fenum(FenumGroup.EVENT_TYPE) String

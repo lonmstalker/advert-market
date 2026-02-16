@@ -145,6 +145,30 @@ public final class MetricNames {
     public static final @Fenum(FenumGroup.METRIC_NAME) String INTERNAL_AUTH_FAILED =
             "internal.auth.failed";
 
+    // --- Notification ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String NOTIFICATION_DELIVERED =
+            "notification.telegram.delivered";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String NOTIFICATION_FAILED =
+            "notification.telegram.failed";
+
+    // --- Commission Sweep ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String COMMISSION_SWEEP_COUNT =
+            "commission.sweep.count";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String COMMISSION_SWEEP_TOTAL_NANO =
+            "commission.sweep.total_nano";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String COMMISSION_SWEEP_FAILED =
+            "commission.sweep.failed";
+
+    // --- Payout ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String PAYOUT_SUBMITTED =
+            "payout.submitted";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String PAYOUT_DEFERRED =
+            "payout.deferred";
+
+    // --- Withdrawal ---
+    public static final @Fenum(FenumGroup.METRIC_NAME) String WITHDRAWAL_REQUESTED =
+            "withdrawal.requested";
+
     // --- Errors ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String ERRORS_DOMAIN =
             "errors.domain";

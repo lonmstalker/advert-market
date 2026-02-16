@@ -43,6 +43,10 @@ public final class ConsumerGroups {
     public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
             TON_PAYOUT_EXECUTOR = "ton-payout-executor";
 
+    /** Executes TON refunds. */
+    public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
+            TON_REFUND_EXECUTOR = "ton-refund-executor";
+
     /** Handles reconciliation events. */
     public static final @Fenum(FenumGroup.CONSUMER_GROUP) String
             RECONCILIATION_HANDLER = "reconciliation-handler";

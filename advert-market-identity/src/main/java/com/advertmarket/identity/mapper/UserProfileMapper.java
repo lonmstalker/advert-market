@@ -35,6 +35,8 @@ public interface UserProfileMapper {
     @Mapping(target = "onboardingCompleted",
             expression = "java(onboardingCompleted(row.onboardingCompleted()))")
     @Mapping(target = "interests", source = "interests")
+    @Mapping(target = "tonAddress",
+            expression = "java(row.tonAddress())")
     @Mapping(target = "createdAt", source = "createdAt")
     UserProfile toProfile(UserProfileRow row, @Context JsonFacade json);
 

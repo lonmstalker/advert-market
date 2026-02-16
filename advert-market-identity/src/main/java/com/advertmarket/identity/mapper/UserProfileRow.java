@@ -19,6 +19,7 @@ public record UserProfileRow(
         @Nullable JSONB notificationSettings,
         @Nullable Boolean onboardingCompleted,
         @Nullable String[] interests,
+        @Nullable String tonAddress,
         @Nullable OffsetDateTime createdAt
 ) {
 

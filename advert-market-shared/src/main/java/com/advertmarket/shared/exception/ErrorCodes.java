@@ -148,6 +148,12 @@ public final class ErrorCodes {
             "USER_NOT_FOUND";
     public static final @Fenum(FenumGroup.ERROR_CODE) String WALLET_NOT_FOUND =
             "WALLET_NOT_FOUND";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String WALLET_ADDRESS_REQUIRED =
+            "WALLET_ADDRESS_REQUIRED";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String INVALID_TON_ADDRESS =
+            "INVALID_TON_ADDRESS";
+    public static final @Fenum(FenumGroup.ERROR_CODE) String WITHDRAWAL_MIN_AMOUNT =
+            "WITHDRAWAL_MIN_AMOUNT";
     public static final @Fenum(FenumGroup.ERROR_CODE) String NOTIFICATION_DELIVERY_FAILED =
             "NOTIFICATION_DELIVERY_FAILED";
 

@@ -34,6 +34,8 @@ public class JooqUserRepository implements UserRepository {
 
     private static final org.jooq.Field<String> CURRENCY_MODE =
             DSL.field(DSL.name("currency_mode"), String.class);
+    private static final org.jooq.Field<String> TON_ADDRESS =
+            DSL.field(DSL.name("ton_address"), String.class);
 
     private final DSLContext dsl;
     private final JsonFacade jsonFacade;
@@ -84,6 +86,7 @@ public class JooqUserRepository implements UserRepository {
                         USERS.NOTIFICATION_SETTINGS.as("notificationSettings"),
                         USERS.ONBOARDING_COMPLETED.as("onboardingCompleted"),
                         USERS.INTERESTS.as("interests"),
+                        TON_ADDRESS.as("tonAddress"),
                         USERS.CREATED_AT.as("createdAt"))
                 .from(USERS)
                 .where(USERS.ID.eq(userId.value()))
@@ -91,6 +94,27 @@ public class JooqUserRepository implements UserRepository {
                         .or(USERS.IS_DELETED.isNull()))
                 .fetchOptionalInto(UserProfileRow.class)
                 .map(row -> userProfileMapper.toProfile(row, jsonFacade));
+    }
+
+    @Override
+    public void updateTonAddress(@NonNull UserId userId,
+            @NonNull String tonAddress) {
+        dsl.update(USERS)
+                .set(TON_ADDRESS, tonAddress)
+                .set(USERS.UPDATED_AT, OffsetDateTime.now())
+                .where(USERS.ID.eq(userId.value()))
+                .execute();
+    }
+
+    @Override
+    public @NonNull Optional<String> findTonAddress(
+            @NonNull UserId userId) {
+        return dsl.select(TON_ADDRESS)
+                .from(USERS)
+                .where(USERS.ID.eq(userId.value()))
+                .and(USERS.IS_DELETED.isFalse()
+                        .or(USERS.IS_DELETED.isNull()))
+                .fetchOptional(TON_ADDRESS);
     }
 
     @Override

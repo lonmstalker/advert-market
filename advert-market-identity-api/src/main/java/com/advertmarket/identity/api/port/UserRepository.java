@@ -77,6 +77,24 @@ public interface UserRepository {
             @NonNull NotificationSettings settings);
 
     /**
+     * Updates the user's TON wallet address.
+     *
+     * @param userId     user identifier
+     * @param tonAddress non-bounceable raw TON address
+     */
+    void updateTonAddress(@NonNull UserId userId,
+            @NonNull String tonAddress);
+
+    /**
+     * Finds a user's TON address by user ID.
+     *
+     * @param userId user identifier
+     * @return TON address, or empty if not set
+     */
+    @NonNull
+    Optional<String> findTonAddress(@NonNull UserId userId);
+
+    /**
      * Soft-deletes a user by clearing PII and setting the deleted flag.
      *
      * @param userId user identifier

@@ -3,6 +3,7 @@ package com.advertmarket.identity.web;
 import com.advertmarket.identity.api.dto.OnboardingRequest;
 import com.advertmarket.identity.api.dto.UpdateLanguageRequest;
 import com.advertmarket.identity.api.dto.UpdateSettingsRequest;
+import com.advertmarket.identity.api.dto.UpdateTonAddressRequest;
 import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.AuthPort;
 import com.advertmarket.identity.api.port.UserPort;
@@ -122,6 +123,27 @@ public class ProfileController {
             @AuthenticationPrincipal @NonNull UserId userId,
             @RequestBody @Valid UpdateSettingsRequest request) {
         return userService.updateSettings(userId, request);
+    }
+
+    /**
+     * Updates the authenticated user's TON wallet address.
+     */
+    @PutMapping("/wallet")
+    @Operation(summary = "Update user TON wallet address")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Wallet address updated",
+            content = @Content(schema =
+            @Schema(implementation = UserProfile.class))
+    )
+    @ApiResponse(responseCode = "400",
+            description = "Invalid TON address format")
+    @ApiResponse(responseCode = "401",
+            description = "Not authenticated")
+    public @NonNull UserProfile updateWallet(
+            @AuthenticationPrincipal @NonNull UserId userId,
+            @RequestBody @Valid UpdateTonAddressRequest request) {
+        return userService.updateTonAddress(userId, request);
     }
 
     /**
