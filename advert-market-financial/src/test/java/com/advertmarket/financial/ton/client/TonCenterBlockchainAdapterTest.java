@@ -300,6 +300,27 @@ class TonCenterBlockchainAdapterTest {
             assertThatThrownBy(() -> adapter.getSeqno("EQAddr"))
                     .isInstanceOf(DomainException.class);
         }
+
+        @Test
+        @DisplayName("Should wrap non-fatal Error from ton4j as DomainException")
+        void wrapsNonFatalError() {
+            when(tonCenter.getSeqno("EQAddr"))
+                    .thenThrow(new Error("getSeqno failed, exitCode: -13"));
+
+            assertThatThrownBy(() -> adapter.getSeqno("EQAddr"))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("getSeqno");
+        }
+
+        @Test
+        @DisplayName("Should rethrow fatal JVM Error")
+        void rethrowsFatalError() {
+            when(tonCenter.getSeqno("EQAddr"))
+                    .thenThrow(new OutOfMemoryError("fatal"));
+
+            assertThatThrownBy(() -> adapter.getSeqno("EQAddr"))
+                    .isInstanceOf(OutOfMemoryError.class);
+        }
     }
 
     @Nested

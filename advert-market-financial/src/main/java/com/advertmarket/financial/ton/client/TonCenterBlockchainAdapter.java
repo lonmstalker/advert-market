@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.ton.ton4j.toncenter.TonCenter;
-import org.ton.ton4j.toncenter.TonCenterException;
 import org.ton.ton4j.toncenter.TonResponse;
 
 /**
@@ -63,8 +62,10 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
                         );
                     })
                     .toList();
-        } catch (TonCenterException ex) {
-            throw wrapException("getTransactions", ex);
+        } catch (DomainException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw wrapThrowable("getTransactions", ex);
         }
     }
 
@@ -75,8 +76,10 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
             var response = tonCenter.sendBocReturnHash(base64Boc);
             checkResponse(response, "sendBoc");
             return response.getResult().getHash();
-        } catch (TonCenterException ex) {
-            throw wrapException("sendBoc", ex);
+        } catch (DomainException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw wrapThrowable("sendBoc", ex);
         }
     }
 
@@ -87,8 +90,10 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
             var response = tonCenter.getMasterchainInfo();
             checkResponse(response, "getMasterchainInfo");
             return response.getResult().getLast().getSeqno();
-        } catch (TonCenterException ex) {
-            throw wrapException("getMasterchainInfo", ex);
+        } catch (DomainException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw wrapThrowable("getMasterchainInfo", ex);
         }
     }
 
@@ -99,8 +104,10 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
             var response = tonCenter.getAddressBalance(address);
             checkResponse(response, "getAddressBalance");
             return Long.parseLong(response.getResult());
-        } catch (TonCenterException ex) {
-            throw wrapException("getAddressBalance", ex);
+        } catch (DomainException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw wrapThrowable("getAddressBalance", ex);
         }
     }
 
@@ -109,8 +116,10 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
         metrics.incrementCounter(MetricNames.TON_API_REQUEST, "method", "getSeqno");
         try {
             return tonCenter.getSeqno(address);
-        } catch (TonCenterException ex) {
-            throw wrapException("getSeqno", ex);
+        } catch (DomainException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw wrapThrowable("getSeqno", ex);
         }
     }
 
@@ -125,8 +134,10 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
                     + nullToZero(fees.getStorageFee())
                     + nullToZero(fees.getGasFee())
                     + nullToZero(fees.getFwdFee());
-        } catch (TonCenterException ex) {
-            throw wrapException("estimateFee", ex);
+        } catch (DomainException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw wrapThrowable("estimateFee", ex);
         }
     }
 
@@ -138,11 +149,19 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
         }
     }
 
-    private DomainException wrapException(String method, TonCenterException ex) {
+    private DomainException wrapThrowable(String method, Throwable ex) {
+        if (ex instanceof Error error && isFatalError(error)) {
+            throw error;
+        }
         metrics.incrementCounter(MetricNames.TON_API_ERROR, "method", method);
         log.error("TON Center API call failed: method={}", method, ex);
         return new DomainException(ErrorCodes.TON_API_ERROR,
                 "TON Center API call failed: " + method, ex);
+    }
+
+    private static boolean isFatalError(Error error) {
+        return error instanceof VirtualMachineError
+                || error instanceof LinkageError;
     }
 
     private static long parseLong(String value) {
