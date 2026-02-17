@@ -1,5 +1,6 @@
 import { Image } from '@telegram-tools/ui-kit';
 import type { ComponentType, SVGProps } from 'react';
+import { useEffect, useState } from 'react';
 import type { MediaItem } from '@/shared/types/text-entity';
 import { FileIcon, ImageIcon, VideoIcon } from '../../icons';
 
@@ -13,6 +14,42 @@ const MEDIA_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   GIF: ImageIcon,
   DOCUMENT: FileIcon,
 };
+
+type MediaImageProps = {
+  item: MediaItem;
+};
+
+function MediaImage({ item }: MediaImageProps) {
+  const primarySrc = item.thumbnailUrl || item.url;
+  const fallbackSrc = item.url;
+  const [src, setSrc] = useState(primarySrc);
+
+  useEffect(() => {
+    setSrc(primarySrc);
+  }, [primarySrc]);
+
+  if (!src) {
+    return null;
+  }
+
+  const handleError = () => {
+    if (src !== fallbackSrc && fallbackSrc) {
+      setSrc(fallbackSrc);
+    }
+  };
+
+  return (
+    <Image
+      src={src}
+      alt={item.caption || 'Media'}
+      className="am-tg-media-image"
+      width="100%"
+      height="100%"
+      objectFit="cover"
+      onError={handleError}
+    />
+  );
+}
 
 export function TelegramPostMedia({ media }: TelegramPostMediaProps) {
   if (media.length === 0) return null;
@@ -64,14 +101,7 @@ export function TelegramPostMedia({ media }: TelegramPostMediaProps) {
         return (
           <div key={item.id} className="am-tg-media-cell">
             {mediaSrc && (item.type === 'PHOTO' || item.type === 'GIF') ? (
-              <Image
-                src={mediaSrc}
-                alt={item.caption || 'Media'}
-                className="am-tg-media-image"
-                width="100%"
-                height="100%"
-                objectFit="cover"
-              />
+              <MediaImage item={item} />
             ) : (
               <div className="am-tg-media-video-overlay">
                 {item.type === 'VIDEO' ? (

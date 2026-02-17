@@ -2089,6 +2089,7 @@ textarea::placeholder {
 
   .am-tg-media--single {
     grid-template-columns: 1fr;
+    aspect-ratio: 4 / 3;
     max-height: 400px;
   }
 

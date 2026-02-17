@@ -1,3 +1,4 @@
+import { fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { MediaItem } from '@/shared/types/text-entity';
 import { renderWithProviders, screen } from '@/test/test-utils';
@@ -37,5 +38,29 @@ describe('TelegramPostMedia', () => {
 
     const image = screen.getByAltText('Media') as HTMLImageElement;
     expect(image.src).toContain('https://cdn.example.com/photo.png');
+  });
+
+  it('falls back to original media URL when thumbnail cannot be loaded', async () => {
+    const media: MediaItem[] = [
+      {
+        id: 'media-3',
+        type: 'PHOTO',
+        url: 'https://cdn.example.com/photo-original.png',
+        thumbnailUrl: 'https://cdn.example.com/photo-broken.png',
+        mimeType: 'image/png',
+        sizeBytes: 1024,
+      },
+    ];
+
+    renderWithProviders(<TelegramPostMedia media={media} />);
+
+    const image = screen.getByAltText('Media') as HTMLImageElement;
+    expect(image.src).toContain('https://cdn.example.com/photo-broken.png');
+
+    fireEvent.error(image);
+
+    await waitFor(() => {
+      expect(screen.getByAltText('Media')).toHaveAttribute('src', 'https://cdn.example.com/photo-original.png');
+    });
   });
 });
