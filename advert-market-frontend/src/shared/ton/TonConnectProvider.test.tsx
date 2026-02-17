@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@/test/test-utils';
 
 type CapturedProps = {
   manifestUrl?: string;
