@@ -3,6 +3,7 @@ package com.advertmarket.financial.ton.service;
 import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.financial.api.event.ExecuteRefundCommand;
 import com.advertmarket.financial.api.event.RefundCompletedEvent;
+import com.advertmarket.financial.api.event.RefundDeferredEvent;
 import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
@@ -77,7 +78,16 @@ public class RefundExecutorWorker implements RefundExecutorPort {
 
     private void doExecuteRefund(DealId dealId,
             ExecuteRefundCommand command) {
-        TxRef txRef = resolveOrSubmitTx(dealId, command);
+        TxRef txRef;
+        try {
+            txRef = resolveOrSubmitTx(dealId, command);
+        } catch (DomainException exception) {
+            if (shouldDefer(exception)) {
+                handleDeferred(dealId, command, exception);
+                return;
+            }
+            throw exception;
+        }
 
         log.info("Refund TX submitted: deal={}, txHash={}, "
                         + "to={}, amount={}",
@@ -219,6 +229,40 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                 txHash, command.amountNano(),
                 command.refundAddress(), 1);
         publishOutboxEvent(dealId, EventTypes.REFUND_COMPLETED, event);
+    }
+
+    private void handleDeferred(
+            DealId dealId,
+            ExecuteRefundCommand command,
+            DomainException exception) {
+        log.warn(
+                "Refund deferred due non-retryable TON error:"
+                        + " deal={}, advertiserId={}, code={}, message={}",
+                dealId,
+                command.advertiserId(),
+                exception.getErrorCode(),
+                exception.getMessage());
+        var event = new RefundDeferredEvent(
+                command.advertiserId(),
+                command.amountNano());
+        publishOutboxEvent(dealId, EventTypes.REFUND_DEFERRED, event);
+        metrics.incrementCounter(MetricNames.REFUND_DEFERRED);
+    }
+
+    @SuppressWarnings("ReferenceEquality")
+    private static boolean shouldDefer(DomainException exception) {
+        if (exception.getErrorCode() == ErrorCodes.TON_TX_FAILED) {
+            var message = exception.getMessage();
+            return message != null
+                    && message.contains("requires reconciliation before retry");
+        }
+        if (exception.getErrorCode() == ErrorCodes.TON_API_ERROR) {
+            var message = exception.getMessage();
+            return message != null
+                    && message.contains("getSeqno")
+                    && message.contains("exitCode: -13");
+        }
+        return false;
     }
 
     private <T extends DomainEvent> void publishOutboxEvent(

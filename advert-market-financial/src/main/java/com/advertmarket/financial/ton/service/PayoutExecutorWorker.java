@@ -90,10 +90,26 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
         }
 
         String payoutAddress = tonAddress.get();
-        TxRef txRef = resolveOrSubmitTx(
-                dealId,
-                command,
-                payoutAddress);
+        TxRef txRef;
+        try {
+            txRef = resolveOrSubmitTx(
+                    dealId,
+                    command,
+                    payoutAddress);
+        } catch (DomainException exception) {
+            if (shouldDefer(exception)) {
+                log.warn(
+                        "Payout deferred due non-retryable TON error:"
+                                + " deal={}, ownerId={}, code={}, message={}",
+                        dealId,
+                        command.ownerId(),
+                        exception.getErrorCode(),
+                        exception.getMessage());
+                handleDeferred(dealId, command);
+                return;
+            }
+            throw exception;
+        }
 
         metrics.incrementCounter(MetricNames.PAYOUT_SUBMITTED);
         log.info("Payout TX submitted: deal={}, txHash={}, "
@@ -250,6 +266,22 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                 command.ownerId(), command.amountNano());
         publishOutboxEvent(dealId, EventTypes.PAYOUT_DEFERRED, event);
         metrics.incrementCounter(MetricNames.PAYOUT_DEFERRED);
+    }
+
+    @SuppressWarnings("ReferenceEquality")
+    private static boolean shouldDefer(DomainException exception) {
+        if (exception.getErrorCode() == ErrorCodes.TON_TX_FAILED) {
+            var message = exception.getMessage();
+            return message != null
+                    && message.contains("requires reconciliation before retry");
+        }
+        if (exception.getErrorCode() == ErrorCodes.TON_API_ERROR) {
+            var message = exception.getMessage();
+            return message != null
+                    && message.contains("getSeqno")
+                    && message.contains("exitCode: -13");
+        }
+        return false;
     }
 
     private <T extends DomainEvent> void publishOutboxEvent(

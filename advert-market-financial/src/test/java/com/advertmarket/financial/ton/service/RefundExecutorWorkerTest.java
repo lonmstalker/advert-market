@@ -1,5 +1,6 @@
 package com.advertmarket.financial.ton.service;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -160,6 +161,65 @@ class RefundExecutorWorkerTest {
         verify(txRepository).updateStatus(200L, "ABANDONED", 0, 0);
         verify(ledgerPort, never()).transfer(any(TransferRequest.class));
         verify(outboxRepository, never()).save(any(OutboxEntry.class));
+    }
+
+    @Test
+    @DisplayName("should defer refund when TON wallet is not initialized (getSeqno -13)")
+    void shouldDeferWhenTonWalletNotInitialized() {
+        var dealId = DealId.generate();
+        var command = new ExecuteRefundCommand(
+                7L, 1_500_000_000L, "UQ-advertiser-address", 33);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+        when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "REFUND"))
+                .thenReturn(Optional.empty());
+        when(txRepository.createOutbound(
+                dealId.value(), "REFUND", 1_500_000_000L, "UQ-advertiser-address", 33))
+                .thenReturn(200L);
+        when(tonWalletPort.submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L))
+                .thenThrow(new DomainException(
+                        ErrorCodes.TON_API_ERROR,
+                        "TON Center API call failed: method=getSeqno, reason=getSeqno failed, exitCode: -13"));
+        when(jsonFacade.toJson(any())).thenReturn("{}");
+
+        assertThatCode(() -> worker.executeRefund(envelope))
+                .doesNotThrowAnyException();
+
+        verify(txRepository).updateStatus(200L, "ABANDONED", 0, 0);
+        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(outboxRepository).save(any(OutboxEntry.class));
+    }
+
+    @Test
+    @DisplayName("should defer refund when outbound tx is already ABANDONED")
+    void shouldDeferWhenOutboundAlreadyAbandoned() {
+        var dealId = DealId.generate();
+        var command = new ExecuteRefundCommand(
+                7L, 1_500_000_000L, "UQ-advertiser-address", 33);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+
+        var existing = new TonTransactionsRecord();
+        existing.setId(777L);
+        existing.setStatus("ABANDONED");
+        existing.setTxHash(null);
+        existing.setVersion(1);
+        when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "REFUND"))
+                .thenReturn(Optional.of(existing));
+        when(jsonFacade.toJson(any())).thenReturn("{}");
+
+        assertThatCode(() -> worker.executeRefund(envelope))
+                .doesNotThrowAnyException();
+
+        verify(tonWalletPort, never()).submitTransaction(anyInt(), anyString(), anyLong());
+        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(outboxRepository).save(any(OutboxEntry.class));
     }
 
     @Test

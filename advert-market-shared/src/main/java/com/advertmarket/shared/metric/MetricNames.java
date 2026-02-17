@@ -181,6 +181,8 @@ public final class MetricNames {
             "payout.submitted";
     public static final @Fenum(FenumGroup.METRIC_NAME) String PAYOUT_DEFERRED =
             "payout.deferred";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String REFUND_DEFERRED =
+            "refund.deferred";
 
     // --- Withdrawal ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String WITHDRAWAL_REQUESTED =
