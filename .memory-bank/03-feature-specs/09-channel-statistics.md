@@ -75,7 +75,7 @@ Scaled: use Telegram Statistics API (TDLib/MTProto, channels with 500+ subscribe
 
 | Rule | Check | Action on Failure |
 |------|-------|-------------------|
-| Bot is channel admin | `getChatMember(channel_id, bot_id)` | Mark "unverified stats" |
+| Bot is channel admin | `getChatAdministrators(channel_id)` contains `bot_id` | Mark "unverified stats" |
 | Subscriber count > 0 | API returns > 0 | Deactivate listing |
 | Channel exists | `getChat` succeeds | Deactivate listing, notify owner |
 | Owner still owns channel | Creator matches owner_id | Alert, ownership verification |
@@ -112,7 +112,7 @@ channel:
 | Component | Role |
 |-----------|------|
 | Channel Service | Stats CRUD, freshness checks |
-| Telegram Bot API client | `getChatMemberCount`, `getChat` calls |
+| Telegram Bot API client | `getChatMemberCount`, `getChat`, `getChatAdministrators` calls |
 | StatsRefreshScheduler | Daily batch refresh cron job |
 | Search Service | Returns stats with freshness indicator |
 
