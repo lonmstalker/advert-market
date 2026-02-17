@@ -11,5 +11,6 @@ public record CreateDealRequest(
         @NotNull Long channelId,
         @Positive long amountNano,
         @Nullable Long pricingRuleId,
-        @Nullable String creativeBrief) {
+        @Nullable String creativeBrief,
+        @Nullable String creativeId) {
 }

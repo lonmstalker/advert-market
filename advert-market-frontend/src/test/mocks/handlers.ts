@@ -1155,6 +1155,14 @@ export const handlers = [
     return HttpResponse.json(profile);
   }),
 
+  // PUT /profile/wallet — update TON wallet address
+  http.put(`${API_BASE}/profile/wallet`, async ({ request }) => {
+    const body = (await request.json()) as { tonAddress: string };
+    profile = { ...profile, tonAddress: body.tonAddress };
+    saveState(STORAGE_KEYS.profile, profile);
+    return HttpResponse.json(profile);
+  }),
+
   // --- Wallet handlers ---
 
   // GET /wallet/summary — wallet summary

@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Select, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 import { ChannelCard, createDeal, fetchChannelDetail } from '@/features/channels';
+import { useCreatives } from '@/features/creatives';
 import { channelKeys, dealKeys } from '@/shared/api/query-keys';
 import { ApiError } from '@/shared/api/types';
 import { useHaptic } from '@/shared/hooks/use-haptic';
@@ -32,6 +33,14 @@ export default function CreateDealPage() {
 
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [creativeBrief, setCreativeBrief] = useState('');
+  const [selectedCreativeId, setSelectedCreativeId] = useState<string | null>(searchParams.get('creativeId'));
+
+  const { data: creativesData } = useCreatives(100);
+  const creatives = useMemo(() => creativesData?.pages.flatMap((page) => page.items) ?? [], [creativesData]);
+  const selectedCreative = useMemo(
+    () => creatives.find((creative) => creative.id === selectedCreativeId),
+    [creatives, selectedCreativeId],
+  );
 
   const selectedRule = channel?.pricingRules.find((r) => r.id === Number(selectedRuleId));
 
@@ -54,11 +63,13 @@ export default function CreateDealPage() {
 
   const handleSubmit = () => {
     if (!selectedRuleId || !channel || !selectedRule) return;
+    const creativeId = selectedCreative?.id;
     mutation.mutate({
       channelId: channel.id,
       amountNano: selectedRule.priceNano,
       pricingRuleId: Number(selectedRuleId),
-      creativeBrief: creativeBrief.trim() || undefined,
+      creativeId,
+      creativeBrief: creativeId ? undefined : creativeBrief.trim() || undefined,
     });
   };
 
@@ -94,6 +105,14 @@ export default function CreateDealPage() {
     })),
   ];
 
+  const creativeOptions = [
+    { label: t('deals.create.manualCreative'), value: null },
+    ...creatives.map((creative) => ({
+      label: creative.title,
+      value: creative.id,
+    })),
+  ];
+
   return (
     <>
       <BackButtonHandler />
@@ -115,6 +134,15 @@ export default function CreateDealPage() {
               <Select options={ruleOptions} value={selectedRuleId} onChange={setSelectedRuleId} />
             </div>
 
+            <div>
+              <div className="mb-2">
+                <Text type="subheadline2" color="secondary">
+                  {t('deals.create.creative')}
+                </Text>
+              </div>
+              <Select options={creativeOptions} value={selectedCreativeId} onChange={setSelectedCreativeId} />
+            </div>
+
             {selectedRule && (
               <AppSurfaceCard>
                 <div className="text-center p-4">
@@ -128,14 +156,30 @@ export default function CreateDealPage() {
               </AppSurfaceCard>
             )}
 
-            <TextareaField
-              value={creativeBrief}
-              onChange={setCreativeBrief}
-              label={t('deals.create.message')}
-              placeholder={t('deals.create.messagePlaceholder')}
-              maxLength={2000}
-              rows={4}
-            />
+            {selectedCreative ? (
+              <AppSurfaceCard>
+                <div className="p-4 flex flex-col gap-2">
+                  <Text type="subheadline2" color="secondary">
+                    {t('deals.create.selectedCreative')}
+                  </Text>
+                  <Text type="title3" weight="bold">
+                    {selectedCreative.title}
+                  </Text>
+                  <Text type="caption1" color="tertiary">
+                    {selectedCreative.draft.text}
+                  </Text>
+                </div>
+              </AppSurfaceCard>
+            ) : (
+              <TextareaField
+                value={creativeBrief}
+                onChange={setCreativeBrief}
+                label={t('deals.create.message')}
+                placeholder={t('deals.create.messagePlaceholder')}
+                maxLength={2000}
+                rows={4}
+              />
+            )}
           </div>
 
           <div className="shrink-0 pb-8 pt-6">

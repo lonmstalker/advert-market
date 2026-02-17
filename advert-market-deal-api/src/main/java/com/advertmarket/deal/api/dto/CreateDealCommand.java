@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param amountNano deal amount in nanoTON (must be positive)
  * @param pricingRuleId optional pricing rule reference
  * @param creativeBrief optional creative brief as JSON string
+ * @param creativeId optional creative template ID from personal library
  */
 @Schema(description = "Command to create a new deal")
 public record CreateDealCommand(
@@ -18,5 +19,7 @@ public record CreateDealCommand(
         long amountNano,
         @Nullable Long pricingRuleId,
         @Schema(description = "Creative brief as JSON string")
-        @Nullable String creativeBrief) {
+        @Nullable String creativeBrief,
+        @Schema(description = "Creative template id")
+        @Nullable String creativeId) {
 }

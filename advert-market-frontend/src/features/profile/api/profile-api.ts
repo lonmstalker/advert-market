@@ -7,6 +7,10 @@ export function updateLanguage(languageCode: string): Promise<UserProfile> {
   return api.put<UserProfile>('/profile/language', { languageCode }, { schema: userProfileSchema });
 }
 
+export function updateWallet(tonAddress: string): Promise<UserProfile> {
+  return api.put<UserProfile>('/profile/wallet', { tonAddress }, { schema: userProfileSchema });
+}
+
 type UpdateSettingsRequest = {
   displayCurrency?: string;
   currencyMode?: CurrencyMode;

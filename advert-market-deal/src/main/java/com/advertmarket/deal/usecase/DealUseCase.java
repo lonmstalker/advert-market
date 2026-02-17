@@ -54,7 +54,8 @@ public class DealUseCase {
                 request.channelId(),
                 request.amountNano(),
                 request.pricingRuleId(),
-                request.creativeBrief());
+                request.creativeBrief(),
+                request.creativeId());
         return dealService.create(command, userId);
     }
 

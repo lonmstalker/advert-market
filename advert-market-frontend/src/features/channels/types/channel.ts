@@ -145,6 +145,7 @@ export const createDealRequestSchema = z.object({
   amountNano: z.number(),
   pricingRuleId: z.number().optional(),
   creativeBrief: z.string().optional(),
+  creativeId: z.string().optional(),
 });
 
 export type CreateDealRequest = z.infer<typeof createDealRequestSchema>;

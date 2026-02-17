@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { mockProfile } from '@/test/mocks/data';
 import { server } from '@/test/mocks/server';
-import { updateLanguage, updateSettings } from '../profile-api';
+import { updateLanguage, updateSettings, updateWallet } from '../profile-api';
 
 describe('profile-api', () => {
   beforeEach(() => {
@@ -61,6 +61,23 @@ describe('profile-api', () => {
       );
 
       await expect(updateSettings({ displayCurrency: 'RUB' })).rejects.toThrow();
+    });
+  });
+
+  describe('updateWallet', () => {
+    it('sends PUT /profile/wallet with tonAddress', async () => {
+      let capturedTonAddress: string | null = null;
+      server.use(
+        http.put('/api/v1/profile/wallet', async ({ request }) => {
+          const body = (await request.json()) as { tonAddress: string };
+          capturedTonAddress = body.tonAddress;
+          return HttpResponse.json({ ...mockProfile, tonAddress: body.tonAddress });
+        }),
+      );
+
+      const profile = await updateWallet('UQBx7fEd1KyD5MHoDNFnVSXxwAAAAAABBBBBBBBBBBBBBBBB');
+      expect(capturedTonAddress).toBe('UQBx7fEd1KyD5MHoDNFnVSXxwAAAAAABBBBBBBBBBBBBBBBB');
+      expect(profile.tonAddress).toBe('UQBx7fEd1KyD5MHoDNFnVSXxwAAAAAABBBBBBBBBBBBBBBBB');
     });
   });
 });

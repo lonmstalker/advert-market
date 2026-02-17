@@ -16,6 +16,7 @@ import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.deal.repository.JooqDealRepository;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
+import com.advertmarket.marketplace.api.port.CreativeRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +53,7 @@ public class DealService implements DealPort {
     private final DealTransitionService dealTransitionService;
     private final ChannelAutoSyncPort channelAutoSyncPort;
     private final ChannelRepository channelRepository;
+    private final CreativeRepository creativeRepository;
     private final DealDtoMapper dealDtoMapper;
     private final JsonFacade jsonFacade;
 
@@ -85,6 +88,7 @@ public class DealService implements DealPort {
         var amount = Money.ofNano(command.amountNano());
         var commission = CommissionCalculator.calculate(
                 amount, DEFAULT_COMMISSION_RATE_BP);
+        var creativeBrief = resolveCreativeBrief(command, advertiserId);
 
         var dealId = UUID.randomUUID();
         var now = Instant.now();
@@ -99,7 +103,7 @@ public class DealService implements DealPort {
                 DEFAULT_COMMISSION_RATE_BP,
                 commission.commission().nanoTon(),
                 null, null,
-                command.creativeBrief(),
+                creativeBrief,
                 null, null, null, null, null, null, null,
                 null, null, null, null,
                 0, now, now);
@@ -205,6 +209,34 @@ public class DealService implements DealPort {
         return command.actorType() == ActorType.CHANNEL_OWNER
                 || command.actorType() == ActorType.CHANNEL_ADMIN
                 || command.targetStatus() == DealStatus.COMPLETED_RELEASED;
+    }
+
+    private @Nullable String resolveCreativeBrief(
+            CreateDealCommand command,
+            long advertiserId) {
+        String creativeId = normalizeOptional(command.creativeId());
+        if (creativeId == null) {
+            return command.creativeBrief();
+        }
+
+        var creative = creativeRepository.findByOwnerAndId(advertiserId, creativeId)
+                .orElseThrow(() -> new DomainException(
+                        ErrorCodes.CREATIVE_NOT_FOUND,
+                        "Creative not found: " + creativeId));
+
+        return jsonFacade.toJson(Map.of(
+                "creativeId", creative.id(),
+                "title", creative.title(),
+                "version", creative.version(),
+                "draft", creative.draft()));
+    }
+
+    private static @Nullable String normalizeOptional(@Nullable String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     @SuppressWarnings("fenum:assignment")

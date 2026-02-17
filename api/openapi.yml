@@ -2046,6 +2046,8 @@ components:
           format: int64
         creativeBrief:
           type: string
+        creativeId:
+          type: string
       required:
       - channelId
     DealDto:
@@ -2255,7 +2257,8 @@ components:
       properties:
         channelUsername:
           type: string
-          description: Public channel username without @
+          description: "Channel reference: username, t.me link, private post link,\
+            \ or numeric id"
           example: mychannel
           maxLength: 255
           minLength: 0

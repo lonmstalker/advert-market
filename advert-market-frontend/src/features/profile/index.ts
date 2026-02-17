@@ -1,1 +1,1 @@
-export { updateLanguage, updateSettings } from './api/profile-api';
+export { updateLanguage, updateSettings, updateWallet } from './api/profile-api';

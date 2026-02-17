@@ -5,14 +5,17 @@ import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.deal.api.dto.DealDto;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.service.DealService;
+import com.advertmarket.deal.web.CreateDealRequest;
 import com.advertmarket.deal.web.DealTransitionRequest;
 import com.advertmarket.financial.api.model.DepositInfo;
 import com.advertmarket.financial.api.model.DepositStatus;
@@ -22,9 +25,11 @@ import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.model.ActorType;
+import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.security.PrincipalAuthentication;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -68,6 +73,30 @@ class DealUseCaseTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    @DisplayName("create should forward creativeId from request to service command")
+    void create_withCreativeId_forwardsCommandField() {
+        var request = new CreateDealRequest(10L, 1_000_000_000L, 5L, null, "creative-42");
+        var created = new DealDto(
+                DealId.generate(),
+                10L,
+                USER_ID,
+                200L,
+                DealStatus.DRAFT,
+                1_000_000_000L,
+                null,
+                Instant.now(),
+                1);
+        when(dealService.create(any(), eq(USER_ID))).thenReturn(created);
+
+        var response = useCase.create(request);
+
+        assertThat(response).isEqualTo(created);
+        var commandCaptor = ArgumentCaptor.forClass(com.advertmarket.deal.api.dto.CreateDealCommand.class);
+        verify(dealService).create(commandCaptor.capture(), eq(USER_ID));
+        assertThat(commandCaptor.getValue().creativeId()).isEqualTo("creative-42");
     }
 
     @Test

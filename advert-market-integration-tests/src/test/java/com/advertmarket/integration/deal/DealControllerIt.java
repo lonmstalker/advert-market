@@ -2,6 +2,7 @@ package com.advertmarket.integration.deal;
 
 import static com.advertmarket.db.generated.tables.ChannelMemberships.CHANNEL_MEMBERSHIPS;
 import static com.advertmarket.db.generated.tables.Channels.CHANNELS;
+import static com.advertmarket.db.generated.tables.CreativeTemplates.CREATIVE_TEMPLATES;
 import static com.advertmarket.db.generated.tables.DealEvents.DEAL_EVENTS;
 import static com.advertmarket.db.generated.tables.Deals.DEALS;
 import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATION_OUTBOX;
@@ -30,9 +31,12 @@ import com.advertmarket.marketplace.api.dto.ChannelSyncResult;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
+import com.advertmarket.marketplace.api.port.CreativeRepository;
 import com.advertmarket.marketplace.channel.adapter.ChannelAuthorizationAdapter;
+import com.advertmarket.marketplace.creative.repository.JooqCreativeTemplateRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
+import com.advertmarket.shared.event.EventEnvelopeDeserializer;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.model.ActorType;
@@ -192,6 +196,50 @@ class DealControllerIt {
                 .bodyValue(createRequest(CHANNEL_ID, 0L))
                 .exchange()
                 .expectStatus().isBadRequest();
+    }
+
+    @Test
+    @DisplayName("POST /deals with creativeId stores creative snapshot into creative_brief")
+    void createDeal_withCreativeId_storesSnapshot() {
+        String token = advertiserToken();
+        UUID creativeId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        dsl.insertInto(CREATIVE_TEMPLATES)
+                .set(CREATIVE_TEMPLATES.ID, creativeId)
+                .set(CREATIVE_TEMPLATES.OWNER_USER_ID, ADVERTISER_ID)
+                .set(CREATIVE_TEMPLATES.TITLE, "Creative for launch")
+                .set(CREATIVE_TEMPLATES.DRAFT, JSONB.valueOf("""
+                        {"text":"Install app","entities":[],"media":[],"keyboardRows":[],"disableWebPagePreview":false}
+                        """))
+                .set(CREATIVE_TEMPLATES.VERSION, 2)
+                .set(CREATIVE_TEMPLATES.IS_DELETED, false)
+                .set(CREATIVE_TEMPLATES.CREATED_AT, now)
+                .set(CREATIVE_TEMPLATES.UPDATED_AT, now)
+                .execute();
+
+        var body = webClient.post().uri("/api/v1/deals")
+                .headers(h -> h.setBearerAuth(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of(
+                        "channelId", CHANNEL_ID,
+                        "amountNano", ONE_TON_NANO,
+                        "creativeId", creativeId.toString()))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(DealDto.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(body).isNotNull();
+        String storedCreativeBrief = dsl.select(DEALS.CREATIVE_BRIEF)
+                .from(DEALS)
+                .where(DEALS.ID.eq(body.id().value()))
+                .fetchSingle(DEALS.CREATIVE_BRIEF)
+                .data();
+        assertThat(storedCreativeBrief)
+                .contains(creativeId.toString())
+                .contains("Creative for launch")
+                .contains("Install app");
     }
 
     // --- GET /deals/{id} ---
@@ -738,6 +786,11 @@ class DealControllerIt {
         }
 
         @Bean
+        CreativeRepository creativeRepository(DSLContext dsl, JsonFacade jsonFacade) {
+            return new JooqCreativeTemplateRepository(dsl, jsonFacade);
+        }
+
+        @Bean
         ChannelAuthorizationPort channelAuthorizationPort(DSLContext dsl) {
             return new ChannelAuthorizationAdapter(dsl);
         }
@@ -755,6 +808,11 @@ class DealControllerIt {
         @Bean
         DepositPort depositPort() {
             return mock(DepositPort.class);
+        }
+
+        @Bean
+        EventEnvelopeDeserializer eventEnvelopeDeserializer() {
+            return mock(EventEnvelopeDeserializer.class);
         }
 
         @Bean

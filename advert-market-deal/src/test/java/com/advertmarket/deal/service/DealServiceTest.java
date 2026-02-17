@@ -17,9 +17,12 @@ import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
+import com.advertmarket.marketplace.api.dto.creative.CreativeDraftDto;
+import com.advertmarket.marketplace.api.dto.creative.CreativeTemplateDto;
 import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
+import com.advertmarket.marketplace.api.port.CreativeRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
@@ -60,6 +63,8 @@ class DealServiceTest {
     private ChannelRepository channelRepository;
     @Mock
     private JsonFacade jsonFacade;
+    @Mock
+    private CreativeRepository creativeRepository;
 
     private DealService service;
 
@@ -69,7 +74,7 @@ class DealServiceTest {
                 dealRepository, dealEventRepository,
                 dealAuthorizationPort, dealTransitionService,
                 channelAutoSyncPort, channelRepository,
-                Mappers.getMapper(DealDtoMapper.class), jsonFacade);
+                creativeRepository, Mappers.getMapper(DealDtoMapper.class), jsonFacade);
     }
 
     private ChannelDetailResponse channelDetail(long channelId, long ownerId) {
@@ -91,6 +96,21 @@ class DealServiceTest {
                 0, Instant.now(), Instant.now());
     }
 
+    private CreativeTemplateDto creativeTemplate(String creativeId) {
+        return new CreativeTemplateDto(
+                creativeId,
+                "Native launch template",
+                new CreativeDraftDto(
+                        "Install app",
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        false),
+                3,
+                OffsetDateTime.now(),
+                OffsetDateTime.now());
+    }
+
     @Nested
     @DisplayName("create()")
     class Create {
@@ -98,7 +118,7 @@ class DealServiceTest {
         @Test
         @DisplayName("should create deal in DRAFT status with commission calculated")
         void create_shouldCreateDeal() {
-            var cmd = new CreateDealCommand(1L, 1_000_000_000L, null, null);
+            var cmd = new CreateDealCommand(1L, 1_000_000_000L, null, null, null);
             when(channelRepository.findDetailById(1L))
                     .thenReturn(Optional.of(channelDetail(1L, 200L)));
 
@@ -121,7 +141,7 @@ class DealServiceTest {
         @Test
         @DisplayName("should throw when channel not found")
         void create_channelNotFound_shouldThrow() {
-            var cmd = new CreateDealCommand(999L, 1_000_000_000L, null, null);
+            var cmd = new CreateDealCommand(999L, 1_000_000_000L, null, null, null);
             when(channelRepository.findDetailById(999L))
                     .thenReturn(Optional.empty());
 
@@ -132,7 +152,7 @@ class DealServiceTest {
         @Test
         @DisplayName("should reject deal amount below minimum anti-dust threshold")
         void create_amountBelowMinimum_shouldThrow() {
-            var cmd = new CreateDealCommand(1L, 499_999_999L, null, null);
+            var cmd = new CreateDealCommand(1L, 499_999_999L, null, null, null);
             when(channelRepository.findDetailById(1L))
                     .thenReturn(Optional.of(channelDetail(1L, 200L)));
 
@@ -140,6 +160,38 @@ class DealServiceTest {
                     .isInstanceOf(DomainException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCodes.INVALID_PARAMETER);
+        }
+
+        @Test
+        @DisplayName("should persist creative snapshot when command references creativeId")
+        void create_withCreativeId_shouldPersistCreativeSnapshot() {
+            var cmd = new CreateDealCommand(1L, 1_000_000_000L, null, null, "creative-42");
+            when(channelRepository.findDetailById(1L))
+                    .thenReturn(Optional.of(channelDetail(1L, 200L)));
+            when(creativeRepository.findByOwnerAndId(100L, "creative-42"))
+                    .thenReturn(Optional.of(creativeTemplate("creative-42")));
+            when(jsonFacade.toJson(any())).thenReturn("{\"creativeId\":\"creative-42\"}");
+
+            service.create(cmd, 100L);
+
+            var captor = ArgumentCaptor.forClass(DealRecord.class);
+            verify(dealRepository).insert(captor.capture());
+            assertThat(captor.getValue().creativeBrief()).isEqualTo("{\"creativeId\":\"creative-42\"}");
+        }
+
+        @Test
+        @DisplayName("should fail with CREATIVE_NOT_FOUND when creativeId is unknown")
+        void create_withUnknownCreativeId_shouldThrow() {
+            var cmd = new CreateDealCommand(1L, 1_000_000_000L, null, null, "creative-missing");
+            when(channelRepository.findDetailById(1L))
+                    .thenReturn(Optional.of(channelDetail(1L, 200L)));
+            when(creativeRepository.findByOwnerAndId(100L, "creative-missing"))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.create(cmd, 100L))
+                    .isInstanceOf(DomainException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCodes.CREATIVE_NOT_FOUND);
         }
     }
 

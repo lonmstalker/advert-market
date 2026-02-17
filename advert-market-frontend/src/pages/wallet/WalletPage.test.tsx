@@ -2,8 +2,11 @@ import { HttpResponse, http } from 'msw';
 import { Route, Routes } from 'react-router';
 import { mockWalletSummaryEmpty, mockWalletSummaryOwner } from '@/test/mocks/data';
 import { server } from '@/test/mocks/server';
-import { renderWithProviders, screen } from '@/test/test-utils';
+import { renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import WalletPage from './WalletPage';
+
+const mockUseTonWalletStatus = vi.fn();
+const mockUpdateWallet = vi.fn();
 
 vi.mock('@tonconnect/ui-react', () => ({
   TonConnectButton: () => <div data-testid="ton-connect-button" />,
@@ -23,6 +26,14 @@ vi.mock('@/shared/hooks/use-haptic', () => ({
   }),
 }));
 
+vi.mock('@/shared/ton', () => ({
+  useTonWalletStatus: () => mockUseTonWalletStatus(),
+}));
+
+vi.mock('@/features/profile', () => ({
+  updateWallet: (address: string) => mockUpdateWallet(address),
+}));
+
 const API_BASE = '/api/v1';
 
 function renderPage() {
@@ -38,6 +49,21 @@ function renderPage() {
 }
 
 describe('WalletPage', () => {
+  beforeEach(() => {
+    mockUseTonWalletStatus.mockReset();
+    mockUseTonWalletStatus.mockReturnValue({
+      isConnected: false,
+      isConnectionRestored: true,
+      address: null,
+      friendlyAddress: null,
+      wallet: null,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    });
+    mockUpdateWallet.mockReset();
+    mockUpdateWallet.mockResolvedValue({});
+  });
+
   it('shows skeleton during load', () => {
     server.use(
       http.get(`${API_BASE}/wallet/summary`, async () => {
@@ -59,6 +85,18 @@ describe('WalletPage', () => {
     );
     renderPage();
     expect(await screen.findByText('No transactions yet')).toBeInTheDocument();
+  });
+
+  it('renders TonConnectButton even when summary and transactions are empty', async () => {
+    server.use(
+      http.get(`${API_BASE}/wallet/summary`, () => HttpResponse.json(mockWalletSummaryEmpty)),
+      http.get(`${API_BASE}/wallet/transactions`, () =>
+        HttpResponse.json({ items: [], nextCursor: null, hasNext: false }),
+      ),
+    );
+    renderPage();
+    await screen.findByText('No transactions yet');
+    expect(screen.getByTestId('ton-connect-button')).toBeInTheDocument();
   });
 
   it('renders BalanceCard as first section', async () => {
@@ -105,5 +143,29 @@ describe('WalletPage', () => {
     await screen.findByText('Total earned');
     expect(screen.queryByRole('button', { name: 'Transfer' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Exchange' })).not.toBeInTheDocument();
+  });
+
+  it('syncs connected TON address to profile when wallet is connected', async () => {
+    mockUseTonWalletStatus.mockReturnValue({
+      isConnected: true,
+      isConnectionRestored: true,
+      address: '0:abc',
+      friendlyAddress: 'UQBx7fEd1KyD5MHoDNFnVSXxwAAAAAABBBBBBBBBBBBBBBBB',
+      wallet: {},
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    });
+    server.use(
+      http.get(`${API_BASE}/wallet/summary`, () => HttpResponse.json(mockWalletSummaryEmpty)),
+      http.get(`${API_BASE}/wallet/transactions`, () =>
+        HttpResponse.json({ items: [], nextCursor: null, hasNext: false }),
+      ),
+    );
+
+    renderPage();
+    await screen.findByText('No transactions yet');
+    await waitFor(() =>
+      expect(mockUpdateWallet).toHaveBeenCalledWith('UQBx7fEd1KyD5MHoDNFnVSXxwAAAAAABBBBBBBBBBBBBBBBB'),
+    );
   });
 });

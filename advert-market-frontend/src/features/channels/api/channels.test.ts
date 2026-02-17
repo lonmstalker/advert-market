@@ -51,4 +51,36 @@ describe('channels api', () => {
       version: 1,
     });
   });
+
+  it('createDeal sends optional creativeId when creating from saved creative', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      id: 'deal-2',
+      channelId: 5,
+      advertiserId: 10,
+      ownerId: 20,
+      status: 'DRAFT',
+      amountNano: 4_000_000_000,
+      deadlineAt: null,
+      createdAt: '2026-01-01T00:00:00Z',
+      version: 1,
+    });
+
+    await createDeal({
+      channelId: 5,
+      amountNano: 4_000_000_000,
+      pricingRuleId: 10,
+      creativeId: 'creative-42',
+    });
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/deals',
+      {
+        channelId: 5,
+        amountNano: 4_000_000_000,
+        pricingRuleId: 10,
+        creativeId: 'creative-42',
+      },
+      expect.any(Object),
+    );
+  });
 });

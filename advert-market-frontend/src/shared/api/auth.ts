@@ -36,6 +36,7 @@ export const userProfileSchema = z
     notificationSettings: notificationSettingsSchema,
     onboardingCompleted: z.boolean(),
     interests: z.array(z.string()),
+    tonAddress: z.string().optional(),
     createdAt: z.string(),
   })
   .transform((profile) => ({

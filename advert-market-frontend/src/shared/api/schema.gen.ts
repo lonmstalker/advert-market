@@ -989,6 +989,7 @@ export interface components {
       /** Format: int64 */
       pricingRuleId?: number;
       creativeBrief?: string;
+      creativeId?: string;
     };
     /** @description Deal summary */
     DealDto: {
@@ -1145,7 +1146,7 @@ export interface components {
     /** @description Channel verification request */
     ChannelVerifyRequest: {
       /**
-       * @description Public channel username without @
+       * @description Channel reference: username, t.me link, private post link, or numeric id
        * @example mychannel
        */
       channelUsername: string;
