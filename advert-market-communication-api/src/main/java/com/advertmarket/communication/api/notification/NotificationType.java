@@ -38,5 +38,7 @@ public enum NotificationType {
     /** Bot was removed from a channel. */
     CHANNEL_BOT_REMOVED,
     /** Bot was demoted in a channel (lost admin rights). */
-    CHANNEL_BOT_DEMOTED
+    CHANNEL_BOT_DEMOTED,
+    /** Bot admin rights were restored and channel reactivated. */
+    CHANNEL_BOT_RESTORED
 }

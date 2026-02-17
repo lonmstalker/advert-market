@@ -124,6 +124,8 @@ public class BotChannelStatusHandler implements ChatMemberUpdateHandler {
         boolean reactivated =
                 channelLifecyclePort.reactivateByTelegramId(channelId);
         if (reactivated) {
+            notifyOwner(owner.get(),
+                    NotificationType.CHANNEL_BOT_RESTORED);
             log.info("Channel={} reactivated after bot promotion",
                     channelId);
             return;
@@ -147,6 +149,8 @@ public class BotChannelStatusHandler implements ChatMemberUpdateHandler {
             boolean reactivated =
                     channelLifecyclePort.reactivateByTelegramId(channelId);
             if (reactivated) {
+                notifyOwner(owner.get(),
+                        NotificationType.CHANNEL_BOT_RESTORED);
                 log.info("Channel={} reactivated: canPostMessages=true",
                         channelId);
                 return;

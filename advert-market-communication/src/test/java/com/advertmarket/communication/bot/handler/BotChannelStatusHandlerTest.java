@@ -145,30 +145,43 @@ class BotChannelStatusHandlerTest {
     // --- handle: member/left → admin (bot promoted) ---
 
     @Test
-    @DisplayName("Reactivates channel when bot promoted (member→admin)")
-    void handle_memberToAdmin_reactivates() throws Exception {
+    @DisplayName("Reactivates and notifies when bot promoted (member→admin)")
+    void handle_memberToAdmin_reactivatesAndNotifies() throws Exception {
         when(lifecyclePort.findOwnerByTelegramId(-400L))
                 .thenReturn(Optional.of(
                         new ChannelOwnerInfo(-400L, 77L, "Promo")));
+        when(lifecyclePort.reactivateByTelegramId(-400L))
+                .thenReturn(true);
 
         handler.handle(createUpdate(Chat.Type.channel,
                 Status.member, Status.administrator, -400L));
 
         verify(lifecyclePort).reactivateByTelegramId(-400L);
-        verify(notificationPort, never()).send(any());
+        var captor = ArgumentCaptor.forClass(
+                NotificationRequest.class);
+        verify(notificationPort).send(captor.capture());
+        assertThat(captor.getValue().type())
+                .isEqualTo(NotificationType.CHANNEL_BOT_RESTORED);
     }
 
     @Test
-    @DisplayName("Reactivates channel when bot added as admin (left→admin)")
-    void handle_leftToAdmin_reactivates() throws Exception {
+    @DisplayName("Reactivates and notifies when bot added as admin (left→admin)")
+    void handle_leftToAdmin_reactivatesAndNotifies() throws Exception {
         when(lifecyclePort.findOwnerByTelegramId(-500L))
                 .thenReturn(Optional.of(
                         new ChannelOwnerInfo(-500L, 88L, "Back")));
+        when(lifecyclePort.reactivateByTelegramId(-500L))
+                .thenReturn(true);
 
         handler.handle(createUpdate(Chat.Type.channel,
                 Status.left, Status.administrator, -500L));
 
         verify(lifecyclePort).reactivateByTelegramId(-500L);
+        var captor = ArgumentCaptor.forClass(
+                NotificationRequest.class);
+        verify(notificationPort).send(captor.capture());
+        assertThat(captor.getValue().type())
+                .isEqualTo(NotificationType.CHANNEL_BOT_RESTORED);
     }
 
     // --- handle: admin→admin (rights changed) ---
@@ -216,13 +229,19 @@ class BotChannelStatusHandlerTest {
         when(lifecyclePort.findOwnerByTelegramId(-700L))
                 .thenReturn(Optional.of(
                         new ChannelOwnerInfo(-700L, 22L, "Post")));
+        when(lifecyclePort.reactivateByTelegramId(-700L))
+                .thenReturn(true);
 
         var update = createUpdateWithCanPost(
                 Chat.Type.channel, -700L, true);
         handler.handle(update);
 
         verify(lifecyclePort).reactivateByTelegramId(-700L);
-        verify(notificationPort, never()).send(any());
+        var captor = ArgumentCaptor.forClass(
+                NotificationRequest.class);
+        verify(notificationPort).send(captor.capture());
+        assertThat(captor.getValue().type())
+                .isEqualTo(NotificationType.CHANNEL_BOT_RESTORED);
     }
 
     @Test

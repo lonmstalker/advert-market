@@ -251,8 +251,9 @@ For `POST /api/v1/bot/webhook`:
 - Valid payload returns `200` and is processed asynchronously.
 - Duplicate `update_id` must be deduplicated (no repeated side effects).
 - `my_chat_member` transitions drive channel state sync:
-  - admin -> left: channel deactivation
-  - member -> admin: channel reactivation
+  - admin -> left: channel deactivation + owner notification (`CHANNEL_BOT_REMOVED`)
+  - admin -> member: channel deactivation + owner notification (`CHANNEL_BOT_DEMOTED`)
+  - left/member -> administrator: channel reactivation + owner notification (`CHANNEL_BOT_RESTORED`)
 
 ## Related Docs
 

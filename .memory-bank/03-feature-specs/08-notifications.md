@@ -43,6 +43,9 @@ flowchart LR
 | **Deal expired** | Both | "Deal #{id} expired." |
 | **Deal cancelled** | Other party | "Deal #{id} cancelled." |
 | **Reconciliation alert** | Platform Operator | "Reconciliation discrepancy detected." |
+| **Bot removed from channel** | Channel Owner | "Bot removed from {channel}. Channel deactivated." |
+| **Bot demoted in channel** | Channel Owner | "Bot lost admin rights in {channel}. Channel deactivated." |
+| **Bot restored as admin** | Channel Owner | "Bot restored in {channel}. Channel activated." |
 
 ## notification_outbox Table
 
