@@ -32,6 +32,7 @@ class SequenceAllocatorTest {
     void setUp() {
         dsl = mock(DSLContext.class);
         sequence = mock(Sequence.class);
+        when(sequence.getName()).thenReturn("deal_subwallet_seq");
     }
 
     @Test

@@ -57,9 +57,11 @@ public class SequenceAllocator {
     }
 
     private void allocateBatch() {
+        String sequenceName = sequence.getName();
         List<Long> values = dsl.fetch(
                 "SELECT nextval({0}) FROM generate_series(1, {1})",
-                sequence, DSL.val(allocationSize)
+                DSL.inline(sequenceName),
+                DSL.val(allocationSize)
         ).getValues(0, Long.class);
 
         nextValue = Collections.min(values);
