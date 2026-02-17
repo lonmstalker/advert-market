@@ -198,7 +198,48 @@ public class DealService implements DealPort {
     public @NonNull DealTransitionResult transition(
             @NonNull DealTransitionCommand command) {
         reconcileOwnerForTransition(command);
-        return dealTransitionService.transition(command);
+        var result = dealTransitionService.transition(command);
+        autoAdvanceToAwaitingPayment(command, result);
+        return result;
+    }
+
+    private void autoAdvanceToAwaitingPayment(
+            DealTransitionCommand command,
+            DealTransitionResult result) {
+        if (!isOwnerAcceptance(command, result)) {
+            return;
+        }
+
+        try {
+            dealTransitionService.transition(new DealTransitionCommand(
+                    command.dealId(),
+                    DealStatus.AWAITING_PAYMENT,
+                    null,
+                    ActorType.SYSTEM,
+                    "Auto transition after acceptance",
+                    null,
+                    null));
+        } catch (RuntimeException exception) {
+            // Keep owner accept committed; retry path remains available via workflow.
+            log.error(
+                    "Failed to auto-advance deal to AWAITING_PAYMENT after owner acceptance: {}",
+                    command.dealId(),
+                    exception);
+        }
+    }
+
+    private static boolean isOwnerAcceptance(
+            DealTransitionCommand command,
+            DealTransitionResult result) {
+        if (command.targetStatus() != DealStatus.ACCEPTED) {
+            return false;
+        }
+        if (command.actorType() != ActorType.CHANNEL_OWNER
+                && command.actorType() != ActorType.CHANNEL_ADMIN) {
+            return false;
+        }
+        return result instanceof DealTransitionResult.Success
+                || result instanceof DealTransitionResult.AlreadyInTargetState;
     }
 
     private void reconcileOwnerForTransition(

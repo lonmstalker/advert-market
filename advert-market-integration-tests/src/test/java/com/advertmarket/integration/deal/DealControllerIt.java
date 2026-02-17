@@ -476,6 +476,13 @@ class DealControllerIt {
                 .expectBody()
                 .jsonPath("$.status").isEqualTo("SUCCESS")
                 .jsonPath("$.newStatus").isEqualTo("ACCEPTED");
+
+        String persistedStatus = dsl.select(DEALS.STATUS)
+                .from(DEALS)
+                .where(DEALS.ID.eq(dealId))
+                .fetchOne(DEALS.STATUS);
+        assertThat(persistedStatus).isEqualTo(
+                DealStatus.AWAITING_PAYMENT.name());
     }
 
     @Test
@@ -513,7 +520,6 @@ class DealControllerIt {
 
         transitionByToken(advertiserToken(), dealId, "OFFER_PENDING");
         transitionByToken(ownerToken(), dealId, "ACCEPTED");
-        transitionAsSystem(dealId, DealStatus.AWAITING_PAYMENT);
         transitionAsSystem(dealId, DealStatus.FUNDED);
         transitionByToken(ownerToken(), dealId, "CREATIVE_SUBMITTED");
         transitionByToken(advertiserToken(), dealId, "CREATIVE_APPROVED");
