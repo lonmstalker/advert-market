@@ -11,9 +11,9 @@ import com.advertmarket.shared.event.EventTypes;
 import com.advertmarket.shared.event.TopicNames;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -23,12 +23,21 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DeliveryEventListener {
 
     private final EventEnvelopeDeserializer deserializer;
     private final DeliveryEventPort deliveryEventPort;
     private final MetricsFacade metrics;
+
+    public DeliveryEventListener(
+            EventEnvelopeDeserializer deserializer,
+            @Qualifier("deliveryEventAdapter")
+            DeliveryEventPort deliveryEventPort,
+            MetricsFacade metrics) {
+        this.deserializer = deserializer;
+        this.deliveryEventPort = deliveryEventPort;
+        this.metrics = metrics;
+    }
 
     /** Consumes delivery events from Kafka. */
     @SuppressWarnings("fenum")

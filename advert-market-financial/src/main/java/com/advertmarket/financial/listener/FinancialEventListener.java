@@ -12,9 +12,9 @@ import com.advertmarket.shared.event.EventTypes;
 import com.advertmarket.shared.event.TopicNames;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -24,12 +24,21 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class FinancialEventListener {
 
     private final EventEnvelopeDeserializer deserializer;
     private final FinancialEventPort financialEventPort;
     private final MetricsFacade metrics;
+
+    public FinancialEventListener(
+            EventEnvelopeDeserializer deserializer,
+            @Qualifier("financialEventAdapter")
+            FinancialEventPort financialEventPort,
+            MetricsFacade metrics) {
+        this.deserializer = deserializer;
+        this.financialEventPort = financialEventPort;
+        this.metrics = metrics;
+    }
 
     /** Consumes financial events from Kafka. */
     @SuppressWarnings("fenum")

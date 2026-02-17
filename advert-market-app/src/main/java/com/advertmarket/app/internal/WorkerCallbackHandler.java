@@ -24,9 +24,9 @@ import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import java.time.Instant;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.fenum.qual.Fenum;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,7 +36,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class WorkerCallbackHandler {
 
     private final EventTypeRegistry eventTypeRegistry;
@@ -45,6 +44,24 @@ public class WorkerCallbackHandler {
     private final DeliveryEventPort deliveryEventPort;
     private final ReconciliationResultPort reconciliationResultPort;
     private final MetricsFacade metrics;
+
+    public WorkerCallbackHandler(
+            EventTypeRegistry eventTypeRegistry,
+            JsonFacade json,
+            @Qualifier("financialEventAdapter")
+            FinancialEventPort financialEventPort,
+            @Qualifier("deliveryEventAdapter")
+            DeliveryEventPort deliveryEventPort,
+            ReconciliationResultPort reconciliationResultPort,
+            MetricsFacade metrics) {
+        this.eventTypeRegistry = eventTypeRegistry;
+        this.json = json;
+        this.financialEventPort = financialEventPort;
+        this.deliveryEventPort = deliveryEventPort;
+        this.reconciliationResultPort =
+                reconciliationResultPort;
+        this.metrics = metrics;
+    }
 
     /** Receives a worker callback and dispatches to the appropriate port. */
     @SuppressWarnings("fenum")
@@ -125,4 +142,3 @@ public class WorkerCallbackHandler {
                 payload);
     }
 }
-
