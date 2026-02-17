@@ -1,7 +1,7 @@
 package com.advertmarket.communication.channel;
 
-import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.RATE_LIMIT_EXCEEDED;
 import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
@@ -25,9 +25,9 @@ import com.pengrad.telegrambot.request.GetChatAdministrators;
 import com.pengrad.telegrambot.request.GetChatMember;
 import com.pengrad.telegrambot.request.GetChatMemberCount;
 import com.pengrad.telegrambot.response.BaseResponse;
-import java.util.Locale;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
