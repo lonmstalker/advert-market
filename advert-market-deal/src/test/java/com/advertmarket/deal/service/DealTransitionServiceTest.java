@@ -514,6 +514,10 @@ class DealTransitionServiceTest {
                         ActorType.CHANNEL_OWNER),
                 Arguments.of(
                         DealStatus.CREATIVE_APPROVED,
+                        DealStatus.PUBLISHED,
+                        ActorType.SYSTEM),
+                Arguments.of(
+                        DealStatus.CREATIVE_APPROVED,
                         DealStatus.CANCELLED,
                         ActorType.ADVERTISER),
                 Arguments.of(

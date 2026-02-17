@@ -309,7 +309,10 @@ public class DealTransitionService {
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.SCHEDULED),
                 EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.PUBLISHED),
-                EnumSet.of(ActorType.CHANNEL_OWNER, ActorType.CHANNEL_ADMIN));
+                EnumSet.of(
+                        ActorType.CHANNEL_OWNER,
+                        ActorType.CHANNEL_ADMIN,
+                        ActorType.SYSTEM));
         map.put(new TransitionKey(DealStatus.CREATIVE_APPROVED, DealStatus.CANCELLED),
                 EnumSet.of(
                         ActorType.ADVERTISER,
