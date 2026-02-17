@@ -5,7 +5,7 @@ import { useHaptic } from '@/shared/hooks/use-haptic';
 import { Tappable } from '@/shared/ui';
 import { CrossIcon } from '@/shared/ui/icons';
 import type { InlineButton, TelegramKeyboardRow } from '../types/creative';
-import { ensureButtonId, makeLocalId } from '../types/creative';
+import { buttonUrlSchema, ensureButtonId, makeLocalId } from '../types/creative';
 
 type ButtonBuilderProps = {
   buttons: TelegramKeyboardRow[];
@@ -24,6 +24,11 @@ function createEmptyButton(): InlineButton {
 export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow = 5 }: ButtonBuilderProps) {
   const { t } = useTranslation();
   const haptic = useHaptic();
+  const validateUrl = (value: string): string | null => {
+    const normalized = value.trim();
+    if (!normalized) return null;
+    return buttonUrlSchema.safeParse(normalized).success ? null : t('creatives.form.linkInvalid');
+  };
 
   const addRow = () => {
     if (buttons.length >= maxRows) return;
@@ -127,6 +132,9 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
                     value={button.url ?? ''}
                     onChange={(value) => updateButton(rowIndex, buttonIndex, { url: value })}
                     placeholder="https://"
+                    type="url"
+                    validateOnBlur
+                    validator={validateUrl}
                   />
                 </div>
               ))}

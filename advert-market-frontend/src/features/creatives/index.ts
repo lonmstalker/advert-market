@@ -25,4 +25,4 @@ export type {
   TelegramKeyboardRow,
   TextEntity,
 } from './types/creative';
-export { ensureButtonId, TextEntityType } from './types/creative';
+export { buttonUrlSchema, ensureButtonId, findFirstInvalidButtonUrl, TextEntityType } from './types/creative';

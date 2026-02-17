@@ -8,6 +8,7 @@ import {
   CreativeForm,
   CreativeHistorySheet,
   ensureButtonId,
+  findFirstInvalidButtonUrl,
   type MediaItem,
   type MediaType,
   type TelegramKeyboardRow,
@@ -89,14 +90,20 @@ export default function CreativeEditorPage() {
         .map((row) =>
           row
             .map((button) => ensureButtonId(button))
-            .filter((button) => button.text.trim().length > 0 && Boolean(button.url)),
+            .filter((button) => button.text.trim().length > 0 && Boolean(button.url?.trim())),
         )
         .filter((row) => row.length > 0),
     [buttons],
   );
+  const hasInvalidButtonUrl = useMemo(() => findFirstInvalidButtonUrl(buttons) !== null, [buttons]);
 
   const handleSubmit = useCallback(() => {
     if (!title.trim() || !text.trim()) return;
+    if (hasInvalidButtonUrl) {
+      haptic.notificationOccurred('error');
+      showError(t('creatives.form.linkInvalid'));
+      return;
+    }
 
     const req = {
       title: title.trim(),
@@ -137,6 +144,7 @@ export default function CreativeEditorPage() {
     text,
     entities,
     media,
+    hasInvalidButtonUrl,
     validButtonRows,
     disableWebPagePreview,
     isEditing,
@@ -164,7 +172,7 @@ export default function CreativeEditorPage() {
     mainButton.setParams.ifAvailable({
       text: t('common.save'),
       isVisible: true,
-      isEnabled: !isPending && !!title.trim() && !!text.trim(),
+      isEnabled: !isPending && !hasInvalidButtonUrl && !!title.trim() && !!text.trim(),
       isLoaderVisible: isPending,
     });
 
@@ -175,7 +183,7 @@ export default function CreativeEditorPage() {
         isLoaderVisible: false,
       });
     };
-  }, [handleSubmit, isPending, supportsMainButton, t, text, title]);
+  }, [handleSubmit, hasInvalidButtonUrl, isPending, supportsMainButton, t, text, title]);
 
   const handleUploadMedia = useCallback(
     (file: File, mediaType: MediaType) => uploadMediaMutation.mutateAsync({ file, mediaType }),
@@ -298,7 +306,7 @@ export default function CreativeEditorPage() {
               text={t('common.save')}
               type="primary"
               loading={isPending}
-              disabled={isPending || !title.trim() || !text.trim()}
+              disabled={isPending || hasInvalidButtonUrl || !title.trim() || !text.trim()}
               onClick={handleSubmit}
             />
           </motion.div>

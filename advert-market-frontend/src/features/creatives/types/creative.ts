@@ -40,10 +40,21 @@ export const mediaItemSchema = z.object({
   caption: z.string().optional(),
 });
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+export const buttonUrlSchema = z.string().trim().min(1).max(2048).url().refine(isHttpUrl);
+
 export const inlineButtonSchema = z.object({
   id: z.string().min(1),
   text: z.string().min(1).max(50),
-  url: z.string().max(2048).optional(),
+  url: buttonUrlSchema.optional(),
 });
 
 export const keyboardRowSchema = z.array(inlineButtonSchema).min(1).max(5);
@@ -100,11 +111,30 @@ export function countButtons(rows: TelegramKeyboardRow[]): number {
 }
 
 export function ensureButtonId(button: Omit<InlineButton, 'id'> & Partial<Pick<InlineButton, 'id'>>): InlineButton {
+  const normalizedUrl = button.url?.trim();
   return {
     id: button.id?.trim() ? button.id : makeLocalId('btn'),
     text: button.text,
-    ...(button.url ? { url: button.url } : {}),
+    ...(normalizedUrl ? { url: normalizedUrl } : {}),
   };
+}
+
+export function findFirstInvalidButtonUrl(
+  rows: TelegramKeyboardRow[],
+): { rowIndex: number; buttonIndex: number } | null {
+  for (const [rowIndex, row] of rows.entries()) {
+    for (const [buttonIndex, button] of row.entries()) {
+      const text = button.text.trim();
+      const url = button.url?.trim();
+      if (!text || !url) {
+        continue;
+      }
+      if (!buttonUrlSchema.safeParse(url).success) {
+        return { rowIndex, buttonIndex };
+      }
+    }
+  }
+  return null;
 }
 
 export function ensureMediaDefaults(media: Partial<MediaItem> & Pick<MediaItem, 'type' | 'url'>): MediaItem {
