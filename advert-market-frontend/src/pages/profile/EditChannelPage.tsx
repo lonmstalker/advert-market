@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Input, Select, Text } from '@telegram-tools/ui-kit';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
@@ -86,6 +86,7 @@ export default function EditChannelPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [ownerNote, setOwnerNote] = useState('');
   const [rules, setRules] = useState<EditablePricingRule[]>([]);
+  const [expandedRuleLocalId, setExpandedRuleLocalId] = useState<string | null>(null);
   const [initialRuleIds, setInitialRuleIds] = useState<number[]>([]);
 
   useEffect(() => {
@@ -101,7 +102,10 @@ export default function EditChannelPage() {
         postType: rule.postTypes[0] ?? null,
         priceTon: nanoToTonInput(rule.priceNano),
       }));
-    setRules(mappedRules.length > 0 ? mappedRules : [{ localId: makeDraftId(), postType: null, priceTon: '' }]);
+    const fallbackRule = { localId: makeDraftId(), postType: null, priceTon: '' };
+    const nextRules = mappedRules.length > 0 ? mappedRules : [fallbackRule];
+    setRules(nextRules);
+    setExpandedRuleLocalId(nextRules[0]?.localId ?? null);
     setInitialRuleIds(channel.pricingRules.map((rule) => rule.id));
   }, [channel]);
 
@@ -118,6 +122,16 @@ export default function EditChannelPage() {
       ),
     );
   }, [postTypes]);
+
+  useEffect(() => {
+    if (rules.length === 0) {
+      setExpandedRuleLocalId(null);
+      return;
+    }
+    if (!rules.some((rule) => rule.localId === expandedRuleLocalId)) {
+      setExpandedRuleLocalId(rules[0]?.localId ?? null);
+    }
+  }, [expandedRuleLocalId, rules]);
 
   const normalizedLang = i18n.language.toLowerCase().startsWith('ru') ? 'ru' : 'en';
   const categoryOptions = useMemo(
@@ -218,6 +232,14 @@ export default function EditChannelPage() {
     setRules((prev) => prev.map((rule) => (rule.localId === localId ? { ...rule, ...patch } : rule)));
   };
 
+  const resolvePostTypeLabel = (postType: string | null): string => {
+    if (!postType) {
+      return t('profile.register.postTypePlaceholder');
+    }
+    const type = postTypes.find((item) => item.type === postType);
+    return type?.labels[normalizedLang] ?? type?.labels.en ?? postType;
+  };
+
   if (isChannelLoading) {
     return (
       <>
@@ -290,12 +312,11 @@ export default function EditChannelPage() {
                 </Text>
                 <Tappable
                   className="text-accent text-sm font-medium bg-transparent border-none cursor-pointer"
-                  onClick={() =>
-                    setRules((prev) => [
-                      ...prev,
-                      { localId: makeDraftId(), postType: postTypes[0]?.type ?? null, priceTon: '' },
-                    ])
-                  }
+                  onClick={() => {
+                    const nextRule = { localId: makeDraftId(), postType: postTypes[0]?.type ?? null, priceTon: '' };
+                    setRules((prev) => [...prev, nextRule]);
+                    setExpandedRuleLocalId(nextRule.localId);
+                  }}
                 >
                   {t('profile.register.addRule')}
                 </Tappable>
@@ -304,51 +325,87 @@ export default function EditChannelPage() {
               <div className="flex flex-col gap-3">
                 {rules.map((rule, index) => (
                   <AppSurfaceCard key={rule.localId}>
-                    <div className="p-4 flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <Text type="subheadline2" color="secondary">
-                          {t('profile.register.ruleLabel', { index: index + 1 })}
-                        </Text>
-                        {rules.length > 1 && (
-                          <Tappable
-                            className="text-destructive text-sm font-medium bg-transparent border-none cursor-pointer"
-                            onClick={() => setRules((prev) => prev.filter((item) => item.localId !== rule.localId))}
+                    <div className="p-4">
+                      <Tappable
+                        data-testid={`edit-channel-rule-toggle-${index}`}
+                        aria-expanded={expandedRuleLocalId === rule.localId}
+                        onClick={() => setExpandedRuleLocalId(rule.localId)}
+                        className="am-collapsible-trigger"
+                      >
+                        <div className="am-collapsible-trigger__copy">
+                          <Text type="subheadline2" color="secondary">
+                            {t('profile.register.ruleLabel', { index: index + 1 })}
+                          </Text>
+                          <Text type="caption1" color="tertiary">
+                            {resolvePostTypeLabel(rule.postType)}
+                            {rule.priceTon.trim() ? ` · ${rule.priceTon.trim()} TON` : ''}
+                          </Text>
+                        </div>
+                        <span
+                          aria-hidden="true"
+                          className="am-collapsible-trigger__chevron"
+                          data-expanded={expandedRuleLocalId === rule.localId ? 'true' : 'false'}
+                        >
+                          ˅
+                        </span>
+                      </Tappable>
+
+                      <AnimatePresence initial={false}>
+                        {expandedRuleLocalId === rule.localId && (
+                          <motion.div
+                            key={`${rule.localId}-content`}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.18 }}
+                            className="am-collapsible-body"
                           >
-                            {t('profile.register.removeRule')}
-                          </Tappable>
+                            <div className="flex items-center justify-end">
+                              {rules.length > 1 && (
+                                <Tappable
+                                  className="text-destructive text-sm font-medium bg-transparent border-none cursor-pointer"
+                                  onClick={() => {
+                                    setRules((prev) => prev.filter((item) => item.localId !== rule.localId));
+                                  }}
+                                >
+                                  {t('profile.register.removeRule')}
+                                </Tappable>
+                              )}
+                            </div>
+
+                            <div>
+                              <div className="mb-1">
+                                <Text type="caption1" color="secondary">
+                                  {t('profile.register.postType')}
+                                </Text>
+                              </div>
+                              <div className="am-form-select">
+                                <Select
+                                  options={postTypeOptions}
+                                  value={rule.postType}
+                                  onChange={(value) => updateRule(rule.localId, { postType: value })}
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="mb-1">
+                                <Text type="caption1" color="secondary">
+                                  {t('profile.register.rulePrice')}
+                                </Text>
+                              </div>
+                              <div className="am-form-field">
+                                <Input
+                                  value={rule.priceTon}
+                                  onChange={(value) => updateRule(rule.localId, { priceTon: value })}
+                                  placeholder={t('profile.register.pricePlaceholder')}
+                                  type="number"
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
                         )}
-                      </div>
-
-                      <div>
-                        <div className="mb-1">
-                          <Text type="caption1" color="secondary">
-                            {t('profile.register.postType')}
-                          </Text>
-                        </div>
-                        <div className="am-form-select">
-                          <Select
-                            options={postTypeOptions}
-                            value={rule.postType}
-                            onChange={(value) => updateRule(rule.localId, { postType: value })}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="mb-1">
-                          <Text type="caption1" color="secondary">
-                            {t('profile.register.rulePrice')}
-                          </Text>
-                        </div>
-                        <div className="am-form-field">
-                          <Input
-                            value={rule.priceTon}
-                            onChange={(value) => updateRule(rule.localId, { priceTon: value })}
-                            placeholder={t('profile.register.pricePlaceholder')}
-                            type="number"
-                          />
-                        </div>
-                      </div>
+                      </AnimatePresence>
                     </div>
                   </AppSurfaceCard>
                 ))}

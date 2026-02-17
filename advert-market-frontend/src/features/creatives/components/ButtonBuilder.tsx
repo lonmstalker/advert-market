@@ -1,5 +1,6 @@
 import { Input, Text } from '@telegram-tools/ui-kit';
 import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { Tappable } from '@/shared/ui';
@@ -24,6 +25,16 @@ function createEmptyButton(): InlineButton {
 export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow = 5 }: ButtonBuilderProps) {
   const { t } = useTranslation();
   const haptic = useHaptic();
+  const [expandedRow, setExpandedRow] = useState<number>(buttons.length > 0 ? 0 : -1);
+
+  useEffect(() => {
+    if (buttons.length === 0) {
+      setExpandedRow(-1);
+      return;
+    }
+    setExpandedRow((prev) => (prev >= 0 && prev < buttons.length ? prev : 0));
+  }, [buttons.length]);
+
   const validateUrl = (value: string): string | null => {
     const normalized = value.trim();
     if (!normalized) return null;
@@ -32,6 +43,7 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
 
   const addRow = () => {
     if (buttons.length >= maxRows) return;
+    setExpandedRow(buttons.length);
     onChange([...buttons, [createEmptyButton()]]);
   };
 
@@ -46,6 +58,7 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
       }
       return [...row, createEmptyButton()];
     });
+    setExpandedRow(rowIndex);
     onChange(next);
   };
 
@@ -87,10 +100,26 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
             transition={{ duration: 0.18 }}
             className="rounded-card border border-card-border bg-card-surface p-3"
           >
-            <div className="mb-2 flex items-center justify-between">
-              <Text type="caption1" color="secondary">
-                {t('creatives.form.rowLabel', { index: rowIndex + 1 })}
-              </Text>
+            <div className="am-collapsible-row-head">
+              <Tappable
+                data-testid={`creative-button-row-toggle-${rowIndex}`}
+                aria-expanded={expandedRow === rowIndex}
+                onClick={() => setExpandedRow(rowIndex)}
+                className="am-collapsible-trigger"
+              >
+                <div className="am-collapsible-trigger__copy">
+                  <Text type="caption1" color="secondary">
+                    {t('creatives.form.rowLabel', { index: rowIndex + 1 })}
+                  </Text>
+                </div>
+                <span
+                  aria-hidden="true"
+                  className="am-collapsible-trigger__chevron"
+                  data-expanded={expandedRow === rowIndex ? 'true' : 'false'}
+                >
+                  ˅
+                </span>
+              </Tappable>
               <Tappable
                 onClick={() => {
                   haptic.impactOccurred('light');
@@ -103,64 +132,77 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
               </Tappable>
             </div>
 
-            <div className="flex flex-col gap-2">
-              {row.map((button, buttonIndex) => (
-                <div key={button.id} className="rounded-row border border-separator bg-bg-base p-2">
-                  <div className="mb-1 flex items-center justify-between">
-                    <Text type="caption2" color="tertiary">
-                      {t('creatives.form.buttonLabel', { index: buttonIndex + 1 })}
-                    </Text>
-                    <Tappable
-                      onClick={() => {
-                        haptic.impactOccurred('light');
-                        removeButton(rowIndex, buttonIndex);
-                      }}
-                      className="flex h-6 w-6 items-center justify-center rounded-full border-0 bg-transparent text-destructive"
-                      aria-label={t('creatives.form.removeButton')}
-                    >
-                      <CrossIcon style={{ width: 12, height: 12 }} />
-                    </Tappable>
+            <AnimatePresence initial={false}>
+              {expandedRow === rowIndex && (
+                <motion.div
+                  key={row.map((button) => button.id).join('|')}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="am-collapsible-body"
+                >
+                  <div className="flex flex-col gap-2">
+                    {row.map((button, buttonIndex) => (
+                      <div key={button.id} className="rounded-row border border-separator bg-bg-base p-2">
+                        <div className="mb-1 flex items-center justify-between">
+                          <Text type="caption2" color="tertiary">
+                            {t('creatives.form.buttonLabel', { index: buttonIndex + 1 })}
+                          </Text>
+                          <Tappable
+                            onClick={() => {
+                              haptic.impactOccurred('light');
+                              removeButton(rowIndex, buttonIndex);
+                            }}
+                            className="flex h-6 w-6 items-center justify-center rounded-full border-0 bg-transparent text-destructive"
+                            aria-label={t('creatives.form.removeButton')}
+                          >
+                            <CrossIcon style={{ width: 12, height: 12 }} />
+                          </Tappable>
+                        </div>
+                        <div className="mb-2">
+                          <Input
+                            value={button.text}
+                            onChange={(value) => updateButton(rowIndex, buttonIndex, { text: value })}
+                            placeholder={t('creatives.form.buttonText')}
+                          />
+                        </div>
+                        <Input
+                          value={button.url ?? ''}
+                          onChange={(value) => updateButton(rowIndex, buttonIndex, { url: value })}
+                          placeholder="https://"
+                          type="url"
+                          validateOnBlur
+                          validator={validateUrl}
+                        />
+                        {button.url?.trim() && !buttonUrlSchema.safeParse(button.url.trim()).success && (
+                          <div className="mt-1">
+                            <Text type="caption1" color="danger">
+                              {t('creatives.form.linkInvalid')}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="mb-2">
-                    <Input
-                      value={button.text}
-                      onChange={(value) => updateButton(rowIndex, buttonIndex, { text: value })}
-                      placeholder={t('creatives.form.buttonText')}
-                    />
-                  </div>
-                  <Input
-                    value={button.url ?? ''}
-                    onChange={(value) => updateButton(rowIndex, buttonIndex, { url: value })}
-                    placeholder="https://"
-                    type="url"
-                    validateOnBlur
-                    validator={validateUrl}
-                  />
-                  {button.url?.trim() && !buttonUrlSchema.safeParse(button.url.trim()).success && (
-                    <div className="mt-1">
-                      <Text type="caption1" color="danger">
-                        {t('creatives.form.linkInvalid')}
-                      </Text>
+
+                  {row.length < maxButtonsPerRow && (
+                    <div className="mt-2">
+                      <Tappable
+                        onClick={() => {
+                          haptic.impactOccurred('light');
+                          addButton(rowIndex);
+                        }}
+                        className="flex w-full items-center justify-center gap-1 rounded-row border border-separator bg-bg-base px-3 py-2 text-sm text-fg-secondary"
+                      >
+                        <span aria-hidden="true">+</span>
+                        {t('creatives.form.addButton')}
+                      </Tappable>
                     </div>
                   )}
-                </div>
-              ))}
-            </div>
-
-            {row.length < maxButtonsPerRow && (
-              <div className="mt-2">
-                <Tappable
-                  onClick={() => {
-                    haptic.impactOccurred('light');
-                    addButton(rowIndex);
-                  }}
-                  className="flex w-full items-center justify-center gap-1 rounded-row border border-separator bg-bg-base px-3 py-2 text-sm text-fg-secondary"
-                >
-                  <span aria-hidden="true">+</span>
-                  {t('creatives.form.addButton')}
-                </Tappable>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ))}
       </AnimatePresence>

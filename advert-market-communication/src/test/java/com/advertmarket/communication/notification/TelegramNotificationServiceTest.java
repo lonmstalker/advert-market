@@ -19,9 +19,14 @@ import com.advertmarket.identity.api.dto.UserProfile;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.i18n.LocalizationService;
 import com.advertmarket.shared.model.UserId;
+import com.pengrad.telegrambot.response.BaseResponse;
+import com.pengrad.telegrambot.response.SendResponse;
+import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +42,12 @@ class TelegramNotificationServiceTest {
     private final TelegramNotificationService service =
             new TelegramNotificationService(
                     sender, i18n, userRepository);
+
+    @BeforeEach
+    void setUp() {
+        when(sender.send(anyLong(), anyString()))
+                .thenReturn(okResponse());
+    }
 
     @Test
     @DisplayName("Uses user language code when user profile exists")
@@ -121,7 +132,7 @@ class TelegramNotificationServiceTest {
     void send_handlesAllTypes() {
         for (var type : NotificationType.values()) {
             String key = "notification."
-                    + type.name().toLowerCase();
+                    + type.name().toLowerCase(Locale.ROOT);
             when(i18n.msg(eq(key), eq("en")))
                     .thenReturn(type.name());
         }
@@ -133,6 +144,22 @@ class TelegramNotificationServiceTest {
                     1L, type, Map.of());
             assertThat(service.send(request)).isTrue();
         }
+    }
+
+    @Test
+    @DisplayName("Returns false when Telegram API response is non-OK")
+    void send_returnsFalseWhenTelegramRejects() {
+        when(userRepository.findById(new UserId(1L)))
+                .thenReturn(Optional.empty());
+        when(i18n.msg(anyString(), eq("en")))
+                .thenReturn("template");
+        when(sender.send(anyLong(), anyString()))
+                .thenReturn(errorResponse(401, "Unauthorized"));
+
+        var request = new NotificationRequest(
+                1L, NotificationType.PUBLISHED, Map.of());
+
+        assertThat(service.send(request)).isFalse();
     }
 
     @Test
@@ -164,5 +191,43 @@ class TelegramNotificationServiceTest {
                 java.util.List.of("tech"),
                 null,
                 Instant.now());
+    }
+
+    private static SendResponse okResponse() {
+        return buildResponse(true, 0, null);
+    }
+
+    private static SendResponse errorResponse(
+            int errorCode,
+            String description) {
+        return buildResponse(false, errorCode, description);
+    }
+
+    private static SendResponse buildResponse(
+            boolean ok,
+            int errorCode,
+            String description) {
+        try {
+            var ctor = SendResponse.class.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            var response = ctor.newInstance();
+            setBaseResponseField(response, "ok", ok);
+            setBaseResponseField(response, "error_code", errorCode);
+            setBaseResponseField(response, "description", description);
+            return response;
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException(
+                    "Failed to construct SendResponse for test",
+                    exception);
+        }
+    }
+
+    private static void setBaseResponseField(
+            SendResponse response,
+            String fieldName,
+            Object value) throws ReflectiveOperationException {
+        Field field = BaseResponse.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(response, value);
     }
 }

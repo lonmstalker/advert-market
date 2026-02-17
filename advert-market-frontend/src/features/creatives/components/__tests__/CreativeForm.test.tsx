@@ -1,6 +1,6 @@
 import { act, createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, renderWithProviders, screen } from '@/test/test-utils';
+import { fireEvent, renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { TextEntityType } from '../../types/creative';
 import { CreativeForm } from '../CreativeForm';
 
@@ -68,5 +68,46 @@ describe('CreativeForm', () => {
     );
 
     expect(screen.getByText('Enter a valid URL starting with http:// or https://')).toBeInTheDocument();
+  });
+
+  it('keeps only one button row expanded at a time', async () => {
+    const textareaRef = createRef<HTMLTextAreaElement>();
+    const { user } = renderWithProviders(
+      <CreativeForm
+        title="Test"
+        onTitleChange={vi.fn()}
+        text="Hello world"
+        onTextChange={vi.fn()}
+        media={[]}
+        onMediaChange={vi.fn()}
+        buttons={[
+          [{ id: 'btn-1', text: 'Open', url: 'https://example.com/open' }],
+          [{ id: 'btn-2', text: 'Read', url: 'https://example.com/read' }],
+        ]}
+        onButtonsChange={vi.fn()}
+        toggleEntity={vi.fn()}
+        isActive={() => false}
+        disableWebPagePreview={false}
+        onDisableWebPagePreviewChange={vi.fn()}
+        textareaRef={textareaRef}
+      />,
+    );
+
+    const firstToggle = screen.getByTestId('creative-button-row-toggle-0');
+    const secondToggle = screen.getByTestId('creative-button-row-toggle-1');
+
+    expect(firstToggle).toHaveAttribute('aria-expanded', 'true');
+    expect(secondToggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByDisplayValue('Open')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Read')).not.toBeInTheDocument();
+
+    await user.click(secondToggle);
+
+    expect(firstToggle).toHaveAttribute('aria-expanded', 'false');
+    expect(secondToggle).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => {
+      expect(screen.queryByDisplayValue('Open')).not.toBeInTheDocument();
+      expect(screen.getByDisplayValue('Read')).toBeInTheDocument();
+    });
   });
 });

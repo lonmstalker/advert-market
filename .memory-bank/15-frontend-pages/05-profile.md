@@ -202,6 +202,12 @@ The bot `@AdMarketBot` must be added as admin to the channel. If not:
 | Channel not found | Inline error `t('profile.register.channelNotFound')` |
 | The channel is already registered | Toast `t('profile.register.alreadyRegistered')` |
 
+### Channel edit UX compact mode (`/profile/channels/:channelId/edit`)
+
+- Pricing rules are rendered as single-open accordions to reduce vertical scrolling in Mini App.
+- Only one rule is expanded at a time; selecting another rule collapses the previous one.
+- Newly added pricing rule opens automatically so the user can edit it immediately.
+
 ---
 
 ## 5.3 Language & Currency

@@ -84,21 +84,21 @@ class StartCommandTest {
     @DisplayName("Resolves channel deep link route")
     void resolveRoute_channel() {
         assertThat(StartCommand.resolveRoute("channel_xyz"))
-                .isEqualTo("/channels/xyz");
+                .isEqualTo("/catalog/channels/xyz");
     }
 
     @Test
     @DisplayName("Resolves dispute deep link route")
     void resolveRoute_dispute() {
         assertThat(StartCommand.resolveRoute("dispute_99"))
-                .isEqualTo("/disputes/99");
+                .isEqualTo("/deals/99");
     }
 
     @Test
     @DisplayName("Resolves deposit deep link route")
     void resolveRoute_deposit() {
         assertThat(StartCommand.resolveRoute("deposit_42"))
-                .isEqualTo("/deposit/42");
+                .isEqualTo("/deals/42");
     }
 
     @Test

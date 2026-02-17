@@ -127,6 +127,7 @@ Split via `SegmentControl`: `t('creatives.editor.edit')` / `t('creatives.editor.
   - Button `t('creatives.editor.addMedia')` (`link`) — max 10
   - V2: file upload with drag & drop
 - **Group `t('creatives.editor.buttons')`** — inline keyboard builder:
+  - Rows are rendered in single-open accordion mode to keep the editor compact on mobile.
   - Each row: Input `t('creatives.editor.buttonText')` (50 chars) + Input `t('creatives.editor.buttonUrl')` + delete (×)
   - Button `t('creatives.editor.addButton')` (`link`) — max 5
 - **Toggle `t('creatives.editor.disablePreview')`** — web page preview on/off

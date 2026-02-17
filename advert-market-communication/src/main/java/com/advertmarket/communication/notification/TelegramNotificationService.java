@@ -7,6 +7,7 @@ import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.i18n.LocalizationService;
 import com.advertmarket.shared.model.UserId;
+import com.pengrad.telegrambot.response.SendResponse;
 import java.util.Locale;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -39,8 +40,17 @@ public class TelegramNotificationService
             String template = i18n.msg(key, locale);
             String rendered = substituteVariables(
                     template, request.variables());
-            sender.send(request.recipientUserId(), rendered);
-            return true;
+            SendResponse response =
+                    sender.send(request.recipientUserId(), rendered);
+            if (response.isOk()) {
+                return true;
+            }
+            log.warn("Telegram API rejected notification type={} to user={} code={} description={}",
+                    request.type(),
+                    request.recipientUserId(),
+                    response.errorCode(),
+                    response.description());
+            return false;
         } catch (Exception e) {
             log.error("Failed to send notification type={} "
                     + "to user={}", request.type(),

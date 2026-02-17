@@ -60,20 +60,28 @@ public class TelegramSender {
     private final TelegramRetryProperties retryProperties;
     private final Executor botUpdateExecutor;
 
-    /** Sends a MarkdownV2 text message to the given chat. */
-    public void send(long chatId, @NonNull String text) {
+    /**
+     * Sends a MarkdownV2 text message to the given chat.
+     *
+     * @return raw Telegram API response
+     */
+    public SendResponse send(long chatId, @NonNull String text) {
         var request = new SendMessage(chatId, text)
                 .parseMode(ParseMode.MarkdownV2);
-        execute(request, chatId);
+        return execute(request, chatId);
     }
 
-    /** Sends a MarkdownV2 message with an inline keyboard. */
-    public void send(long chatId, @NonNull String text,
+    /**
+     * Sends a MarkdownV2 message with an inline keyboard.
+     *
+     * @return raw Telegram API response
+     */
+    public SendResponse send(long chatId, @NonNull String text,
             @NonNull InlineKeyboardMarkup keyboard) {
         var request = new SendMessage(chatId, text)
                 .parseMode(ParseMode.MarkdownV2)
                 .replyMarkup(keyboard);
-        execute(request, chatId);
+        return execute(request, chatId);
     }
 
     /** Answers a callback query without text. */

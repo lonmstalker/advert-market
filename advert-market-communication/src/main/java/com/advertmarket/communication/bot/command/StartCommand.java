@@ -33,9 +33,11 @@ public class StartCommand implements BotCommand {
     private static final Map<String, String> DEEP_LINK_ROUTES =
             Map.of(
                     "deal", "/deals/",
-                    "channel", "/channels/",
-                    "dispute", "/disputes/",
-                    "deposit", "/deposit/"
+                    "channel", "/catalog/channels/",
+                    // Dedicated dispute/deposit pages are not implemented in SPA routes yet.
+                    // Route both to deal details by id.
+                    "dispute", "/deals/",
+                    "deposit", "/deals/"
             );
 
     private final String webAppUrl;
