@@ -308,7 +308,8 @@ if retry 3 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "test -d '${DEPLOY_DIR}/.git'"; the
   retry 5 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; cd '${DEPLOY_DIR}'; git fetch origin; git checkout main; git pull --rebase --autostash origin main"
 else
   echo "==> Remote is NOT a git repo: syncing deploy infra (no .env, no nginx state)"
-  retry 5 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/scripts'"
+  retry 5 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; mkdir -p '${DEPLOY_DIR}/deploy/scripts' '${DEPLOY_DIR}/deploy/nginx'"
+  retry 5 2 "${SSH_CMD[@]}" "${DEPLOY_SSH}" "set -euo pipefail; if [[ -d '${DEPLOY_DIR}/deploy/nginx/canary-api-split.conf' ]]; then rm -rf '${DEPLOY_DIR}/deploy/nginx/canary-api-split.conf'; fi"
 
   retry 5 2 rsync -az -e "${RSYNC_SSH}" "Dockerfile" "${DEPLOY_SSH}:${DEPLOY_DIR}/Dockerfile"
   if [[ -f .dockerignore ]]; then
@@ -323,6 +324,15 @@ else
   if [[ -f "deploy/docker-compose.server.override.yml" ]]; then
     retry 5 2 rsync -az -e "${RSYNC_SSH}" "deploy/docker-compose.server.override.yml" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/"
   fi
+  # Use --inplace for bind-mounted nginx config files so running containers
+  # observe updates without requiring full recreation.
+  retry 5 2 rsync -az --inplace -e "${RSYNC_SSH}" \
+    "deploy/nginx/nginx.conf" \
+    "deploy/nginx/canary-api.conf" \
+    "deploy/nginx/canary-api-split.conf" \
+    "deploy/nginx/upstream-blue.conf" \
+    "deploy/nginx/upstream-green.conf" \
+    "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/nginx/"
   retry 5 2 rsync -az -e "${RSYNC_SSH}" "deploy/scripts/" "${DEPLOY_SSH}:${DEPLOY_DIR}/deploy/scripts/"
 fi
 

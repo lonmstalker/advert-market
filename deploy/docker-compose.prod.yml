@@ -96,6 +96,7 @@ services:
           sleep 1
         done
         mc mb --ignore-existing local/${CREATIVES_STORAGE_BUCKET:-creative-media}
+        mc anonymous set download local/${CREATIVES_STORAGE_BUCKET:-creative-media}
 
   # ── Application: Blue-Green ───────────────────────────
   app-blue:

@@ -43,7 +43,7 @@ export const mediaItemSchema = z.object({
 export const inlineButtonSchema = z.object({
   id: z.string().min(1),
   text: z.string().min(1).max(50),
-  url: z.string().url().optional(),
+  url: z.string().max(2048).optional(),
 });
 
 export const keyboardRowSchema = z.array(inlineButtonSchema).min(1).max(5);

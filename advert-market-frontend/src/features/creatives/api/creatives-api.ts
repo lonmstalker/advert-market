@@ -23,7 +23,7 @@ const apiTextEntitySchema = z.object({
 const apiInlineButtonSchema = z.object({
   id: z.string().nullable().optional(),
   text: z.string().min(1).max(50),
-  url: z.string().url().nullable().optional(),
+  url: z.string().max(2048).nullable().optional(),
 });
 
 const apiMediaAssetSchema = z.object({

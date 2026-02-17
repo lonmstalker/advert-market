@@ -1,5 +1,9 @@
+import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
+import { server } from '@/test/mocks/server';
 import { createCreative, flattenButtons, nonEmptyKeyboardRows, uploadCreativeMedia } from './creatives-api';
+
+const API_BASE = '/api/v1';
 
 describe('creatives-api helpers', () => {
   it('normalizes keyboard rows and drops empty/invalid buttons', () => {
@@ -52,6 +56,41 @@ describe('creatives-api helpers', () => {
       text: 'Open',
       url: 'https://example.com',
     });
+  });
+
+  it('accepts backend keyboard button url as plain string (non-URL)', async () => {
+    server.use(
+      http.post(`${API_BASE}/creatives`, () => {
+        return HttpResponse.json(
+          {
+            id: 'creative-non-url',
+            title: 'Template',
+            draft: {
+              text: 'Post text',
+              entities: [],
+              media: [],
+              keyboardRows: [[{ id: 'b1', text: 'Open', url: 'Тест' }]],
+              disableWebPagePreview: false,
+            },
+            version: 1,
+            createdAt: '2026-02-17T09:02:27.72319Z',
+            updatedAt: '2026-02-17T09:02:27.72319Z',
+          },
+          { status: 201 },
+        );
+      }),
+    );
+
+    const created = await createCreative({
+      title: 'Template',
+      text: 'Post text',
+      entities: [],
+      media: [],
+      buttons: [[{ id: 'b1', text: 'Open', url: 'https://example.com' }]],
+      disableWebPagePreview: false,
+    });
+
+    expect(created.draft.buttons[0]?.[0]?.url).toBe('Тест');
   });
 
   it('uploads media through /creatives/media and returns canonical media asset', async () => {
