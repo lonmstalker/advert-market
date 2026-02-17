@@ -104,6 +104,7 @@ Server owns the action -> status mapping matrix.
 
 - Deal creation performs live channel sync, but `RATE_LIMIT_EXCEEDED` no longer blocks the request.
 - When live sync is rate-limited, runtime falls back to cached channel state in DB.
+- Channel sync transaction policy is `noRollbackFor = DomainException`, so caught sync errors do not mark deal creation transaction as rollback-only.
 - `creativeBrief` accepts plain text from Mini App and is normalized into JSON before persistence to `deals.creative_brief` (`JSONB`).
 
 ## Related Documents
