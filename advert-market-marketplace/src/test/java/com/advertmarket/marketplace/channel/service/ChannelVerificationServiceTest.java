@@ -2,7 +2,6 @@ package com.advertmarket.marketplace.channel.service;
 
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_INSUFFICIENT_RIGHTS;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
-import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
 import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
@@ -17,6 +16,7 @@ import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
 import com.advertmarket.shared.exception.DomainException;
 import java.time.Duration;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,21 +58,19 @@ class ChannelVerificationServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw CHANNEL_BOT_NOT_MEMBER when bot is left")
-    void shouldRejectBotNotMember() {
+    @DisplayName("Should throw CHANNEL_BOT_NOT_ADMIN when bot is absent in admin list")
+    void shouldRejectBotNotAdminWhenBotMissingInAdmins() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
-        when(telegramChannel.getChatMember(CHANNEL_ID, BOT_ID))
-                .thenReturn(memberInfo(BOT_ID, ChatMemberStatus.LEFT));
-        when(telegramChannel.getChatMember(CHANNEL_ID, USER_ID))
-                .thenReturn(adminInfo(USER_ID));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(adminInfo(USER_ID)));
         when(telegramChannel.getChatMemberCount(CHANNEL_ID))
                 .thenReturn(1000);
 
         assertThatThrownBy(() -> service.verify(USERNAME, USER_ID))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
-                .isEqualTo(CHANNEL_BOT_NOT_MEMBER);
+                .isEqualTo(CHANNEL_BOT_NOT_ADMIN);
     }
 
     @Test
@@ -80,10 +78,10 @@ class ChannelVerificationServiceTest {
     void shouldRejectBotNotAdmin() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
-        when(telegramChannel.getChatMember(CHANNEL_ID, BOT_ID))
-                .thenReturn(memberInfo(BOT_ID, ChatMemberStatus.MEMBER));
-        when(telegramChannel.getChatMember(CHANNEL_ID, USER_ID))
-                .thenReturn(adminInfo(USER_ID));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(
+                        memberInfo(BOT_ID, ChatMemberStatus.MEMBER),
+                        adminInfo(USER_ID)));
         when(telegramChannel.getChatMemberCount(CHANNEL_ID))
                 .thenReturn(1000);
 
@@ -98,12 +96,12 @@ class ChannelVerificationServiceTest {
     void shouldRejectBotInsufficientRights() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
-        when(telegramChannel.getChatMember(CHANNEL_ID, BOT_ID))
-                .thenReturn(new ChatMemberInfo(BOT_ID,
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(
+                        new ChatMemberInfo(BOT_ID,
                         ChatMemberStatus.ADMINISTRATOR,
-                        false, false, false, true));
-        when(telegramChannel.getChatMember(CHANNEL_ID, USER_ID))
-                .thenReturn(adminInfo(USER_ID));
+                        false, false, false, true),
+                        adminInfo(USER_ID)));
         when(telegramChannel.getChatMemberCount(CHANNEL_ID))
                 .thenReturn(1000);
 
@@ -118,10 +116,8 @@ class ChannelVerificationServiceTest {
     void shouldRejectUserNotAdmin() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
-        when(telegramChannel.getChatMember(CHANNEL_ID, BOT_ID))
-                .thenReturn(botAdmin());
-        when(telegramChannel.getChatMember(CHANNEL_ID, USER_ID))
-                .thenReturn(memberInfo(USER_ID, ChatMemberStatus.MEMBER));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(botAdmin()));
         when(telegramChannel.getChatMemberCount(CHANNEL_ID))
                 .thenReturn(1000);
 
@@ -136,10 +132,8 @@ class ChannelVerificationServiceTest {
     void shouldVerifySuccessfully() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
-        when(telegramChannel.getChatMember(CHANNEL_ID, BOT_ID))
-                .thenReturn(botAdmin());
-        when(telegramChannel.getChatMember(CHANNEL_ID, USER_ID))
-                .thenReturn(adminInfo(USER_ID));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(botAdmin(), adminInfo(USER_ID)));
         when(telegramChannel.getChatMemberCount(CHANNEL_ID))
                 .thenReturn(5000);
 
@@ -162,10 +156,8 @@ class ChannelVerificationServiceTest {
     void shouldPropagateDomainExceptionFromTelegramPort() {
         when(telegramChannel.getChatByUsername(USERNAME))
                 .thenReturn(chatInfo("channel"));
-        when(telegramChannel.getChatMember(CHANNEL_ID, BOT_ID))
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
                 .thenThrow(new DomainException(SERVICE_UNAVAILABLE, "boom"));
-        when(telegramChannel.getChatMember(CHANNEL_ID, USER_ID))
-                .thenReturn(adminInfo(USER_ID));
         when(telegramChannel.getChatMemberCount(CHANNEL_ID))
                 .thenReturn(1000);
 

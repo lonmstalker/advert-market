@@ -1,6 +1,7 @@
 package com.advertmarket.communication.channel;
 
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
+import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.RATE_LIMIT_EXCEEDED;
 import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
@@ -24,6 +25,7 @@ import com.pengrad.telegrambot.request.GetChatAdministrators;
 import com.pengrad.telegrambot.request.GetChatMember;
 import com.pengrad.telegrambot.request.GetChatMemberCount;
 import com.pengrad.telegrambot.response.BaseResponse;
+import java.util.Locale;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -191,7 +193,20 @@ public class TelegramChannelService implements TelegramChannelPort {
 
     private static void mapTelegramError(int errorCode,
             String description, long channelId) {
+        String normalizedDescription = description == null
+                ? ""
+                : description.toLowerCase(Locale.ROOT);
         if (errorCode == HttpStatus.BAD_REQUEST.value()) {
+            if (normalizedDescription.contains(
+                    "member list is inaccessible")
+                    || normalizedDescription.contains(
+                    "chat_admin_required")
+                    || normalizedDescription.contains(
+                    "administrator rights required")) {
+                throw new DomainException(CHANNEL_BOT_NOT_ADMIN,
+                        "Bot is not an admin of channel "
+                                + channelId);
+            }
             throw new DomainException(CHANNEL_NOT_FOUND,
                     "Channel not found: " + channelId);
         }

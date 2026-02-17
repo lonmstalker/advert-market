@@ -119,6 +119,25 @@ class TelegramChannelServiceTest {
         }
 
         @Test
+        @DisplayName("Throws CHANNEL_BOT_NOT_ADMIN on inaccessible member list")
+        void throwsBotNotAdminOnInaccessibleMemberList() {
+            when(cache.getChatInfo(123L))
+                    .thenReturn(Optional.empty());
+            var response = buildErrorResponse(
+                    GetChatResponse.class, 400,
+                    "Bad Request: member list is inaccessible");
+            when(sender.execute(any(GetChat.class)))
+                    .thenReturn(response);
+
+            assertThatThrownBy(() -> service.getChat(123L))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(
+                            ((DomainException) ex).getErrorCode())
+                            .isEqualTo(
+                                    ErrorCodes.CHANNEL_BOT_NOT_ADMIN));
+        }
+
+        @Test
         @DisplayName("Throws CHANNEL_BOT_NOT_MEMBER on 403 error")
         void throwsBotNotMemberOn403() {
             when(cache.getChatInfo(123L))

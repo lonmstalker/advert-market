@@ -2,7 +2,6 @@ package com.advertmarket.marketplace.channel.service;
 
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_INSUFFICIENT_RIGHTS;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
-import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_MEMBER;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
 
@@ -14,6 +13,7 @@ import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
 import com.advertmarket.marketplace.channel.mapper.ChannelVerifyResponseFactory;
 import com.advertmarket.shared.exception.DomainException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -90,12 +90,8 @@ public class ChannelVerificationService {
         long botId = botProperties.botUserId();
 
         long timeoutMs = botProperties.verificationTimeout().toMillis();
-        var botMemberFuture = CompletableFuture.supplyAsync(
-                () -> telegramChannel.getChatMember(channelId, botId),
-                blockingIoExecutor).orTimeout(timeoutMs,
-                TimeUnit.MILLISECONDS);
-        var userMemberFuture = CompletableFuture.supplyAsync(
-                () -> telegramChannel.getChatMember(channelId, userId),
+        var adminsFuture = CompletableFuture.supplyAsync(
+                () -> telegramChannel.getChatAdministrators(channelId),
                 blockingIoExecutor).orTimeout(timeoutMs,
                 TimeUnit.MILLISECONDS);
         var memberCountFuture = CompletableFuture.supplyAsync(
@@ -105,14 +101,21 @@ public class ChannelVerificationService {
 
         try {
             CompletableFuture.allOf(
-                    botMemberFuture, userMemberFuture, memberCountFuture
+                    adminsFuture, memberCountFuture
             ).join();
         } catch (CompletionException e) {
             throw unwrapAsyncFailure(channelId, e);
         }
 
-        var botMember = botMemberFuture.join();
-        var userMember = userMemberFuture.join();
+        var admins = adminsFuture.join();
+        var botMember = findAdminByUserId(admins, botId)
+                .orElseThrow(() -> new DomainException(
+                        CHANNEL_BOT_NOT_ADMIN,
+                        "Bot is not an admin of the channel"));
+        var userMember = findAdminByUserId(admins, userId)
+                .orElseThrow(() -> new DomainException(
+                        CHANNEL_USER_NOT_ADMIN,
+                        "User is not an admin of the channel"));
         int memberCount = memberCountFuture.join();
 
         validateBot(botMember);
@@ -152,12 +155,14 @@ public class ChannelVerificationService {
                 cause);
     }
 
+    private static java.util.Optional<ChatMemberInfo> findAdminByUserId(
+            List<ChatMemberInfo> admins, long userId) {
+        return admins.stream()
+                .filter(admin -> admin.userId() == userId)
+                .findFirst();
+    }
+
     private static void validateBot(@NonNull ChatMemberInfo bot) {
-        if (bot.status() == ChatMemberStatus.LEFT
-                || bot.status() == ChatMemberStatus.KICKED) {
-            throw new DomainException(CHANNEL_BOT_NOT_MEMBER,
-                    "Bot is not a member of the channel");
-        }
         if (bot.status() != ChatMemberStatus.CREATOR
                 && bot.status() != ChatMemberStatus.ADMINISTRATOR) {
             throw new DomainException(CHANNEL_BOT_NOT_ADMIN,
