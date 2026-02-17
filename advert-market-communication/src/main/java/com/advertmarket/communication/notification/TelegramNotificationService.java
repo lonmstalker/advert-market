@@ -7,7 +7,7 @@ import com.advertmarket.communication.bot.internal.sender.TelegramSender;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.i18n.LocalizationService;
 import com.advertmarket.shared.model.UserId;
-import com.pengrad.telegrambot.response.SendResponse;
+import com.pengrad.telegrambot.response.BaseResponse;
 import java.util.Locale;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class TelegramNotificationService
             String template = i18n.msg(key, locale);
             String rendered = substituteVariables(
                     template, request.variables());
-            SendResponse response =
+            BaseResponse response =
                     sender.send(request.recipientUserId(), rendered);
             if (response.isOk()) {
                 return true;

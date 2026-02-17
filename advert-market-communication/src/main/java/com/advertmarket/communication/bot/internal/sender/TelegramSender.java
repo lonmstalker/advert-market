@@ -65,7 +65,7 @@ public class TelegramSender {
      *
      * @return raw Telegram API response
      */
-    public SendResponse send(long chatId, @NonNull String text) {
+    public BaseResponse send(long chatId, @NonNull String text) {
         var request = new SendMessage(chatId, text)
                 .parseMode(ParseMode.MarkdownV2);
         return execute(request, chatId);
@@ -76,7 +76,7 @@ public class TelegramSender {
      *
      * @return raw Telegram API response
      */
-    public SendResponse send(long chatId, @NonNull String text,
+    public BaseResponse send(long chatId, @NonNull String text,
             @NonNull InlineKeyboardMarkup keyboard) {
         var request = new SendMessage(chatId, text)
                 .parseMode(ParseMode.MarkdownV2)
