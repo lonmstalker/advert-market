@@ -167,7 +167,7 @@ function useChannelRights(channelId: number) {
 ### Deep link format
 
 ```
-t.me/AdvertMarketBot/app?startapp={type}_{id}
+t.me/adv_markt_bot/app?startapp={type}_{id}
 ```
 
 | Type | Example | Routing |

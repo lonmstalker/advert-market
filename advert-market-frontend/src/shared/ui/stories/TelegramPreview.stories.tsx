@@ -22,7 +22,7 @@ const media: MediaItem[] = [
 
 const buttons: InlineButton[] = [
   { text: 'Открыть канал', url: 'https://t.me/cryptonewsdaily' },
-  { text: 'Создать сделку', url: 'https://t.me/advert_market_bot/app' },
+  { text: 'Создать сделку', url: 'https://t.me/adv_markt_bot/app' },
 ];
 
 const meta: Meta = {

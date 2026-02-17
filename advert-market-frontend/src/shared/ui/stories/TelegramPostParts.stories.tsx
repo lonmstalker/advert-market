@@ -14,7 +14,7 @@ const entities: TextEntity[] = [
 
 const buttons: InlineButton[] = [
   { id: 'btn-1', text: 'Open channel', url: 'https://t.me/cryptonewsdaily' },
-  { id: 'btn-2', text: 'Create deal', url: 'https://t.me/advert_market_bot/app' },
+  { id: 'btn-2', text: 'Create deal', url: 'https://t.me/adv_markt_bot/app' },
   { id: 'btn-3', text: 'Share brief', url: 'https://admarket.example/deals/42' },
 ];
 

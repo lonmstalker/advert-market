@@ -29,7 +29,7 @@ import { parseTonToNano } from '@/shared/lib/ton-format';
 import { AppPageShell, AppSectionHeader, AppSurfaceCard, Tappable, TextareaField } from '@/shared/ui';
 import { fadeIn, pressScale, slideFromLeft, slideFromRight } from '@/shared/ui/animations';
 
-const BOT_USERNAME = '@AdvertMarketBot';
+const BOT_USERNAME = '@adv_markt_bot';
 
 type PricingRuleDraft = {
   localId: string;

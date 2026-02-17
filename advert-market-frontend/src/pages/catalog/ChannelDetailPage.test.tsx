@@ -223,7 +223,7 @@ describe('ChannelDetailPage', () => {
       const { user } = renderPage(1);
       const shareBtn = await screen.findByRole('button', { name: 'Share' });
       await user.click(shareBtn);
-      expect(mockShareUrlIfAvailable).toHaveBeenCalledWith('https://t.me/AdvertMarketBot/app?startapp=channel_1');
+      expect(mockShareUrlIfAvailable).toHaveBeenCalledWith('https://t.me/adv_markt_bot/app?startapp=channel_1');
     });
 
     it('shows channel age', async () => {

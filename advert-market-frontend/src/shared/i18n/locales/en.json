@@ -656,7 +656,7 @@
       "title": "Add Channel",
       "channelLink": "Channel username, link, or ID",
       "channelPlaceholder": "@username / t.me/c/... / -100...",
-      "addBotInstruction": "Add @AdvertMarketBot as an admin to your channel",
+      "addBotInstruction": "Add @adv_markt_bot as an admin to your channel",
       "autosyncHint": "After bot promotion the channel is synced automatically. \"Verify\" is a fallback sync trigger.",
       "copyBot": "Copy",
       "openBot": "Open bot",

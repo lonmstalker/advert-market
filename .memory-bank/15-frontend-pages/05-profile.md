@@ -124,9 +124,9 @@ GET /api/v1/channels/topics # Topics (enum)
 **Step 1: Channel Check**
 - **Input `t('profile.register.channelLink')`** — format `@username` or `t.me/...`
 - Button `t('profile.register.verify')` (`secondary`)
-- Instructions: `t('profile.register.addBotInstruction')` — "Add @AdvertMarketBot as a channel administrator"
-- **Copy button** next to "@AdvertMarketBot": copy icon → `navigator.clipboard.writeText('@AdvertMarketBot')` → toast `t('common.copied')`
-- **Button `t('profile.register.openBot')`** — `openTelegramLink('https://t.me/AdvertMarketBot')`
+- Instructions: `t('profile.register.addBotInstruction')` — "Add @adv_markt_bot as a channel administrator"
+- **Copy button** next to "@adv_markt_bot": copy icon → `navigator.clipboard.writeText('@adv_markt_bot')` → toast `t('common.copied')`
+- **Button `t('profile.register.openBot')`** — `openTelegramLink('https://t.me/adv_markt_bot')`
 
 **Step 2: Setup (after verification)**
 - Channel name - read-only, from API

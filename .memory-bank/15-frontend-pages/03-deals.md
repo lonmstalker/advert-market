@@ -123,7 +123,7 @@ POST /api/v1/deals/:dealId/transition
 
 - **Header row:**
   - **Status-badge** – large, at the top
-  - **ShareButton** — deep link `t.me/AdvertMarketBot/app?startapp=deal_{dealId_short}` (see 6.4)
+  - **ShareButton** — deep link `t.me/adv_markt_bot/app?startapp=deal_{dealId_short}` (see 6.4)
 - **Channel card** — compact, tap → `/catalog/channels/:channelId`
 - **Amount** — `title2`, bold, `tabular-nums`, `<Amount>`
 - **Action block** - depends on the role and status (matrix below)
@@ -318,8 +318,8 @@ POST /api/v1/deals/:dealId/creative # Sending creative
 Flow of sending a post through a bot:
 
 1. User presses `t('deals.creative.importFromTelegram')`
-2. Mini App shows instructions: `t('deals.creative.importInstruction')` - "Forward the post to the bot @AdvertMarketBot"
-3. Button `t('deals.creative.openBot')` → `openTelegramLink('https://t.me/AdvertMarketBot')`
+2. Mini App shows instructions: `t('deals.creative.importInstruction')` - "Forward the post to the bot @adv_markt_bot"
+3. Button `t('deals.creative.openBot')` → `openTelegramLink('https://t.me/adv_markt_bot')`
 4. The user forwards the post to the bot
 5. The bot parses the post (text, media, buttons) → saves by `dealId`
 6. Mini App polling `GET /api/v1/deals/:dealId/creative/import` (every 3s, timeout 60s)

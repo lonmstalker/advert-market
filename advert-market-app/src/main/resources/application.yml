@@ -95,7 +95,7 @@ app:
         key-prefix: ${CREATIVES_STORAGE_KEY_PREFIX:creatives}
   telegram:
     bot-token: ${TELEGRAM_BOT_TOKEN:}
-    bot-username: ${TELEGRAM_BOT_USERNAME:AdvertMarketBot}
+    bot-username: ${TELEGRAM_BOT_USERNAME:adv_markt_bot}
     webhook:
       url: ${TELEGRAM_WEBHOOK_URL:}
       secret: ${TELEGRAM_WEBHOOK_SECRET:}

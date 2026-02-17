@@ -91,7 +91,7 @@ const TON_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
 <TonConnectUIProvider
   manifestUrl={TON_MANIFEST_URL}
   actionsConfiguration={{
-    twaReturnUrl: 'https://t.me/AdvertMarketBot/app',
+    twaReturnUrl: 'https://t.me/adv_markt_bot/app',
   }}
 >
 ```

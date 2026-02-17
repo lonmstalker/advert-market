@@ -199,7 +199,7 @@ GET /api/v1/channels/:channelId/team # Check: user role (backend returns List<Te
 |----------|-----------|
 | "Create deal" | → `/deals/new?channelId=:channelId` |
 | "Edit" | → `/profile/channels/:channelId/edit` (owner only) |
-| ShareButton | Deep link `t.me/AdvertMarketBot/app?startapp=channel_{channelId}` → `switchInlineQuery()` or clipboard + toast |
+| ShareButton | Deep link `t.me/adv_markt_bot/app?startapp=channel_{channelId}` → `switchInlineQuery()` or clipboard + toast |
 | BackButton | → `/catalog` |
 
 ### Role Definition

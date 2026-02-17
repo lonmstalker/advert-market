@@ -228,7 +228,7 @@ Inline keyboard callbacks follow pattern: `{action}:{entity_id}`:
 
 ### Overview
 
-Telegram Mini App deep links: `https://t.me/AdvertMarketBot/app?startapp=<payload>`. The `startapp` parameter is passed to the Mini App via `Telegram.WebApp.initDataUnsafe.start_param`.
+Telegram Mini App deep links: `https://t.me/adv_markt_bot/app?startapp=<payload>`. The `startapp` parameter is passed to the Mini App via `Telegram.WebApp.initDataUnsafe.start_param`.
 
 ### Link Format
 

@@ -2,7 +2,7 @@ import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { Outlet } from 'react-router';
 
 const TON_MANIFEST_URL = import.meta.env.VITE_TON_MANIFEST_URL ?? `${window.location.origin}/tonconnect-manifest.json`;
-const TON_TWA_RETURN_URL = import.meta.env.VITE_TWA_RETURN_URL ?? 'https://t.me/AdvertMarketBot/app';
+const TON_TWA_RETURN_URL = import.meta.env.VITE_TWA_RETURN_URL ?? 'https://t.me/adv_markt_bot/app';
 
 export function TonConnectProvider() {
   return (

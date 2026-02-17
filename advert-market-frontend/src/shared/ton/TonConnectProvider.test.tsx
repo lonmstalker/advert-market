@@ -43,14 +43,14 @@ describe('TonConnectProvider', () => {
 
     expect(captured.manifestUrl).toBe(`${window.location.origin}/tonconnect-manifest.json`);
     expect(captured.actionsConfiguration).toEqual({
-      twaReturnUrl: 'https://t.me/AdvertMarketBot/app',
+      twaReturnUrl: 'https://t.me/adv_markt_bot/app',
     });
     expect(screen.getByTestId('mock-outlet')).toBeInTheDocument();
   });
 
   it('uses env overrides for manifest and TWA return URL', async () => {
     vi.stubEnv('VITE_TON_MANIFEST_URL', 'https://teleinsight.in/tonconnect-manifest.json');
-    vi.stubEnv('VITE_TWA_RETURN_URL', 'https://t.me/TeleInsightBot/app');
+    vi.stubEnv('VITE_TWA_RETURN_URL', 'https://t.me/adv_markt_bot/app');
 
     const { TonConnectProvider } = await import('./TonConnectProvider');
 
@@ -58,7 +58,7 @@ describe('TonConnectProvider', () => {
 
     expect(captured.manifestUrl).toBe('https://teleinsight.in/tonconnect-manifest.json');
     expect(captured.actionsConfiguration).toEqual({
-      twaReturnUrl: 'https://t.me/TeleInsightBot/app',
+      twaReturnUrl: 'https://t.me/adv_markt_bot/app',
     });
   });
 });

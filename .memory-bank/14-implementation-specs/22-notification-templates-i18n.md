@@ -90,7 +90,7 @@ notification.RECONCILIATION_ALERT=<b>ALERT: Reconciliation discrepancy</b>\nType
     "outcome": "REFUND"
   },
   "buttons": [
-    {"text": "Open deal", "url": "https://t.me/bot?startapp=deal_550e8400"}
+    {"text": "Open deal", "url": "https://t.me/adv_markt_bot/app?startapp=deal_550e8400"}
   ]
 }
 ```

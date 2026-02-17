@@ -69,7 +69,7 @@ export default function ChannelDetailPage() {
   const telegramLink = channel.username ? `https://t.me/${channel.username}` : (channel.inviteLink ?? null);
 
   const handleShare = () => {
-    const link = `https://t.me/AdvertMarketBot/app?startapp=channel_${channel.id}`;
+    const link = `https://t.me/adv_markt_bot/app?startapp=channel_${channel.id}`;
     const [shared] = shareURL.ifAvailable(link);
     if (shared) {
       haptic.impactOccurred('light');
