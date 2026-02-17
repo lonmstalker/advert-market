@@ -97,12 +97,7 @@ public class DealWorkflowEngine {
                         "offer-pending-owner");
             }
             case NEGOTIATING -> notifyCounterparty(envelope, deal);
-            case ACCEPTED -> notifyOne(
-                    envelope,
-                    deal,
-                    deal.advertiserId(),
-                    NotificationType.OFFER_ACCEPTED,
-                    "accepted-advertiser");
+            case ACCEPTED -> onAccepted(envelope, deal);
             case AWAITING_PAYMENT -> onAwaitingPayment(envelope, deal);
             case FUNDED -> notifyOne(
                     envelope,
@@ -171,6 +166,30 @@ public class DealWorkflowEngine {
                         depositAddress,
                         deal.amountNano(),
                         deal.advertiserId()));
+    }
+
+    private void onAccepted(
+            EventEnvelope<DealStateChangedEvent> envelope,
+            DealRecord deal) {
+        notifyOne(
+                envelope,
+                deal,
+                deal.advertiserId(),
+                NotificationType.OFFER_ACCEPTED,
+                "accepted-advertiser");
+
+        if (deal.status() != DealStatus.ACCEPTED) {
+            return;
+        }
+
+        dealTransitionService.transition(new DealTransitionCommand(
+                DealId.of(deal.id()),
+                DealStatus.AWAITING_PAYMENT,
+                null,
+                ActorType.SYSTEM,
+                "Auto transition after acceptance",
+                null,
+                null));
     }
 
     private void onPublished(

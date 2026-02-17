@@ -238,9 +238,16 @@ class DealWorkflowKafkaE2EIntegrationTest {
     @DisplayName("Deposit happy path: AWAITING_PAYMENT -> FUNDED with persisted tx hash")
     void depositHappyPath_transitionsToFunded() {
         long amountNano = 50_000_000_000L;
-        UUID dealId = insertDeal(DealStatus.ACCEPTED, amountNano);
-
-        transitionSystem(dealId, DealStatus.AWAITING_PAYMENT);
+        UUID dealId = insertDeal(DealStatus.OFFER_PENDING, amountNano);
+        transition(
+                dealId,
+                DealStatus.ACCEPTED,
+                ActorType.CHANNEL_OWNER,
+                OWNER_ID,
+                "owner accepted offer",
+                null,
+                null);
+        awaitDealStatus(dealId, DealStatus.AWAITING_PAYMENT);
 
         var address = awaitDepositAddress(dealId);
         var txHash = "tx-deposit-happy-" + dealId;
@@ -273,9 +280,16 @@ class DealWorkflowKafkaE2EIntegrationTest {
     @DisplayName("Large deposit: review required -> approve -> FUNDED")
     void largeDepositReviewApprove_transitionsToFunded() {
         long amountNano = 2_000_000_000_000L;
-        UUID dealId = insertDeal(DealStatus.ACCEPTED, amountNano);
-
-        transitionSystem(dealId, DealStatus.AWAITING_PAYMENT);
+        UUID dealId = insertDeal(DealStatus.OFFER_PENDING, amountNano);
+        transition(
+                dealId,
+                DealStatus.ACCEPTED,
+                ActorType.CHANNEL_OWNER,
+                OWNER_ID,
+                "owner accepted offer",
+                null,
+                null);
+        awaitDealStatus(dealId, DealStatus.AWAITING_PAYMENT);
 
         String address = awaitDepositAddress(dealId);
         String txHash = "tx-deposit-review-approve-" + dealId;
@@ -310,9 +324,16 @@ class DealWorkflowKafkaE2EIntegrationTest {
     @DisplayName("Large deposit: review required -> reject -> CANCELLED + REJECTED")
     void largeDepositReject_transitionsToCancelled() {
         long amountNano = 2_100_000_000_000L;
-        UUID dealId = insertDeal(DealStatus.ACCEPTED, amountNano);
-
-        transitionSystem(dealId, DealStatus.AWAITING_PAYMENT);
+        UUID dealId = insertDeal(DealStatus.OFFER_PENDING, amountNano);
+        transition(
+                dealId,
+                DealStatus.ACCEPTED,
+                ActorType.CHANNEL_OWNER,
+                OWNER_ID,
+                "owner accepted offer",
+                null,
+                null);
+        awaitDealStatus(dealId, DealStatus.AWAITING_PAYMENT);
 
         String address = awaitDepositAddress(dealId);
         tonBlockchainPort.putInbound(
@@ -516,10 +537,6 @@ class DealWorkflowKafkaE2EIntegrationTest {
                 .set(TON_TRANSACTIONS.VERSION, 0)
                 .set(TON_TRANSACTIONS.CONFIRMED_AT, OffsetDateTime.now(ZoneOffset.UTC))
                 .execute();
-    }
-
-    private void transitionSystem(UUID dealId, DealStatus targetStatus) {
-        transition(dealId, targetStatus, ActorType.SYSTEM, null, null, null, null);
     }
 
     private void transition(

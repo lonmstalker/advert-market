@@ -457,6 +457,28 @@ class DealControllerIt {
     }
 
     @Test
+    @DisplayName("POST /deals/{id}/transition owner-side falls back to cached channel when sync is rate-limited")
+    void transition_ownerSideSyncRateLimited_returns200() {
+        UUID dealId = createDealViaApi(advertiserToken());
+        transitionByToken(advertiserToken(), dealId, "OFFER_PENDING");
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.RATE_LIMIT_EXCEEDED,
+                        "rate limited"));
+
+        webClient.post()
+                .uri("/api/v1/deals/{id}/transition", dealId)
+                .headers(h -> h.setBearerAuth(ownerToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(transitionRequest("ACCEPTED"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("SUCCESS")
+                .jsonPath("$.newStatus").isEqualTo("ACCEPTED");
+    }
+
+    @Test
     @DisplayName("Full workflow: create deal with creative brief and reach COMPLETED_RELEASED")
     void fullWorkflow_createDealAndCreativeToCompletedReleased() {
         String creativeBrief = """

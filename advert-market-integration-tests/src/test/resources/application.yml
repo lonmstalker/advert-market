@@ -4,3 +4,8 @@ spring:
   mvc:
     problemdetails:
       enabled: false
+app:
+  marketplace:
+    creatives:
+      storage:
+        bucket: integration-creative-media

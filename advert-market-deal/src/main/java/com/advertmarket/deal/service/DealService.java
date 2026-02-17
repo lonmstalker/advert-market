@@ -116,17 +116,27 @@ public class DealService implements DealPort {
     }
 
     private void syncChannelForCreate(long channelId) {
+        syncChannelWithRateLimitFallback(channelId, "create");
+    }
+
+    private void syncChannelForTransition(long channelId) {
+        syncChannelWithRateLimitFallback(channelId, "transition");
+    }
+
+    private void syncChannelWithRateLimitFallback(
+            long channelId,
+            String operation) {
         try {
             channelAutoSyncPort.syncFromTelegram(channelId);
         } catch (DomainException exception) {
-            if (exception.getErrorCode()
-                    != ErrorCodes.RATE_LIMIT_EXCEEDED) {
-                throw exception;
+            switch (exception.getErrorCode()) {
+                case ErrorCodes.RATE_LIMIT_EXCEEDED -> log.warn(
+                        "Channel sync rate-limited for {}; "
+                                + "falling back to cached channel snapshot: {}",
+                        operation,
+                        channelId);
+                default -> throw exception;
             }
-            log.warn(
-                    "Channel sync rate-limited for create; "
-                            + "falling back to cached channel snapshot: {}",
-                    channelId);
         }
     }
 
@@ -203,7 +213,7 @@ public class DealService implements DealPort {
                         "Deal",
                         command.dealId().value().toString()));
 
-        channelAutoSyncPort.syncFromTelegram(deal.channelId());
+        syncChannelForTransition(deal.channelId());
         var channel = channelRepository.findDetailById(deal.channelId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         ErrorCodes.CHANNEL_NOT_FOUND,

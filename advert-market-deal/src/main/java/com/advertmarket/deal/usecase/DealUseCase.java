@@ -26,6 +26,7 @@ import com.advertmarket.shared.pagination.CursorPage;
 import com.advertmarket.shared.security.SecurityContextUtil;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DealUseCase {
 
     private final DealService dealService;
@@ -157,7 +159,7 @@ public class DealUseCase {
             return ActorType.ADVERTISER;
         }
 
-        channelAutoSyncPort.syncFromTelegram(channelId);
+        syncChannelForActorResolution(channelId);
 
         if (channelAuthorizationPort.isOwner(channelId)) {
             return ActorType.CHANNEL_OWNER;
@@ -167,6 +169,20 @@ public class DealUseCase {
         }
         throw new DomainException(ErrorCodes.DEAL_NOT_PARTICIPANT,
                 "User is not a participant of deal " + dealId);
+    }
+
+    private void syncChannelForActorResolution(long channelId) {
+        try {
+            channelAutoSyncPort.syncFromTelegram(channelId);
+        } catch (DomainException exception) {
+            switch (exception.getErrorCode()) {
+                case ErrorCodes.RATE_LIMIT_EXCEEDED -> log.warn(
+                        "Channel sync rate-limited during transition actor "
+                                + "resolution; falling back to cached channel snapshot: {}",
+                        channelId);
+                default -> throw exception;
+            }
+        }
     }
 
     private static DealTransitionResponse toResponse(

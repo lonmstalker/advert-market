@@ -62,6 +62,39 @@ class DealWorkflowEngineTest {
     }
 
     @Test
+    @DisplayName("ACCEPTED: notify advertiser and auto-transition to AWAITING_PAYMENT")
+    void accepted_notifiesAdvertiserAndAutoTransitionsToAwaitingPayment() {
+        var dealId = DealId.generate();
+        var deal = deal(dealId, DealStatus.ACCEPTED);
+        when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
+
+        var event = new DealStateChangedEvent(
+                DealStatus.OFFER_PENDING,
+                DealStatus.ACCEPTED,
+                deal.ownerId(),
+                ActorType.CHANNEL_OWNER,
+                deal.amountNano(),
+                deal.channelId(),
+                null,
+                null);
+        var envelope = EventEnvelope.create(
+                EventTypes.DEAL_STATE_CHANGED, dealId, event);
+
+        engine.handle(envelope);
+
+        verify(outboxRepository).save(any(OutboxEntry.class));
+
+        var commandCaptor = org.mockito.ArgumentCaptor.forClass(
+                com.advertmarket.deal.api.dto.DealTransitionCommand.class);
+        verify(dealTransitionService).transition(commandCaptor.capture());
+        var command = commandCaptor.getValue();
+        assertThat(command.dealId()).isEqualTo(dealId);
+        assertThat(command.targetStatus()).isEqualTo(DealStatus.AWAITING_PAYMENT);
+        assertThat(command.actorType()).isEqualTo(ActorType.SYSTEM);
+        assertThat(command.reason()).isEqualTo("Auto transition after acceptance");
+    }
+
+    @Test
     @DisplayName("AWAITING_PAYMENT: generate deposit address, persist and emit WATCH_DEPOSIT")
     void awaitingPayment_generatesDepositAddressAndWatchCommand() {
         var dealId = DealId.generate();
