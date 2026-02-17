@@ -21,17 +21,20 @@ export function TelegramPostMedia({ media }: TelegramPostMediaProps) {
   if (documents.length === media.length) {
     return (
       <div className="am-tg-documents">
-        {documents.map((item, index) => (
-          <div key={`${item.fileId}-${index}`} className="am-tg-document">
-            <div className="am-tg-document-icon">
-              <FileIcon className="w-5 h-5" />
+        {documents.map((item, index) => {
+          const fileRef = item.fileId ?? item.id;
+          return (
+            <div key={fileRef} className="am-tg-document">
+              <div className="am-tg-document-icon">
+                <FileIcon className="w-5 h-5" />
+              </div>
+              <div className="am-tg-document-info">
+                <span className="am-tg-document-name">{item.caption || `Document ${index + 1}`}</span>
+                <span className="am-tg-document-size">{fileRef.slice(0, 12)}...</span>
+              </div>
             </div>
-            <div className="am-tg-document-info">
-              <span className="am-tg-document-name">{item.caption || `Document ${index + 1}`}</span>
-              <span className="am-tg-document-size">{item.fileId.slice(0, 12)}...</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

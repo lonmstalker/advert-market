@@ -4,19 +4,19 @@ import type { TransactionStatus } from '../types/wallet';
 
 type StatusConfig = {
   badgeClass: string;
-  textColor: 'accent' | 'warning' | 'success' | 'danger';
+  textColor: 'accent' | 'danger';
   i18nKey: string;
 };
 
 const STATUS_CONFIG: Record<TransactionStatus, StatusConfig> = {
   pending: {
     badgeClass: 'bg-soft-warning',
-    textColor: 'warning',
+    textColor: 'accent',
     i18nKey: 'wallet.status.pending',
   },
   confirmed: {
     badgeClass: 'bg-soft-success',
-    textColor: 'success',
+    textColor: 'accent',
     i18nKey: 'wallet.status.confirmed',
   },
   failed: {

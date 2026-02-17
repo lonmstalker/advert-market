@@ -60,7 +60,7 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
             onPointerDown={(e) => e.preventDefault()}
             onMouseDown={(e) => e.preventDefault()}
             className="am-formatting-toolbar__button"
-            data-active={isActive}
+            data-active={isActive ? 'true' : 'false'}
             data-disabled={disabled ? 'true' : 'false'}
             aria-pressed={isActive}
             aria-label={t(btn.labelKey)}
@@ -75,7 +75,7 @@ export function FormattingToolbar({ onFormat, onLink, activeTypes, disabled }: F
         onPointerDown={(e) => e.preventDefault()}
         onMouseDown={(e) => e.preventDefault()}
         className="am-formatting-toolbar__button"
-        data-active={activeTypes.has(TextEntityType.TEXT_LINK)}
+        data-active={activeTypes.has(TextEntityType.TEXT_LINK) ? 'true' : 'false'}
         data-disabled={disabled ? 'true' : 'false'}
         aria-label={t('creatives.form.formatting.link')}
       >

@@ -72,9 +72,14 @@ function toAmountNano(deal: { amountNano?: unknown; priceNano?: unknown }): numb
   return 1_000_000_000;
 }
 
+function toDealVersion(deal: MockDealState | (typeof mockDeals)[number]): number {
+  if ('version' in deal && typeof deal.version === 'number') return deal.version;
+  return 1;
+}
+
 function normalizeDealRecord(deal: MockDealState | (typeof mockDeals)[number]): MockDealState {
   const amountNano = toAmountNano(deal);
-  const version = typeof deal.version === 'number' ? deal.version : 1;
+  const version = toDealVersion(deal);
   const status = typeof deal.status === 'string' && DEAL_STATUS_SET.has(deal.status) ? deal.status : 'DRAFT';
 
   return {
@@ -277,9 +282,9 @@ type MockTextEntity = {
 };
 
 type MockInlineButton = {
-  id?: string | null;
+  id?: string;
   text: string;
-  url?: string | null;
+  url?: string;
 };
 
 type MockKeyboardRow = MockInlineButton[];
@@ -435,7 +440,7 @@ function normalizeKeyboardRows(rawDraft: unknown): MockKeyboardRow[] {
     .filter(Array.isArray)
     .map((row, rowIndex) =>
       row
-        .map((button, buttonIndex) => {
+        .map<MockInlineButton | null>((button, buttonIndex) => {
           if (typeof button !== 'object' || button === null) return null;
           const rawButton = button as { id?: unknown; text?: unknown; url?: unknown };
           const text = typeof rawButton.text === 'string' ? rawButton.text.trim() : '';
@@ -460,7 +465,7 @@ function normalizeMediaAssets(rawDraft: unknown, creativeId: string): MockMediaA
   if (!Array.isArray(draft.media)) return [];
 
   return draft.media
-    .map((rawItem, index) => {
+    .map<MockMediaAsset | null>((rawItem, index) => {
       if (typeof rawItem !== 'object' || rawItem === null) return null;
       const item = rawItem as {
         id?: unknown;

@@ -21,6 +21,7 @@ export type {
   CreativeVersion,
   InlineButton,
   MediaItem,
+  MediaType,
   TelegramKeyboardRow,
   TextEntity,
 } from './types/creative';
