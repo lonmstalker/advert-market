@@ -19,18 +19,28 @@ import {
   useUpdateCreative,
   useUploadCreativeMedia,
 } from '@/features/creatives';
+import { ApiError } from '@/shared/api/types';
 import { useHaptic } from '@/shared/hooks/use-haptic';
+import { useToast } from '@/shared/hooks/use-toast';
 import { AppPageShell, BackButtonHandler, FixedBottomBar, Tappable, TelegramChatSimulator } from '@/shared/ui';
 import { fadeIn, pressScale, scaleIn, slideFromLeft, slideFromRight } from '@/shared/ui/animations';
 import { SegmentControl } from '@/shared/ui/components/segment-control';
 
 type EditorTab = 'editor' | 'preview';
 
+function resolveSaveErrorMessage(error: unknown, fallbackMessage: string): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  return fallbackMessage;
+}
+
 export default function CreativeEditorPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { creativeId } = useParams<{ creativeId: string }>();
   const haptic = useHaptic();
+  const { showError, showSuccess } = useToast();
 
   const isEditing = !!creativeId;
   const { data: creative, isLoading } = useCreativeDetail(creativeId);
@@ -87,7 +97,6 @@ export default function CreativeEditorPage() {
 
   const handleSubmit = useCallback(() => {
     if (!title.trim() || !text.trim()) return;
-    haptic.notificationOccurred('success');
 
     const req = {
       title: title.trim(),
@@ -100,11 +109,27 @@ export default function CreativeEditorPage() {
 
     if (isEditing) {
       updateMutation.mutate(req, {
-        onSuccess: () => navigate('/profile/creatives'),
+        onSuccess: () => {
+          haptic.notificationOccurred('success');
+          showSuccess(t('creatives.toast.saved'));
+          navigate('/profile/creatives');
+        },
+        onError: (error) => {
+          haptic.notificationOccurred('error');
+          showError(resolveSaveErrorMessage(error, t('common.toast.saveFailed')));
+        },
       });
     } else {
       createMutation.mutate(req, {
-        onSuccess: () => navigate('/profile/creatives'),
+        onSuccess: () => {
+          haptic.notificationOccurred('success');
+          showSuccess(t('creatives.toast.created'));
+          navigate('/profile/creatives');
+        },
+        onError: (error) => {
+          haptic.notificationOccurred('error');
+          showError(resolveSaveErrorMessage(error, t('common.toast.saveFailed')));
+        },
       });
     }
   }, [
@@ -119,6 +144,9 @@ export default function CreativeEditorPage() {
     updateMutation,
     navigate,
     haptic,
+    showError,
+    showSuccess,
+    t,
   ]);
 
   useEffect(() => {

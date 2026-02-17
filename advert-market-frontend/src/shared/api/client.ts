@@ -93,10 +93,9 @@ async function request<T>(method: string, path: string, options?: RequestOptions
   const token = getAuthToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-  } else {
-    if (initData) {
-      headers['X-Telegram-Init-Data'] = initData;
-    }
+  }
+  if (initData) {
+    headers['X-Telegram-Init-Data'] = initData;
   }
 
   if (options?.body) {
@@ -144,7 +143,6 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     // Otherwise we can deadlock by trying to "re-login" while already logging in.
     const isAuthEndpoint = path.startsWith('/auth/');
     if (response.status === 401 && !isAuthEndpoint && !options?._isRetrying) {
-      sessionStorage.removeItem('access_token');
       const reLoginOk = await attemptReLogin();
       if (reLoginOk) {
         return request(method, path, { ...options, _isRetrying: true });

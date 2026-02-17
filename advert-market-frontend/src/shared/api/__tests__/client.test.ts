@@ -137,7 +137,7 @@ describe('api client', () => {
       expect(data.auth).toBeNull();
     });
 
-    it('prefers Bearer token over initData when both available', async () => {
+    it('sends both Bearer token and initData when available', async () => {
       sessionStorage.setItem('access_token', 'my-jwt');
 
       server.use(
@@ -151,7 +151,7 @@ describe('api client', () => {
 
       const data = await api.get<{ auth: string; initData: string | null }>('/pref');
       expect(data.auth).toBe('Bearer my-jwt');
-      expect(data.initData).toBeNull();
+      expect(data.initData).toBe('mock-init-data');
     });
   });
 
@@ -371,6 +371,22 @@ describe('api client', () => {
         expect(err).toBeInstanceOf(ApiError);
         expect((err as ApiError).status).toBe(401);
       }
+    });
+
+    it('keeps existing access_token when re-login fails', async () => {
+      sessionStorage.setItem('access_token', 'still-present-token');
+
+      server.use(
+        http.get(`${API_BASE}/auth-fails`, () => {
+          return HttpResponse.json({ type: 'about:blank', title: 'Unauthorized', status: 401 }, { status: 401 });
+        }),
+        http.post(`${API_BASE}/auth/login`, () => {
+          return HttpResponse.json({ type: 'about:blank', title: 'Too Many Requests', status: 429 }, { status: 429 });
+        }),
+      );
+
+      await expect(api.get('/auth-fails')).rejects.toBeInstanceOf(ApiError);
+      expect(sessionStorage.getItem('access_token')).toBe('still-present-token');
     });
 
     it('does not retry on second consecutive 401 (prevents infinite loop)', async () => {
