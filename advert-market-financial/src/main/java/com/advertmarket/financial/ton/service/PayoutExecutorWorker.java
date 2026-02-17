@@ -85,7 +85,7 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
         var tonAddress = userRepository.findTonAddress(ownerId);
 
         if (tonAddress.isEmpty()) {
-            handleDeferred(dealId, command);
+            handleDeferred(dealId, command, "owner has no TON address");
             return;
         }
 
@@ -105,7 +105,10 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                         command.ownerId(),
                         exception.getErrorCode(),
                         exception.getMessage());
-                handleDeferred(dealId, command);
+                handleDeferred(
+                        dealId,
+                        command,
+                        "non-retryable TON error: " + exception.getMessage());
                 return;
             }
             throw exception;
@@ -259,9 +262,10 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
     }
 
     private void handleDeferred(DealId dealId,
-            ExecutePayoutCommand command) {
-        log.warn("Payout deferred: owner={} has no TON address, "
-                        + "deal={}", command.ownerId(), dealId);
+            ExecutePayoutCommand command,
+            String reason) {
+        log.warn("Payout deferred: deal={}, owner={}, reason={}",
+                dealId, command.ownerId(), reason);
         var event = new PayoutDeferredEvent(
                 command.ownerId(), command.amountNano());
         publishOutboxEvent(dealId, EventTypes.PAYOUT_DEFERRED, event);

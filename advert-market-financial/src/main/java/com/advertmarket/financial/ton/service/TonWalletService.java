@@ -24,6 +24,7 @@ import org.ton.ton4j.address.Address;
 import org.ton.ton4j.cell.Cell;
 import org.ton.ton4j.mnemonic.Mnemonic;
 import org.ton.ton4j.smartcontract.types.WalletV4R2Config;
+import org.ton.ton4j.smartcontract.utils.MsgUtils;
 import org.ton.ton4j.smartcontract.wallet.v4.WalletV4R2;
 
 /**
@@ -109,10 +110,11 @@ public class TonWalletService implements TonWalletPort {
                 .build();
 
         String walletAddress = wallet.getAddress().toBounceable();
-        long seqno = blockchainPort.getSeqno(walletAddress);
+        SeqnoPlan seqnoPlan = resolveSeqno(walletAddress);
+        long seqno = seqnoPlan.seqno();
 
         String base64Boc = buildSignedBoc(wallet, subwalletId, seqno,
-                destinationAddress, amountNano);
+                destinationAddress, amountNano, seqnoPlan.includeStateInit());
 
         for (int attempt = 0; attempt < MAX_SEND_RETRIES; attempt++) {
             try {
@@ -140,7 +142,8 @@ public class TonWalletService implements TonWalletPort {
 
     private String handleSendFailure(String walletAddress, long originalSeqno,
                                       int subwalletId, int attempt) {
-        long currentSeqno = blockchainPort.getSeqno(walletAddress);
+        long currentSeqno = fetchCurrentSeqnoAfterSendFailure(
+                walletAddress, originalSeqno);
         if (currentSeqno > originalSeqno) {
             log.warn("Seqno advanced {} -> {} after sendBoc failure, "
                             + "recovering TX hash for subwallet={}",
@@ -154,6 +157,53 @@ public class TonWalletService implements TonWalletPort {
                     attempt + 1, MAX_SEND_RETRIES, subwalletId);
         }
         return null;
+    }
+
+    private SeqnoPlan resolveSeqno(String walletAddress) {
+        try {
+            return new SeqnoPlan(blockchainPort.getSeqno(walletAddress), false);
+        } catch (DomainException ex) {
+            if (isUninitializedWallet(ex)) {
+                log.info("TON wallet is not initialized yet, using seqno=0 "
+                                + "and deploy message: wallet={}",
+                        walletAddress);
+                return new SeqnoPlan(0L, true);
+            }
+            throw ex;
+        }
+    }
+
+    private long fetchCurrentSeqnoAfterSendFailure(
+            String walletAddress, long fallbackSeqno) {
+        try {
+            return blockchainPort.getSeqno(walletAddress);
+        } catch (DomainException ex) {
+            if (isUninitializedWallet(ex)) {
+                return fallbackSeqno;
+            }
+            throw ex;
+        }
+    }
+
+    @SuppressWarnings("ReferenceEquality")
+    private static boolean isUninitializedWallet(DomainException ex) {
+        if (ex.getErrorCode() != ErrorCodes.TON_API_ERROR) {
+            return false;
+        }
+        return containsInErrorChain(ex, "exitCode: -13");
+    }
+
+    private static boolean containsInErrorChain(
+            Throwable throwable, String needle) {
+        Throwable current = throwable;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null && message.contains(needle)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private String recoverTxHash(String walletAddress) {
@@ -175,7 +225,8 @@ public class TonWalletService implements TonWalletPort {
 
     private String buildSignedBoc(WalletV4R2 wallet, int subwalletId,
                                    long seqno, String destinationAddress,
-                                   long amountNano) {
+                                   long amountNano,
+                                   boolean includeStateInit) {
         WalletV4R2Config txConfig = WalletV4R2Config.builder()
                 .walletId(subwalletId)
                 .seqno(seqno)
@@ -184,9 +235,15 @@ public class TonWalletService implements TonWalletPort {
                 .bounce(false)
                 .build();
 
-        wallet.createTransferBody(txConfig);
-        Cell signedBody = wallet.createInternalSignedBody(txConfig);
-        return signedBody.toBase64();
+        Cell transferBody = wallet.createTransferBody(txConfig);
+        var externalMessage = includeStateInit
+                ? MsgUtils.createExternalMessageWithSignedBody(
+                keyPair,
+                wallet.getAddress(),
+                wallet.getStateInit(),
+                transferBody)
+                : wallet.prepareExternalMsg(txConfig);
+        return externalMessage.toCell().toBase64();
     }
 
     // security: prevent mnemonic leak via exception chain
@@ -202,5 +259,8 @@ public class TonWalletService implements TonWalletPort {
             throw new IllegalStateException(
                     "Failed to derive key pair from mnemonic");
         }
+    }
+
+    private record SeqnoPlan(long seqno, boolean includeStateInit) {
     }
 }

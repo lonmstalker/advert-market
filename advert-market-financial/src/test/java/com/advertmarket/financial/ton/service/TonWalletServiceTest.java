@@ -189,6 +189,26 @@ class TonWalletServiceTest {
         }
 
         @Test
+        @DisplayName("Should submit first tx with seqno=0 when wallet is not initialized (getSeqno -13)")
+        void submitsFirstTransaction_whenWalletIsNotInitialized() {
+            String destAddress = generateValidAddress();
+            when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                    .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+            when(blockchainPort.getSeqno(anyString()))
+                    .thenThrow(new DomainException(
+                            "TON_API_ERROR",
+                            "TON Center API call failed: method=getSeqno, reason=getSeqno failed, "
+                                    + "exitCode: -13"));
+            when(blockchainPort.sendBoc(anyString())).thenReturn("txhash_init");
+
+            String txHash = service.submitTransaction(42,
+                    destAddress, 1_000_000_000L);
+
+            assertThat(txHash).isEqualTo("txhash_init");
+            verify(blockchainPort).sendBoc(anyString());
+        }
+
+        @Test
         @DisplayName("Should retry sendBoc when it fails and seqno unchanged")
         void retries_onSendBocFailure_seqnoUnchanged() {
             String destAddress = generateValidAddress();
