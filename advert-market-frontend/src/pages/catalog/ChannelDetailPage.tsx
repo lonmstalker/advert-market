@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { openTelegramLink, shareURL } from '@telegram-apps/sdk-react';
 import { AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,9 +7,7 @@ import { useNavigate, useParams } from 'react-router';
 import { fetchChannelDetail, useChannelRights } from '@/features/channels';
 import { channelKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
-import { useToast } from '@/shared/hooks/use-toast';
 import { getMinPrice } from '@/shared/lib/channel-utils';
-import { copyToClipboard } from '@/shared/lib/clipboard';
 import { computeCpm } from '@/shared/lib/ton-format';
 import { AppPageShell, BackButtonHandler, EmptyState, PageLoader, SegmentControl } from '@/shared/ui';
 import { SearchOffIcon } from '@/shared/ui/icons';
@@ -26,7 +25,6 @@ export default function ChannelDetailPage() {
   const navigate = useNavigate();
   const { channelId } = useParams<{ channelId: string }>();
   const haptic = useHaptic();
-  const { showSuccess } = useToast();
   const id = Number(channelId);
   const [activeTab, setActiveTab] = useState<DetailTab>('about');
 
@@ -70,13 +68,22 @@ export default function ChannelDetailPage() {
   const heroCpm = minPrice != null && channel.avgReach ? computeCpm(minPrice, channel.avgReach) : null;
   const telegramLink = channel.username ? `https://t.me/${channel.username}` : (channel.inviteLink ?? null);
 
-  const handleShare = async () => {
+  const handleShare = () => {
     const link = `https://t.me/AdvertMarketBot/app?startapp=channel_${channel.id}`;
-    const ok = await copyToClipboard(link);
-    if (ok) {
-      haptic.notificationOccurred('success');
-      showSuccess(t('catalog.channel.share'));
+    const [shared] = shareURL.ifAvailable(link);
+    if (shared) {
+      haptic.impactOccurred('light');
+      return;
     }
+
+    const telegramShareLink = `https://t.me/share/url?${new URLSearchParams({ url: link }).toString().replace(/\+/g, '%20')}`;
+    const [openedInTelegram] = openTelegramLink.ifAvailable(telegramShareLink);
+    if (openedInTelegram) {
+      haptic.impactOccurred('light');
+      return;
+    }
+
+    window.open(telegramShareLink, '_blank', 'noopener,noreferrer');
   };
 
   const tabs: { value: DetailTab; label: string }[] = [

@@ -24,12 +24,14 @@ export default function CreateDealPage() {
   const haptic = useHaptic();
   const { showSuccess, showError } = useToast();
 
-  const channelId = Number(searchParams.get('channelId'));
+  const channelIdRaw = searchParams.get('channelId');
+  const channelId = Number(channelIdRaw);
+  const hasValidChannelId = channelIdRaw != null && Number.isFinite(channelId);
 
   const { data: channel, isLoading } = useQuery({
     queryKey: channelKeys.detail(channelId),
     queryFn: () => fetchChannelDetail(channelId),
-    enabled: !Number.isNaN(channelId) && channelId > 0,
+    enabled: hasValidChannelId,
   });
 
   const [selectedPostType, setSelectedPostType] = useState<string | null>(null);

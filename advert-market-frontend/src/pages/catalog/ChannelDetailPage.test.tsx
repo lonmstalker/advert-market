@@ -35,12 +35,19 @@ vi.mock('@/shared/ui', async (importOriginal) => {
   return { ...actual, BackButtonHandler: () => null };
 });
 
-const { mockCopyToClipboard } = vi.hoisted(() => ({
-  mockCopyToClipboard: vi.fn().mockResolvedValue(true),
+const { mockShareUrlIfAvailable } = vi.hoisted(() => ({
+  mockShareUrlIfAvailable: vi.fn(() => [true] as const),
 }));
-vi.mock('@/shared/lib/clipboard', () => ({
-  copyToClipboard: mockCopyToClipboard,
-}));
+vi.mock('@telegram-apps/sdk-react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@telegram-apps/sdk-react')>();
+  return {
+    ...actual,
+    shareURL: {
+      ...actual.shareURL,
+      ifAvailable: mockShareUrlIfAvailable,
+    },
+  };
+});
 
 const API_BASE = '/api/v1';
 
@@ -212,11 +219,11 @@ describe('ChannelDetailPage', () => {
       expect(await screen.findByRole('button', { name: 'Share' })).toBeInTheDocument();
     });
 
-    it('clicking Share copies link to clipboard', async () => {
+    it('clicking Share opens Telegram native share', async () => {
       const { user } = renderPage(1);
       const shareBtn = await screen.findByRole('button', { name: 'Share' });
       await user.click(shareBtn);
-      expect(mockCopyToClipboard).toHaveBeenCalledWith('https://t.me/AdvertMarketBot/app?startapp=channel_1');
+      expect(mockShareUrlIfAvailable).toHaveBeenCalledWith('https://t.me/AdvertMarketBot/app?startapp=channel_1');
     });
 
     it('shows channel age', async () => {

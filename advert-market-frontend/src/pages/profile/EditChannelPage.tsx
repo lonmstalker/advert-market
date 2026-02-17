@@ -66,12 +66,13 @@ export default function EditChannelPage() {
   const haptic = useHaptic();
   const { showSuccess, showError } = useToast();
 
-  const parsedChannelId = Number(channelId);
+  const parsedChannelId = Number(channelId ?? Number.NaN);
+  const hasValidChannelId = channelId != null && Number.isFinite(parsedChannelId);
 
   const { data: channel, isLoading: isChannelLoading } = useQuery({
     queryKey: channelKeys.detail(parsedChannelId),
     queryFn: () => fetchChannelDetail(parsedChannelId),
-    enabled: !Number.isNaN(parsedChannelId) && parsedChannelId > 0,
+    enabled: hasValidChannelId,
   });
   const { data: categories } = useQuery({
     queryKey: channelKeys.categories(),
