@@ -134,6 +134,10 @@ Dark mode uses Deep Gunmetal (`#1C1C1E` base), not pure black. OLED-safe with su
 
 The project uses **Tailwind CSS v4** with CSS-first configuration. There is no `tailwind.config.ts`.
 
+Troubleshooting entrypoint:
+- `docs/troubleshooting/frontend-troubleshooting.md` (canonical)
+- `docs/css-issues-tailwind-v4-migration.md` (historical case study)
+
 ### Architecture
 
 | File | Purpose |
