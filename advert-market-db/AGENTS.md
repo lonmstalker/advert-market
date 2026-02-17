@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Database — Agent Instructions
 
 jOOQ code generation and Liquibase database migrations.

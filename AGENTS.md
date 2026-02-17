@@ -1,7 +1,7 @@
 # Agent Instructions
 
 - Use Hindsight and find relevant information from .memory-bank when start session
-- Use .asisstant/SKILL.md
+- Use `.claude/skills/*/SKILL.md` when a matching workflow/skill is needed
 - This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 - MUST use TDD when write code
 - MUST update .memory-bank and Hindsight when have new insights, opinions, decisions

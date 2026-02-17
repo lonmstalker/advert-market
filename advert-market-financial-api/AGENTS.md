@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Financial API — Agent Instructions
 
 Pure API module: commands, result events, and ports for the double-entry ledger, escrow, payouts, and reconciliation.

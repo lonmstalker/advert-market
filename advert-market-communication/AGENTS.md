@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Communication — Agent Instructions
 
 Telegram bot, webhook processing, channel verification, and notification delivery.

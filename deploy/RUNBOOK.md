@@ -50,13 +50,20 @@ export COMPOSE_PROJECT_NAME=advert-market
 | `TELEGRAM_WEBHOOK_SECRET` | Yes | Random hex for webhook verification |
 | `TELEGRAM_WEBAPP_URL` | Yes | Mini App public URL (`https://teleinsight.in`) |
 | `TON_API_KEY` | Yes | TON Center API key |
+| `TON_WALLET_MNEMONIC` | Yes | Platform wallet mnemonic (encrypted/securely stored) |
+| `PII_ENCRYPTION_KEY` | Yes | Base64 key for encrypted PII fields |
 | `CANARY_ADMIN_TOKEN` | Yes | Bearer token for canary admin endpoint |
 | `INTERNAL_API_KEY` | Yes | Shared key for internal endpoints |
 | `APP_MARKETPLACE_CHANNEL_BOT_USER_ID` | Yes | Telegram bot user id (numeric) |
 | `CREATIVES_STORAGE_ACCESS_KEY` | Yes | MinIO access key (S3 key id) |
 | `CREATIVES_STORAGE_SECRET_KEY` | Yes | MinIO secret key |
+| `CREATIVES_STORAGE_ENABLED` | No | Media storage toggle (default: `true`) |
 | `CREATIVES_STORAGE_BUCKET` | No | Bucket name (default: `creative-media`) |
+| `CREATIVES_STORAGE_REGION` | No | Bucket region (default: `us-east-1`) |
 | `CREATIVES_STORAGE_PUBLIC_BASE_URL` | No | Public media base URL (default: `https://teleinsight.in/creative-media`) |
+| `CREATIVES_STORAGE_KEY_PREFIX` | No | Object key prefix (default: `creatives`) |
+| `TON_NETWORK` | No | TON network (`testnet` by default) |
+| `APP_TELEGRAM_WELCOME_CUSTOM_EMOJI_ID` | No | Optional welcome custom emoji id |
 | `APP_IMAGE` | No | Docker image tag (default: `advertmarket:latest`) |
 
 ---
@@ -83,7 +90,7 @@ docker compose -f docker-compose.prod.yml up -d app-blue nginx
 # Manual fallback (debug only):
 # curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
 #   -H "Content-Type: application/json" \
-#   -d "{\"url\":\"${TELEGRAM_WEBHOOK_URL}\",\"secret_token\":\"${TELEGRAM_WEBHOOK_SECRET}\",\"allowed_updates\":[\"message\",\"callback_query\"]}"
+#   -d "{\"url\":\"${TELEGRAM_WEBHOOK_URL}\",\"secret_token\":\"${TELEGRAM_WEBHOOK_SECRET}\",\"allowed_updates\":[\"message\",\"callback_query\",\"my_chat_member\"]}"
 ```
 
 ## 2. Blue-Green Deployment (New Version)

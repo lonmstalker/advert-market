@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Deal — Agent Instructions
 
 Deal state machine, CAS-based transitions, deadline management, and lifecycle orchestration.

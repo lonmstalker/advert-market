@@ -4,7 +4,6 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,8 +12,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class OpenApiConfig {
-
-    private static final String INTERNAL_PREFIX = "/internal/";
 
     /** Creates the OpenAPI spec metadata with Bearer auth. */
     @Bean
@@ -32,18 +29,5 @@ public class OpenApiConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")));
-    }
-
-    /** Excludes internal service endpoints from published API docs. */
-    @Bean
-    public OpenApiCustomizer excludeInternalPathsCustomizer() {
-        return openApi -> {
-            if (openApi.getPaths() == null) {
-                return;
-            }
-            openApi.getPaths().entrySet().removeIf(entry ->
-                    entry.getKey() != null
-                            && entry.getKey().startsWith(INTERNAL_PREFIX));
-        };
     }
 }

@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Marketplace API — Agent Instructions
 
 Pure API module: DTOs, port interfaces, enums for channels, pricing, teams, categories, and Telegram channel verification.

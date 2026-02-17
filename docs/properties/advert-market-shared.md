@@ -5,6 +5,7 @@
 - [Canary Deployment](#canary-deployment)
 - [Deployment Instance](#deployment-instance)
 - [Outbox Poller](#outbox-poller)
+- [PII Encryption](#pii-encryption)
 
 
 ---
@@ -40,7 +41,13 @@ Transactional outbox polling configuration
 | `app.outbox.max-retries` | `int` | Maximum number of retry attempts before marking as failed |  | No |  |  |
 | `app.outbox.initial-backoff` | `Duration` | Initial backoff duration before first retry |  | No |  |  |
 | `app.outbox.publish-timeout` | `Duration` | Timeout for publishing a single outbox entry to Kafka |  | No |  |  |
-| `app.outbox.d-e-f-a-u-l-t_-p-o-l-l_-i-n-t-e-r-v-a-l_-m-s` | `long` |  | `500` | No |  |  |
-| `app.outbox.d-e-f-a-u-l-t_-b-a-t-c-h_-s-i-z-e` | `int` |  | `50` | No |  |  |
-| `app.outbox.d-e-f-a-u-l-t_-m-a-x_-r-e-t-r-i-e-s` | `int` |  | `3` | No |  |  |
-| `app.outbox.d-e-f-a-u-l-t_-p-u-b-l-i-s-h_-t-i-m-e-o-u-t_-s` | `long` |  | `5` | No |  |  |
+| `app.outbox.stuck-threshold-seconds` | `int` | Seconds after which a PROCESSING entry is considered stuck |  | No |  |  |
+
+## PII Encryption
+
+PII data encryption at rest using AES-256-GCM
+
+
+| Property | Type | Description | Default | Required | Constraints | Examples |
+|----------|------|-------------|---------|----------|-------------|----------|
+| `app.pii.encryption.key` | `NonNull String` | Base64-encoded 256-bit AES master key for PII encryption |  | Yes |  |  |

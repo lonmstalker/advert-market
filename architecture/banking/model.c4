@@ -279,7 +279,7 @@ model {
 
     primaryDb = database 'PostgreSQL' {
       #mvp
-      description 'PostgreSQL 18 — primary data store with partitioned tables. 14 tables across 4 categories'
+      description 'PostgreSQL 18 — primary data store with partitioned tables. 20 base tables (14 primary + 6 support) across 4 categories'
 
       // Core domain tables
       users = component 'users' {
@@ -291,7 +291,7 @@ model {
       }
 
       deals = component 'deals' {
-        description 'Deal aggregate: status (16 states), version (optimistic locking), escrow fields, creative_brief/draft JSONB, deadline_at'
+        description 'Deal aggregate: status (17 states), version (optimistic locking), escrow fields, creative_brief/draft JSONB, deadline_at'
       }
 
       creativeTemplates = component 'creative_templates' {

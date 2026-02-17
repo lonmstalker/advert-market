@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Shared — Agent Instructions
 
 Cross-cutting domain primitives, value objects, events, and infrastructure ports shared across all modules.

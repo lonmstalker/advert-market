@@ -153,13 +153,6 @@ public record TonProperties(
             )
             @NotEmpty @NonNull List<Tier> tiers
     ) {
-
-        private static final long NANO_100_TON = 100_000_000_000L;
-        private static final long NANO_1000_TON = 1_000_000_000_000L;
-        private static final int SMALL_CONFIRMATIONS = 1;
-        private static final int MEDIUM_CONFIRMATIONS = 3;
-        private static final int LARGE_CONFIRMATIONS = 5;
-
         /** Defensive copy for immutability. */
         public Confirmation {
             tiers = List.copyOf(tiers);
@@ -173,9 +166,9 @@ public record TonProperties(
          */
         public Confirmation() {
             this(List.of(
-                    new Tier(NANO_100_TON, SMALL_CONFIRMATIONS, false),
-                    new Tier(NANO_1000_TON, MEDIUM_CONFIRMATIONS, false),
-                    new Tier(Long.MAX_VALUE, LARGE_CONFIRMATIONS, true)));
+                    new Tier(100_000_000_000L, 1, false),
+                    new Tier(1_000_000_000_000L, 3, false),
+                    new Tier(Long.MAX_VALUE, 5, true)));
         }
 
         /**

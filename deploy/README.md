@@ -109,14 +109,19 @@ Create `deploy/.env` (never commit it). Minimum required variables:
 - `TELEGRAM_WEBAPP_URL`
 - `APP_MARKETPLACE_CHANNEL_BOT_USER_ID`
 - `TON_API_KEY`
+- `TON_WALLET_MNEMONIC`
+- `PII_ENCRYPTION_KEY`
 - `CREATIVES_STORAGE_ACCESS_KEY`
 - `CREATIVES_STORAGE_SECRET_KEY`
 
 Optional:
 
 - `APP_IMAGE` (defaults to `advertmarket:latest`)
-- `TON_API_URL` (defaults to TON Center testnet)
+- `TON_NETWORK` (defaults to `testnet`)
+- `APP_TELEGRAM_WELCOME_CUSTOM_EMOJI_ID` (defaults to empty)
+- `CREATIVES_STORAGE_ENABLED` (defaults to `true`)
 - `CREATIVES_STORAGE_BUCKET` (defaults to `creative-media`)
+- `CREATIVES_STORAGE_REGION` (defaults to `us-east-1`)
 - `CREATIVES_STORAGE_PUBLIC_BASE_URL` (defaults to `https://teleinsight.in/creative-media`)
 - `CREATIVES_STORAGE_KEY_PREFIX` (defaults to `creatives`)
 

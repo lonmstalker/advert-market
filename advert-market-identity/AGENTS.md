@@ -1,4 +1,8 @@
- 2. # Identity — Agent Instructions
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
+# Identity — Agent Instructions
 
 Auth flow implementation: JWT, Telegram initData, user management.
 

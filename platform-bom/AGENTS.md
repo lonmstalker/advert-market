@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Platform BOM — Agent Instructions
 
 Bill of Materials: centralized dependency version management using Gradle Java Platform plugin.

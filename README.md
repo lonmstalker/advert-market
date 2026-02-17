@@ -149,24 +149,59 @@ Blue-green deployment via Docker Compose + nginx reverse proxy.
 
 | Variable | Description |
 |----------|-------------|
-| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC URL |
-| `SPRING_DATASOURCE_USERNAME` | Database user |
-| `SPRING_DATASOURCE_PASSWORD` | Database password |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Kafka broker addresses |
-| `SPRING_DATA_REDIS_HOST` | Redis host |
-| `APP_TELEGRAM_BOT_TOKEN` | Telegram Bot API token |
-| `APP_TELEGRAM_BOT_USERNAME` | Bot username (without @) |
-| `APP_JWT_SECRET` | JWT signing secret |
-| `APP_TON_WALLET_ADDRESS` | Platform TON wallet address |
-| `APP_TON_WALLET_MNEMONIC` | Platform TON wallet mnemonic |
+| `DB_PASSWORD` | PostgreSQL password for app + migrations |
+| `JWT_SECRET` | JWT signing secret |
+| `INTERNAL_API_KEY` | Shared key for internal worker endpoints |
+| `CANARY_ADMIN_TOKEN` | Token for `/internal/v1/canary` |
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot API token |
+| `TELEGRAM_BOT_USERNAME` | Bot username (without `@`) |
+| `TELEGRAM_WEBHOOK_URL` | Public HTTPS webhook URL |
+| `TELEGRAM_WEBHOOK_SECRET` | Telegram webhook secret token |
+| `TELEGRAM_WEBAPP_URL` | Public Mini App URL |
+| `TON_API_KEY` | TON Center API key |
+| `TON_WALLET_MNEMONIC` | Platform wallet mnemonic |
+| `PII_ENCRYPTION_KEY` | Base64-encoded 32-byte key for encrypted fields |
+| `APP_MARKETPLACE_CHANNEL_BOT_USER_ID` | Bot user id (numeric) |
+| `CREATIVES_STORAGE_ACCESS_KEY` | S3/MinIO access key |
+| `CREATIVES_STORAGE_SECRET_KEY` | S3/MinIO secret key |
 
-See [deploy/RUNBOOK.md](deploy/RUNBOOK.md) for full deployment instructions.
+Optional (runtime defaults are defined in `deploy/docker-compose.prod.yml` and `application.yml`):
+
+- `TON_NETWORK`
+- `APP_TELEGRAM_WELCOME_CUSTOM_EMOJI_ID`
+- `CREATIVES_STORAGE_ENABLED`
+- `CREATIVES_STORAGE_BUCKET`
+- `CREATIVES_STORAGE_REGION`
+- `CREATIVES_STORAGE_PUBLIC_BASE_URL`
+- `CREATIVES_STORAGE_KEY_PREFIX`
+- `APP_IMAGE`
+
+See [deploy/RUNBOOK.md](deploy/RUNBOOK.md) and [deploy/README.md](deploy/README.md) for the canonical deployment contract and full variable matrix.
 
 ## API Documentation
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI spec: `http://localhost:8080/v3/api-docs`
+- OpenAPI YAML: `http://localhost:8080/v3/api-docs.yaml`
 - Generate frontend types from spec: `cd advert-market-frontend && npm run api:types`
+
+## Configuration Properties
+
+Generated Spring configuration properties docs are the canonical source for app-level property names:
+
+- `docs/properties/advert-market-app.md`
+- `docs/properties/advert-market-communication.md`
+- `docs/properties/advert-market-deal.md`
+- `docs/properties/advert-market-financial.md`
+- `docs/properties/advert-market-identity.md`
+- `docs/properties/advert-market-marketplace.md`
+- `docs/properties/advert-market-shared.md`
+
+Regenerate after changing `@ConfigurationProperties` records:
+
+```bash
+./gradlew generatePropertyDocs
+```
 
 ## Known Limitations
 

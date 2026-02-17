@@ -25,6 +25,7 @@ Root configuration for the Telegram bot
 | `app.telegram.bot-username` | `NotBlank String` | Telegram bot username |  | Yes |  |  |
 | `app.telegram.webhook.url` | `String` | Webhook URL for receiving updates |  | No |  |  |
 | `app.telegram.webhook.secret` | `NotBlank String` | Secret token for webhook validation |  | No |  |  |
+| `app.telegram.webhook.max-body-bytes` | `Positive int` | Maximum accepted webhook request body size in bytes |  | No |  |  |
 | `app.telegram.webapp.url` | `NotBlank String` | Telegram Web App URL |  | Yes |  |  |
 | `app.telegram.welcome.custom-emoji-id` | `String` | Custom emoji id to prefix the welcome message (MarkdownV2: ![x](tg://emoji?id=...)) |  | No |  |  |
 

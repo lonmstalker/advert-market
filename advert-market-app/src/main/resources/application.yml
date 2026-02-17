@@ -101,7 +101,7 @@ app:
       secret: ${TELEGRAM_WEBHOOK_SECRET:}
       max-body-bytes: ${TELEGRAM_WEBHOOK_MAX_BODY_BYTES:262144}
     webapp:
-      url: ${TELEGRAM_WEBAPP_URL:https://app.advertmarket.com}
+      url: ${TELEGRAM_WEBAPP_URL:https://teleinsight.in}
     sender:
       global-per-sec: 30
       per-chat-per-sec: 1

@@ -4,6 +4,7 @@
 
 - [Authentication](#authentication)
 - [Login Rate Limiter](#login-rate-limiter)
+- [Locale Currency Mapping](#locale-currency-mapping)
 
 
 ---
@@ -28,3 +29,13 @@ Login rate limiter configuration
 |----------|------|-------------|---------|----------|-------------|----------|
 | `app.auth.rate-limiter.max-attempts` | `Positive int` | Maximum login attempts per window |  | Yes |  |  |
 | `app.auth.rate-limiter.window-seconds` | `Positive int` | Rate limit window duration in seconds |  | Yes |  |  |
+
+## Locale Currency Mapping
+
+Server-driven mapping from language code to effective display currency
+
+
+| Property | Type | Description | Default | Required | Constraints | Examples |
+|----------|------|-------------|---------|----------|-------------|----------|
+| `app.locale-currency.fallback-currency` | `NonNull String` | Currency code used when language mapping is missing |  | Yes |  |  |
+| `app.locale-currency.language-map` | `String>` | Map of language code (e.g. ru, en) to ISO 4217 currency code |  | Yes |  |  |

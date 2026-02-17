@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # App — Agent Instructions
 
 Spring Boot application module: configuration, wiring, HTTP filters, Kafka listeners, global error handling. NO business logic here.

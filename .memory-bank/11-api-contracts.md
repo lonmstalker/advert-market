@@ -39,6 +39,7 @@ Rules:
 | `PUT` | `/api/v1/profile/onboarding` | `advert-market-identity` | Complete onboarding |
 | `PUT` | `/api/v1/profile/language` | `advert-market-identity` | Update language |
 | `PUT` | `/api/v1/profile/settings` | `advert-market-identity` | Update settings (`currencyMode`, `displayCurrency`, notifications) |
+| `PUT` | `/api/v1/profile/wallet` | `advert-market-identity` | Update user TON wallet address |
 | `DELETE` | `/api/v1/profile` | `advert-market-identity` | Delete account |
 
 ### Marketplace Catalog
@@ -74,6 +75,19 @@ Rules:
 | `PUT` | `/api/v1/channels/{channelId}/pricing/{ruleId}` | `advert-market-marketplace` | Update pricing rule |
 | `DELETE` | `/api/v1/channels/{channelId}/pricing/{ruleId}` | `advert-market-marketplace` | Delete pricing rule |
 
+### Creative Library
+
+| Method | Path | Module | Notes |
+|---|---|---|---|
+| `GET` | `/api/v1/creatives` | `advert-market-marketplace` | List creative templates |
+| `POST` | `/api/v1/creatives` | `advert-market-marketplace` | Create creative template |
+| `GET` | `/api/v1/creatives/{id}` | `advert-market-marketplace` | Creative template detail |
+| `PUT` | `/api/v1/creatives/{id}` | `advert-market-marketplace` | Update creative template |
+| `DELETE` | `/api/v1/creatives/{id}` | `advert-market-marketplace` | Delete creative template |
+| `GET` | `/api/v1/creatives/{id}/versions` | `advert-market-marketplace` | Creative template version history |
+| `POST` | `/api/v1/creatives/media` | `advert-market-marketplace` | Upload creative media asset (`multipart/form-data`) |
+| `DELETE` | `/api/v1/creatives/media/{mediaId}` | `advert-market-marketplace` | Delete creative media asset |
+
 ### Communication
 
 | Method | Path | Module | Notes |
@@ -98,6 +112,21 @@ Rules:
 | `POST` | `/api/v1/deals/{id}/transition` | `advert-market-deal` | State transitions |
 | `GET` | `/api/v1/deals/{id}/deposit` | `advert-market-deal` | Deposit address + confirmation progress |
 
+### Wallet
+
+| Method | Path | Module | Notes |
+|---|---|---|---|
+| `GET` | `/api/v1/wallet/summary` | `advert-market-financial` | Wallet aggregates |
+| `GET` | `/api/v1/wallet/transactions` | `advert-market-financial` | Wallet history |
+| `POST` | `/api/v1/wallet/withdraw` | `advert-market-financial` | Withdrawal request |
+
+### Admin
+
+| Method | Path | Module | Notes |
+|---|---|---|---|
+| `POST` | `/api/v1/admin/deposits/{id}/approve` | `advert-market-deal` | Manual operator approval for flagged deposits |
+| `POST` | `/api/v1/admin/deposits/{id}/reject` | `advert-market-deal` | Manual operator rejection for flagged deposits |
+
 #### Deal Contract Gate (2026-02-16)
 
 - OpenAPI regenerated from backend `HEAD` confirms:
@@ -116,7 +145,6 @@ Rules:
 
 | Method | Path | Purpose | Beads ID | Target module |
 |---|---|---|---|---|
-| `GET` | `/api/v1/deals/{id}/escrow` | Escrow status | `advert-market-av4.3` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/brief` | Submit brief | `advert-market-6wx.3` | `advert-market-deal` |
 | `GET` | `/api/v1/deals/{id}/brief` | Read brief | `advert-market-6wx.3` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/creative` | Submit creative draft | `advert-market-6wx.3` | `advert-market-deal` |
@@ -130,18 +158,7 @@ Rules:
 | `GET` | `/api/v1/deals/{id}/dispute` | Get dispute status | `advert-market-4fr.1` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/dispute/evidence` | Attach evidence | `advert-market-4fr.1` | `advert-market-deal` |
 | `POST` | `/api/v1/deals/{id}/dispute/resolve` | Resolve dispute | `advert-market-4fr.1` | `advert-market-deal` |
-| `GET` | `/api/v1/creatives` | Creative library list | `advert-market-7lx` | `advert-market-marketplace` |
-| `POST` | `/api/v1/creatives` | Create creative template | `advert-market-7lx` | `advert-market-marketplace` |
-| `GET` | `/api/v1/creatives/{id}` | Creative template detail | `advert-market-7lx` | `advert-market-marketplace` |
-| `PUT` | `/api/v1/creatives/{id}` | Update creative template | `advert-market-7lx` | `advert-market-marketplace` |
-| `DELETE` | `/api/v1/creatives/{id}` | Delete creative template (soft) | `advert-market-7lx` | `advert-market-marketplace` |
-| `GET` | `/api/v1/creatives/{id}/versions` | Creative template version history | `advert-market-7lx` | `advert-market-marketplace` |
-| `POST` | `/api/v1/creatives/media` | Upload creative media asset (`multipart/form-data`) | `advert-market-7lx` | `advert-market-marketplace` |
-| `DELETE` | `/api/v1/creatives/media/{mediaId}` | Delete creative media asset (soft) | `advert-market-7lx` | `advert-market-marketplace` |
-| `GET` | `/api/v1/wallet/summary` | Wallet aggregates | `advert-market-av4.6` | `advert-market-financial` |
-| `GET` | `/api/v1/wallet/transactions` | Wallet history | `advert-market-av4.6` | `advert-market-financial` |
 | `GET` | `/api/v1/wallet/transactions/{txId}` | Wallet transaction detail | `advert-market-av4.6` | `advert-market-financial` |
-| `POST` | `/api/v1/wallet/withdraw` | Withdrawal request | `advert-market-av4.6` | `advert-market-financial` |
 
 ## Compatibility Notes
 

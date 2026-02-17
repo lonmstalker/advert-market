@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Frontend Agent Instructions
 
 ## UI Kit: @telegram-tools/ui-kit

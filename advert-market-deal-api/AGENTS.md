@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Deal API — Agent Instructions
 
 Pure API module: DTOs, ports, and events for the deal state machine.

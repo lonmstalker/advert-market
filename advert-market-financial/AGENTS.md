@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Financial — Agent Instructions
 
 Double-entry ledger for nanoTON accounting. Escrow, payouts, and reconciliation pending.

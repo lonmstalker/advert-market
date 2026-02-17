@@ -29,9 +29,9 @@ dependencies {
 ```
 POST https://api.telegram.org/bot{token}/setWebhook
 {
-  "url": "https://bot.advertmarket.com/api/v1/bot/webhook",
+  "url": "https://teleinsight.in/api/v1/bot/webhook",
   "secret_token": "<random-256-bit-hex>",
-  "allowed_updates": ["message", "callback_query"],
+  "allowed_updates": ["message", "callback_query", "my_chat_member"],
   "max_connections": 40
 }
 ```
@@ -123,7 +123,7 @@ telegram:
   bot:
     token: ${TELEGRAM_BOT_TOKEN}
     webhook:
-      url: ${TELEGRAM_WEBHOOK_URL:https://bot.advertmarket.com/api/v1/bot/webhook}
+      url: ${TELEGRAM_WEBHOOK_URL:https://teleinsight.in/api/v1/bot/webhook}
       secret: ${TELEGRAM_WEBHOOK_SECRET}
   rate-limit:
     per-chat-delay-ms: 1000   # 1 msg/sec to same chat
@@ -183,7 +183,7 @@ Commands are registered via `setMyCommands` on bot startup (public commands only
 
 ### /start
 - Upsert user in `users` table (create if not exists)
-- Send welcome message with WebApp button linking to `https://app.advertmarket.com`
+- Send welcome message with WebApp button linking to `https://teleinsight.in`
 - If first-time user: trigger onboarding flow in Mini App
 
 ### /start {startapp}
@@ -266,7 +266,7 @@ public void handleStartCommand(Update update) {
 }
 
 private String buildDeepLinkUrl(String startParam) {
-    // startapp=deal_550e8400 -> https://app.advertmarket.com/?route=deal&id=550e8400
+    // startapp=deal_550e8400 -> https://teleinsight.in/?route=deal&id=550e8400
     String[] parts = startParam.split("_", 2);
     if (parts.length != 2) return BASE_WEBAPP_URL;
 

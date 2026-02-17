@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Marketplace — Agent Instructions
 
 Channel management, pricing, team membership, and full-text search implementation.

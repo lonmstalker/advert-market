@@ -1,3 +1,7 @@
+# Parent Instructions
+- Parent: `/Users/nikitakocnev/.codex/AGENTS.md`
+- This file contains only module-local deltas.
+
 # Architecture — Agent Instructions
 
 LikeC4 architecture diagrams for the advert-market platform.

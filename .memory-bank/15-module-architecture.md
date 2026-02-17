@@ -52,9 +52,9 @@ This split enables:
 | `advert-market-identity` | Implemented | Auth/login/logout, profile APIs, onboarding |
 | `advert-market-marketplace` | Implemented | Channel catalog/search, verification, pricing, team management |
 | `advert-market-communication` | Partially implemented | Webhook + bot routing + shared outbox integration points |
-| `advert-market-deal` | Scaffold only | `src/main/java/.gitkeep`; APIs are planned in Beads |
-| `advert-market-financial` | Scaffold only | `src/main/java/.gitkeep`; APIs are planned in Beads |
-| `advert-market-delivery` | Scaffold only | `src/main/java/.gitkeep`; APIs are planned in Beads |
+| `advert-market-deal` | Implemented | Deal controllers, transition service, workflow engine, timeout scheduler, dispute hooks |
+| `advert-market-financial` | Implemented | Wallet API, escrow/ledger services, TON workers (deposit/payout/refund), reconciliation/commission flows |
+| `advert-market-delivery` | Partially implemented | Delivery event listener and integration hooks are present; full scheduler/verifier surface is still in progress |
 
 ## Dependency Graph (impl → api)
 

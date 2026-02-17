@@ -9,7 +9,8 @@
     "advert-market-marketplace/src/main/java",
     "advert-market-app/src/main/java",
     "advert-market-communication/src/main/java",
-    "advert-market-deal/src/main/java"
+    "advert-market-deal/src/main/java",
+    "advert-market-financial/src/main/java"
   ],
   "beadsValidStatuses": [
     "open",
@@ -20,98 +21,10 @@
     {
       "scope": "frontend-backend",
       "method": "GET",
-      "path": "/api/v1/deals/{param}/timeline",
-      "beads_id": "advert-market-av4.5",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Deal timeline API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "POST",
-      "path": "/api/v1/deals/{param}/negotiate",
-      "beads_id": "advert-market-av4.5",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Deal negotiate API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "GET",
-      "path": "/api/v1/deals/{param}/deposit",
-      "beads_id": "advert-market-av4.3",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Deposit info API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "GET",
-      "path": "/api/v1/wallet/summary",
-      "beads_id": "advert-market-av4.6",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Wallet API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "GET",
-      "path": "/api/v1/wallet/transactions",
-      "beads_id": "advert-market-av4.6",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Wallet API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "GET",
       "path": "/api/v1/wallet/transactions/{param}",
       "beads_id": "advert-market-av4.6",
       "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
       "reason": "Wallet API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "GET",
-      "path": "/api/v1/creatives",
-      "beads_id": "advert-market-7lx",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Creative library API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "POST",
-      "path": "/api/v1/creatives",
-      "beads_id": "advert-market-7lx",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Creative library API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "GET",
-      "path": "/api/v1/creatives/{param}",
-      "beads_id": "advert-market-7lx",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Creative library API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "PUT",
-      "path": "/api/v1/creatives/{param}",
-      "beads_id": "advert-market-7lx",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Creative library API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "DELETE",
-      "path": "/api/v1/creatives/{param}",
-      "beads_id": "advert-market-7lx",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Creative library API is planned and tracked in Beads"
-    },
-    {
-      "scope": "frontend-backend",
-      "method": "GET",
-      "path": "/api/v1/creatives/{param}/versions",
-      "beads_id": "advert-market-7lx",
-      "memory_bank_ref": ".memory-bank/11-api-contracts.md#planned-api",
-      "reason": "Creative library API is planned and tracked in Beads"
     }
   ]
 }
