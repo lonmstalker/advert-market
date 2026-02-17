@@ -27,6 +27,7 @@ import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.json.JsonFacade;
+import com.advertmarket.shared.json.JsonException;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
@@ -192,6 +193,47 @@ class DealServiceTest {
                     .isInstanceOf(DomainException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCodes.CREATIVE_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("should create deal using cached channel when live sync is rate-limited")
+        void create_whenSyncRateLimited_shouldFallbackToCachedChannel() {
+            var cmd = new CreateDealCommand(1L, 1_000_000_000L, null, null, null);
+            when(channelAutoSyncPort.syncFromTelegram(1L))
+                    .thenThrow(new DomainException(
+                            ErrorCodes.RATE_LIMIT_EXCEEDED,
+                            "rate limited"));
+            when(channelRepository.findDetailById(1L))
+                    .thenReturn(Optional.of(channelDetail(1L, 200L)));
+
+            var result = service.create(cmd, 100L);
+
+            assertThat(result.status()).isEqualTo(DealStatus.DRAFT);
+            verify(dealRepository).insert(any(DealRecord.class));
+        }
+
+        @Test
+        @DisplayName("should wrap plain-text creativeBrief into JSON payload")
+        void create_withPlainTextCreativeBrief_shouldPersistJson() {
+            var cmd = new CreateDealCommand(
+                    1L,
+                    1_000_000_000L,
+                    null,
+                    "Need native integration",
+                    null);
+            when(channelRepository.findDetailById(1L))
+                    .thenReturn(Optional.of(channelDetail(1L, 200L)));
+            when(jsonFacade.readTree("Need native integration"))
+                    .thenThrow(new JsonException("invalid json"));
+            when(jsonFacade.toJson(any()))
+                    .thenReturn("{\"text\":\"Need native integration\"}");
+
+            service.create(cmd, 100L);
+
+            var captor = ArgumentCaptor.forClass(DealRecord.class);
+            verify(dealRepository).insert(captor.capture());
+            assertThat(captor.getValue().creativeBrief())
+                    .isEqualTo("{\"text\":\"Need native integration\"}");
         }
     }
 

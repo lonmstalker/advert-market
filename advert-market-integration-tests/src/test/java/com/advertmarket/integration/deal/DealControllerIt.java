@@ -171,6 +171,57 @@ class DealControllerIt {
     }
 
     @Test
+    @DisplayName("POST /deals should fallback to cached channel when live sync is rate-limited")
+    void createDeal_syncRateLimited_returns201() {
+        String token = advertiserToken();
+        when(channelAutoSyncPort.syncFromTelegram(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        ErrorCodes.RATE_LIMIT_EXCEEDED,
+                        "rate limited"));
+
+        var body = webClient.post().uri("/api/v1/deals")
+                .headers(h -> h.setBearerAuth(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(createRequest(CHANNEL_ID, ONE_TON_NANO))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(DealDto.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.channelId()).isEqualTo(CHANNEL_ID);
+        assertThat(body.status().name()).isEqualTo("DRAFT");
+    }
+
+    @Test
+    @DisplayName("POST /deals with plain text creativeBrief returns 201 and persists wrapped JSON")
+    void createDeal_plainTextCreativeBrief_returns201() {
+        String token = advertiserToken();
+
+        var body = webClient.post().uri("/api/v1/deals")
+                .headers(h -> h.setBearerAuth(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of(
+                        "channelId", CHANNEL_ID,
+                        "amountNano", ONE_TON_NANO,
+                        "creativeBrief", "Need native integration"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(DealDto.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(body).isNotNull();
+        String storedCreativeBrief = dsl.select(DEALS.CREATIVE_BRIEF)
+                .from(DEALS)
+                .where(DEALS.ID.eq(body.id().value()))
+                .fetchSingle(DEALS.CREATIVE_BRIEF)
+                .data();
+        assertThat(storedCreativeBrief).contains("Need native integration");
+    }
+
+    @Test
     @DisplayName("POST /deals with non-existent channel returns 404")
     void createDeal_channelNotFound_returns404() {
         String token = advertiserToken();

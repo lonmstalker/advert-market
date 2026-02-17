@@ -22,6 +22,7 @@ import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.financial.CommissionCalculator;
 import com.advertmarket.shared.json.JsonFacade;
+import com.advertmarket.shared.json.JsonException;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
@@ -31,6 +32,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DealService implements DealPort {
 
     private static final int DEFAULT_COMMISSION_RATE_BP = 200;
@@ -68,7 +71,7 @@ public class DealService implements DealPort {
     @Transactional
     public @NonNull DealDto create(@NonNull CreateDealCommand command,
                                    long advertiserId) {
-        channelAutoSyncPort.syncFromTelegram(command.channelId());
+        syncChannelForCreate(command.channelId());
         var channel = channelRepository.findDetailById(command.channelId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         ErrorCodes.CHANNEL_NOT_FOUND, "Channel",
@@ -110,6 +113,21 @@ public class DealService implements DealPort {
 
         dealRepository.insert(record);
         return dealDtoMapper.toDto(record);
+    }
+
+    private void syncChannelForCreate(long channelId) {
+        try {
+            channelAutoSyncPort.syncFromTelegram(channelId);
+        } catch (DomainException exception) {
+            if (exception.getErrorCode()
+                    != ErrorCodes.RATE_LIMIT_EXCEEDED) {
+                throw exception;
+            }
+            log.warn(
+                    "Channel sync rate-limited for create; "
+                            + "falling back to cached channel snapshot: {}",
+                    channelId);
+        }
     }
 
     @Override
@@ -216,7 +234,7 @@ public class DealService implements DealPort {
             long advertiserId) {
         String creativeId = normalizeOptional(command.creativeId());
         if (creativeId == null) {
-            return command.creativeBrief();
+            return normalizeManualCreativeBrief(command.creativeBrief());
         }
 
         var creative = creativeRepository.findByOwnerAndId(advertiserId, creativeId)
@@ -229,6 +247,21 @@ public class DealService implements DealPort {
                 "title", creative.title(),
                 "version", creative.version(),
                 "draft", creative.draft()));
+    }
+
+    private @Nullable String normalizeManualCreativeBrief(
+            @Nullable String rawCreativeBrief) {
+        String creativeBrief = normalizeOptional(rawCreativeBrief);
+        if (creativeBrief == null) {
+            return null;
+        }
+
+        try {
+            jsonFacade.readTree(creativeBrief);
+            return creativeBrief;
+        } catch (JsonException ignored) {
+            return jsonFacade.toJson(Map.of("text", creativeBrief));
+        }
     }
 
     private static @Nullable String normalizeOptional(@Nullable String raw) {

@@ -100,6 +100,12 @@ Server owns the action -> status mapping matrix.
 - Re-send is blocked when existing outbound transaction is unresolved.
 - Ledger operations remain idempotent by operation-specific keys.
 
+## Create Path Reliability
+
+- Deal creation performs live channel sync, but `RATE_LIMIT_EXCEEDED` no longer blocks the request.
+- When live sync is rate-limited, runtime falls back to cached channel state in DB.
+- `creativeBrief` accepts plain text from Mini App and is normalized into JSON before persistence to `deals.creative_brief` (`JSONB`).
+
 ## Related Documents
 
 - [Deal state machine](../06-deal-state-machine.md)
