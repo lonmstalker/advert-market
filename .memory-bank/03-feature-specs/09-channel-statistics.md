@@ -44,6 +44,9 @@ GET /bot{token}/getChatMemberCount?chat_id={channel_id}
 
 Returns: integer (subscriber count). Bot must be admin of the channel.
 
+Verification/runtime note:
+- Channel verification performs Telegram reads sequentially and retries once after ~1.1s when local per-channel limiter returns `RATE_LIMIT_EXCEEDED`.
+
 ### getChat
 
 ```

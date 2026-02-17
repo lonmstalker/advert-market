@@ -4,9 +4,12 @@ import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_INSUFFICI
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.RATE_LIMIT_EXCEEDED;
 import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
@@ -158,13 +161,50 @@ class ChannelVerificationServiceTest {
                 .thenReturn(chatInfo("channel"));
         when(telegramChannel.getChatAdministrators(CHANNEL_ID))
                 .thenThrow(new DomainException(SERVICE_UNAVAILABLE, "boom"));
-        when(telegramChannel.getChatMemberCount(CHANNEL_ID))
-                .thenReturn(1000);
 
         assertThatThrownBy(() -> service.verify(USERNAME, USER_ID))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(SERVICE_UNAVAILABLE);
+    }
+
+    @Test
+    @DisplayName("Should retry once when admins lookup is rate-limited")
+    void shouldRetryOnceWhenAdminsLookupRateLimited() {
+        when(telegramChannel.getChatByUsername(USERNAME))
+                .thenReturn(chatInfo("channel"));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        RATE_LIMIT_EXCEEDED, "rate limited"))
+                .thenReturn(List.of(botAdmin(), adminInfo(USER_ID)));
+        when(telegramChannel.getChatMemberCount(CHANNEL_ID))
+                .thenReturn(1000);
+
+        var result = service.verify(USERNAME, USER_ID);
+
+        assertThat(result.channelId()).isEqualTo(CHANNEL_ID);
+        verify(telegramChannel, times(2))
+                .getChatAdministrators(CHANNEL_ID);
+    }
+
+    @Test
+    @DisplayName("Should retry once when member count lookup is rate-limited")
+    void shouldRetryOnceWhenMemberCountLookupRateLimited() {
+        when(telegramChannel.getChatByUsername(USERNAME))
+                .thenReturn(chatInfo("channel"));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(botAdmin(), adminInfo(USER_ID)));
+        when(telegramChannel.getChatMemberCount(CHANNEL_ID))
+                .thenThrow(new DomainException(
+                        RATE_LIMIT_EXCEEDED, "rate limited"))
+                .thenReturn(1000);
+
+        var result = service.verify(USERNAME, USER_ID);
+
+        assertThat(result.channelId()).isEqualTo(CHANNEL_ID);
+        assertThat(result.subscriberCount()).isEqualTo(1000);
+        verify(telegramChannel, times(2))
+                .getChatMemberCount(CHANNEL_ID);
     }
 
     private static ChatInfo chatInfo(String type) {

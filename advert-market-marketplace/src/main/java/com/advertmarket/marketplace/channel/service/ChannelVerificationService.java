@@ -12,6 +12,7 @@ import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
 import com.advertmarket.marketplace.channel.mapper.ChannelVerifyResponseFactory;
+import com.advertmarket.shared.error.ErrorCode;
 import com.advertmarket.shared.exception.DomainException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -37,6 +39,8 @@ import org.springframework.stereotype.Service;
 public class ChannelVerificationService {
 
     private static final String TYPE_CHANNEL = "channel";
+    private static final int RATE_LIMIT_MAX_ATTEMPTS = 2;
+    private static final long RATE_LIMIT_RETRY_DELAY_MS = 1100L;
 
     private final TelegramChannelPort telegramChannel;
     private final ChannelBotProperties botProperties;
@@ -90,24 +94,16 @@ public class ChannelVerificationService {
         long botId = botProperties.botUserId();
 
         long timeoutMs = botProperties.verificationTimeout().toMillis();
-        var adminsFuture = CompletableFuture.supplyAsync(
+        var admins = callTelegramWithRateLimitRetry(
+                channelId,
+                timeoutMs,
                 () -> telegramChannel.getChatAdministrators(channelId),
-                blockingIoExecutor).orTimeout(timeoutMs,
-                TimeUnit.MILLISECONDS);
-        var memberCountFuture = CompletableFuture.supplyAsync(
+                "getChatAdministrators");
+        int memberCount = callTelegramWithRateLimitRetry(
+                channelId,
+                timeoutMs,
                 () -> telegramChannel.getChatMemberCount(channelId),
-                blockingIoExecutor).orTimeout(timeoutMs,
-                TimeUnit.MILLISECONDS);
-
-        try {
-            CompletableFuture.allOf(
-                    adminsFuture, memberCountFuture
-            ).join();
-        } catch (CompletionException e) {
-            throw unwrapAsyncFailure(channelId, e);
-        }
-
-        var admins = adminsFuture.join();
+                "getChatMemberCount");
         var botMember = findAdminByUserId(admins, botId)
                 .orElseThrow(() -> new DomainException(
                         CHANNEL_BOT_NOT_ADMIN,
@@ -116,7 +112,6 @@ public class ChannelVerificationService {
                 .orElseThrow(() -> new DomainException(
                         CHANNEL_USER_NOT_ADMIN,
                         "User is not an admin of the channel"));
-        int memberCount = memberCountFuture.join();
 
         validateBot(botMember);
         validateUser(userMember);
@@ -126,6 +121,60 @@ public class ChannelVerificationService {
                 memberCount,
                 botMember,
                 userMember);
+    }
+
+    private <T> T callTelegramWithRateLimitRetry(
+            long channelId,
+            long timeoutMs,
+            Supplier<T> operation,
+            String operationName) {
+        for (int attempt = 1;
+                attempt <= RATE_LIMIT_MAX_ATTEMPTS;
+                attempt++) {
+            try {
+                return callTelegramWithTimeout(
+                        channelId, timeoutMs, operation);
+            } catch (DomainException e) {
+                ErrorCode resolved = ErrorCode.resolve(
+                        e.getErrorCode());
+                if (resolved != ErrorCode.RATE_LIMIT_EXCEEDED
+                        || attempt == RATE_LIMIT_MAX_ATTEMPTS) {
+                    throw e;
+                }
+                log.warn("Channel={} {} rate-limited, retrying in {} ms",
+                        channelId, operationName,
+                        RATE_LIMIT_RETRY_DELAY_MS);
+                sleepBeforeRateLimitRetry(channelId);
+            }
+        }
+        throw new IllegalStateException("Rate limit retry exhausted");
+    }
+
+    private <T> T callTelegramWithTimeout(
+            long channelId,
+            long timeoutMs,
+            Supplier<T> operation) {
+        var future = CompletableFuture.supplyAsync(
+                operation, blockingIoExecutor).orTimeout(
+                timeoutMs, TimeUnit.MILLISECONDS);
+        try {
+            return future.join();
+        } catch (CompletionException e) {
+            throw unwrapAsyncFailure(channelId, e);
+        }
+    }
+
+    private static void sleepBeforeRateLimitRetry(long channelId) {
+        try {
+            Thread.sleep(RATE_LIMIT_RETRY_DELAY_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new DomainException(
+                    com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE,
+                    "Interrupted while waiting to retry channel "
+                            + channelId,
+                    e);
+        }
     }
 
     private static DomainException unwrapAsyncFailure(
