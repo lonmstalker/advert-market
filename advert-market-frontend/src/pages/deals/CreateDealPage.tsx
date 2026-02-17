@@ -66,7 +66,7 @@ export default function CreateDealPage() {
     if (selectedPostType || postTypeOptions.length === 0) {
       return;
     }
-    setSelectedPostType(postTypeOptions[0].type);
+    setSelectedPostType(postTypeOptions[0]?.type ?? null);
   }, [selectedPostType, postTypeOptions]);
 
   const mutation = useMutation({

@@ -99,7 +99,7 @@ export default function RegisterChannelPage() {
           ? rule
           : {
               ...rule,
-              postType: postTypes[0].type,
+              postType: postTypes[0]?.type ?? null,
             },
       ),
     );

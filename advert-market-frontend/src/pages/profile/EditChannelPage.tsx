@@ -113,7 +113,7 @@ export default function EditChannelPage() {
           ? rule
           : {
               ...rule,
-              postType: postTypes[0].type,
+              postType: postTypes[0]?.type ?? null,
             },
       ),
     );
