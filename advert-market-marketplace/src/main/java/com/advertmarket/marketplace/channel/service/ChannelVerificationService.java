@@ -193,28 +193,44 @@ public class ChannelVerificationService {
     }
 
     private static String extractTelegramPath(String raw) {
-        String withScheme = raw;
-        if (!raw.startsWith("http://")
-                && !raw.startsWith("https://")
-                && (raw.startsWith("t.me/")
-                || raw.startsWith("telegram.me/"))) {
-            withScheme = "https://" + raw;
-        }
-        if (!withScheme.startsWith("http://")
-                && !withScheme.startsWith("https://")) {
+        String withScheme = addHttpsToTelegramShortcut(raw);
+        if (!hasHttpScheme(withScheme)) {
             return raw;
         }
 
         URI uri = URI.create(withScheme);
-        String host = uri.getHost();
+        if (!isTelegramHost(uri.getHost())) {
+            return raw;
+        }
+        return requireTelegramPath(uri.getPath());
+    }
+
+    private static String addHttpsToTelegramShortcut(String raw) {
+        if (hasHttpScheme(raw) || !isTelegramShortcut(raw)) {
+            return raw;
+        }
+        return "https://" + raw;
+    }
+
+    private static boolean hasHttpScheme(String value) {
+        return value.startsWith("http://")
+                || value.startsWith("https://");
+    }
+
+    private static boolean isTelegramShortcut(String value) {
+        return value.startsWith("t.me/")
+                || value.startsWith("telegram.me/");
+    }
+
+    private static boolean isTelegramHost(@Nullable String host) {
         if (host == null) {
-            return raw;
+            return false;
         }
-        if (!host.equalsIgnoreCase(T_ME_HOST)
-                && !host.equalsIgnoreCase(TELEGRAM_ME_HOST)) {
-            return raw;
-        }
-        String path = uri.getPath();
+        return host.equalsIgnoreCase(T_ME_HOST)
+                || host.equalsIgnoreCase(TELEGRAM_ME_HOST);
+    }
+
+    private static String requireTelegramPath(@Nullable String path) {
         if (path == null || path.isBlank()) {
             throw invalidParameter("Telegram link does not contain channel "
                     + "reference");

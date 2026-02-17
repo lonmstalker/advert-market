@@ -205,7 +205,8 @@ class ChannelAutoSyncServiceTest {
     }
 
     @Test
-    @DisplayName("syncFromTelegram should not mark outer transaction rollback-only for DomainException")
+    @DisplayName("syncFromTelegram should not mark outer transaction rollback-only "
+            + "for DomainException")
     void syncFromTelegram_noRollbackForDomainException() throws Exception {
         Transactional transactional = ChannelAutoSyncService.class
                 .getMethod("syncFromTelegram", long.class)

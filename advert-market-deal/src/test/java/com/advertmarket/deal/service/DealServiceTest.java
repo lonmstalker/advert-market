@@ -17,17 +17,17 @@ import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
+import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.dto.creative.CreativeDraftDto;
 import com.advertmarket.marketplace.api.dto.creative.CreativeTemplateDto;
-import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.CreativeRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.EntityNotFoundException;
 import com.advertmarket.shared.exception.ErrorCodes;
-import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.json.JsonException;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
@@ -166,18 +166,19 @@ class DealServiceTest {
         @Test
         @DisplayName("should persist creative snapshot when command references creativeId")
         void create_withCreativeId_shouldPersistCreativeSnapshot() {
-            var cmd = new CreateDealCommand(1L, 1_000_000_000L, null, null, "creative-42");
             when(channelRepository.findDetailById(1L))
                     .thenReturn(Optional.of(channelDetail(1L, 200L)));
             when(creativeRepository.findByOwnerAndId(100L, "creative-42"))
                     .thenReturn(Optional.of(creativeTemplate("creative-42")));
             when(jsonFacade.toJson(any())).thenReturn("{\"creativeId\":\"creative-42\"}");
 
+            var cmd = new CreateDealCommand(1L, 1_000_000_000L, null, null, "creative-42");
             service.create(cmd, 100L);
 
             var captor = ArgumentCaptor.forClass(DealRecord.class);
             verify(dealRepository).insert(captor.capture());
-            assertThat(captor.getValue().creativeBrief()).isEqualTo("{\"creativeId\":\"creative-42\"}");
+            assertThat(captor.getValue().creativeBrief())
+                    .isEqualTo("{\"creativeId\":\"creative-42\"}");
         }
 
         @Test
@@ -215,12 +216,6 @@ class DealServiceTest {
         @Test
         @DisplayName("should wrap plain-text creativeBrief into JSON payload")
         void create_withPlainTextCreativeBrief_shouldPersistJson() {
-            var cmd = new CreateDealCommand(
-                    1L,
-                    1_000_000_000L,
-                    null,
-                    "Need native integration",
-                    null);
             when(channelRepository.findDetailById(1L))
                     .thenReturn(Optional.of(channelDetail(1L, 200L)));
             when(jsonFacade.readTree("Need native integration"))
@@ -228,6 +223,12 @@ class DealServiceTest {
             when(jsonFacade.toJson(any()))
                     .thenReturn("{\"text\":\"Need native integration\"}");
 
+            var cmd = new CreateDealCommand(
+                    1L,
+                    1_000_000_000L,
+                    null,
+                    "Need native integration",
+                    null);
             service.create(cmd, 100L);
 
             var captor = ArgumentCaptor.forClass(DealRecord.class);

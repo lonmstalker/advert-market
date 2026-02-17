@@ -5,8 +5,8 @@ import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -94,7 +94,8 @@ class DealUseCaseTest {
         var response = useCase.create(request);
 
         assertThat(response).isEqualTo(created);
-        var commandCaptor = ArgumentCaptor.forClass(com.advertmarket.deal.api.dto.CreateDealCommand.class);
+        var commandCaptor = ArgumentCaptor.forClass(
+                com.advertmarket.deal.api.dto.CreateDealCommand.class);
         verify(dealService).create(commandCaptor.capture(), eq(USER_ID));
         assertThat(commandCaptor.getValue().creativeId()).isEqualTo("creative-42");
     }
