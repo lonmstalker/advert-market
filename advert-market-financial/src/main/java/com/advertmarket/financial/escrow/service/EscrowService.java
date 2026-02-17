@@ -17,6 +17,8 @@ import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.model.Money;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.util.IdempotencyKey;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +74,8 @@ public class EscrowService implements EscrowPort {
                                long expectedAmountNano,
                                int confirmations,
                                @NonNull String fromAddress) {
+        syncInboundDepositRecord(dealId, txHash, confirmations, fromAddress);
+
         var received = Money.ofNano(amountNano);
         long excess = DepositAmountValidator.excessNano(
                 expectedAmountNano, amountNano);
@@ -108,6 +112,50 @@ public class EscrowService implements EscrowPort {
                         + "expected={}, excess={}",
                 dealId, txHash, amountNano,
                 expectedAmountNano, excess);
+    }
+
+    private void syncInboundDepositRecord(
+            DealId dealId,
+            String txHash,
+            int confirmations,
+            String fromAddress) {
+        var inboundOpt = txRepository.findLatestInboundByDealId(dealId.value());
+        if (inboundOpt.isEmpty()) {
+            return;
+        }
+
+        var inbound = inboundOpt.get();
+        if (alreadyEnriched(inbound)) {
+            return;
+        }
+
+        int expectedVersion = inbound.getVersion() != null
+                ? inbound.getVersion()
+                : 0;
+        boolean updated = txRepository.updateConfirmed(
+                inbound.getId(),
+                txHash,
+                confirmations,
+                0L,
+                OffsetDateTime.now(ZoneOffset.UTC),
+                fromAddress,
+                expectedVersion);
+        if (!updated) {
+            log.debug("Inbound deposit CAS update skipped: deal={}", dealId);
+        }
+    }
+
+    private static boolean alreadyEnriched(TonTransactionsRecord inbound) {
+        String status = inbound.getStatus();
+        if (status == null || !"CONFIRMED".equalsIgnoreCase(status)) {
+            return false;
+        }
+        String txHash = inbound.getTxHash();
+        if (txHash == null || txHash.isBlank()) {
+            return false;
+        }
+        String fromAddress = inbound.getFromAddress();
+        return fromAddress != null && !fromAddress.isBlank();
     }
 
     @Override

@@ -3,6 +3,10 @@ package com.advertmarket.financial.escrow.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -13,6 +17,7 @@ import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
+import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
@@ -157,6 +162,78 @@ class EscrowServiceTest {
             assertThat(captor.getAllValues())
                     .extracting(r -> r.idempotencyKey().value())
                     .containsOnly("deposit:txhash_dup");
+        }
+
+        @Test
+        @DisplayName("Should enrich latest inbound TX when callback confirms deposit")
+        void enrichesLatestInboundOnConfirm() {
+            var dealId = DealId.generate();
+            var inbound = new TonTransactionsRecord();
+            inbound.setId(10L);
+            inbound.setVersion(3);
+            inbound.setStatus("PENDING");
+            inbound.setTxHash(null);
+            inbound.setFromAddress(null);
+            when(txRepository.findLatestInboundByDealId(dealId.value()))
+                    .thenReturn(java.util.Optional.of(inbound));
+            when(txRepository.updateConfirmed(
+                    eq(10L),
+                    eq("txhash_sync"),
+                    eq(4),
+                    eq(0L),
+                    any(java.time.OffsetDateTime.class),
+                    eq("fromAddr"),
+                    eq(3))).thenReturn(true);
+            when(ledgerPort.transfer(any())).thenReturn(UUID.randomUUID());
+
+            service.confirmDeposit(
+                    dealId,
+                    "txhash_sync",
+                    10_000_000_000L,
+                    10_000_000_000L,
+                    4,
+                    "fromAddr");
+
+            verify(txRepository).updateConfirmed(
+                    eq(10L),
+                    eq("txhash_sync"),
+                    eq(4),
+                    eq(0L),
+                    any(java.time.OffsetDateTime.class),
+                    eq("fromAddr"),
+                    eq(3));
+        }
+
+        @Test
+        @DisplayName("Should not rewrite inbound TX when already confirmed and enriched")
+        void skipsInboundRewriteWhenAlreadyEnriched() {
+            var dealId = DealId.generate();
+            var inbound = new TonTransactionsRecord();
+            inbound.setId(11L);
+            inbound.setVersion(1);
+            inbound.setStatus("CONFIRMED");
+            inbound.setTxHash("existing_tx");
+            inbound.setFromAddress("existing_from");
+            when(txRepository.findLatestInboundByDealId(dealId.value()))
+                    .thenReturn(java.util.Optional.of(inbound));
+            when(ledgerPort.transfer(any())).thenReturn(UUID.randomUUID());
+
+            service.confirmDeposit(
+                    dealId,
+                    "txhash_new",
+                    10_000_000_000L,
+                    10_000_000_000L,
+                    3,
+                    "fromAddr");
+
+            verify(txRepository, never()).updateConfirmed(
+                    anyLong(),
+                    anyString(),
+                    anyInt(),
+                    anyLong(),
+                    any(java.time.OffsetDateTime.class),
+                    anyString(),
+                    anyInt());
         }
     }
 
