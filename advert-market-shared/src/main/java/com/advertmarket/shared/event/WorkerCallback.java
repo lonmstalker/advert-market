@@ -2,7 +2,6 @@ package com.advertmarket.shared.event;
 
 import com.advertmarket.shared.FenumGroup;
 import com.advertmarket.shared.model.DealId;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Objects;
 import java.util.UUID;
 import org.checkerframework.checker.fenum.qual.Fenum;
@@ -24,7 +23,7 @@ public record WorkerCallback(
         @Fenum(FenumGroup.EVENT_TYPE) @NonNull String callbackType,
         @Nullable DealId dealId,
         @NonNull UUID correlationId,
-        @NonNull JsonNode payload) {
+        @NonNull Object payload) {
 
     /**
      * Creates a worker callback with validation.
