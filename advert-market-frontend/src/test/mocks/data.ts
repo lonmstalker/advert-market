@@ -16,6 +16,7 @@ export const mockUser = {
   currencyMode: 'AUTO' as 'AUTO' | 'MANUAL',
   notificationSettings: mockNotificationSettings,
   onboardingCompleted: true,
+  tonAddress: null as string | null,
   interests: ['advertiser'] as string[],
   createdAt: '2026-01-15T10:00:00Z',
 };
@@ -40,6 +41,7 @@ export const mockProfile = {
   currencyMode: mockUser.currencyMode,
   notificationSettings: mockUser.notificationSettings,
   onboardingCompleted: mockUser.onboardingCompleted,
+  tonAddress: mockUser.tonAddress,
   interests: mockUser.interests,
   createdAt: mockUser.createdAt,
 };

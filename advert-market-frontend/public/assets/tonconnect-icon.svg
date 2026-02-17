@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Ad Market">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00b4d8" />
+      <stop offset="1" stop-color="#0077b6" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#g)" />
+  <path d="M23 87 L49 34 H61 L87 87 H74 L67 72 H43 L36 87 Z M49 60 H61 L55 47 Z" fill="#ffffff" />
+  <circle cx="94" cy="36" r="13" fill="#ffb703" />
+  <path d="M94 25 L97 33 H106 L99 38 L102 46 L94 41 L86 46 L89 38 L82 33 H91 Z" fill="#023047" />
+</svg>
