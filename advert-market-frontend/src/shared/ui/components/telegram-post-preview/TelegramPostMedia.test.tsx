@@ -1,7 +1,6 @@
-import { fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { MediaItem } from '@/shared/types/text-entity';
-import { renderWithProviders, screen } from '@/test/test-utils';
+import { fireEvent, renderWithProviders, screen, waitFor } from '@/test/test-utils';
 import { TelegramPostMedia } from './TelegramPostMedia';
 
 describe('TelegramPostMedia', () => {
