@@ -92,7 +92,7 @@ describe('RegisterChannelPage', () => {
 
     await waitFor(() => expect(backHandler).not.toBeNull());
 
-    await user.type(screen.getByPlaceholderText('@username'), 'mynewchannel');
+    await user.type(screen.getByRole('textbox'), 'mynewchannel');
     await user.click(screen.getByRole('button', { name: 'Verify' }));
 
     await waitFor(() => {
@@ -106,5 +106,17 @@ describe('RegisterChannelPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Verify' })).toBeInTheDocument();
     });
+  });
+
+  it('shows inline error for unsupported invite links without calling API', async () => {
+    const { user } = renderPage();
+
+    await user.type(screen.getByRole('textbox'), 'https://t.me/+invite');
+    await user.click(screen.getByRole('button', { name: 'Verify' }));
+
+    expect(mockVerifyChannel).not.toHaveBeenCalled();
+    expect(
+      screen.getByText('Invite links are not supported. Use @username, t.me/c/... link, or numeric channel ID.'),
+    ).toBeInTheDocument();
   });
 });

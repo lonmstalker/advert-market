@@ -86,10 +86,10 @@ export function createDeal(request: CreateDealRequest): Promise<CreateDealRespon
   });
 }
 
-export function verifyChannel(username: string): Promise<ChannelVerifyResponse> {
+export function verifyChannel(channelReference: string): Promise<ChannelVerifyResponse> {
   return api.post(
     '/channels/verify',
-    { channelUsername: username },
+    { channelUsername: channelReference },
     {
       schema: channelVerifyResponseSchema,
     },

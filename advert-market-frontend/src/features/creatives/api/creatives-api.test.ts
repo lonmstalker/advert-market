@@ -105,4 +105,83 @@ describe('creatives-api helpers', () => {
       uploaded.url.startsWith('http://') || uploaded.url.startsWith('https://') || uploaded.url.startsWith('data:'),
     ).toBe(true);
   });
+
+  it('accepts relative media URLs from create response and normalizes them', async () => {
+    server.use(
+      http.post(`${API_BASE}/creatives`, () => {
+        return HttpResponse.json(
+          {
+            id: 'creative-relative-media',
+            title: 'Template',
+            draft: {
+              text: 'Post text',
+              entities: [],
+              media: [
+                {
+                  id: 'media-1',
+                  type: 'PHOTO',
+                  url: '/creative-media/creatives/photo.png',
+                  thumbnailUrl: '/creative-media/creatives/thumb.png',
+                  fileName: 'photo.png',
+                  fileSize: '10 KB',
+                  mimeType: 'image/png',
+                  sizeBytes: 10240,
+                  caption: 'Preview',
+                },
+              ],
+              keyboardRows: [[{ id: 'b1', text: 'Open', url: 'https://example.com' }]],
+              disableWebPagePreview: false,
+            },
+            version: 1,
+            createdAt: '2026-02-17T09:02:27.72319Z',
+            updatedAt: '2026-02-17T09:02:27.72319Z',
+          },
+          { status: 201 },
+        );
+      }),
+    );
+
+    const created = await createCreative({
+      title: 'Template',
+      text: 'Post text',
+      entities: [],
+      media: [],
+      buttons: [[{ id: 'b1', text: 'Open', url: 'https://example.com' }]],
+      disableWebPagePreview: false,
+    });
+
+    const expectedUrl = new URL('/creative-media/creatives/photo.png', window.location.origin).toString();
+    const expectedThumb = new URL('/creative-media/creatives/thumb.png', window.location.origin).toString();
+    expect(created.draft.media[0]?.url).toBe(expectedUrl);
+    expect(created.draft.media[0]?.thumbnailUrl).toBe(expectedThumb);
+  });
+
+  it('accepts relative media URLs from upload response and normalizes them', async () => {
+    server.use(
+      http.post(`${API_BASE}/creatives/media`, () => {
+        return HttpResponse.json(
+          {
+            id: 'media-relative',
+            type: 'PHOTO',
+            url: '/creative-media/creatives/upload-photo.png',
+            thumbnailUrl: '/creative-media/creatives/upload-photo-thumb.png',
+            fileName: 'upload-photo.png',
+            fileSize: '12 KB',
+            mimeType: 'image/png',
+            sizeBytes: 12000,
+            caption: null,
+          },
+          { status: 201 },
+        );
+      }),
+    );
+
+    const file = new File(['abc'], 'banner.png', { type: 'image/png' });
+    const uploaded = await uploadCreativeMedia(file, 'PHOTO');
+
+    expect(uploaded.url).toBe(new URL('/creative-media/creatives/upload-photo.png', window.location.origin).toString());
+    expect(uploaded.thumbnailUrl).toBe(
+      new URL('/creative-media/creatives/upload-photo-thumb.png', window.location.origin).toString(),
+    );
+  });
 });

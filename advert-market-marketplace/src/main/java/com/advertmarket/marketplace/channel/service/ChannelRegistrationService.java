@@ -30,14 +30,14 @@ public class ChannelRegistrationService {
     /**
      * Step 1: verifies channel ownership and bot admin status.
      *
-     * @param username channel username (without @)
+     * @param reference channel username, link, or numeric id
      * @param userId   requesting user's Telegram ID
      * @return verification result for the UI
      */
     @NonNull
-    public ChannelVerifyResponse verify(@NonNull String username,
+    public ChannelVerifyResponse verify(@NonNull String reference,
                                         long userId) {
-        return verificationService.verify(username, userId);
+        return verificationService.verify(reference, userId);
     }
 
     /**

@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import type { CSSProperties, MouseEventHandler, PointerEventHandler, ReactNode } from 'react';
+import type { CSSProperties, MouseEventHandler, PointerEventHandler, ReactNode, TouchEventHandler } from 'react';
 import { pressScale } from '@/shared/ui/animations';
 
 function joinClasses(...classes: Array<string | false | null | undefined>): string {
@@ -11,6 +11,7 @@ type TappableProps = {
   onClick?: () => void;
   onPointerDown?: PointerEventHandler<HTMLButtonElement>;
   onMouseDown?: MouseEventHandler<HTMLButtonElement>;
+  onTouchStart?: TouchEventHandler<HTMLButtonElement>;
   disabled?: boolean;
   style?: CSSProperties;
   className?: string;
@@ -26,6 +27,7 @@ export function Tappable({
   onClick,
   onPointerDown,
   onMouseDown,
+  onTouchStart,
   disabled,
   style,
   className,
@@ -38,6 +40,7 @@ export function Tappable({
       onClick={onClick}
       onPointerDown={onPointerDown}
       onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
       disabled={disabled}
       style={{ minWidth: 44, minHeight: 44, ...style }}
       className={joinClasses('am-tappable', className, disabled && 'opacity-50 pointer-events-none')}

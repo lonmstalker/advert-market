@@ -24,12 +24,11 @@ import { fadeIn, pressScale, slideFromLeft, slideFromRight } from '@/shared/ui/a
 
 const BOT_USERNAME = '@AdvertMarketBot';
 
-function normalizeUsername(raw: string): string {
-  let u = raw.trim();
-  if (u.startsWith('https://t.me/')) u = u.slice('https://t.me/'.length);
-  if (u.startsWith('http://t.me/')) u = u.slice('http://t.me/'.length);
-  if (u.startsWith('@')) u = u.slice(1);
-  return u;
+function looksLikeInviteLink(raw: string): boolean {
+  const value = raw.trim().toLowerCase();
+  return (
+    value.startsWith('+') || value.includes('t.me/+') || value.includes('telegram.me/+') || value.includes('/joinchat/')
+  );
 }
 
 export default function RegisterChannelPage() {
@@ -99,11 +98,15 @@ export default function RegisterChannelPage() {
   });
 
   const handleVerify = () => {
-    const normalized = normalizeUsername(username);
-    if (!normalized) return;
+    const reference = username.trim();
+    if (!reference) return;
+    if (looksLikeInviteLink(reference)) {
+      setInlineError(t('profile.register.inviteLinkUnsupported'));
+      return;
+    }
     haptic.impactOccurred('medium');
     setInlineError(null);
-    verifyMutation.mutate(normalized);
+    verifyMutation.mutate(reference);
   };
 
   const handleCopyBot = async () => {

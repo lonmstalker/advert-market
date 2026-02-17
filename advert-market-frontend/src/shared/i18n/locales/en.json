@@ -646,8 +646,8 @@
     "creatives.description": "Ad template library",
     "register": {
       "title": "Add Channel",
-      "channelLink": "Channel link",
-      "channelPlaceholder": "@username",
+      "channelLink": "Channel username, link, or ID",
+      "channelPlaceholder": "@username / t.me/c/... / -100...",
       "addBotInstruction": "Add @AdvertMarketBot as an admin to your channel",
       "autosyncHint": "After bot promotion the channel is synced automatically. \"Verify\" is a fallback sync trigger.",
       "copyBot": "Copy",
@@ -666,6 +666,7 @@
       "success": "Channel registered",
       "botNotAdmin": "Bot is not added as a channel admin",
       "channelNotFound": "Channel not found",
+      "inviteLinkUnsupported": "Invite links are not supported. Use @username, t.me/c/... link, or numeric channel ID.",
       "alreadyRegistered": "This channel is already registered",
       "alreadySynced": "Channel is already synchronized"
     }

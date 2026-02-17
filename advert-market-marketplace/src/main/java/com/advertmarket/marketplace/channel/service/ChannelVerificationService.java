@@ -4,6 +4,7 @@ import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_INSUFFICI
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.INVALID_PARAMETER;
 
 import com.advertmarket.marketplace.api.dto.ChannelVerifyResponse;
 import com.advertmarket.marketplace.api.dto.telegram.ChatInfo;
@@ -14,6 +15,7 @@ import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
 import com.advertmarket.marketplace.channel.mapper.ChannelVerifyResponseFactory;
 import com.advertmarket.shared.error.ErrorCode;
 import com.advertmarket.shared.exception.DomainException;
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -22,9 +24,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +44,15 @@ import org.springframework.stereotype.Service;
 public class ChannelVerificationService {
 
     private static final String TYPE_CHANNEL = "channel";
+    private static final String T_ME_HOST = "t.me";
+    private static final String TELEGRAM_ME_HOST = "telegram.me";
+    private static final String JOINCHAT_LINK_PREFIX = "joinchat/";
+    private static final String INVITE_HASH_PREFIX = "+";
+    private static final long TELEGRAM_CHANNEL_ID_OFFSET = 1_000_000_000_000L;
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile(
+            "^-?\\d+$");
+    private static final Pattern PRIVATE_POST_LINK_PATTERN = Pattern.compile(
+            "^c/(\\d+)(?:/.*)?$");
     private static final int RATE_LIMIT_MAX_ATTEMPTS = 2;
     private static final long RATE_LIMIT_RETRY_DELAY_MS = 1100L;
 
@@ -51,14 +64,14 @@ public class ChannelVerificationService {
     /**
      * Resolves a channel by username and verifies bot + user status.
      *
-     * @param username channel username (without @)
+     * @param reference channel username, numeric id, or private post link
      * @param userId   Telegram user ID of the requester
      * @return verification result
      */
     @NonNull
-    public ChannelVerifyResponse verify(@NonNull String username,
+    public ChannelVerifyResponse verify(@NonNull String reference,
                                         long userId) {
-        var chatInfo = resolveChannel(username);
+        var chatInfo = resolveChannel(reference);
         return verifyBotAndUser(chatInfo, userId);
     }
 
@@ -78,7 +91,23 @@ public class ChannelVerificationService {
     }
 
     @NonNull
-    ChatInfo resolveChannel(@NonNull String username) {
+    ChatInfo resolveChannel(@NonNull String reference) {
+        String normalized = normalizeChannelReference(reference);
+        if (isInviteLink(normalized)) {
+            throw invalidParameter("Invite links are not supported for "
+                    + "verification. Provide @username, t.me/c/<id>/<post>, "
+                    + "or channel id.");
+        }
+
+        Long channelId = parseChannelIdOrNull(normalized);
+        if (channelId != null) {
+            return resolveChannelById(channelId);
+        }
+
+        String username = normalizeUsername(normalized);
+        if (username.isBlank()) {
+            throw invalidParameter("Channel reference is empty");
+        }
         var chatInfo = telegramChannel.getChatByUsername(username);
         if (!TYPE_CHANNEL.equalsIgnoreCase(chatInfo.type())) {
             throw new DomainException(CHANNEL_NOT_FOUND,
@@ -86,6 +115,151 @@ public class ChannelVerificationService {
                             + "type: " + chatInfo.type());
         }
         return chatInfo;
+    }
+
+    private static boolean isInviteLink(String normalizedReference) {
+        return normalizedReference.startsWith(INVITE_HASH_PREFIX)
+                || normalizedReference.startsWith(JOINCHAT_LINK_PREFIX);
+    }
+
+    @Nullable
+    private static Long parseChannelIdOrNull(String normalizedReference) {
+        var matcher = PRIVATE_POST_LINK_PATTERN.matcher(normalizedReference);
+        if (matcher.matches()) {
+            return toChannelIdFromInternal(
+                    parsePositiveLong(matcher.group(1),
+                            "Invalid private post link"));
+        }
+        if (normalizedReference.startsWith("c/")) {
+            throw invalidParameter("Invalid private post link: "
+                    + normalizedReference);
+        }
+
+        if (!NUMERIC_PATTERN.matcher(normalizedReference).matches()) {
+            return null;
+        }
+        long parsed = parseLong(normalizedReference, "Invalid channel id");
+        return normalizeChannelId(parsed);
+    }
+
+    private static long normalizeChannelId(long parsed) {
+        if (parsed == 0) {
+            throw invalidParameter("Channel id cannot be 0");
+        }
+        if (parsed <= -TELEGRAM_CHANNEL_ID_OFFSET) {
+            return parsed;
+        }
+        if (parsed < 0) {
+            throw invalidParameter("Unsupported channel id format: " + parsed);
+        }
+        if (parsed >= TELEGRAM_CHANNEL_ID_OFFSET) {
+            return -parsed;
+        }
+        return toChannelIdFromInternal(parsed);
+    }
+
+    private static long toChannelIdFromInternal(long internalId) {
+        return -(TELEGRAM_CHANNEL_ID_OFFSET + internalId);
+    }
+
+    private static String normalizeChannelReference(@NonNull String reference) {
+        String trimmed = reference.trim();
+        if (trimmed.isBlank()) {
+            throw invalidParameter("Channel reference is required");
+        }
+
+        String noQuery = stripQueryAndFragment(trimmed);
+        String path = extractTelegramPath(noQuery);
+        String normalized = trimSlashes(path);
+
+        if (normalized.startsWith("@")) {
+            return normalized.substring(1);
+        }
+        return normalized;
+    }
+
+    private static String stripQueryAndFragment(String value) {
+        int queryPos = value.indexOf('?');
+        int fragmentPos = value.indexOf('#');
+        int cutPos;
+        if (queryPos < 0) {
+            cutPos = fragmentPos;
+        } else if (fragmentPos < 0) {
+            cutPos = queryPos;
+        } else {
+            cutPos = Math.min(queryPos, fragmentPos);
+        }
+        return cutPos >= 0 ? value.substring(0, cutPos) : value;
+    }
+
+    private static String extractTelegramPath(String raw) {
+        String withScheme = raw;
+        if (!raw.startsWith("http://")
+                && !raw.startsWith("https://")
+                && (raw.startsWith("t.me/")
+                || raw.startsWith("telegram.me/"))) {
+            withScheme = "https://" + raw;
+        }
+        if (!withScheme.startsWith("http://")
+                && !withScheme.startsWith("https://")) {
+            return raw;
+        }
+
+        URI uri = URI.create(withScheme);
+        String host = uri.getHost();
+        if (host == null) {
+            return raw;
+        }
+        if (!host.equalsIgnoreCase(T_ME_HOST)
+                && !host.equalsIgnoreCase(TELEGRAM_ME_HOST)) {
+            return raw;
+        }
+        String path = uri.getPath();
+        if (path == null || path.isBlank()) {
+            throw invalidParameter("Telegram link does not contain channel "
+                    + "reference");
+        }
+        return path;
+    }
+
+    private static String trimSlashes(String value) {
+        String normalized = value;
+        while (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0,
+                    normalized.length() - 1);
+        }
+        return normalized;
+    }
+
+    private static String normalizeUsername(String normalizedReference) {
+        int slashIndex = normalizedReference.indexOf('/');
+        String firstSegment = slashIndex >= 0
+                ? normalizedReference.substring(0, slashIndex)
+                : normalizedReference;
+        return firstSegment.trim();
+    }
+
+    private static long parsePositiveLong(String value, String message) {
+        long parsed = parseLong(value, message);
+        if (parsed <= 0) {
+            throw invalidParameter(message + ": " + value);
+        }
+        return parsed;
+    }
+
+    private static long parseLong(String value, String message) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException ex) {
+            throw invalidParameter(message + ": " + value);
+        }
+    }
+
+    private static DomainException invalidParameter(String message) {
+        return new DomainException(INVALID_PARAMETER, message);
     }
 
     @NonNull

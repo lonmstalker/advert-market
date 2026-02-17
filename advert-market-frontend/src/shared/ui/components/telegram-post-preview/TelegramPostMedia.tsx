@@ -1,4 +1,3 @@
-import { Image } from '@telegram-tools/ui-kit';
 import type { ComponentType, SVGProps } from 'react';
 import type { MediaItem } from '@/shared/types/text-entity';
 import { FileIcon, ImageIcon, VideoIcon } from '../../icons';
@@ -59,18 +58,12 @@ export function TelegramPostMedia({ media }: TelegramPostMediaProps) {
       {visibleMedia.map((item, index) => {
         const Icon = MEDIA_ICONS[item.type] || FileIcon;
         const showOverflow = overflowCount > 0 && index === visibleMedia.length - 1;
+        const mediaSrc = item.thumbnailUrl || item.url;
 
         return (
-          <div key={`${item.fileId}-${index}`} className="am-tg-media-cell">
-            {item.url && (item.type === 'PHOTO' || item.type === 'GIF') ? (
-              <Image
-                src={item.url}
-                alt={item.caption || 'Media'}
-                className="am-tg-media-image"
-                width="100%"
-                height="100%"
-                objectFit="cover"
-              />
+          <div key={item.id} className="am-tg-media-cell">
+            {mediaSrc && (item.type === 'PHOTO' || item.type === 'GIF') ? (
+              <img src={mediaSrc} alt={item.caption || 'Media'} className="am-tg-media-image" loading="lazy" />
             ) : (
               <div className="am-tg-media-video-overlay">
                 {item.type === 'VIDEO' ? (

@@ -124,7 +124,9 @@ export function CreativeForm({
             {t('creatives.form.title')}
           </Text>
         </div>
-        <Input value={title} onChange={onTitleChange} placeholder={t('creatives.form.titlePlaceholder')} />
+        <div className="am-form-field">
+          <Input value={title} onChange={onTitleChange} placeholder={t('creatives.form.titlePlaceholder')} />
+        </div>
       </div>
 
       <div className="am-creative-form__field">
@@ -169,6 +171,7 @@ export function CreativeForm({
           onSelect={syncSelection}
           onKeyUp={syncSelection}
           onMouseUp={syncSelection}
+          onTouchStart={syncSelection}
           onTouchEnd={syncSelection}
         />
       </div>

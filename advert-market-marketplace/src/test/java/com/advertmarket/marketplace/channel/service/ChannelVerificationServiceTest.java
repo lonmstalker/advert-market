@@ -4,10 +4,13 @@ import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_INSUFFICI
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_BOT_NOT_ADMIN;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_NOT_FOUND;
 import static com.advertmarket.shared.exception.ErrorCodes.CHANNEL_USER_NOT_ADMIN;
+import static com.advertmarket.shared.exception.ErrorCodes.INVALID_PARAMETER;
 import static com.advertmarket.shared.exception.ErrorCodes.RATE_LIMIT_EXCEEDED;
 import static com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -166,6 +169,62 @@ class ChannelVerificationServiceTest {
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
                 .isEqualTo(SERVICE_UNAVAILABLE);
+    }
+
+    @Test
+    @DisplayName("Should resolve private post link via channel id")
+    void shouldResolvePrivatePostLinkViaChannelId() {
+        when(telegramChannel.getChat(CHANNEL_ID))
+                .thenReturn(chatInfo("channel"));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(botAdmin(), adminInfo(USER_ID)));
+        when(telegramChannel.getChatMemberCount(CHANNEL_ID))
+                .thenReturn(1000);
+
+        var result = service.verify("https://t.me/c/1234567890/42",
+                USER_ID);
+
+        assertThat(result.channelId()).isEqualTo(CHANNEL_ID);
+        verify(telegramChannel).getChat(CHANNEL_ID);
+        verify(telegramChannel, never()).getChatByUsername(any());
+    }
+
+    @Test
+    @DisplayName("Should resolve numeric channel id directly")
+    void shouldResolveNumericChannelIdDirectly() {
+        when(telegramChannel.getChat(CHANNEL_ID))
+                .thenReturn(chatInfo("channel"));
+        when(telegramChannel.getChatAdministrators(CHANNEL_ID))
+                .thenReturn(List.of(botAdmin(), adminInfo(USER_ID)));
+        when(telegramChannel.getChatMemberCount(CHANNEL_ID))
+                .thenReturn(1000);
+
+        var result = service.verify(String.valueOf(CHANNEL_ID), USER_ID);
+
+        assertThat(result.channelId()).isEqualTo(CHANNEL_ID);
+        verify(telegramChannel).getChat(CHANNEL_ID);
+        verify(telegramChannel, never()).getChatByUsername(any());
+    }
+
+    @Test
+    @DisplayName("Should reject Telegram invite links in verify step")
+    void shouldRejectInviteLinks() {
+        assertThatThrownBy(() ->
+                service.verify("https://t.me/+inviteHash", USER_ID))
+                .isInstanceOf(DomainException.class)
+                .extracting(e -> ((DomainException) e).getErrorCode())
+                .isEqualTo(INVALID_PARAMETER);
+    }
+
+    @Test
+    @DisplayName("Should reject malformed private post links")
+    void shouldRejectMalformedPrivatePostLinks() {
+        assertThatThrownBy(() ->
+                service.verify("https://t.me/c/not-a-number/42",
+                        USER_ID))
+                .isInstanceOf(DomainException.class)
+                .extracting(e -> ((DomainException) e).getErrorCode())
+                .isEqualTo(INVALID_PARAMETER);
     }
 
     @Test

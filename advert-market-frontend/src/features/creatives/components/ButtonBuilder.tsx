@@ -136,6 +136,13 @@ export function ButtonBuilder({ buttons, onChange, maxRows = 5, maxButtonsPerRow
                     validateOnBlur
                     validator={validateUrl}
                   />
+                  {button.url?.trim() && !buttonUrlSchema.safeParse(button.url.trim()).success && (
+                    <div className="mt-1">
+                      <Text type="caption1" color="danger">
+                        {t('creatives.form.linkInvalid')}
+                      </Text>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

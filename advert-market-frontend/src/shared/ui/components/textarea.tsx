@@ -14,6 +14,7 @@ type TextareaProps = {
   onSelect?: () => void;
   onKeyUp?: () => void;
   onMouseUp?: () => void;
+  onTouchStart?: () => void;
   onTouchEnd?: () => void;
 };
 
@@ -32,6 +33,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     onSelect,
     onKeyUp,
     onMouseUp,
+    onTouchStart,
     onTouchEnd,
   },
   ref,
@@ -81,6 +83,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
       onSelect={onSelect}
       onKeyUp={onKeyUp}
       onMouseUp={onMouseUp}
+      onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     />
   );

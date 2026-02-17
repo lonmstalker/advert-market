@@ -26,11 +26,13 @@ const apiInlineButtonSchema = z.object({
   url: z.string().max(2048).nullable().optional(),
 });
 
+const mediaUrlSchema = z.string().trim().min(1).max(2048);
+
 const apiMediaAssetSchema = z.object({
   id: z.string().nullable().optional(),
   type: mediaTypeSchema,
-  url: z.string().url(),
-  thumbnailUrl: z.string().url().nullable().optional(),
+  url: mediaUrlSchema,
+  thumbnailUrl: mediaUrlSchema.nullable().optional(),
   fileName: z.string().nullable().optional(),
   fileSize: z.string().nullable().optional(),
   mimeType: z.string().nullable().optional(),
@@ -201,14 +203,30 @@ function mapApiMediaAsset(media: z.infer<typeof apiMediaAssetSchema>): MediaItem
   return ensureMediaDefaults({
     id: media.id ?? makeLocalId('media'),
     type: media.type,
-    url: media.url,
-    thumbnailUrl: media.thumbnailUrl ?? undefined,
+    url: normalizeMediaUrl(media.url),
+    thumbnailUrl: media.thumbnailUrl ? normalizeMediaUrl(media.thumbnailUrl) : undefined,
     fileName: media.fileName ?? undefined,
     fileSize: media.fileSize ?? undefined,
     mimeType: media.mimeType ?? 'application/octet-stream',
     sizeBytes: media.sizeBytes ?? 0,
     caption: media.caption ?? undefined,
   });
+}
+
+function normalizeMediaUrl(rawUrl: string): string {
+  const value = rawUrl.trim();
+  try {
+    return new URL(value).toString();
+  } catch {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      try {
+        return new URL(value, window.location.origin).toString();
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  }
 }
 
 export function nonEmptyKeyboardRows(rows: TelegramKeyboardRow[]): TelegramKeyboardRow[] {

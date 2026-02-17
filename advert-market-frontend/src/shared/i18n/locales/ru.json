@@ -650,8 +650,8 @@
     "creatives.description": "Библиотека рекламных шаблонов",
     "register": {
       "title": "Добавить канал",
-      "channelLink": "Ссылка на канал",
-      "channelPlaceholder": "@username",
+      "channelLink": "Канал: username, ссылка или ID",
+      "channelPlaceholder": "@username / t.me/c/... / -100...",
       "addBotInstruction": "Добавьте @AdvertMarketBot как администратора вашего канала",
       "autosyncHint": "После добавления бота канал синхронизируется автоматически. \"Проверить\" — резервный запуск синхронизации.",
       "copyBot": "Скопировать",
@@ -670,6 +670,7 @@
       "success": "Канал зарегистрирован",
       "botNotAdmin": "Бот не добавлен как администратор канала",
       "channelNotFound": "Канал не найден",
+      "inviteLinkUnsupported": "Инвайт-ссылки не поддерживаются. Укажите @username, ссылку t.me/c/... или числовой ID канала.",
       "alreadyRegistered": "Этот канал уже зарегистрирован",
       "alreadySynced": "Канал уже синхронизирован"
     }
