@@ -20,6 +20,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -165,15 +166,17 @@ public class ChannelVerificationService {
     }
 
     private static void sleepBeforeRateLimitRetry(long channelId) {
-        try {
-            Thread.sleep(RATE_LIMIT_RETRY_DELAY_MS);
-        } catch (InterruptedException e) {
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(
+                RATE_LIMIT_RETRY_DELAY_MS));
+        if (Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
             throw new DomainException(
                     com.advertmarket.shared.exception.ErrorCodes.SERVICE_UNAVAILABLE,
                     "Interrupted while waiting to retry channel "
                             + channelId,
-                    e);
+                    new InterruptedException(
+                            "Interrupted while waiting for rate-limit "
+                                    + "retry"));
         }
     }
 
