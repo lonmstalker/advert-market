@@ -1,11 +1,16 @@
 export {
+  createChannelPricingRule,
   createDeal,
+  deleteChannelPricingRule,
   fetchCategories,
   fetchChannelDetail,
   fetchChannels,
   fetchChannelTeam,
   fetchMyChannels,
+  fetchPostTypes,
   registerChannel,
+  updateChannel,
+  updateChannelPricingRule,
   verifyChannel,
 } from './api/channels';
 export { CategoryChipRow } from './components/CategoryChipRow';
@@ -31,8 +36,11 @@ export type {
   ChannelSort,
   ChannelTeam,
   ChannelTopic,
+  ChannelUpdateRequest,
   ChannelVerifyResponse,
   CreateDealRequest,
   CreateDealResponse,
+  PostType,
   PricingRule,
+  PricingRuleCreateRequest,
 } from './types/channel';

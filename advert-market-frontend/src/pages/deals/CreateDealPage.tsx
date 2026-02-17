@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, Select, Text } from '@telegram-tools/ui-kit';
+import { Button, Input, Select, Text } from '@telegram-tools/ui-kit';
 import { motion } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
-import { ChannelCard, createDeal, fetchChannelDetail } from '@/features/channels';
+import { ChannelCard, createDeal, fetchChannelDetail, fetchPostTypes } from '@/features/channels';
 import { useCreatives } from '@/features/creatives';
 import { channelKeys, dealKeys } from '@/shared/api/query-keys';
 import { ApiError } from '@/shared/api/types';
@@ -14,9 +14,10 @@ import { formatTon } from '@/shared/lib/ton-format';
 import { AppPageShell, AppSurfaceCard, BackButtonHandler, EmptyState, PageLoader, TextareaField } from '@/shared/ui';
 import { fadeIn, pressScale } from '@/shared/ui/animations';
 import { SadFaceIcon } from '@/shared/ui/icons';
+import { buildPostTypeOptions, resolveCreateDealPricing } from './create-deal.helpers';
 
 export default function CreateDealPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -31,7 +32,8 @@ export default function CreateDealPage() {
     enabled: !Number.isNaN(channelId) && channelId > 0,
   });
 
-  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
+  const [selectedPostType, setSelectedPostType] = useState<string | null>(null);
+  const [customAmountTon, setCustomAmountTon] = useState('');
   const [creativeBrief, setCreativeBrief] = useState('');
   const [selectedCreativeId, setSelectedCreativeId] = useState<string | null>(searchParams.get('creativeId'));
 
@@ -42,7 +44,28 @@ export default function CreateDealPage() {
     [creatives, selectedCreativeId],
   );
 
-  const selectedRule = channel?.pricingRules.find((r) => r.id === Number(selectedRuleId));
+  const { data: postTypes = [] } = useQuery({
+    queryKey: channelKeys.postTypes(),
+    queryFn: fetchPostTypes,
+  });
+
+  const postTypeOptions = useMemo(
+    () => buildPostTypeOptions(postTypes, channel?.pricingRules ?? [], i18n.language),
+    [postTypes, channel?.pricingRules, i18n.language],
+  );
+  const selectedPostTypeOption = useMemo(
+    () => postTypeOptions.find((option) => option.type === selectedPostType) ?? null,
+    [postTypeOptions, selectedPostType],
+  );
+  const hasRuleForSelectedType =
+    selectedPostTypeOption?.pricingRuleId != null && selectedPostTypeOption?.priceNano != null;
+
+  useEffect(() => {
+    if (selectedPostType || postTypeOptions.length === 0) {
+      return;
+    }
+    setSelectedPostType(postTypeOptions[0].type);
+  }, [selectedPostType, postTypeOptions]);
 
   const mutation = useMutation({
     mutationFn: createDeal,
@@ -62,12 +85,23 @@ export default function CreateDealPage() {
   });
 
   const handleSubmit = () => {
-    if (!selectedRuleId || !channel || !selectedRule) return;
+    if (!selectedPostType || !channel) return;
+    let pricing: { amountNano: number; pricingRuleId?: number };
+    try {
+      pricing = resolveCreateDealPricing({
+        selectedPostType,
+        options: postTypeOptions,
+        customAmountTon,
+      });
+    } catch {
+      showError(t('deals.create.error.invalidAmount'));
+      return;
+    }
     const creativeId = selectedCreative?.id;
     mutation.mutate({
       channelId: channel.id,
-      amountNano: selectedRule.priceNano,
-      pricingRuleId: Number(selectedRuleId),
+      amountNano: pricing.amountNano,
+      pricingRuleId: pricing.pricingRuleId,
       creativeId,
       creativeBrief: creativeId ? undefined : creativeBrief.trim() || undefined,
     });
@@ -97,11 +131,14 @@ export default function CreateDealPage() {
     );
   }
 
-  const ruleOptions = [
+  const selectPostTypeOptions = [
     { label: t('deals.create.selectPostType'), value: null },
-    ...channel.pricingRules.map((rule) => ({
-      label: `${rule.name} — ${formatTon(rule.priceNano)}`,
-      value: String(rule.id),
+    ...postTypeOptions.map((option) => ({
+      label:
+        option.priceNano != null
+          ? `${option.label} — ${formatTon(option.priceNano)}`
+          : `${option.label} — ${t('deals.create.noRuleLabel')}`,
+      value: option.type,
     })),
   ];
 
@@ -131,8 +168,31 @@ export default function CreateDealPage() {
                   {t('deals.create.postType')}
                 </Text>
               </div>
-              <Select options={ruleOptions} value={selectedRuleId} onChange={setSelectedRuleId} />
+              <Select options={selectPostTypeOptions} value={selectedPostType} onChange={setSelectedPostType} />
             </div>
+
+            {!hasRuleForSelectedType && selectedPostType && (
+              <div>
+                <div className="mb-2">
+                  <Text type="subheadline2" color="secondary">
+                    {t('deals.create.customAmount')}
+                  </Text>
+                </div>
+                <div className="am-form-field">
+                  <Input
+                    value={customAmountTon}
+                    onChange={setCustomAmountTon}
+                    placeholder={t('deals.create.customAmountPlaceholder')}
+                    type="number"
+                  />
+                </div>
+                <div className="mt-1">
+                  <Text type="caption1" color="secondary">
+                    {t('deals.create.customAmountHint')}
+                  </Text>
+                </div>
+              </div>
+            )}
 
             <div>
               <div className="mb-2">
@@ -143,14 +203,14 @@ export default function CreateDealPage() {
               <Select options={creativeOptions} value={selectedCreativeId} onChange={setSelectedCreativeId} />
             </div>
 
-            {selectedRule && (
+            {selectedPostTypeOption?.priceNano != null && (
               <AppSurfaceCard>
                 <div className="text-center p-4">
                   <Text type="subheadline2" color="secondary">
                     {t('deals.create.price')}
                   </Text>
                   <Text type="title1" weight="bold">
-                    <span className="am-tabnum">{formatTon(selectedRule.priceNano)}</span>
+                    <span className="am-tabnum">{formatTon(selectedPostTypeOption.priceNano)}</span>
                   </Text>
                 </div>
               </AppSurfaceCard>
@@ -186,13 +246,13 @@ export default function CreateDealPage() {
             <motion.div {...pressScale}>
               <Button
                 text={
-                  selectedRule
-                    ? `${t('deals.create.submit')} · ${formatTon(selectedRule.priceNano)}`
+                  selectedPostTypeOption?.priceNano != null
+                    ? `${t('deals.create.submit')} · ${formatTon(selectedPostTypeOption.priceNano)}`
                     : t('deals.create.submit')
                 }
                 type="primary"
                 onClick={handleSubmit}
-                disabled={!selectedRuleId}
+                disabled={!selectedPostType || (!hasRuleForSelectedType && !customAmountTon.trim())}
                 loading={mutation.isPending}
               />
             </motion.div>

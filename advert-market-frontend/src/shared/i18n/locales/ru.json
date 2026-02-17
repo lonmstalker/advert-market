@@ -493,6 +493,10 @@
       "title": "Создание сделки",
       "postType": "Тип размещения",
       "selectPostType": "Выберите тип",
+      "noRuleLabel": "индивидуальные условия",
+      "customAmount": "Сумма оффера (TON)",
+      "customAmountPlaceholder": "0.00",
+      "customAmountHint": "Укажите сумму вручную, если для этого типа размещения нет правила канала.",
       "creative": "Креатив",
       "manualCreative": "Написать вручную",
       "selectedCreative": "Выбранный креатив",
@@ -502,7 +506,8 @@
       "submit": "Отправить оффер",
       "error": {
         "alreadyExists": "Сделка с этим каналом уже существует",
-        "failed": "Не удалось создать сделку"
+        "failed": "Не удалось создать сделку",
+        "invalidAmount": "Введите корректную сумму в TON"
       }
     }
   },
@@ -665,6 +670,15 @@
       "subscribers": "{{count}} подписчиков",
       "category": "Категория",
       "categoryPlaceholder": "Выберите категорию",
+      "ownerNote": "Заметка владельца",
+      "ownerNotePlaceholder": "Что рекламодателю нужно знать до создания сделки?",
+      "pricingRules": "Правила размещения",
+      "addRule": "Добавить правило",
+      "removeRule": "Удалить",
+      "ruleLabel": "Правило {{index}}",
+      "postType": "Тип размещения",
+      "postTypePlaceholder": "Выберите тип размещения",
+      "rulePrice": "Цена (TON)",
       "price": "Цена за пост (TON)",
       "pricePlaceholder": "0.00",
       "priceHint": "Минимальная цена за размещение рекламы",
@@ -675,7 +689,8 @@
       "channelNotFound": "Канал не найден",
       "inviteLinkUnsupported": "Инвайт-ссылки не поддерживаются. Укажите @username, ссылку t.me/c/... или числовой ID канала.",
       "alreadyRegistered": "Этот канал уже зарегистрирован",
-      "alreadySynced": "Канал уже синхронизирован"
+      "alreadySynced": "Канал уже синхронизирован",
+      "pricingRuleInvalid": "Заполните тип размещения и корректную сумму TON для каждого правила"
     }
   },
   "creatives": {

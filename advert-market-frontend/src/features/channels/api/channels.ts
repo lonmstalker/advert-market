@@ -9,6 +9,7 @@ import {
   type ChannelRegistrationRequest,
   type ChannelResponse,
   type ChannelTeam,
+  type ChannelUpdateRequest,
   type ChannelVerifyResponse,
   type CreateDealRequest,
   type CreateDealResponse,
@@ -19,11 +20,22 @@ import {
   channelTeamSchema,
   channelVerifyResponseSchema,
   createDealResponseSchema,
+  type PostType,
+  type PricingRule,
+  type PricingRuleCreateRequest,
+  postTypeSchema,
+  pricingRuleSchema,
 } from '../types/channel';
 
 export function fetchCategories(): Promise<Category[]> {
   return api.get('/categories', {
     schema: z.array(categorySchema),
+  });
+}
+
+export function fetchPostTypes(): Promise<PostType[]> {
+  return api.get('/post-types', {
+    schema: z.array(postTypeSchema),
   });
 }
 
@@ -100,6 +112,32 @@ export function registerChannel(request: ChannelRegistrationRequest): Promise<Ch
   return api.post('/channels', request, {
     schema: channelResponseSchema,
   });
+}
+
+export function updateChannel(channelId: number, request: ChannelUpdateRequest): Promise<ChannelResponse> {
+  return api.put(`/channels/${channelId}`, request, {
+    schema: channelResponseSchema,
+  });
+}
+
+export function createChannelPricingRule(channelId: number, request: PricingRuleCreateRequest): Promise<PricingRule> {
+  return api.post(`/channels/${channelId}/pricing`, request, {
+    schema: pricingRuleSchema,
+  });
+}
+
+export function updateChannelPricingRule(
+  channelId: number,
+  ruleId: number,
+  request: PricingRuleCreateRequest,
+): Promise<PricingRule> {
+  return api.put(`/channels/${channelId}/pricing/${ruleId}`, request, {
+    schema: pricingRuleSchema,
+  });
+}
+
+export function deleteChannelPricingRule(channelId: number, ruleId: number): Promise<void> {
+  return api.delete(`/channels/${channelId}/pricing/${ruleId}`);
 }
 
 export function fetchMyChannels(): Promise<ChannelResponse[]> {

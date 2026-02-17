@@ -47,6 +47,7 @@ const ProfilePage = lazyRetry(() => import('@/pages/profile/ProfilePage'));
 const LocaleCurrencyPage = lazyRetry(() => import('@/pages/profile/LocaleCurrencyPage'));
 const NotificationsPage = lazyRetry(() => import('@/pages/profile/NotificationsPage'));
 const RegisterChannelPage = lazyRetry(() => import('@/pages/profile/RegisterChannelPage'));
+const EditChannelPage = lazyRetry(() => import('@/pages/profile/EditChannelPage'));
 const CreativesPage = lazyRetry(() => import('@/pages/creatives/CreativesPage'));
 const CreativeEditorPage = lazyRetry(() => import('@/pages/creatives/CreativeEditorPage'));
 
@@ -129,6 +130,7 @@ function AppRoutes() {
             <Route path="/profile/currency" element={<Navigate to="/profile/locale-currency" replace />} />
             <Route path="/profile/notifications" element={<NotificationsPage />} />
             <Route path="/profile/channels/new" element={<RegisterChannelPage />} />
+            <Route path="/profile/channels/:channelId/edit" element={<EditChannelPage />} />
             <Route path="/profile/creatives" element={<CreativesPage />} />
             <Route path="/profile/creatives/new" element={<CreativeEditorPage />} />
             <Route path="/profile/creatives/:creativeId/edit" element={<CreativeEditorPage />} />

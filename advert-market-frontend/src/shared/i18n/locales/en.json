@@ -489,6 +489,10 @@
       "title": "Create deal",
       "postType": "Post type",
       "selectPostType": "Select type",
+      "noRuleLabel": "custom terms",
+      "customAmount": "Custom amount (TON)",
+      "customAmountPlaceholder": "0.00",
+      "customAmountHint": "Set your offer amount when the selected type has no predefined channel rule.",
       "creative": "Creative",
       "manualCreative": "Write manually",
       "selectedCreative": "Selected creative",
@@ -498,7 +502,8 @@
       "submit": "Send offer",
       "error": {
         "alreadyExists": "A deal with this channel already exists",
-        "failed": "Failed to create deal"
+        "failed": "Failed to create deal",
+        "invalidAmount": "Enter a valid amount in TON"
       }
     }
   },
@@ -661,6 +666,15 @@
       "subscribers": "{{count}} subscribers",
       "category": "Category",
       "categoryPlaceholder": "Select category",
+      "ownerNote": "Owner note",
+      "ownerNotePlaceholder": "What should advertisers know before making a deal?",
+      "pricingRules": "Placement rules",
+      "addRule": "Add rule",
+      "removeRule": "Remove",
+      "ruleLabel": "Rule {{index}}",
+      "postType": "Post type",
+      "postTypePlaceholder": "Select post type",
+      "rulePrice": "Price (TON)",
       "price": "Price per post (TON)",
       "pricePlaceholder": "0.00",
       "priceHint": "Minimum price for ad placement",
@@ -671,7 +685,8 @@
       "channelNotFound": "Channel not found",
       "inviteLinkUnsupported": "Invite links are not supported. Use @username, t.me/c/... link, or numeric channel ID.",
       "alreadyRegistered": "This channel is already registered",
-      "alreadySynced": "Channel is already synchronized"
+      "alreadySynced": "Channel is already synchronized",
+      "pricingRuleInvalid": "Fill post type and valid TON amount for each placement rule"
     }
   },
   "creatives": {

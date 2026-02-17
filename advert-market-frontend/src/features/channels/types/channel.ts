@@ -138,6 +138,15 @@ export const channelTeamSchema = z.union([channelTeamLegacySchema, channelTeamDi
 export type ChannelTeamMember = z.infer<typeof channelTeamMemberSchema>;
 export type ChannelTeam = z.infer<typeof channelTeamSchema>;
 
+// --- Post types reference data ---
+
+export const postTypeSchema = z.object({
+  type: z.string().min(1),
+  labels: z.record(z.string(), z.string()),
+});
+
+export type PostType = z.infer<typeof postTypeSchema>;
+
 // --- Create deal ---
 
 export const createDealRequestSchema = z.object({
@@ -211,6 +220,27 @@ export const channelRegistrationRequestSchema = z.object({
 });
 
 export type ChannelRegistrationRequest = z.infer<typeof channelRegistrationRequestSchema>;
+
+export const channelUpdateRequestSchema = z.object({
+  description: z.string().optional(),
+  categories: z.array(z.string()).optional(),
+  pricePerPostNano: z.number().optional(),
+  language: z.string().max(10).optional(),
+  isActive: z.boolean().optional(),
+  customRules: z.string().optional(),
+});
+
+export type ChannelUpdateRequest = z.infer<typeof channelUpdateRequestSchema>;
+
+export const pricingRuleCreateRequestSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+  postTypes: z.array(z.string().min(1)).min(1),
+  priceNano: z.number().int().positive(),
+  sortOrder: z.number().int(),
+});
+
+export type PricingRuleCreateRequest = z.infer<typeof pricingRuleCreateRequestSchema>;
 
 export const channelResponseSchema = z.object({
   id: z.number(),
