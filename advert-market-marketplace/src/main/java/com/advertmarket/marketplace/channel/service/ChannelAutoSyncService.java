@@ -43,7 +43,7 @@ public class ChannelAutoSyncService implements ChannelAutoSyncPort {
     private final DSLContext dsl;
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = DomainException.class)
     @NonNull
     public ChannelSyncResult syncFromTelegram(long channelId) {
         ChatInfo chatInfo = telegramChannelPort.getChat(channelId);

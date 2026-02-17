@@ -16,6 +16,7 @@ import com.advertmarket.marketplace.api.dto.telegram.ChatMemberInfo;
 import com.advertmarket.marketplace.api.dto.telegram.ChatMemberStatus;
 import com.advertmarket.marketplace.api.port.TelegramChannelPort;
 import com.advertmarket.shared.exception.DomainException;
+import java.util.Arrays;
 import java.util.List;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 @DisplayName("ChannelAutoSyncService — Telegram channel sync logic")
 @ExtendWith(MockitoExtension.class)
@@ -200,6 +202,18 @@ class ChannelAutoSyncServiceTest {
             assertThatThrownBy(() -> service.syncFromTelegram(CHANNEL_ID))
                     .isInstanceOf(DomainException.class);
         }
+    }
+
+    @Test
+    @DisplayName("syncFromTelegram should not mark outer transaction rollback-only for DomainException")
+    void syncFromTelegram_noRollbackForDomainException() throws Exception {
+        Transactional transactional = ChannelAutoSyncService.class
+                .getMethod("syncFromTelegram", long.class)
+                .getAnnotation(Transactional.class);
+
+        assertThat(transactional).isNotNull();
+        assertThat(Arrays.asList(transactional.noRollbackFor()))
+                .contains(DomainException.class);
     }
 
     private void setupTelegramResponses() {
