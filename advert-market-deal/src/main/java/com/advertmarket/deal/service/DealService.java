@@ -14,6 +14,7 @@ import com.advertmarket.deal.api.port.DealPort;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.mapper.DealDtoMapper;
 import com.advertmarket.deal.repository.JooqDealRepository;
+import com.advertmarket.financial.api.port.EscrowPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
 import com.advertmarket.marketplace.api.port.ChannelRepository;
 import com.advertmarket.marketplace.api.port.CreativeRepository;
@@ -56,6 +57,7 @@ public class DealService implements DealPort {
     private final DealTransitionService dealTransitionService;
     private final ChannelAutoSyncPort channelAutoSyncPort;
     private final ChannelRepository channelRepository;
+    private final EscrowPort escrowPort;
     private final CreativeRepository creativeRepository;
     private final DealDtoMapper dealDtoMapper;
     private final JsonFacade jsonFacade;
@@ -211,7 +213,8 @@ public class DealService implements DealPort {
         }
 
         try {
-            dealTransitionService.transition(new DealTransitionCommand(
+            var autoAdvanceResult = dealTransitionService.transition(
+                    new DealTransitionCommand(
                     command.dealId(),
                     DealStatus.AWAITING_PAYMENT,
                     null,
@@ -219,6 +222,9 @@ public class DealService implements DealPort {
                     "Auto transition after acceptance",
                     null,
                     null));
+            bootstrapAwaitingPaymentDeposit(
+                    command.dealId(),
+                    autoAdvanceResult);
         } catch (RuntimeException exception) {
             // Keep owner accept committed; retry path remains available via workflow.
             log.error(
@@ -240,6 +246,42 @@ public class DealService implements DealPort {
         }
         return result instanceof DealTransitionResult.Success
                 || result instanceof DealTransitionResult.AlreadyInTargetState;
+    }
+
+    private void bootstrapAwaitingPaymentDeposit(
+            DealId dealId,
+            DealTransitionResult autoAdvanceResult) {
+        if (!(autoAdvanceResult instanceof DealTransitionResult.Success)
+                && !(autoAdvanceResult
+                instanceof DealTransitionResult.AlreadyInTargetState)) {
+            return;
+        }
+
+        var currentDeal = dealRepository.findById(dealId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        ErrorCodes.DEAL_NOT_FOUND,
+                        "Deal",
+                        dealId.value().toString()));
+
+        if (currentDeal.status() != DealStatus.AWAITING_PAYMENT) {
+            return;
+        }
+
+        String existingAddress = currentDeal.depositAddress();
+        Integer existingSubwallet = currentDeal.subwalletId();
+        if (existingAddress != null && !existingAddress.isBlank()
+                && existingSubwallet != null) {
+            return;
+        }
+
+        var addressInfo = escrowPort.generateDepositAddress(
+                dealId,
+                currentDeal.amountNano());
+        int subwalletId = Math.toIntExact(addressInfo.subwalletId());
+        dealRepository.setDepositAddress(
+                dealId,
+                addressInfo.depositAddress(),
+                subwalletId);
     }
 
     private void reconcileOwnerForTransition(

@@ -7,6 +7,7 @@ import static com.advertmarket.db.generated.tables.DealEvents.DEAL_EVENTS;
 import static com.advertmarket.db.generated.tables.Deals.DEALS;
 import static com.advertmarket.db.generated.tables.NotificationOutbox.NOTIFICATION_OUTBOX;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -18,6 +19,7 @@ import com.advertmarket.deal.api.dto.DealDto;
 import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.service.DealService;
+import com.advertmarket.financial.api.model.DepositAddressInfo;
 import com.advertmarket.financial.api.port.DepositPort;
 import com.advertmarket.financial.api.port.EscrowPort;
 import com.advertmarket.identity.security.JwtAuthenticationFilter;
@@ -128,14 +130,20 @@ class DealControllerIt {
     @Autowired
     private ChannelAutoSyncPort channelAutoSyncPort;
 
+    @Autowired
+    private EscrowPort escrowPort;
+
     @BeforeEach
     void setUp() {
         webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
         reset(channelAutoSyncPort);
+        reset(escrowPort);
         when(channelAutoSyncPort.syncFromTelegram(anyLong()))
                 .thenReturn(new ChannelSyncResult(false, null, OWNER_ID));
+        when(escrowPort.generateDepositAddress(any(DealId.class), anyLong()))
+                .thenReturn(new DepositAddressInfo("UQ_test_sync_deposit", 101L));
         DatabaseSupport.cleanAllTables(dsl);
         TestDataFactory.upsertUser(dsl, ADVERTISER_ID);
         TestDataFactory.upsertUser(dsl, OWNER_ID);
@@ -483,6 +491,17 @@ class DealControllerIt {
                 .fetchOne(DEALS.STATUS);
         assertThat(persistedStatus).isEqualTo(
                 DealStatus.AWAITING_PAYMENT.name());
+
+        String depositAddress = dsl.select(DEALS.DEPOSIT_ADDRESS)
+                .from(DEALS)
+                .where(DEALS.ID.eq(dealId))
+                .fetchOne(DEALS.DEPOSIT_ADDRESS);
+        Integer subwalletId = dsl.select(DEALS.SUBWALLET_ID)
+                .from(DEALS)
+                .where(DEALS.ID.eq(dealId))
+                .fetchOne(DEALS.SUBWALLET_ID);
+        assertThat(depositAddress).isEqualTo("UQ_test_sync_deposit");
+        assertThat(subwalletId).isEqualTo(101);
     }
 
     @Test

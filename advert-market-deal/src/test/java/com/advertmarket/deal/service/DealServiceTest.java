@@ -16,6 +16,8 @@ import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.api.port.DealEventRepository;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.mapper.DealDtoMapper;
+import com.advertmarket.financial.api.model.DepositAddressInfo;
+import com.advertmarket.financial.api.port.EscrowPort;
 import com.advertmarket.marketplace.api.dto.ChannelDetailResponse;
 import com.advertmarket.marketplace.api.dto.PricingRuleDto;
 import com.advertmarket.marketplace.api.dto.creative.CreativeDraftDto;
@@ -63,6 +65,8 @@ class DealServiceTest {
     @Mock
     private ChannelRepository channelRepository;
     @Mock
+    private EscrowPort escrowPort;
+    @Mock
     private JsonFacade jsonFacade;
     @Mock
     private CreativeRepository creativeRepository;
@@ -75,6 +79,7 @@ class DealServiceTest {
                 dealRepository, dealEventRepository,
                 dealAuthorizationPort, dealTransitionService,
                 channelAutoSyncPort, channelRepository,
+                escrowPort,
                 creativeRepository, Mappers.getMapper(DealDtoMapper.class), jsonFacade);
     }
 
@@ -306,6 +311,100 @@ class DealServiceTest {
             var result = service.transition(cmd);
 
             assertThat(result).isEqualTo(expected);
+        }
+
+        @Test
+        @DisplayName("owner acceptance should auto-advance and bootstrap deposit address")
+        void transition_ownerAcceptance_shouldBootstrapDepositAddress() {
+            var dealId = DealId.generate();
+            var command = new DealTransitionCommand(
+                    dealId,
+                    DealStatus.ACCEPTED,
+                    200L,
+                    ActorType.CHANNEL_OWNER,
+                    null,
+                    null,
+                    null);
+
+            var beforeAcceptance = new DealRecord(
+                    dealId.value(),
+                    1L,
+                    100L,
+                    200L,
+                    null,
+                    DealStatus.OFFER_PENDING,
+                    1_000_000_000L,
+                    200,
+                    20_000_000L,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    0,
+                    Instant.now(),
+                    Instant.now());
+            var awaitingPayment = new DealRecord(
+                    dealId.value(),
+                    1L,
+                    100L,
+                    200L,
+                    null,
+                    DealStatus.AWAITING_PAYMENT,
+                    1_000_000_000L,
+                    200,
+                    20_000_000L,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    0,
+                    Instant.now(),
+                    Instant.now());
+
+            when(dealRepository.findById(dealId))
+                    .thenReturn(Optional.of(beforeAcceptance))
+                    .thenReturn(Optional.of(awaitingPayment));
+            when(channelRepository.findDetailById(1L))
+                    .thenReturn(Optional.of(channelDetail(1L, 200L)));
+            when(dealTransitionService.transition(any(DealTransitionCommand.class)))
+                    .thenAnswer(invocation -> {
+                        var value = invocation.getArgument(0, DealTransitionCommand.class);
+                        if (value.targetStatus() == DealStatus.ACCEPTED) {
+                            return new DealTransitionResult.Success(DealStatus.ACCEPTED);
+                        }
+                        return new DealTransitionResult.Success(DealStatus.AWAITING_PAYMENT);
+                    });
+            when(escrowPort.generateDepositAddress(dealId, 1_000_000_000L))
+                    .thenReturn(new DepositAddressInfo("UQ_sync_addr", 77L));
+
+            var result = service.transition(command);
+
+            assertThat(result).isInstanceOf(DealTransitionResult.Success.class);
+            verify(escrowPort).generateDepositAddress(dealId, 1_000_000_000L);
+            verify(dealRepository).setDepositAddress(
+                    dealId,
+                    "UQ_sync_addr",
+                    77);
         }
     }
 }
