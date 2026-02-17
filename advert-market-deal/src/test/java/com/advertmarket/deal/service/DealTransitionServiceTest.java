@@ -147,7 +147,7 @@ class DealTransitionServiceTest {
         }
 
         @Test
-        @DisplayName("transition DISPUTED → PARTIALLY_REFUNDED without partial amounts should reject")
+        @DisplayName("DISPUTED → PARTIALLY_REFUNDED without amounts should reject")
         void transitionDisputedToPartiallyRefundedWithoutAmountsShouldReject() {
             var dealId = DealId.generate();
             var deal = dealInStatus(dealId, DealStatus.DISPUTED, 0);

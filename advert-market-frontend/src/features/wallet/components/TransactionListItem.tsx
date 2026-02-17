@@ -51,7 +51,7 @@ export const TransactionListItem = memo(function TransactionListItem({
           className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-card-border"
           style={{ background: getTransactionTypeTint(transaction.type) }}
         >
-          <Icon className="w-5 h-5 text-fg-secondary" />
+          <Icon className="w-5 h-5 text-fg-primary" />
         </span>
 
         <div className="flex-1 min-w-0">

@@ -53,25 +53,32 @@ public record OutboxProperties(
         )
         int stuckThresholdSeconds
 ) {
+    private static final long DEFAULT_POLL_INTERVAL_MILLIS = 500L;
+    private static final int DEFAULT_BATCH_SIZE = 50;
+    private static final int DEFAULT_MAX_RETRIES = 3;
+    private static final long DEFAULT_INITIAL_BACKOFF_SECONDS = 1L;
+    private static final long DEFAULT_PUBLISH_TIMEOUT_SECONDS = 5L;
+    private static final int DEFAULT_STUCK_THRESHOLD_SECONDS = 300;
+
     /** Applies defaults for unset properties. */
     public OutboxProperties {
         if (pollInterval == null) {
-            pollInterval = Duration.ofMillis(500);
+            pollInterval = Duration.ofMillis(DEFAULT_POLL_INTERVAL_MILLIS);
         }
         if (batchSize <= 0) {
-            batchSize = 50;
+            batchSize = DEFAULT_BATCH_SIZE;
         }
         if (maxRetries <= 0) {
-            maxRetries = 3;
+            maxRetries = DEFAULT_MAX_RETRIES;
         }
         if (initialBackoff == null) {
-            initialBackoff = Duration.ofSeconds(1);
+            initialBackoff = Duration.ofSeconds(DEFAULT_INITIAL_BACKOFF_SECONDS);
         }
         if (publishTimeout == null) {
-            publishTimeout = Duration.ofSeconds(5);
+            publishTimeout = Duration.ofSeconds(DEFAULT_PUBLISH_TIMEOUT_SECONDS);
         }
         if (stuckThresholdSeconds <= 0) {
-            stuckThresholdSeconds = 300;
+            stuckThresholdSeconds = DEFAULT_STUCK_THRESHOLD_SECONDS;
         }
     }
 }

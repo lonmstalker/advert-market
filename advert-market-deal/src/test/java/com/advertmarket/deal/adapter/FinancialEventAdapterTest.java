@@ -6,8 +6,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealRecord;
+import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.service.DealTransitionService;

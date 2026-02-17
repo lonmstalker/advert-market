@@ -63,7 +63,7 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
         const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
         const primaryType = rule.postTypes[0] ?? 'NATIVE';
         const localizedType = t(`catalog.channel.postType.${primaryType}`, { defaultValue: rule.name });
-        const overlap = buildOverlapLabel(channel.postFrequencyHours, undefined, t);
+        const overlap = buildOverlapLabel(channel.postFrequencyHours, rule.durationHours, t);
         return (
           <div key={rule.id} className="bg-bg-base border border-separator rounded-[14px] overflow-hidden">
             <div className="py-4 px-4 flex items-center gap-3.5">

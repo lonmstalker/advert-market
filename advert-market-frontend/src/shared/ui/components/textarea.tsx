@@ -58,9 +58,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     if (!autosize || !innerRef.current) return;
 
     const element = innerRef.current;
+    const hasValue = value.length > 0;
     element.style.height = 'auto';
     const minHeight = rows * 24;
-    element.style.height = `${Math.max(minHeight, element.scrollHeight)}px`;
+    const contentHeight = hasValue ? element.scrollHeight : 0;
+    element.style.height = `${Math.max(minHeight, contentHeight)}px`;
   }, [autosize, rows, value]);
 
   return (

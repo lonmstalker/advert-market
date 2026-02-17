@@ -19,6 +19,7 @@ import com.advertmarket.shared.event.DomainEvent;
 import com.advertmarket.shared.event.EventEnvelope;
 import com.advertmarket.shared.event.EventTypes;
 import com.advertmarket.shared.event.TopicNames;
+import com.advertmarket.shared.json.JsonException;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
@@ -45,6 +46,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class DealWorkflowEngine {
 
+    private static final int SHORT_DEAL_ID_LENGTH = 8;
     private static final Duration OFFER_PENDING_TIMEOUT = Duration.ofHours(48);
     private static final Duration NEGOTIATING_TIMEOUT = Duration.ofHours(72);
     private static final Duration AWAITING_PAYMENT_TIMEOUT = Duration.ofHours(24);
@@ -136,6 +138,9 @@ public class DealWorkflowEngine {
             case DRAFT -> {
                 // no-op
             }
+            default -> {
+                // Explicit no-op for forward compatibility with new statuses.
+            }
         }
     }
 
@@ -144,13 +149,14 @@ public class DealWorkflowEngine {
             DealRecord deal) {
         var dealId = DealId.of(deal.id());
         String depositAddress = deal.depositAddress();
-        int subwalletId = deal.subwalletId() != null
-                ? deal.subwalletId() : 0;
+        Integer existingSubwalletId = deal.subwalletId();
+        int subwalletId = existingSubwalletId != null ? existingSubwalletId : 0;
 
         if (depositAddress == null || depositAddress.isBlank()) {
             var info = escrowPort.generateDepositAddress(dealId, deal.amountNano());
             depositAddress = info.depositAddress();
-            subwalletId = (int) info.subwalletId();
+            var generatedSubwalletId = info.subwalletId();
+            subwalletId = Math.toIntExact(generatedSubwalletId);
             dealRepository.setDepositAddress(
                     dealId,
                     depositAddress,
@@ -170,18 +176,21 @@ public class DealWorkflowEngine {
     private void onPublished(
             EventEnvelope<DealStateChangedEvent> envelope,
             DealRecord deal) {
-        if (deal.messageId() != null
-                && deal.contentHash() != null
-                && deal.publishedAt() != null) {
+        var messageId = deal.messageId();
+        var contentHash = deal.contentHash();
+        var publishedAt = deal.publishedAt();
+        if (messageId != null
+                && contentHash != null
+                && publishedAt != null) {
             emitDeliveryCommand(
                     envelope,
                     "verify-delivery",
                     EventTypes.VERIFY_DELIVERY,
                     new VerifyDeliveryCommand(
                             deal.channelId(),
-                            deal.messageId(),
-                            deal.contentHash(),
-                            deal.publishedAt(),
+                            messageId,
+                            contentHash,
+                            publishedAt,
                             1));
         } else {
             log.warn("Cannot emit VERIFY_DELIVERY for deal={} due to missing metadata",
@@ -234,7 +243,8 @@ public class DealWorkflowEngine {
             EventEnvelope<DealStateChangedEvent> envelope,
             DealRecord deal,
             long refundAmountNano) {
-        if (deal.refundedTxHash() == null || deal.refundedTxHash().isBlank()) {
+        var refundedTxHash = deal.refundedTxHash();
+        if (refundedTxHash == null || refundedTxHash.isBlank()) {
             emitRefundCommand(envelope, deal, refundAmountNano, "execute-refund");
         }
         notifyBoth(
@@ -424,11 +434,12 @@ public class DealWorkflowEngine {
     }
 
     private static int requiredSubwallet(DealRecord deal) {
-        if (deal.subwalletId() == null) {
+        var subwalletId = deal.subwalletId();
+        if (subwalletId == null) {
             throw new IllegalStateException(
                     "subwalletId is required for deal " + deal.id());
         }
-        return deal.subwalletId();
+        return subwalletId;
     }
 
     private void applyDeadline(DealId dealId, DealStatus toStatus) {
@@ -458,7 +469,7 @@ public class DealWorkflowEngine {
         String channelName = channelRepository.findDetailById(deal.channelId())
                 .map(c -> c.title())
                 .orElse("channel");
-        String shortId = deal.id().toString().substring(0, 8);
+        String shortId = deal.id().toString().substring(0, SHORT_DEAL_ID_LENGTH);
         return Map.of(
                 "channel_name", channelName,
                 "deal_id_short", shortId,
@@ -473,7 +484,7 @@ public class DealWorkflowEngine {
             var node = jsonFacade.readTree(creativeDraftJson);
             String text = node.path("text").asText("");
             return new CreativeDraft(text, List.of(), List.of());
-        } catch (RuntimeException ex) {
+        } catch (JsonException ex) {
             return new CreativeDraft("", List.of(), List.of());
         }
     }

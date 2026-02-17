@@ -327,7 +327,7 @@
       "ownerNote": "Заметка от владельца",
       "overlapTooltipLine1": "~{{freq}}ч — реклама на 1-м месте",
       "overlapTooltipLine2": "{{dur}}ч — пост в ленте канала",
-      "overlapFormat": "{{freq}}/{{dur}}",
+      "overlapFormat": "{{freq}}/{{dur}}ч",
       "onlyDuration": "{{dur}}ч",
       "onlyFrequency": "~{{freq}}ч",
       "postType": {

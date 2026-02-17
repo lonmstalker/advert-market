@@ -27,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -83,7 +84,7 @@ public class DepositWatcher {
     public void watchDeposit(EventEnvelope<WatchDepositCommand> envelope) {
         var dealId = Objects.requireNonNull(
                 envelope.dealId(), "dealId is required for WATCH_DEPOSIT");
-        var command = envelope.payload();
+        final var command = envelope.payload();
 
         var existing = txRepository.findLatestInboundByDealId(dealId.value());
         if (existing.isPresent()) {
@@ -151,12 +152,21 @@ public class DepositWatcher {
             return;
         }
 
+        var observation = observeInboundDeposit(record);
+        if (observation.isEmpty()) {
+            return;
+        }
+
+        processObservedDeposit(record, masterSeqno, observation.get());
+    }
+
+    private Optional<DepositObservation> observeInboundDeposit(TonTransactionsRecord record) {
         String toAddress = record.getToAddress();
         Long expectedAmount = record.getAmountNano();
         if (toAddress == null || expectedAmount == null) {
             log.warn("Deposit id={} has null toAddress or amountNano",
                     record.getId());
-            return;
+            return Optional.empty();
         }
 
         var inboundTxs = blockchainPort.getTransactions(
@@ -164,15 +174,24 @@ public class DepositWatcher {
                 .filter(tx -> tx.amountNano() > 0)
                 .toList();
         if (inboundTxs.isEmpty()) {
-            return;
+            return Optional.empty();
         }
 
         long totalReceived = inboundTxs.stream()
                 .mapToLong(TonTransactionInfo::amountNano)
                 .sum();
-        var latest = inboundTxs.stream()
+        final var latest = inboundTxs.stream()
                 .max(Comparator.comparingLong(TonTransactionInfo::lt))
                 .orElseThrow();
+        return Optional.of(new DepositObservation(expectedAmount, totalReceived, latest));
+    }
+
+    private void processObservedDeposit(
+            TonTransactionsRecord record,
+            long masterSeqno,
+            DepositObservation observation) {
+        long expectedAmount = observation.expectedAmount();
+        long totalReceived = observation.totalReceived();
 
         if (totalReceived < expectedAmount) {
             updateProgressStatus(record, "UNDERPAID", confirmations(record));
@@ -187,13 +206,12 @@ public class DepositWatcher {
         }
 
         if (confirmedBlocks < requirement.confirmations()) {
-            String status = record.getSeqno() == null
-                    ? "TX_DETECTED"
-                    : (totalReceived > expectedAmount ? "OVERPAID" : "CONFIRMING");
-            updateProgressStatus(record, status, confirmedBlocks);
-            log.debug("Deposit id={} has {}/{} confirmations, status={}",
-                    record.getId(), confirmedBlocks,
-                    requirement.confirmations(), status);
+            updatePendingConfirmationStatus(
+                    record,
+                    totalReceived,
+                    expectedAmount,
+                    confirmedBlocks,
+                    requirement.confirmations());
             return;
         }
 
@@ -203,7 +221,21 @@ public class DepositWatcher {
             return;
         }
 
-        confirmDeposit(record, latest, confirmedBlocks, totalReceived);
+        confirmDeposit(record, observation.latestTx(), confirmedBlocks, totalReceived);
+    }
+
+    private void updatePendingConfirmationStatus(
+            TonTransactionsRecord record,
+            long totalReceived,
+            long expectedAmount,
+            int confirmedBlocks,
+            int requiredConfirmations) {
+        String status = record.getSeqno() == null
+                ? "TX_DETECTED"
+                : (totalReceived > expectedAmount ? "OVERPAID" : "CONFIRMING");
+        updateProgressStatus(record, status, confirmedBlocks);
+        log.debug("Deposit id={} has {}/{} confirmations, status={}",
+                record.getId(), confirmedBlocks, requiredConfirmations, status);
     }
 
     private int resolveConfirmedBlocks(TonTransactionsRecord record,
@@ -318,6 +350,13 @@ public class DepositWatcher {
         return Objects.requireNonNull(
                 record.getAmountNano(),
                 "amount_nano must be present for deposit");
+    }
+
+    private record DepositObservation(
+            long expectedAmount,
+            long totalReceived,
+            TonTransactionInfo latestTx
+    ) {
     }
 
     private <T extends DomainEvent> void publishOutboxEvent(

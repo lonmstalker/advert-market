@@ -158,7 +158,7 @@ function PricingRulesList({ rules, channel }: { rules: PricingRule[]; channel: C
         const ruleCpm = channel.avgReach ? computeCpm(rule.priceNano, channel.avgReach) : null;
         const primaryType = rule.postTypes[0] ?? 'NATIVE';
         const localizedType = t(`catalog.channel.postType.${primaryType}`, { defaultValue: rule.name });
-        const overlap = buildOverlapLabel(channel.postFrequencyHours, undefined, t);
+        const overlap = buildOverlapLabel(channel.postFrequencyHours, rule.durationHours, t);
         return (
           <div key={rule.id} style={pricingCardStyle}>
             <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>

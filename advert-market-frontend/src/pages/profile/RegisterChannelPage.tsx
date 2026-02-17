@@ -176,7 +176,7 @@ export default function RegisterChannelPage() {
 
   return (
     <AppPageShell withTabsPadding={false} testId="profile-register-channel-page">
-      <motion.div {...fadeIn} className="flex flex-col min-h-[calc(100vh-40px)]">
+      <motion.div {...fadeIn} className="flex flex-col min-h-[calc(100vh-40px)] px-4">
         <AppSectionHeader title={t('profile.register.title')} />
 
         <AnimatePresence mode="wait">
@@ -204,14 +204,16 @@ export default function RegisterChannelPage() {
                       {t('profile.register.channelLink')}
                     </Text>
                   </div>
-                  <Input
-                    value={username}
-                    onChange={(v) => {
-                      setUsername(v);
-                      setInlineError(null);
-                    }}
-                    placeholder={t('profile.register.channelPlaceholder')}
-                  />
+                  <div className="am-form-field">
+                    <Input
+                      value={username}
+                      onChange={(v) => {
+                        setUsername(v);
+                        setInlineError(null);
+                      }}
+                      placeholder={t('profile.register.channelPlaceholder')}
+                    />
+                  </div>
                   {inlineError && (
                     <motion.div {...fadeIn} className="mt-2">
                       <div className="text-destructive">
@@ -268,7 +270,9 @@ export default function RegisterChannelPage() {
                       {t('profile.register.category')}
                     </Text>
                   </div>
-                  <Select options={categoryOptions} value={selectedCategory} onChange={setSelectedCategory} />
+                  <div className="am-form-select">
+                    <Select options={categoryOptions} value={selectedCategory} onChange={setSelectedCategory} />
+                  </div>
                 </div>
 
                 <div>
@@ -277,12 +281,14 @@ export default function RegisterChannelPage() {
                       {t('profile.register.price')}
                     </Text>
                   </div>
-                  <Input
-                    value={price}
-                    onChange={setPrice}
-                    placeholder={t('profile.register.pricePlaceholder')}
-                    type="number"
-                  />
+                  <div className="am-form-field">
+                    <Input
+                      value={price}
+                      onChange={setPrice}
+                      placeholder={t('profile.register.pricePlaceholder')}
+                      type="number"
+                    />
+                  </div>
                   <div className="mt-1">
                     <Text type="caption1" color="secondary">
                       {t('profile.register.priceHint')}

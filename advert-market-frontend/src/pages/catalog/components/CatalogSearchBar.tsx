@@ -44,11 +44,11 @@ export function CatalogSearchBar({
         </motion.div>
         <Tappable
           onClick={onOpenFilters}
-          className={`am-filter-button ${activeFilterCount > 0 ? 'am-filter-button--active' : ''}`}
+          className={`am-filter-btn ${activeFilterCount > 0 ? 'am-filter-btn--active' : ''}`}
           aria-label={t('catalog.filters.button')}
         >
           <FilterIcon className={`w-5 h-5 ${activeFilterCount > 0 ? 'text-accent' : 'text-fg-secondary'}`} />
-          {activeFilterCount > 0 && <span className="am-filter-badge">{activeFilterCount}</span>}
+          {activeFilterCount > 0 && <span className="am-filter-btn__badge">{activeFilterCount}</span>}
         </Tappable>
       </div>
     </div>

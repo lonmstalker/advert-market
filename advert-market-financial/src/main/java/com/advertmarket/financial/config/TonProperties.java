@@ -153,6 +153,12 @@ public record TonProperties(
             )
             @NotEmpty @NonNull List<Tier> tiers
     ) {
+        private static final long TIER_THRESHOLD_100_TON_NANO = 100_000_000_000L;
+        private static final long TIER_THRESHOLD_1000_TON_NANO = 1_000_000_000_000L;
+        private static final int DEFAULT_CONFIRMATIONS_TIER_1 = 1;
+        private static final int DEFAULT_CONFIRMATIONS_TIER_2 = 3;
+        private static final int DEFAULT_CONFIRMATIONS_TIER_3 = 5;
+
         /** Defensive copy for immutability. */
         public Confirmation {
             tiers = List.copyOf(tiers);
@@ -166,9 +172,9 @@ public record TonProperties(
          */
         public Confirmation() {
             this(List.of(
-                    new Tier(100_000_000_000L, 1, false),
-                    new Tier(1_000_000_000_000L, 3, false),
-                    new Tier(Long.MAX_VALUE, 5, true)));
+                    new Tier(TIER_THRESHOLD_100_TON_NANO, DEFAULT_CONFIRMATIONS_TIER_1, false),
+                    new Tier(TIER_THRESHOLD_1000_TON_NANO, DEFAULT_CONFIRMATIONS_TIER_2, false),
+                    new Tier(Long.MAX_VALUE, DEFAULT_CONFIRMATIONS_TIER_3, true)));
         }
 
         /**

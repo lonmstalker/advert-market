@@ -53,8 +53,8 @@ describe('DealInfoCard', () => {
 
   it('renders overlap chip when both freq and duration are present', () => {
     renderWithProviders(<DealInfoCard deal={makeDeal({ postFrequencyHours: 4, durationHours: 24 })} />);
-    // overlapFormat: "{{freq}}/{{dur}}" => "4/24"
-    expect(screen.getByText('4/24')).toBeInTheDocument();
+    // overlapFormat: "{{freq}}/{{dur}}h" => "4/24h"
+    expect(screen.getByText('4/24h')).toBeInTheDocument();
   });
 
   it('renders only duration chip when freq is absent', () => {

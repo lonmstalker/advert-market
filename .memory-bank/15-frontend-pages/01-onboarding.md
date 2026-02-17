@@ -118,8 +118,7 @@ type OnboardingPrimaryRole = 'advertiser' | 'owner' | 'both';
 Route resolver:
 
 ```ts
-owner -> /profile/channels/new
-advertiser|both -> /catalog
+owner|advertiser|both -> /catalog
 ```
 
 Finish button text:

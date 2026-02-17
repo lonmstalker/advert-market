@@ -1,8 +1,25 @@
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import mkcert from 'vite-plugin-mkcert';
 import { resolve } from 'path';
+
+/**
+ * Wraps CSS from matched packages in a @layer rule so their universal
+ * resets (* { padding:0; margin:0 }) don't override Tailwind utilities
+ * (which live in their own @layer and lose to unlayered CSS by spec).
+ */
+function cssLayerWrap(packageId: string, layerName: string): Plugin {
+  return {
+    name: `css-layer-wrap:${layerName}`,
+    enforce: 'pre',
+    transform(code, id) {
+      if (id.includes(packageId) && id.endsWith('.css')) {
+        return { code: `@layer ${layerName} {\n${code}\n}`, map: null };
+      }
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   const isE2E = mode === 'e2e';
@@ -10,7 +27,9 @@ export default defineConfig(({ mode }) => {
   return {
     // Playwright's webServer readiness check does not trust mkcert by default.
     // We disable mkcert for e2e to keep local runs deterministic.
-    plugins: isE2E ? [tailwindcss(), react()] : [tailwindcss(), react(), mkcert()],
+    plugins: isE2E
+      ? [cssLayerWrap('@telegram-tools/ui-kit', 'ui-kit'), tailwindcss(), react()]
+      : [cssLayerWrap('@telegram-tools/ui-kit', 'ui-kit'), tailwindcss(), react(), mkcert()],
     resolve: {
       alias: {
         '@': resolve(process.cwd(), 'src'),

@@ -1,4 +1,10 @@
-@import "tailwindcss" layer(tailwind);
+/* Layer order: lowest → highest priority.
+   ui-kit's universal reset (* { padding:0; margin:0 }) must NOT beat Tailwind utilities.
+   UI Kit CSS is wrapped in @layer ui-kit by the vite-css-layer plugin. */
+@layer ui-kit, theme, base, components, utilities;
+
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
 
 @theme {
   /* Spacing (-> p-am-4, m-am-8, gap-am-16, etc.) */
@@ -64,6 +70,12 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Selective reset: only elements that truly need it.
+   UI Kit components handle their own padding/margin in @layer ui-kit.
+   This avoids base layer (higher priority) overriding ui-kit internals. */
+html, body, h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote, fieldset, legend {
   margin: 0;
   padding: 0;
 }
@@ -154,6 +166,9 @@ textarea::placeholder {
   --color-border-separator: rgba(0, 0, 0, 0.08);
   --color-link: var(--tg-theme-link-color, #3390ec);
 
+  /* Avatar lightness for hsl() background. */
+  --am-avatar-lightness: 48%;
+
   /* State colors (no Telegram theme equivalent — always static). */
   --color-state-success: #34c759;
   --color-state-destructive: #ff3b30;
@@ -235,13 +250,14 @@ textarea::placeholder {
    or system preference (prefers-color-scheme). Deep Gunmetal OLED base. */
 [theme-mode='dark'],
 [data-theme='dark'] {
+  --am-avatar-lightness: 55%;
   --color-background-secondary: var(--tg-theme-secondary-bg-color, #171a21);
   --color-background-base: var(--tg-theme-bg-color, #0d1117);
   --color-background-modal: #121722;
-  --color-border-separator: rgba(255, 255, 255, 0.11);
+  --color-border-separator: rgba(255, 255, 255, 0.14);
   --color-foreground-primary: var(--tg-theme-text-color, #f4f7fb);
-  --color-foreground-secondary: var(--tg-theme-hint-color, #a4aec0);
-  --color-foreground-tertiary: #7d889b;
+  --color-foreground-secondary: var(--tg-theme-hint-color, #b8c2d0);
+  --color-foreground-tertiary: #8e99ad;
   --color-accent-primary: var(--tg-theme-button-color, #3390ec);
   --color-link: var(--tg-theme-link-color, #3390ec);
 
@@ -257,6 +273,7 @@ textarea::placeholder {
   --am-shadow-card: 0 8px 26px rgba(0, 0, 0, 0.26);
   --am-shadow-elevated: 0 14px 36px rgba(0, 0, 0, 0.3);
   --am-card-shadow: var(--am-shadow-card);
+  --am-tabbar-border: rgba(255, 255, 255, 0.12);
   --am-tabbar-shadow: var(--am-shadow-elevated);
   --am-input-bg: var(--color-background-base);
   --am-input-placeholder: color-mix(in srgb, var(--color-foreground-secondary) 88%, #ffffff 12%);
@@ -276,13 +293,14 @@ textarea::placeholder {
 /* System dark mode auto-detection (non-Telegram, no explicit theme attribute). */
 @media (prefers-color-scheme: dark) {
   :root:not([theme-mode]):not([data-theme]) {
+    --am-avatar-lightness: 55%;
     --color-background-secondary: #171a21;
     --color-background-base: #0d1117;
     --color-background-modal: #121722;
-    --color-border-separator: rgba(255, 255, 255, 0.11);
+    --color-border-separator: rgba(255, 255, 255, 0.14);
     --color-foreground-primary: #f4f7fb;
-    --color-foreground-secondary: #a4aec0;
-    --color-foreground-tertiary: #7d889b;
+    --color-foreground-secondary: #b8c2d0;
+    --color-foreground-tertiary: #8e99ad;
     --color-accent-primary: #3390ec;
     --color-link: #3390ec;
 
@@ -298,6 +316,7 @@ textarea::placeholder {
     --am-shadow-card: 0 8px 26px rgba(0, 0, 0, 0.26);
     --am-shadow-elevated: 0 14px 36px rgba(0, 0, 0, 0.3);
     --am-card-shadow: var(--am-shadow-card);
+    --am-tabbar-border: rgba(255, 255, 255, 0.12);
     --am-tabbar-shadow: var(--am-shadow-elevated);
     --am-input-bg: var(--color-background-base);
     --am-input-placeholder: color-mix(in srgb, #98989f 88%, #ffffff 12%);
@@ -510,7 +529,7 @@ textarea::placeholder {
 
 .am-channel-card__metric {
   border-radius: 10px;
-  border: 1px solid var(--am-card-border);
+  border: 1px solid var(--am-border-strong);
   background: color-mix(in srgb, var(--color-background-base) 88%, transparent);
   padding: 8px 10px;
   display: flex;
@@ -673,6 +692,11 @@ textarea::placeholder {
 
 .am-onboarding-mockup::-webkit-scrollbar {
   display: none;
+}
+
+/* Group inside mockup states: transparent background to avoid white-on-white */
+.am-onboarding-tour-slide__states {
+  --color-background-section: transparent;
 }
 
 .am-onboarding-search-bar {
@@ -1102,6 +1126,37 @@ textarea::placeholder {
   height: calc(var(--am-fixed-bottom-bar-base) + var(--am-safe-area-bottom));
 }
 
+/* Standalone form field wrapper (Input/Select outside GroupItem) */
+.am-form-field {
+  width: 100%;
+  border: 1px solid var(--color-border-separator);
+  border-radius: 12px;
+  background: var(--color-background-section);
+  overflow: hidden;
+}
+
+.am-form-field input {
+  width: 100%;
+  min-height: 50px;
+  padding: 14px 16px;
+  font-size: 17px;
+  color: var(--color-foreground-primary);
+}
+
+/* Select wrapper: no overflow hidden so dropdown can escape */
+.am-form-select {
+  position: relative;
+  width: 100%;
+  min-height: 50px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-separator);
+  border-radius: 12px;
+  background: var(--color-background-section);
+  font-size: 17px;
+  color: var(--color-foreground-primary);
+  cursor: pointer;
+}
+
 /* Creative editor responsive layout */
 .am-creative-editor-page {
   min-height: calc(100vh - 40px);
@@ -1206,8 +1261,8 @@ textarea::placeholder {
 }
 
 .am-formatting-toolbar__button {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
   border-radius: 8px;
   display: inline-flex;
@@ -1235,13 +1290,13 @@ textarea::placeholder {
 
 .am-textarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 160px;
   resize: vertical;
   border-radius: 12px;
   border: 1px solid var(--color-border-separator);
   background: var(--am-input-bg);
   color: var(--color-foreground-primary);
-  padding: 12px;
+  padding: 14px 16px;
   font-size: 15px;
   line-height: 1.4;
   font-family: inherit;
@@ -1259,6 +1314,12 @@ textarea::placeholder {
 
 .am-textarea:focus-visible {
   border-color: var(--color-accent-primary);
+}
+
+.am-creative-form input,
+.am-creative-form .am-textarea {
+  min-height: 48px;
+  font-size: 16px;
 }
 
 .am-creatives-page {
@@ -1776,7 +1837,7 @@ textarea::placeholder {
 
   /* Profile hero card */
   .am-profile-avatar-ring {
-    @apply w-[88px] h-[88px] rounded-full flex items-center justify-center;
+    @apply w-[56px] h-[56px] rounded-full flex items-center justify-center;
     border: 3px solid var(--color-accent-primary);
     background: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
   }
@@ -2111,7 +2172,7 @@ textarea::placeholder {
   }
 
   .am-tg-message-body {
-    padding: 8px 12px 10px;
+    padding: 8px 12px 14px;
   }
 
   .am-tg-message-body--with-media {

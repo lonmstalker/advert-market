@@ -42,6 +42,12 @@ Transactional outbox polling configuration
 | `app.outbox.initial-backoff` | `Duration` | Initial backoff duration before first retry |  | No |  |  |
 | `app.outbox.publish-timeout` | `Duration` | Timeout for publishing a single outbox entry to Kafka |  | No |  |  |
 | `app.outbox.stuck-threshold-seconds` | `int` | Seconds after which a PROCESSING entry is considered stuck |  | No |  |  |
+| `app.outbox.d-e-f-a-u-l-t_-p-o-l-l_-i-n-t-e-r-v-a-l_-m-i-l-l-i-s` | `long` |  | `500` | No |  |  |
+| `app.outbox.d-e-f-a-u-l-t_-b-a-t-c-h_-s-i-z-e` | `int` |  | `50` | No |  |  |
+| `app.outbox.d-e-f-a-u-l-t_-m-a-x_-r-e-t-r-i-e-s` | `int` |  | `3` | No |  |  |
+| `app.outbox.d-e-f-a-u-l-t_-i-n-i-t-i-a-l_-b-a-c-k-o-f-f_-s-e-c-o-n-d-s` | `long` |  | `1` | No |  |  |
+| `app.outbox.d-e-f-a-u-l-t_-p-u-b-l-i-s-h_-t-i-m-e-o-u-t_-s-e-c-o-n-d-s` | `long` |  | `5` | No |  |  |
+| `app.outbox.d-e-f-a-u-l-t_-s-t-u-c-k_-t-h-r-e-s-h-o-l-d_-s-e-c-o-n-d-s` | `int` |  | `300` | No |  |  |
 
 ## PII Encryption
 

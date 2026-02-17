@@ -50,6 +50,11 @@ TON blockchain integration settings
 | `app.ton.deposit.max-retries` | `Positive int` | Max retries before marking deposit as permanently failed |  | No |  |  |
 | `app.ton.network` | `NonNull String` | Blockchain network: testnet or mainnet |  | Yes |  |  |
 | `app.ton.confirmation.tiers` | `Tier>` | Ordered list of confirmation tiers |  | No |  |  |
+| `app.ton.confirmation.t-i-e-r_-t-h-r-e-s-h-o-l-d_100_-t-o-n_-n-a-n-o` | `long` |  | `100000000000` | No |  |  |
+| `app.ton.confirmation.t-i-e-r_-t-h-r-e-s-h-o-l-d_1000_-t-o-n_-n-a-n-o` | `long` |  | `1000000000000` | No |  |  |
+| `app.ton.confirmation.d-e-f-a-u-l-t_-c-o-n-f-i-r-m-a-t-i-o-n-s_-t-i-e-r_1` | `int` |  | `1` | No |  |  |
+| `app.ton.confirmation.d-e-f-a-u-l-t_-c-o-n-f-i-r-m-a-t-i-o-n-s_-t-i-e-r_2` | `int` |  | `3` | No |  |  |
+| `app.ton.confirmation.d-e-f-a-u-l-t_-c-o-n-f-i-r-m-a-t-i-o-n-s_-t-i-e-r_3` | `int` |  | `5` | No |  |  |
 
 ## TON Resilience
 

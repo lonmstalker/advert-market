@@ -190,6 +190,7 @@ public class DepositService implements DepositPort {
             return DepositStatus.AWAITING_PAYMENT;
         }
         return switch (rawStatus) {
+            case null -> DepositStatus.AWAITING_PAYMENT;
             case "TX_DETECTED" -> DepositStatus.TX_DETECTED;
             case "CONFIRMING" -> DepositStatus.CONFIRMING;
             case "AWAITING_OPERATOR_REVIEW" -> DepositStatus.AWAITING_OPERATOR_REVIEW;

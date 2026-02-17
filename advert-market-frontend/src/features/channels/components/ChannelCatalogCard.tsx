@@ -106,7 +106,7 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
             </Text>
           </div>
           <div className="am-channel-card__metric">
-            <Text type="subheadline2" color="secondary">
+            <Text type="subheadline2" weight="medium">
               <span className="am-tabnum">{avgViews}</span>
             </Text>
             <Text type="caption2" color="secondary">
@@ -114,7 +114,7 @@ export const ChannelCatalogCard = memo(function ChannelCatalogCard({ channel, on
             </Text>
           </div>
           <div className="am-channel-card__metric">
-            <Text type="subheadline2" color="secondary">
+            <Text type="subheadline2" weight="medium">
               <span className="am-tabnum">{er}</span>
             </Text>
             <Text type="caption2" color="secondary">

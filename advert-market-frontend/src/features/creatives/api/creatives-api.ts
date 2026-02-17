@@ -222,5 +222,5 @@ export function nonEmptyKeyboardRows(rows: TelegramKeyboardRow[]): TelegramKeybo
 }
 
 export function flattenButtons(rows: TelegramKeyboardRow[]): InlineButton[] {
-  return rows.flatMap((row) => row);
+  return rows.flat();
 }

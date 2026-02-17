@@ -10,7 +10,7 @@ import { useToast } from '@/shared/hooks';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { preserveLanguageOnSettingsUpdate } from '@/shared/lib/profile-settings';
 import { useSettingsStore } from '@/shared/stores/settings-store';
-import { AppPageShell, AppSectionHeader, BackButtonHandler } from '@/shared/ui';
+import { AppPageShell, BackButtonHandler } from '@/shared/ui';
 import { slideFromRight, staggerChildren } from '@/shared/ui/animations';
 
 const DEBOUNCE_MS = 500;
@@ -55,10 +55,9 @@ export default function NotificationsPage() {
   return (
     <AppPageShell withTabsPadding={false} testId="profile-notifications-page">
       <BackButtonHandler />
-      <AppSectionHeader title={t('profile.notifications')} />
 
-      <motion.div {...slideFromRight} className="flex flex-col gap-6">
-        <motion.div {...staggerChildren} initial="initial" animate="animate" className="flex flex-col gap-6">
+      <motion.div {...slideFromRight} className="flex flex-col gap-4">
+        <motion.div {...staggerChildren} initial="initial" animate="animate" className="flex flex-col gap-4">
           <motion.div {...slideFromRight}>
             <Group header={t('profile.notifications.deals')}>
               <GroupItem

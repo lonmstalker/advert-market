@@ -101,7 +101,7 @@ export function countButtons(rows: TelegramKeyboardRow[]): number {
 
 export function ensureButtonId(button: Omit<InlineButton, 'id'> & Partial<Pick<InlineButton, 'id'>>): InlineButton {
   return {
-    id: button.id && button.id.trim() ? button.id : makeLocalId('btn'),
+    id: button.id?.trim() ? button.id : makeLocalId('btn'),
     text: button.text,
     ...(button.url ? { url: button.url } : {}),
   };
@@ -109,7 +109,7 @@ export function ensureButtonId(button: Omit<InlineButton, 'id'> & Partial<Pick<I
 
 export function ensureMediaDefaults(media: Partial<MediaItem> & Pick<MediaItem, 'type' | 'url'>): MediaItem {
   return {
-    id: media.id && media.id.trim() ? media.id : makeLocalId('media'),
+    id: media.id?.trim() ? media.id : makeLocalId('media'),
     type: media.type,
     url: media.url,
     thumbnailUrl: media.thumbnailUrl,

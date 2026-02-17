@@ -10,13 +10,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.advertmarket.financial.api.model.DepositInfo;
-import com.advertmarket.financial.api.model.DepositStatus;
-import com.advertmarket.financial.api.port.DepositPort;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealAuthorizationPort;
 import com.advertmarket.deal.service.DealService;
 import com.advertmarket.deal.web.DealTransitionRequest;
+import com.advertmarket.financial.api.model.DepositInfo;
+import com.advertmarket.financial.api.model.DepositStatus;
+import com.advertmarket.financial.api.port.DepositPort;
 import com.advertmarket.marketplace.api.model.ChannelRight;
 import com.advertmarket.marketplace.api.port.ChannelAuthorizationPort;
 import com.advertmarket.marketplace.api.port.ChannelAutoSyncPort;
@@ -212,7 +212,8 @@ class DealUseCaseTest {
         assertThatThrownBy(() -> useCase.approveDeposit(dealUuid))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).getErrorCode())
-                .isEqualTo(com.advertmarket.shared.exception.ErrorCodes.AUTH_INSUFFICIENT_PERMISSIONS);
+                .isEqualTo(
+                        com.advertmarket.shared.exception.ErrorCodes.AUTH_INSUFFICIENT_PERMISSIONS);
     }
 
     private static void setCurrentUser(long userId, boolean operator) {

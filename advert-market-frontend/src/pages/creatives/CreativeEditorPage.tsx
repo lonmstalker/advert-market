@@ -177,7 +177,7 @@ export default function CreativeEditorPage() {
 
   const previewContent = (
     <div className="am-creative-editor__preview-surface">
-      <TelegramChatSimulator text={text} entities={entities} media={media} buttons={validButtonRows} />
+      <TelegramChatSimulator text={text} entities={entities} media={media} buttons={validButtonRows.flat()} />
     </div>
   );
 

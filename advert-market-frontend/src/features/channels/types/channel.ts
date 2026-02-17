@@ -35,6 +35,7 @@ export const pricingRuleSchema = z.object({
   description: z.string().nullable().optional(),
   postTypes: z.array(z.string()),
   priceNano: z.number(),
+  durationHours: z.number().nullable().optional(),
   isActive: z.boolean(),
   sortOrder: z.number(),
 });

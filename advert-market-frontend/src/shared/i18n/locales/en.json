@@ -324,7 +324,7 @@
       "ownerNote": "Owner's note",
       "overlapTooltipLine1": "~{{freq}}h — ad stays on top",
       "overlapTooltipLine2": "{{dur}}h — post stays in feed",
-      "overlapFormat": "{{freq}}/{{dur}}",
+      "overlapFormat": "{{freq}}/{{dur}}h",
       "onlyDuration": "{{dur}}h",
       "onlyFrequency": "~{{freq}}h",
       "postType": {

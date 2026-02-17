@@ -28,6 +28,12 @@ public class DealStateChangedListener {
     private final DealWorkflowEngine workflowEngine;
     private final MetricsFacade metrics;
 
+    /**
+     * Consumes one deal state-changed event and triggers workflow side effects.
+     *
+     * @param record Kafka record with serialized event envelope
+     * @param ack manual acknowledgment for the processed message
+     */
     @SuppressWarnings("fenum")
     @KafkaListener(
             topics = TopicNames.DEAL_STATE_CHANGED,
@@ -51,17 +57,7 @@ public class DealStateChangedListener {
 
         @SuppressWarnings("unchecked")
         var typed = (EventEnvelope<DealStateChangedEvent>) envelope;
-        try {
-            workflowEngine.handle(typed);
-        } catch (RuntimeException ex) {
-            log.error(
-                    "Failed to handle deal.state-changed event: eventId={}, dealId={}, toStatus={}",
-                    typed.eventId(),
-                    typed.dealId(),
-                    typed.payload().toStatus(),
-                    ex);
-            throw ex;
-        }
+        workflowEngine.handle(typed);
         ack.acknowledge();
     }
 }

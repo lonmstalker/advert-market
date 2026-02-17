@@ -44,11 +44,19 @@ public class DeliveryEventAdapter implements DeliveryEventPort {
             return;
         }
 
+        var messageId = event.messageId();
+        var contentHash = event.contentHash();
+        var publishedAt = event.publishedAt();
+        if (contentHash == null || publishedAt == null) {
+            log.warn("Publication result has null fields after validation for deal={}", dealId);
+            return;
+        }
+
         dealRepository.setPublicationMetadata(
                 dealId,
-                event.messageId(),
-                event.contentHash(),
-                event.publishedAt());
+                messageId,
+                contentHash,
+                publishedAt);
 
         dealTransitionService.transition(new DealTransitionCommand(
                 dealId,

@@ -15,7 +15,7 @@ import { fetchProfile } from '@/shared/api/auth';
 import { channelKeys, dealKeys, profileKeys } from '@/shared/api/query-keys';
 import { useHaptic } from '@/shared/hooks/use-haptic';
 import { useInfiniteScroll } from '@/shared/hooks/use-infinite-scroll';
-import { AppPageShell, AppSectionHeader, EmptyState, EndOfList, FilterButton, SegmentControl } from '@/shared/ui';
+import { AppPageShell, EmptyState, EndOfList, FilterButton, SegmentControl } from '@/shared/ui';
 import { staggerChildren } from '@/shared/ui/animations';
 import { MailboxIcon } from '@/shared/ui/icons';
 
@@ -117,21 +117,17 @@ export default function DealsPage() {
   return (
     <>
       <AppPageShell testId="deals-page-shell">
-        <AppSectionHeader
-          title={t('deals.title')}
-          action={
-            <FilterButton
-              activeCount={activeFilterCount}
-              onClick={() => {
-                haptic.impactOccurred('light');
-                setSheetOpen(true);
-              }}
-            />
-          }
-        />
-
-        <div className="am-surface-row p-2.5">
-          <SegmentControl tabs={translatedTabs} active={activeRole} onChange={setActiveRole} />
+        <div className="am-surface-row p-2.5 flex items-center gap-2.5">
+          <div className="flex-1">
+            <SegmentControl tabs={translatedTabs} active={activeRole} onChange={setActiveRole} />
+          </div>
+          <FilterButton
+            activeCount={activeFilterCount}
+            onClick={() => {
+              haptic.impactOccurred('light');
+              setSheetOpen(true);
+            }}
+          />
         </div>
 
         <AnimatePresence mode="wait">

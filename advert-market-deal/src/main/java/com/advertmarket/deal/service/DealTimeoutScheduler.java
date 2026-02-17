@@ -142,11 +142,12 @@ public class DealTimeoutScheduler {
         if (deal.status().isTerminal()) {
             return false;
         }
-        if (deal.deadlineAt() == null) {
+        var deadlineAt = deal.deadlineAt();
+        if (deadlineAt == null) {
             return false;
         }
         var deadlineThreshold = java.time.Instant.now().minus(props.gracePeriod());
-        return !deal.deadlineAt().isAfter(deadlineThreshold);
+        return !deadlineAt.isAfter(deadlineThreshold);
     }
 
     private @Nullable DealStatus timeoutTarget(DealStatus status) {

@@ -24,7 +24,6 @@ import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -205,7 +204,7 @@ class DealWorkflowEngineTest {
     }
 
     @Test
-    @DisplayName("PARTIALLY_REFUNDED: emit partial refund and payout commands with amounts from event")
+    @DisplayName("PARTIALLY_REFUNDED: emit refund/payout commands from event amounts")
     void partiallyRefunded_emitsPartialCommands() {
         var dealId = DealId.generate();
         var deal = deal(dealId, DealStatus.PARTIALLY_REFUNDED);

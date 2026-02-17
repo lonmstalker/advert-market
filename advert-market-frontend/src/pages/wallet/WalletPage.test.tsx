@@ -61,10 +61,9 @@ describe('WalletPage', () => {
     expect(await screen.findByText('No transactions yet')).toBeInTheDocument();
   });
 
-  it('renders finance header chip', async () => {
+  it('renders BalanceCard as first section', async () => {
     renderPage();
-    await screen.findByText('Total earned');
-    expect(screen.getByText('Finance')).toBeInTheDocument();
+    expect(await screen.findByText('Total earned')).toBeInTheDocument();
   });
 
   it('renders BalanceCard with earned amount', async () => {
@@ -101,12 +100,10 @@ describe('WalletPage', () => {
     expect(await screen.findByText('detail-page')).toBeInTheDocument();
   });
 
-  it('renders wallet quick actions without top up/withdraw for temporary wallets', async () => {
+  it('does not render quick action buttons (simplified layout)', async () => {
     renderPage();
     await screen.findByText('Total earned');
-    expect(screen.getByRole('button', { name: 'Transfer' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Exchange' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Top up' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Withdraw' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Transfer' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Exchange' })).not.toBeInTheDocument();
   });
 });

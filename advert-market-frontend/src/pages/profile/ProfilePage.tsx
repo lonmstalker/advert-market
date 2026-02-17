@@ -88,7 +88,7 @@ export default function ProfilePage() {
 
   return (
     <AppPageShell testId="profile-page-shell">
-      <motion.div {...fadeIn} className="flex flex-col gap-5">
+      <motion.div {...fadeIn} className="flex flex-col gap-4">
         <ProfileHero
           displayName={displayName}
           username={username || undefined}
@@ -97,7 +97,7 @@ export default function ProfilePage() {
           avatarUrl={tgUser?.photoUrl}
         />
 
-        <motion.div {...staggerChildren} initial="initial" animate="animate" className="flex flex-col gap-5">
+        <motion.div {...staggerChildren} initial="initial" animate="animate" className="flex flex-col gap-4">
           <motion.div {...fadeIn}>
             <Group header={t('profile.channels')}>
               {myChannels && myChannels.length > 0 ? (
