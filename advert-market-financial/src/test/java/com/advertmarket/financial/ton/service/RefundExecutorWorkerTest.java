@@ -65,8 +65,8 @@ class RefundExecutorWorkerTest {
     }
 
     @Test
-    @DisplayName("should fail-closed when outbound refund exists in CREATED without tx hash")
-    void shouldFailClosedOnCreatedOutboundRefundWithoutHash() {
+    @DisplayName("should resume CREATED outbound refund without tx hash")
+    void shouldResumeCreatedOutboundRefundWithoutHash() {
         var dealId = DealId.generate();
         var command = new ExecuteRefundCommand(
                 7L,
@@ -88,14 +88,18 @@ class RefundExecutorWorkerTest {
         existing.setVersion(0);
         when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "REFUND"))
                 .thenReturn(Optional.of(existing));
+        when(tonWalletPort.submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L))
+                .thenReturn("refund-resumed");
+        when(txRepository.markSubmitted(777L, "refund-resumed", 0))
+                .thenReturn(true);
+        when(ledgerPort.transfer(any(TransferRequest.class)))
+                .thenReturn(UUID.randomUUID());
+        when(jsonFacade.toJson(any())).thenReturn("{}");
 
-        assertThatThrownBy(() -> worker.executeRefund(envelope))
-                .isInstanceOf(DomainException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCodes.TON_TX_FAILED);
+        worker.executeRefund(envelope);
 
-        verify(tonWalletPort, never())
-                .submitTransaction(anyInt(), anyString(), anyLong());
+        verify(tonWalletPort).submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L);
+        verify(txRepository).markSubmitted(777L, "refund-resumed", 0);
     }
 
     @Test

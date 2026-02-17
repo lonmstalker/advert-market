@@ -97,7 +97,10 @@ public class RefundExecutorWorker implements RefundExecutorPort {
         var existing = txRepository.findLatestOutboundByDealIdAndType(
                 dealId.value(), TX_TYPE);
         if (existing.isPresent()) {
-            return reuseOrFail(dealId, existing.get());
+            return reuseOrResumeCreatedOrFail(
+                    dealId,
+                    command,
+                    existing.get());
         }
 
         long txId = txRepository.createOutbound(
@@ -106,30 +109,18 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                 command.amountNano(),
                 command.refundAddress(),
                 command.subwalletId());
-        int version = 0;
-        // CHECKSTYLE.OFF: IllegalCatch
-        try {
-            String txHash = tonWalletPort.submitTransaction(
-                    command.subwalletId(),
-                    command.refundAddress(),
-                    command.amountNano());
-            boolean marked = txRepository.markSubmitted(
-                    txId, txHash, version);
-            if (!marked) {
-                throw new DomainException(
-                        ErrorCodes.TON_TX_FAILED,
-                        "Failed to persist outbound refund submission");
-            }
-            return new TxRef(txId, txHash, version + 1, false);
-        } catch (RuntimeException ex) {
-            txRepository.updateStatus(txId, "ABANDONED", 0, version);
-            throw ex;
-        }
-        // CHECKSTYLE.ON: IllegalCatch
+        return submitAndMark(
+                txId,
+                0,
+                command.subwalletId(),
+                command.refundAddress(),
+                command.amountNano(),
+                "Failed to persist outbound refund submission");
     }
 
-    private TxRef reuseOrFail(
+    private TxRef reuseOrResumeCreatedOrFail(
             DealId dealId,
+            ExecuteRefundCommand command,
             TonTransactionsRecord record) {
         String status = record.getStatus() == null
                 ? "" : record.getStatus().toUpperCase(Locale.ROOT);
@@ -146,11 +137,56 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                     "CONFIRMED".equals(status));
         }
 
+        if ("CREATED".equals(status)
+                && (txHash == null || txHash.isBlank())) {
+            return submitAndMark(
+                    record.getId(),
+                    version,
+                    command.subwalletId(),
+                    command.refundAddress(),
+                    command.amountNano(),
+                    "Failed to persist resumed outbound refund submission");
+        }
+
         throw new DomainException(
                 ErrorCodes.TON_TX_FAILED,
                 "Outbound refund requires reconciliation before retry: deal="
                         + dealId.value() + ", txId=" + record.getId()
                         + ", status=" + status);
+    }
+
+    private TxRef submitAndMark(
+            long txId,
+            int expectedVersion,
+            int subwalletId,
+            String refundAddress,
+            long amountNano,
+            String persistFailureMessage) {
+        // CHECKSTYLE.OFF: IllegalCatch
+        try {
+            String txHash = tonWalletPort.submitTransaction(
+                    subwalletId,
+                    refundAddress,
+                    amountNano);
+            boolean marked = txRepository.markSubmitted(
+                    txId,
+                    txHash,
+                    expectedVersion);
+            if (!marked) {
+                throw new DomainException(
+                        ErrorCodes.TON_TX_FAILED,
+                        persistFailureMessage);
+            }
+            return new TxRef(
+                    txId,
+                    txHash,
+                    expectedVersion + 1,
+                    false);
+        } catch (RuntimeException ex) {
+            txRepository.updateStatus(txId, "ABANDONED", 0, expectedVersion);
+            throw ex;
+        }
+        // CHECKSTYLE.ON: IllegalCatch
     }
 
     private void markOutboundConfirmed(TxRef txRef) {

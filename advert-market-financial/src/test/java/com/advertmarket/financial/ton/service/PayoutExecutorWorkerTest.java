@@ -70,8 +70,8 @@ class PayoutExecutorWorkerTest {
     }
 
     @Test
-    @DisplayName("should fail-closed when outbound payout exists in CREATED without tx hash")
-    void shouldFailClosedOnCreatedOutboundPayoutWithoutHash() {
+    @DisplayName("should resume CREATED outbound payout without tx hash")
+    void shouldResumeCreatedOutboundPayoutWithoutHash() {
         var dealId = DealId.generate();
         var command = new ExecutePayoutCommand(
                 42L, 1_000_000_000L, 100_000_000L, 11);
@@ -92,14 +92,18 @@ class PayoutExecutorWorkerTest {
         existing.setVersion(0);
         when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "PAYOUT"))
                 .thenReturn(Optional.of(existing));
+        when(tonWalletPort.submitTransaction(11, "UQ-owner-address", 1_000_000_000L))
+                .thenReturn("txhash-resumed");
+        when(txRepository.markSubmitted(555L, "txhash-resumed", 0))
+                .thenReturn(true);
+        when(ledgerPort.transfer(any(TransferRequest.class)))
+                .thenReturn(UUID.randomUUID());
+        when(jsonFacade.toJson(any())).thenReturn("{}");
 
-        assertThatThrownBy(() -> worker.executePayout(envelope))
-                .isInstanceOf(DomainException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCodes.TON_TX_FAILED);
+        worker.executePayout(envelope);
 
-        verify(tonWalletPort, never())
-                .submitTransaction(anyInt(), anyString(), anyLong());
+        verify(tonWalletPort).submitTransaction(11, "UQ-owner-address", 1_000_000_000L);
+        verify(txRepository).markSubmitted(555L, "txhash-resumed", 0);
     }
 
     @Test

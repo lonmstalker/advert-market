@@ -115,7 +115,11 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
         var existing = txRepository.findLatestOutboundByDealIdAndType(
                 dealId.value(), TX_TYPE);
         if (existing.isPresent()) {
-            return reuseOrFail(dealId, existing.get());
+            return reuseOrResumeCreatedOrFail(
+                    dealId,
+                    command,
+                    payoutAddress,
+                    existing.get());
         }
 
         long txId = txRepository.createOutbound(
@@ -124,30 +128,19 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                 command.amountNano(),
                 payoutAddress,
                 command.subwalletId());
-        int version = 0;
-        // CHECKSTYLE.OFF: IllegalCatch
-        try {
-            String txHash = tonWalletPort.submitTransaction(
-                    command.subwalletId(),
-                    payoutAddress,
-                    command.amountNano());
-            boolean marked = txRepository.markSubmitted(
-                    txId, txHash, version);
-            if (!marked) {
-                throw new DomainException(
-                        ErrorCodes.TON_TX_FAILED,
-                        "Failed to persist outbound payout submission");
-            }
-            return new TxRef(txId, txHash, version + 1, false);
-        } catch (RuntimeException ex) {
-            txRepository.updateStatus(txId, "ABANDONED", 0, version);
-            throw ex;
-        }
-        // CHECKSTYLE.ON: IllegalCatch
+        return submitAndMark(
+                txId,
+                0,
+                command.subwalletId(),
+                payoutAddress,
+                command.amountNano(),
+                "Failed to persist outbound payout submission");
     }
 
-    private TxRef reuseOrFail(
+    private TxRef reuseOrResumeCreatedOrFail(
             DealId dealId,
+            ExecutePayoutCommand command,
+            String payoutAddress,
             TonTransactionsRecord record) {
         String status = record.getStatus() == null
                 ? "" : record.getStatus().toUpperCase(Locale.ROOT);
@@ -164,11 +157,56 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                     "CONFIRMED".equals(status));
         }
 
+        if ("CREATED".equals(status)
+                && (txHash == null || txHash.isBlank())) {
+            return submitAndMark(
+                    record.getId(),
+                    version,
+                    command.subwalletId(),
+                    payoutAddress,
+                    command.amountNano(),
+                    "Failed to persist resumed outbound payout submission");
+        }
+
         throw new DomainException(
                 ErrorCodes.TON_TX_FAILED,
                 "Outbound payout requires reconciliation before retry: deal="
                         + dealId.value() + ", txId=" + record.getId()
                         + ", status=" + status);
+    }
+
+    private TxRef submitAndMark(
+            long txId,
+            int expectedVersion,
+            int subwalletId,
+            String toAddress,
+            long amountNano,
+            String persistFailureMessage) {
+        // CHECKSTYLE.OFF: IllegalCatch
+        try {
+            String txHash = tonWalletPort.submitTransaction(
+                    subwalletId,
+                    toAddress,
+                    amountNano);
+            boolean marked = txRepository.markSubmitted(
+                    txId,
+                    txHash,
+                    expectedVersion);
+            if (!marked) {
+                throw new DomainException(
+                        ErrorCodes.TON_TX_FAILED,
+                        persistFailureMessage);
+            }
+            return new TxRef(
+                    txId,
+                    txHash,
+                    expectedVersion + 1,
+                    false);
+        } catch (RuntimeException ex) {
+            txRepository.updateStatus(txId, "ABANDONED", 0, expectedVersion);
+            throw ex;
+        }
+        // CHECKSTYLE.ON: IllegalCatch
     }
 
     private void markOutboundConfirmed(TxRef txRef) {
