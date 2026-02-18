@@ -189,7 +189,7 @@ class TonWalletServiceTest {
         }
 
         @Test
-        @DisplayName("Should submit first tx with seqno=0 when wallet is not initialized (getSeqno -13)")
+        @DisplayName("Should deploy wallet then submit first tx when wallet is not initialized (getSeqno -13)")
         void submitsFirstTransaction_whenWalletIsNotInitialized() {
             String destAddress = generateValidAddress();
             when(lockPort.withLock(anyString(), any(Duration.class), any()))
@@ -198,14 +198,18 @@ class TonWalletServiceTest {
                     .thenThrow(new DomainException(
                             "TON_API_ERROR",
                             "TON Center API call failed: method=getSeqno, reason=getSeqno failed, "
-                                    + "exitCode: -13"));
-            when(blockchainPort.sendBoc(anyString())).thenReturn("txhash_init");
+                                    + "exitCode: -13"))
+                    .thenReturn(0L);
+            when(blockchainPort.sendBoc(anyString()))
+                    .thenReturn("txhash_deploy")
+                    .thenReturn("txhash_init");
 
             String txHash = service.submitTransaction(42,
                     destAddress, 1_000_000_000L);
 
             assertThat(txHash).isEqualTo("txhash_init");
-            verify(blockchainPort).sendBoc(anyString());
+            verify(blockchainPort, org.mockito.Mockito.times(2))
+                    .sendBoc(anyString());
         }
 
         @Test

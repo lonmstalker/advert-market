@@ -21,10 +21,8 @@ import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.ton.ton4j.address.Address;
-import org.ton.ton4j.cell.Cell;
 import org.ton.ton4j.mnemonic.Mnemonic;
 import org.ton.ton4j.smartcontract.types.WalletV4R2Config;
-import org.ton.ton4j.smartcontract.utils.MsgUtils;
 import org.ton.ton4j.smartcontract.wallet.v4.WalletV4R2;
 
 /**
@@ -44,6 +42,8 @@ public class TonWalletService implements TonWalletPort {
 
     private static final Duration TX_LOCK_TTL = Duration.ofSeconds(300);
     private static final int MAX_SEND_RETRIES = 3;
+    private static final int DEPLOY_SEQNO_POLL_ATTEMPTS = 10;
+    private static final Duration DEPLOY_SEQNO_POLL_DELAY = Duration.ofMillis(300);
 
     private final TonBlockchainPort blockchainPort;
     private final DistributedLockPort lockPort;
@@ -110,11 +110,10 @@ public class TonWalletService implements TonWalletPort {
                 .build();
 
         String walletAddress = wallet.getAddress().toBounceable();
-        SeqnoPlan seqnoPlan = resolveSeqno(walletAddress);
-        long seqno = seqnoPlan.seqno();
+        long seqno = resolveSeqno(wallet, walletAddress);
 
         String base64Boc = buildSignedBoc(wallet, subwalletId, seqno,
-                destinationAddress, amountNano, seqnoPlan.includeStateInit());
+                destinationAddress, amountNano);
 
         for (int attempt = 0; attempt < MAX_SEND_RETRIES; attempt++) {
             try {
@@ -159,18 +158,45 @@ public class TonWalletService implements TonWalletPort {
         return null;
     }
 
-    private SeqnoPlan resolveSeqno(String walletAddress) {
+    private long resolveSeqno(WalletV4R2 wallet, String walletAddress) {
         try {
-            return new SeqnoPlan(blockchainPort.getSeqno(walletAddress), false);
+            return blockchainPort.getSeqno(walletAddress);
         } catch (DomainException ex) {
             if (isUninitializedWallet(ex)) {
-                log.info("TON wallet is not initialized yet, using seqno=0 "
-                                + "and deploy message: wallet={}",
+                log.info("TON wallet is not initialized yet, deploying wallet first: wallet={}",
                         walletAddress);
-                return new SeqnoPlan(0L, true);
+                deployWallet(wallet, walletAddress);
+                return waitForWalletSeqno(walletAddress);
             }
             throw ex;
         }
+    }
+
+    private void deployWallet(WalletV4R2 wallet, String walletAddress) {
+        String deployBoc = wallet.prepareDeployMsg().toCell().toBase64();
+        String deployTxHash = blockchainPort.sendBoc(deployBoc);
+        log.info("TON wallet deploy submitted: wallet={}, txHash={}",
+                walletAddress, deployTxHash);
+    }
+
+    private long waitForWalletSeqno(String walletAddress) {
+        for (int attempt = 1; attempt <= DEPLOY_SEQNO_POLL_ATTEMPTS; attempt++) {
+            try {
+                return blockchainPort.getSeqno(walletAddress);
+            } catch (DomainException ex) {
+                if (!isUninitializedWallet(ex)) {
+                    throw ex;
+                }
+                if (attempt == DEPLOY_SEQNO_POLL_ATTEMPTS) {
+                    break;
+                }
+                sleepQuietly(DEPLOY_SEQNO_POLL_DELAY);
+            }
+        }
+        throw new DomainException(
+                ErrorCodes.TON_TX_FAILED,
+                "Wallet deployment was submitted but seqno is still unavailable"
+                        + " after " + DEPLOY_SEQNO_POLL_ATTEMPTS + " attempts");
     }
 
     private long fetchCurrentSeqnoAfterSendFailure(
@@ -206,6 +232,17 @@ public class TonWalletService implements TonWalletPort {
         return false;
     }
 
+    private static void sleepQuietly(Duration delay) {
+        try {
+            Thread.sleep(delay.toMillis());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new DomainException(
+                    ErrorCodes.TON_TX_FAILED,
+                    "Interrupted while waiting for TON wallet deployment");
+        }
+    }
+
     private String recoverTxHash(String walletAddress) {
         var recent = blockchainPort.getTransactions(walletAddress, 1);
         if (!recent.isEmpty()) {
@@ -225,8 +262,7 @@ public class TonWalletService implements TonWalletPort {
 
     private String buildSignedBoc(WalletV4R2 wallet, int subwalletId,
                                    long seqno, String destinationAddress,
-                                   long amountNano,
-                                   boolean includeStateInit) {
+                                   long amountNano) {
         WalletV4R2Config txConfig = WalletV4R2Config.builder()
                 .walletId(subwalletId)
                 .seqno(seqno)
@@ -235,14 +271,7 @@ public class TonWalletService implements TonWalletPort {
                 .bounce(false)
                 .build();
 
-        Cell transferBody = wallet.createTransferBody(txConfig);
-        var externalMessage = includeStateInit
-                ? MsgUtils.createExternalMessageWithSignedBody(
-                keyPair,
-                wallet.getAddress(),
-                wallet.getStateInit(),
-                transferBody)
-                : wallet.prepareExternalMsg(txConfig);
+        var externalMessage = wallet.prepareExternalMsg(txConfig);
         return externalMessage.toCell().toBase64();
     }
 
@@ -259,8 +288,5 @@ public class TonWalletService implements TonWalletPort {
             throw new IllegalStateException(
                     "Failed to derive key pair from mnemonic");
         }
-    }
-
-    private record SeqnoPlan(long seqno, boolean includeStateInit) {
     }
 }
