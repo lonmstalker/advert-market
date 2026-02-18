@@ -6,6 +6,7 @@ plugins {
 dependencies {
     api platform(project(':platform-bom'))
     api project(':advert-market-financial-api')
+    implementation project(':advert-market-communication-api')
     implementation project(':advert-market-shared')
     implementation project(':advert-market-identity-api')
     implementation project(':advert-market-db')

@@ -8,16 +8,22 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.app.outbox.JooqOutboxRepository;
 import com.advertmarket.integration.support.ContainerProperties;
 import com.advertmarket.integration.support.DatabaseSupport;
 import com.advertmarket.integration.support.TestDataFactory;
 import com.advertmarket.marketplace.api.port.TelegramChannelPort;
+import com.advertmarket.marketplace.channel.config.ChannelBotProperties;
 import com.advertmarket.marketplace.channel.config.ChannelStatisticsCollectorProperties;
 import com.advertmarket.marketplace.channel.service.ChannelStatisticsCollectorScheduler;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.metric.MetricsFacade;
+import com.advertmarket.shared.outbox.OutboxRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Duration;
 import javax.sql.DataSource;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
@@ -178,7 +184,22 @@ class ChannelStatisticsCollectorIntegrationTest {
         ChannelStatisticsCollectorProperties
                 channelStatisticsCollectorProperties() {
             return new ChannelStatisticsCollectorProperties(
-                    true, 100, 0, 2);
+                    true, 100, 0, 2, Duration.ofHours(24));
+        }
+
+        @Bean
+        ChannelBotProperties channelBotProperties() {
+            return new ChannelBotProperties(777L, Duration.ofSeconds(3));
+        }
+
+        @Bean
+        OutboxRepository outboxRepository(DSLContext dsl) {
+            return new JooqOutboxRepository(dsl);
+        }
+
+        @Bean
+        JsonFacade jsonFacade() {
+            return new JsonFacade(new ObjectMapper().findAndRegisterModules());
         }
 
         @Bean
@@ -186,10 +207,19 @@ class ChannelStatisticsCollectorIntegrationTest {
                 channelStatisticsCollectorScheduler(
                 DSLContext dsl,
                 TelegramChannelPort telegramChannelPort,
+                ChannelBotProperties channelBotProperties,
+                OutboxRepository outboxRepository,
+                JsonFacade jsonFacade,
                 MetricsFacade metricsFacade,
                 ChannelStatisticsCollectorProperties properties) {
             return new ChannelStatisticsCollectorScheduler(
-                    dsl, telegramChannelPort, metricsFacade, properties);
+                    dsl,
+                    telegramChannelPort,
+                    channelBotProperties,
+                    outboxRepository,
+                    jsonFacade,
+                    metricsFacade,
+                    properties);
         }
     }
 }

@@ -5,6 +5,7 @@ import io.github.springpropertiesmd.api.annotation.PropertyGroupDoc;
 import io.github.springpropertiesmd.api.annotation.Requirement;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
@@ -16,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
  * @param batchSize maximum channels processed per cycle
  * @param retryBackoffMs fixed backoff between retries for transient failures
  * @param maxRetriesPerChannel max retries after the first attempt for each channel
+ * @param adminCheckInterval minimum interval between admin list checks
  */
 @ConfigurationProperties(prefix = "app.marketplace.channel.statistics")
 @PropertyGroupDoc(
@@ -48,6 +50,12 @@ public record ChannelStatisticsCollectorProperties(
                 description = "Maximum retries per channel for transient Telegram failures",
                 required = Requirement.OPTIONAL
         )
-        @PositiveOrZero @DefaultValue("2") int maxRetriesPerChannel
+        @PositiveOrZero @DefaultValue("2") int maxRetriesPerChannel,
+
+        @PropertyDoc(
+                description = "Minimum interval between periodic admin list checks",
+                required = Requirement.OPTIONAL
+        )
+        @DefaultValue("24h") Duration adminCheckInterval
 ) {
 }

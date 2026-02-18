@@ -51,6 +51,7 @@ public class DealWorkflowEngine {
     private static final Duration NEGOTIATING_TIMEOUT = Duration.ofHours(72);
     private static final Duration AWAITING_PAYMENT_TIMEOUT = Duration.ofHours(24);
     private static final Duration FUNDED_TIMEOUT = Duration.ofHours(72);
+    private static final Duration CREATIVE_SUBMITTED_TIMEOUT = Duration.ofHours(48);
     private static final Duration CREATIVE_APPROVED_TIMEOUT = Duration.ofHours(48);
     private static final Duration SCHEDULED_TIMEOUT = Duration.ofHours(24);
     private static final Duration DELIVERY_VERIFYING_TIMEOUT = Duration.ofHours(24);
@@ -195,6 +196,13 @@ public class DealWorkflowEngine {
     private void onPublished(
             EventEnvelope<DealStateChangedEvent> envelope,
             DealRecord deal) {
+        notifyOne(
+                envelope,
+                deal,
+                deal.advertiserId(),
+                NotificationType.PUBLISHED,
+                "published-advertiser");
+
         var messageId = deal.messageId();
         var contentHash = deal.contentHash();
         var publishedAt = deal.publishedAt();
@@ -476,6 +484,7 @@ public class DealWorkflowEngine {
             case NEGOTIATING -> Optional.of(NEGOTIATING_TIMEOUT);
             case AWAITING_PAYMENT -> Optional.of(AWAITING_PAYMENT_TIMEOUT);
             case FUNDED -> Optional.of(FUNDED_TIMEOUT);
+            case CREATIVE_SUBMITTED -> Optional.of(CREATIVE_SUBMITTED_TIMEOUT);
             case CREATIVE_APPROVED -> Optional.of(CREATIVE_APPROVED_TIMEOUT);
             case SCHEDULED -> Optional.of(SCHEDULED_TIMEOUT);
             case DELIVERY_VERIFYING -> Optional.of(DELIVERY_VERIFYING_TIMEOUT);

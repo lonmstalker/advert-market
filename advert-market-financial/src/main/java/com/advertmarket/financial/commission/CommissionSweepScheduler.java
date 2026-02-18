@@ -4,6 +4,7 @@ import com.advertmarket.financial.api.model.Leg;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.config.CommissionSweepProperties;
+import com.advertmarket.financial.config.NetworkFeeProperties;
 import com.advertmarket.financial.ledger.repository.JooqAccountBalanceRepository;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricNames;
@@ -14,7 +15,7 @@ import com.advertmarket.shared.model.Money;
 import com.advertmarket.shared.util.IdempotencyKey;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.List;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,7 +27,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-@EnableConfigurationProperties(CommissionSweepProperties.class)
+@EnableConfigurationProperties({
+        CommissionSweepProperties.class,
+        NetworkFeeProperties.class
+})
 @Slf4j
 @SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class CommissionSweepScheduler {
@@ -38,6 +42,7 @@ public class CommissionSweepScheduler {
     private final DistributedLockPort lockPort;
     private final MetricsFacade metrics;
     private final CommissionSweepProperties props;
+    private final NetworkFeeProperties networkFeeProperties;
 
     /**
      * Executes scheduled commission sweep under a distributed lock.
@@ -104,16 +109,23 @@ public class CommissionSweepScheduler {
             }
 
             var amount = Money.ofNano(balance);
+            long feeNano = Math.max(networkFeeProperties.defaultEstimateNano(), 0L);
+            var legs = new ArrayList<Leg>();
+            legs.add(new Leg(accountId,
+                    EntryType.COMMISSION_SWEEP, amount, Leg.Side.DEBIT));
+            legs.add(new Leg(AccountId.platformTreasury(),
+                    EntryType.COMMISSION_SWEEP, amount, Leg.Side.CREDIT));
+            if (feeNano > 0) {
+                var feeAmount = Money.ofNano(feeNano);
+                legs.add(new Leg(AccountId.platformTreasury(),
+                        EntryType.NETWORK_FEE, feeAmount, Leg.Side.DEBIT));
+                legs.add(new Leg(AccountId.networkFees(),
+                        EntryType.NETWORK_FEE, feeAmount, Leg.Side.CREDIT));
+            }
             var transfer = new TransferRequest(
                     null,
                     IdempotencyKey.sweep(date, accountId),
-                    List.of(
-                            new Leg(accountId,
-                                    EntryType.COMMISSION_SWEEP, amount,
-                                    Leg.Side.DEBIT),
-                            new Leg(AccountId.platformTreasury(),
-                                    EntryType.COMMISSION_SWEEP, amount,
-                                    Leg.Side.CREDIT)),
+                    legs,
                     "Commission sweep " + date + " from " + accountId);
             ledgerPort.transfer(transfer);
             return balance;

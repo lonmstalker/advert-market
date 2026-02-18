@@ -1,6 +1,7 @@
 package com.advertmarket.deal.repository;
 
 import static com.advertmarket.db.generated.tables.Deals.DEALS;
+import static com.advertmarket.db.generated.tables.Users.USERS;
 
 import com.advertmarket.deal.api.dto.DealListCriteria;
 import com.advertmarket.deal.api.dto.DealRecord;
@@ -329,6 +330,16 @@ public class JooqDealRepository implements DealRepository {
                 .set(DEALS.UPDATED_AT, OffsetDateTime.now())
                 .where(DEALS.ID.eq(dealId.value()))
                 .execute();
+    }
+
+    @Override
+    @NonNull
+    public List<Long> findOperatorUserIds() {
+        return dsl.select(USERS.ID)
+                .from(USERS)
+                .where(USERS.IS_OPERATOR.isTrue())
+                .orderBy(USERS.ID.asc())
+                .fetch(USERS.ID);
     }
 
     /**

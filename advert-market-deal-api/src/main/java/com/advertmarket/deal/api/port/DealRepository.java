@@ -155,4 +155,12 @@ public interface DealRepository {
             long messageId,
             @NonNull String contentHash,
             @NonNull Instant publishedAt);
+
+    /**
+     * Returns all operator user IDs used for dispute escalation alerts.
+     *
+     * @return ordered list of operator user identifiers
+     */
+    @NonNull
+    List<Long> findOperatorUserIds();
 }

@@ -39,6 +39,12 @@ public enum NotificationType {
     CHANNEL_BOT_REMOVED,
     /** Bot was demoted in a channel (lost admin rights). */
     CHANNEL_BOT_DEMOTED,
+    /** Channel owner lost admin access and listing was deactivated. */
+    CHANNEL_OWNERSHIP_LOST,
     /** Bot admin rights were restored and channel reactivated. */
-    CHANNEL_BOT_RESTORED
+    CHANNEL_BOT_RESTORED,
+    /** Unclaimed payout reminder sent to channel owner. */
+    PAYOUT_UNCLAIMED,
+    /** 30+ day unclaimed payout escalated to operators. */
+    PAYOUT_UNCLAIMED_OPERATOR_REVIEW
 }

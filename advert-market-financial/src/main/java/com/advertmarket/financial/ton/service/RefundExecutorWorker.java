@@ -9,6 +9,7 @@ import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.RefundExecutorPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
+import com.advertmarket.financial.config.NetworkFeeProperties;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.shared.event.DomainEvent;
 import com.advertmarket.shared.event.EventEnvelope;
@@ -32,7 +33,7 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,7 @@ public class RefundExecutorWorker implements RefundExecutorPort {
     private final JsonFacade jsonFacade;
     private final MetricsFacade metrics;
     private final JooqTonTransactionRepository txRepository;
+    private final NetworkFeeProperties networkFeeProperties;
 
     @Override
     public void executeRefund(
@@ -98,7 +100,10 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                 dealId, txRef.txHash(), command.refundAddress(),
                 command.amountNano());
 
-        recordLedger(dealId, command.amountNano());
+        recordLedger(
+                dealId,
+                command.amountNano(),
+                networkFeeProperties.defaultEstimateNano());
         publishCompletedEvent(dealId, txRef.txHash(), command);
         markOutboundConfirmed(txRef);
 
@@ -288,18 +293,35 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                 txRef.id(), "CONFIRMED", 0, txRef.version());
     }
 
-    private void recordLedger(DealId dealId, long amountNano) {
+    private void recordLedger(
+            DealId dealId,
+            long amountNano,
+            long feeEstimateNano) {
+        long boundedFee = Math.min(amountNano, Math.max(feeEstimateNano, 0L));
+        long netRefundAmount = amountNano - boundedFee;
         var amount = Money.ofNano(amountNano);
+        var legs = new ArrayList<Leg>();
+        legs.add(new Leg(AccountId.escrow(dealId),
+                EntryType.ESCROW_REFUND,
+                amount,
+                Leg.Side.DEBIT));
+        if (netRefundAmount > 0) {
+            legs.add(new Leg(AccountId.externalTon(),
+                    EntryType.ESCROW_REFUND,
+                    Money.ofNano(netRefundAmount),
+                    Leg.Side.CREDIT));
+        }
+        if (boundedFee > 0) {
+            legs.add(new Leg(AccountId.networkFees(),
+                    EntryType.NETWORK_FEE_REFUND,
+                    Money.ofNano(boundedFee),
+                    Leg.Side.CREDIT));
+        }
+
         var transfer = new TransferRequest(
                 dealId,
                 IdempotencyKey.refund(dealId),
-                List.of(
-                        new Leg(AccountId.escrow(dealId),
-                                EntryType.ESCROW_REFUND, amount,
-                                Leg.Side.DEBIT),
-                        new Leg(AccountId.externalTon(),
-                                EntryType.ESCROW_REFUND, amount,
-                                Leg.Side.CREDIT)),
+                legs,
                 "Refund for deal " + dealId);
         ledgerPort.transfer(transfer);
     }

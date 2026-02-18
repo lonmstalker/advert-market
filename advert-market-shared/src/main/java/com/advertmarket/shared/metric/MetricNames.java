@@ -103,12 +103,16 @@ public final class MetricNames {
             "channel.stats.collector.failure";
     public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_STATS_COLLECTOR_RETRY =
             "channel.stats.collector.retry";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String CHANNEL_ADMIN_CHECK =
+            "channel.admin.check";
 
     // --- Deal Timeout ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String DEAL_TIMEOUT_PROCESSED =
             "deal.timeout.processed";
     public static final @Fenum(FenumGroup.METRIC_NAME) String DEAL_TIMEOUT_REFUND_EMITTED =
             "deal.timeout.refund.emitted";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String DEAL_TIMEOUT_DISPUTE_ESCALATED =
+            "deal.timeout.dispute.escalated";
 
     // --- Delivery ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String DELIVERY_VERIFIED =
@@ -183,6 +187,12 @@ public final class MetricNames {
             "payout.deferred";
     public static final @Fenum(FenumGroup.METRIC_NAME) String REFUND_DEFERRED =
             "refund.deferred";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String PAYOUT_UNCLAIMED_REMINDER =
+            "payout.unclaimed.reminder";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String PAYOUT_UNCLAIMED_OPERATOR_ESCALATED =
+            "payout.unclaimed.operator.escalated";
+    public static final @Fenum(FenumGroup.METRIC_NAME) String PAYOUT_UNCLAIMED_RETRY_EMITTED =
+            "payout.unclaimed.retry.emitted";
 
     // --- Withdrawal ---
     public static final @Fenum(FenumGroup.METRIC_NAME) String WITHDRAWAL_REQUESTED =

@@ -1,5 +1,6 @@
 package com.advertmarket.financial.ton.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -8,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +18,7 @@ import com.advertmarket.financial.api.event.ExecutePayoutCommand;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
+import com.advertmarket.financial.config.NetworkFeeProperties;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.event.EventEnvelope;
@@ -25,7 +28,9 @@ import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
+import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.EntryType;
 import com.advertmarket.shared.model.UserId;
 import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxRepository;
@@ -36,9 +41,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("PayoutExecutorWorker")
 class PayoutExecutorWorkerTest {
+
+    private static final long DEFAULT_FEE_NANO = 5_000_000L;
 
     private TonWalletPort tonWalletPort;
     private LedgerPort ledgerPort;
@@ -68,7 +76,8 @@ class PayoutExecutorWorkerTest {
                 lockPort,
                 jsonFacade,
                 metrics,
-                txRepository);
+                txRepository,
+                new NetworkFeeProperties(DEFAULT_FEE_NANO));
     }
 
     @Test
@@ -137,7 +146,21 @@ class PayoutExecutorWorkerTest {
         worker.executePayout(envelope);
 
         verify(tonWalletPort).submitTransaction(11, "UQ-owner-address", 1_000_000_000L);
-        verify(ledgerPort).transfer(any(TransferRequest.class));
+        var requestCaptor = ArgumentCaptor.forClass(TransferRequest.class);
+        verify(ledgerPort, times(2)).transfer(requestCaptor.capture());
+        assertThat(requestCaptor.getAllValues())
+                .satisfies(requests -> {
+                    assertThat(requests).anySatisfy(request -> {
+                        assertThat(request.legs()).anySatisfy(leg -> {
+                            assertThat(leg.accountId())
+                                    .isEqualTo(AccountId.networkFees());
+                            assertThat(leg.entryType())
+                                    .isEqualTo(EntryType.NETWORK_FEE);
+                            assertThat(leg.amount().nanoTon())
+                                    .isEqualTo(DEFAULT_FEE_NANO);
+                        });
+                    });
+                });
         verify(outboxRepository).save(any(OutboxEntry.class));
     }
 
@@ -430,7 +453,7 @@ class PayoutExecutorWorkerTest {
 
         verify(tonWalletPort).submitTransaction(11, "UQ-owner-address", 1_000_000_000L);
         verify(txRepository).markSubmitted(555L, "txhash-resumed-abandoned", 1);
-        verify(ledgerPort).transfer(any(TransferRequest.class));
+        verify(ledgerPort, times(2)).transfer(any(TransferRequest.class));
         verify(outboxRepository).save(any(OutboxEntry.class));
     }
 }

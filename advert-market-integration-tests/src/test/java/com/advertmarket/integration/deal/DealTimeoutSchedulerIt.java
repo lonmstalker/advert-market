@@ -90,7 +90,13 @@ class DealTimeoutSchedulerIt {
                 Duration.ofMinutes(2));
 
         scheduler = new DealTimeoutScheduler(
-                dealRepository, transitionService, lockPort, metrics, props);
+                dealRepository,
+                transitionService,
+                lockPort,
+                outboxRepository,
+                jsonFacade,
+                metrics,
+                props);
     }
 
     @Test

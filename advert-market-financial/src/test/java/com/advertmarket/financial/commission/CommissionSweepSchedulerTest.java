@@ -1,5 +1,6 @@
 package com.advertmarket.financial.commission;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -15,12 +16,14 @@ import static org.mockito.Mockito.when;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.config.CommissionSweepProperties;
+import com.advertmarket.financial.config.NetworkFeeProperties;
 import com.advertmarket.financial.ledger.repository.JooqAccountBalanceRepository;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
+import com.advertmarket.shared.model.EntryType;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -28,9 +31,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("CommissionSweepScheduler — commission sweep operations")
 class CommissionSweepSchedulerTest {
+
+    private static final long DEFAULT_FEE_NANO = 5_000_000L;
 
     private JooqAccountBalanceRepository balanceRepository;
     private LedgerPort ledgerPort;
@@ -47,9 +53,15 @@ class CommissionSweepSchedulerTest {
 
         var props = new CommissionSweepProperties(
                 "0 0 2 * * *", 1000L, 100, Duration.ofMinutes(5));
+        var networkFeeProps = new NetworkFeeProperties(DEFAULT_FEE_NANO);
 
         scheduler = new CommissionSweepScheduler(
-                balanceRepository, ledgerPort, lockPort, metrics, props);
+                balanceRepository,
+                ledgerPort,
+                lockPort,
+                metrics,
+                props,
+                networkFeeProps);
     }
 
     @Test
@@ -120,7 +132,26 @@ class CommissionSweepSchedulerTest {
 
         scheduler.sweep();
 
-        verify(ledgerPort, times(2)).transfer(any(TransferRequest.class));
+        var requestCaptor = ArgumentCaptor.forClass(TransferRequest.class);
+        verify(ledgerPort, times(2)).transfer(requestCaptor.capture());
+        assertThat(requestCaptor.getAllValues()).allSatisfy(request -> {
+            assertThat(request.legs()).anySatisfy(leg -> {
+                assertThat(leg.accountId())
+                        .isEqualTo(AccountId.platformTreasury());
+                assertThat(leg.entryType())
+                        .isEqualTo(EntryType.NETWORK_FEE);
+                assertThat(leg.amount().nanoTon())
+                        .isEqualTo(DEFAULT_FEE_NANO);
+            });
+            assertThat(request.legs()).anySatisfy(leg -> {
+                assertThat(leg.accountId())
+                        .isEqualTo(AccountId.networkFees());
+                assertThat(leg.entryType())
+                        .isEqualTo(EntryType.NETWORK_FEE);
+                assertThat(leg.amount().nanoTon())
+                        .isEqualTo(DEFAULT_FEE_NANO);
+            });
+        });
         verify(metrics).incrementCounter(
                 eq(MetricNames.COMMISSION_SWEEP_COUNT),
                 eq("count"), eq("2"));

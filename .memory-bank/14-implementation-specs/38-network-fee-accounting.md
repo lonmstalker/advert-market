@@ -4,6 +4,13 @@
 
 Every outbound TON transaction (payout, refund, commission sweep) incurs a gas fee (~0.005 TON). These fees must be tracked in the ledger to maintain the invariant: `SUM(debits) = SUM(credits)`.
 
+## Runtime Status (2026-02-18)
+
+- Implemented in runtime workers (`PayoutExecutorWorker`, `RefundExecutorWorker`, `CommissionSweepScheduler`):
+  - fee entries are recorded with configurable estimate `app.financial.network-fee.default-estimate-nano`.
+- Planned follow-up:
+  - switch to actual on-chain fee synchronization (`ton_transactions.fee_nano` reconciliation path) in `advert-market-d79`.
+
 ## NETWORK_FEES Account
 
 New expense account type tracking all TON gas fees paid by the platform.

@@ -13,10 +13,12 @@ import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.config.DealTimeoutProperties;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealStatus;
+import com.advertmarket.shared.outbox.OutboxRepository;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -42,6 +44,10 @@ class DealTimeoutSchedulerTest {
     @Mock
     private DistributedLockPort lockPort;
     @Mock
+    private OutboxRepository outboxRepository;
+    @Mock
+    private JsonFacade jsonFacade;
+    @Mock
     private MetricsFacade metrics;
 
     private DealTimeoutProperties props;
@@ -61,7 +67,7 @@ class DealTimeoutSchedulerTest {
                 Duration.ofMinutes(2));
         scheduler = new DealTimeoutScheduler(
                 dealRepository, dealTransitionService,
-                lockPort, metrics, props);
+                lockPort, outboxRepository, jsonFacade, metrics, props);
     }
 
     @Nested
@@ -166,6 +172,26 @@ class DealTimeoutSchedulerTest {
             scheduler.processExpiredDeals();
 
             verify(dealTransitionService, never()).transition(any());
+        }
+
+        @Test
+        @DisplayName("Should escalate DISPUTED timeout and clear deadline")
+        void escalatesDisputedTimeoutAndClearsDeadline() {
+            acquireLock();
+            var deal = dealRecord(DealStatus.DISPUTED, false);
+            when(dealRepository.findExpiredDeals(eq(50), any()))
+                    .thenReturn(List.of(deal));
+            when(dealRepository.findById(any())).thenReturn(Optional.of(deal));
+            when(dealRepository.findOperatorUserIds())
+                    .thenReturn(List.of(101L, 202L));
+            when(jsonFacade.toJson(any())).thenReturn("{}");
+
+            scheduler.processExpiredDeals();
+
+            verify(dealTransitionService, never()).transition(any());
+            verify(dealRepository).clearDeadline(any());
+            verify(outboxRepository, org.mockito.Mockito.times(2))
+                    .save(any());
         }
 
         @Test

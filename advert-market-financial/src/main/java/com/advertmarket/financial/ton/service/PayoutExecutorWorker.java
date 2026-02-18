@@ -9,6 +9,7 @@ import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.PayoutExecutorPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
+import com.advertmarket.financial.config.NetworkFeeProperties;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.event.DomainEvent;
@@ -64,6 +65,7 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
     private final JsonFacade jsonFacade;
     private final MetricsFacade metrics;
     private final JooqTonTransactionRepository txRepository;
+    private final NetworkFeeProperties networkFeeProperties;
 
     @Override
     public void executePayout(
@@ -124,7 +126,11 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                 dealId, txRef.txHash(), payoutAddress,
                 command.amountNano());
 
-        recordLedger(dealId, ownerId, command.amountNano());
+        recordLedger(
+                dealId,
+                ownerId,
+                command.amountNano(),
+                networkFeeProperties.defaultEstimateNano());
         publishCompletedEvent(dealId, txRef.txHash(), command, payoutAddress);
         markOutboundConfirmed(txRef);
 
@@ -319,8 +325,11 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                 txRef.id(), "CONFIRMED", 0, txRef.version());
     }
 
-    private void recordLedger(DealId dealId, UserId ownerId,
-            long amountNano) {
+    private void recordLedger(
+            DealId dealId,
+            UserId ownerId,
+            long amountNano,
+            long feeEstimateNano) {
         var amount = Money.ofNano(amountNano);
         var transfer = new TransferRequest(
                 dealId,
@@ -334,6 +343,26 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                                 Leg.Side.CREDIT)),
                 "Payout for deal " + dealId);
         ledgerPort.transfer(transfer);
+
+        if (feeEstimateNano <= 0) {
+            return;
+        }
+
+        var feeAmount = Money.ofNano(feeEstimateNano);
+        var feeTransfer = new TransferRequest(
+                dealId,
+                IdempotencyKey.fee("payout:" + dealId.value()),
+                List.of(
+                        new Leg(AccountId.platformTreasury(),
+                                EntryType.NETWORK_FEE,
+                                feeAmount,
+                                Leg.Side.DEBIT),
+                        new Leg(AccountId.networkFees(),
+                                EntryType.NETWORK_FEE,
+                                feeAmount,
+                                Leg.Side.CREDIT)),
+                "Payout network fee for deal " + dealId);
+        ledgerPort.transfer(feeTransfer);
     }
 
     private void publishCompletedEvent(DealId dealId, String txHash,

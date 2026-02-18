@@ -196,7 +196,8 @@ class DealWorkflowEngineTest {
 
         engine.handle(envelope);
 
-        verify(outboxRepository).save(any(OutboxEntry.class));
+        verify(outboxRepository, org.mockito.Mockito.atLeast(2))
+                .save(any(OutboxEntry.class));
         var commandCaptor = org.mockito.ArgumentCaptor.forClass(
                 com.advertmarket.deal.api.dto.DealTransitionCommand.class);
         verify(dealTransitionService).transition(commandCaptor.capture());
@@ -204,6 +205,30 @@ class DealWorkflowEngineTest {
         assertThat(command.dealId()).isEqualTo(dealId);
         assertThat(command.targetStatus()).isEqualTo(DealStatus.DELIVERY_VERIFYING);
         assertThat(command.actorType()).isEqualTo(ActorType.SYSTEM);
+    }
+
+    @Test
+    @DisplayName("CREATIVE_SUBMITTED: set 48h deadline")
+    void creativeSubmitted_setsDeadline() {
+        var dealId = DealId.generate();
+        var deal = deal(dealId, DealStatus.CREATIVE_SUBMITTED);
+        when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
+
+        var event = new DealStateChangedEvent(
+                DealStatus.FUNDED,
+                DealStatus.CREATIVE_SUBMITTED,
+                null,
+                ActorType.ADVERTISER,
+                deal.amountNano(),
+                deal.channelId(),
+                null,
+                null);
+        var envelope = EventEnvelope.create(
+                EventTypes.DEAL_STATE_CHANGED, dealId, event);
+
+        engine.handle(envelope);
+
+        verify(dealRepository).setDeadline(eq(dealId), any(Instant.class));
     }
 
     @Test

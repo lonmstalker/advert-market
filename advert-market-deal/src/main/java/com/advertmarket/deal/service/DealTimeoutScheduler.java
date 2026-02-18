@@ -1,16 +1,27 @@
 package com.advertmarket.deal.service;
 
+import com.advertmarket.communication.api.event.NotificationEvent;
+import com.advertmarket.communication.api.notification.NotificationType;
 import com.advertmarket.deal.api.dto.DealRecord;
 import com.advertmarket.deal.api.dto.DealTransitionCommand;
 import com.advertmarket.deal.api.dto.DealTransitionResult;
 import com.advertmarket.deal.api.port.DealRepository;
 import com.advertmarket.deal.config.DealTimeoutProperties;
+import com.advertmarket.shared.event.EventEnvelope;
+import com.advertmarket.shared.event.EventTypes;
+import com.advertmarket.shared.event.TopicNames;
+import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.lock.DistributedLockPort;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.ActorType;
 import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.model.DealStatus;
+import com.advertmarket.shared.outbox.OutboxEntry;
+import com.advertmarket.shared.outbox.OutboxRepository;
+import com.advertmarket.shared.outbox.OutboxStatus;
+import java.time.Instant;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -28,16 +39,20 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"fenum:argument", "fenum:assignment"})
 public class DealTimeoutScheduler {
 
     private static final String SCHEDULER_LOCK_KEY = "scheduler:deal-timeout";
     private static final String DEAL_LOCK_PREFIX = "lock:deal:";
     private static final String TIMEOUT_REASON = "Deal expired due to timeout";
+    private static final int SHORT_DEAL_ID_LENGTH = 8;
     private static final long SYSTEM_ACTOR_ID = 0L;
 
     private final DealRepository dealRepository;
     private final DealTransitionService dealTransitionService;
     private final DistributedLockPort lockPort;
+    private final OutboxRepository outboxRepository;
+    private final JsonFacade jsonFacade;
     private final MetricsFacade metrics;
     private final DealTimeoutProperties props;
 
@@ -102,6 +117,11 @@ public class DealTimeoutScheduler {
             return;
         }
 
+        if (current.status() == DealStatus.DISPUTED) {
+            escalateDispute(dealId, current);
+            return;
+        }
+
         var targetStatus = timeoutTarget(current.status());
         if (targetStatus == null) {
             log.debug("No timeout action configured for status {}, deal={}",
@@ -136,6 +156,54 @@ public class DealTimeoutScheduler {
             log.info("Timeout processed: deal={} {} -> {}",
                     dealId, current.status(), targetStatus);
         }
+    }
+
+    private void escalateDispute(DealId dealId, DealRecord current) {
+        var operatorIds = dealRepository.findOperatorUserIds();
+        for (Long operatorId : operatorIds) {
+            publishOperatorEscalation(dealId, current, operatorId);
+        }
+        dealRepository.clearDeadline(dealId);
+        metrics.incrementCounter(
+                MetricNames.DEAL_TIMEOUT_DISPUTE_ESCALATED,
+                "operators", String.valueOf(operatorIds.size()));
+        log.info(
+                "Dispute timeout escalated: deal={}, operators={}",
+                dealId,
+                operatorIds.size());
+    }
+
+    private void publishOperatorEscalation(
+            DealId dealId,
+            DealRecord deal,
+            long operatorId) {
+        var payload = new NotificationEvent(
+                operatorId,
+                NotificationType.RECONCILIATION_ALERT.name(),
+                "ru",
+                Map.of(
+                        "deal_id_short",
+                        deal.id().toString().substring(0, SHORT_DEAL_ID_LENGTH),
+                        "channel_id",
+                        String.valueOf(deal.channelId())),
+                null);
+        var envelope = EventEnvelope.create(
+                EventTypes.NOTIFICATION,
+                dealId,
+                payload);
+        outboxRepository.save(OutboxEntry.builder()
+                .dealId(dealId)
+                .idempotencyKey(
+                        "deal-timeout:disputed-escalation:%s:%d"
+                                .formatted(deal.id(), operatorId))
+                .topic(TopicNames.COMMUNICATION_NOTIFICATIONS)
+                .partitionKey(String.valueOf(operatorId))
+                .payload(jsonFacade.toJson(envelope))
+                .status(OutboxStatus.PENDING)
+                .retryCount(0)
+                .version(0)
+                .createdAt(Instant.now())
+                .build());
     }
 
     private boolean isExpiredCandidate(DealRecord deal) {

@@ -83,6 +83,7 @@ app:
       statistics:
         retry-backoff-ms: ${CHANNEL_STATS_RETRY_BACKOFF_MS:1000}
         max-retries-per-channel: ${CHANNEL_STATS_MAX_RETRIES_PER_CHANNEL:2}
+        admin-check-interval: ${CHANNEL_ADMIN_CHECK_INTERVAL:24h}
     creatives:
       storage:
         enabled: ${CREATIVES_STORAGE_ENABLED:false}
@@ -143,6 +144,16 @@ app:
     min-withdrawal-nano: ${WALLET_MIN_WITHDRAWAL_NANO:100000000}
     daily-velocity-limit-nano: ${WALLET_DAILY_VELOCITY_LIMIT_NANO:1000000000000}
     manual-approval-threshold-nano: ${WALLET_MANUAL_APPROVAL_THRESHOLD_NANO:1000000000000}
+  financial:
+    network-fee:
+      default-estimate-nano: ${NETWORK_FEE_DEFAULT_ESTIMATE_NANO:5000000}
+    unclaimed-payout:
+      cron: ${UNCLAIMED_PAYOUT_CRON:0 30 2 * * *}
+      batch-size: ${UNCLAIMED_PAYOUT_BATCH_SIZE:100}
+      lock-ttl: ${UNCLAIMED_PAYOUT_LOCK_TTL:10m}
+      reminder-days: ${UNCLAIMED_PAYOUT_REMINDER_DAYS:1,7,21,30}
+      operator-review-day: ${UNCLAIMED_PAYOUT_OPERATOR_REVIEW_DAY:30}
+      notification-locale: ${UNCLAIMED_PAYOUT_NOTIFICATION_LOCALE:ru}
   canary:
     admin-token: ${CANARY_ADMIN_TOKEN:}
   internal-api:
