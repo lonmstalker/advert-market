@@ -159,6 +159,22 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                     "Failed to persist resumed outbound refund submission");
         }
 
+        if ("ABANDONED".equals(status)
+                && (txHash == null || txHash.isBlank())) {
+            log.warn(
+                    "Resuming ABANDONED outbound refund without tx hash:"
+                            + " deal={}, txId={}",
+                    dealId.value(),
+                    record.getId());
+            return submitAndMark(
+                    record.getId(),
+                    version,
+                    command.subwalletId(),
+                    command.refundAddress(),
+                    command.amountNano(),
+                    "Failed to persist resumed abandoned outbound refund submission");
+        }
+
         throw new DomainException(
                 ErrorCodes.TON_TX_FAILED,
                 "Outbound refund requires reconciliation before retry: deal="
@@ -288,12 +304,8 @@ public class RefundExecutorWorker implements RefundExecutorPort {
         }
         if (exception.getErrorCode() == ErrorCodes.TON_TX_FAILED) {
             var message = exception.getMessage();
-            if (message == null) {
-                return false;
-            }
-            return message.contains("after 3 retries")
-                    || message.contains("seqno is still unavailable")
-                    || message.contains("Interrupted while waiting for TON wallet deployment");
+            return message == null
+                    || !message.contains("requires reconciliation before retry");
         }
         return false;
     }

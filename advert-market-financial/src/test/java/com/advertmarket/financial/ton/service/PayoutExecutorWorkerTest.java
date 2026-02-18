@@ -163,7 +163,7 @@ class PayoutExecutorWorkerTest {
     }
 
     @Test
-    @DisplayName("should propagate exception when submitTransaction fails")
+    @DisplayName("should propagate TON_TX_FAILED as retryable without abandoning outbound payout")
     void shouldPropagateExceptionOnSubmitFailure() {
         var dealId = DealId.generate();
         var command = new ExecutePayoutCommand(
@@ -188,7 +188,8 @@ class PayoutExecutorWorkerTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCodes.TON_TX_FAILED);
 
-        verify(txRepository).updateStatus(100L, "ABANDONED", 0, 0);
+        verify(txRepository).incrementRetryCount(100L);
+        verify(txRepository, never()).updateStatus(100L, "ABANDONED", 0, 0);
         verify(ledgerPort, never()).transfer(any(TransferRequest.class));
         verify(outboxRepository, never()).save(any(OutboxEntry.class));
     }
@@ -297,8 +298,8 @@ class PayoutExecutorWorkerTest {
     }
 
     @Test
-    @DisplayName("should defer payout when outbound tx is already ABANDONED")
-    void shouldDeferWhenOutboundAlreadyAbandoned() {
+    @DisplayName("should resume ABANDONED payout when tx hash is missing")
+    void shouldResumeAbandonedWithoutHash() {
         var dealId = DealId.generate();
         var command = new ExecutePayoutCommand(
                 42L, 1_000_000_000L, 100_000_000L, 11);
@@ -317,13 +318,19 @@ class PayoutExecutorWorkerTest {
         existing.setVersion(1);
         when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "PAYOUT"))
                 .thenReturn(Optional.of(existing));
+        when(tonWalletPort.submitTransaction(11, "UQ-owner-address", 1_000_000_000L))
+                .thenReturn("txhash-resumed-abandoned");
+        when(txRepository.markSubmitted(555L, "txhash-resumed-abandoned", 1))
+                .thenReturn(true);
+        when(ledgerPort.transfer(any(TransferRequest.class)))
+                .thenReturn(UUID.randomUUID());
         when(jsonFacade.toJson(any())).thenReturn("{}");
 
-        assertThatCode(() -> worker.executePayout(envelope))
-                .doesNotThrowAnyException();
+        worker.executePayout(envelope);
 
-        verify(tonWalletPort, never()).submitTransaction(anyInt(), anyString(), anyLong());
-        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(tonWalletPort).submitTransaction(11, "UQ-owner-address", 1_000_000_000L);
+        verify(txRepository).markSubmitted(555L, "txhash-resumed-abandoned", 1);
+        verify(ledgerPort).transfer(any(TransferRequest.class));
         verify(outboxRepository).save(any(OutboxEntry.class));
     }
 }

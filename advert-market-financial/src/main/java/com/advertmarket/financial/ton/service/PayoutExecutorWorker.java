@@ -188,6 +188,22 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                     "Failed to persist resumed outbound payout submission");
         }
 
+        if ("ABANDONED".equals(status)
+                && (txHash == null || txHash.isBlank())) {
+            log.warn(
+                    "Resuming ABANDONED outbound payout without tx hash:"
+                            + " deal={}, txId={}",
+                    dealId.value(),
+                    record.getId());
+            return submitAndMark(
+                    record.getId(),
+                    version,
+                    command.subwalletId(),
+                    payoutAddress,
+                    command.amountNano(),
+                    "Failed to persist resumed abandoned outbound payout submission");
+        }
+
         throw new DomainException(
                 ErrorCodes.TON_TX_FAILED,
                 "Outbound payout requires reconciliation before retry: deal="
@@ -311,12 +327,8 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
         }
         if (exception.getErrorCode() == ErrorCodes.TON_TX_FAILED) {
             var message = exception.getMessage();
-            if (message == null) {
-                return false;
-            }
-            return message.contains("after 3 retries")
-                    || message.contains("seqno is still unavailable")
-                    || message.contains("Interrupted while waiting for TON wallet deployment");
+            return message == null
+                    || !message.contains("requires reconciliation before retry");
         }
         return false;
     }

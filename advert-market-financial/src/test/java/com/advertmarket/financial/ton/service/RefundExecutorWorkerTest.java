@@ -135,7 +135,7 @@ class RefundExecutorWorkerTest {
     }
 
     @Test
-    @DisplayName("should propagate exception when submitTransaction fails")
+    @DisplayName("should propagate TON_TX_FAILED as retryable without abandoning outbound refund")
     void shouldPropagateExceptionOnSubmitFailure() {
         var dealId = DealId.generate();
         var command = new ExecuteRefundCommand(
@@ -158,7 +158,8 @@ class RefundExecutorWorkerTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCodes.TON_TX_FAILED);
 
-        verify(txRepository).updateStatus(200L, "ABANDONED", 0, 0);
+        verify(txRepository).incrementRetryCount(200L);
+        verify(txRepository, never()).updateStatus(200L, "ABANDONED", 0, 0);
         verify(ledgerPort, never()).transfer(any(TransferRequest.class));
         verify(outboxRepository, never()).save(any(OutboxEntry.class));
     }
@@ -261,8 +262,8 @@ class RefundExecutorWorkerTest {
     }
 
     @Test
-    @DisplayName("should defer refund when outbound tx is already ABANDONED")
-    void shouldDeferWhenOutboundAlreadyAbandoned() {
+    @DisplayName("should resume ABANDONED refund when tx hash is missing")
+    void shouldResumeAbandonedWithoutHash() {
         var dealId = DealId.generate();
         var command = new ExecuteRefundCommand(
                 7L, 1_500_000_000L, "UQ-advertiser-address", 33);
@@ -279,13 +280,19 @@ class RefundExecutorWorkerTest {
         existing.setVersion(1);
         when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "REFUND"))
                 .thenReturn(Optional.of(existing));
+        when(tonWalletPort.submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L))
+                .thenReturn("refund-resumed-abandoned");
+        when(txRepository.markSubmitted(777L, "refund-resumed-abandoned", 1))
+                .thenReturn(true);
+        when(ledgerPort.transfer(any(TransferRequest.class)))
+                .thenReturn(UUID.randomUUID());
         when(jsonFacade.toJson(any())).thenReturn("{}");
 
-        assertThatCode(() -> worker.executeRefund(envelope))
-                .doesNotThrowAnyException();
+        worker.executeRefund(envelope);
 
-        verify(tonWalletPort, never()).submitTransaction(anyInt(), anyString(), anyLong());
-        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(tonWalletPort).submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L);
+        verify(txRepository).markSubmitted(777L, "refund-resumed-abandoned", 1);
+        verify(ledgerPort).transfer(any(TransferRequest.class));
         verify(outboxRepository).save(any(OutboxEntry.class));
     }
 
