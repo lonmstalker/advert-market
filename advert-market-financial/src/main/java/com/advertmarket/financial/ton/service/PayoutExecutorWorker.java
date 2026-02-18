@@ -30,10 +30,13 @@ import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import com.advertmarket.shared.outbox.OutboxStatus;
 import com.advertmarket.shared.util.IdempotencyKey;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -240,7 +243,8 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                     false);
         } catch (RuntimeException ex) {
             var domainException = extractDomainException(ex);
-            if (isRetryableSubmissionFailure(domainException)) {
+            if (isRetryableSubmissionFailure(domainException)
+                    || isRetryableTransientFailure(ex)) {
                 txRepository.incrementRetryCount(txId);
                 if (domainException != null) {
                     throw domainException;
@@ -329,6 +333,19 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
             var message = exception.getMessage();
             return message == null
                     || !message.contains("requires reconciliation before retry");
+        }
+        return false;
+    }
+
+    private static boolean isRetryableTransientFailure(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof CallNotPermittedException
+                    || current instanceof BulkheadFullException
+                    || current instanceof TimeoutException) {
+                return true;
+            }
+            current = current.getCause();
         }
         return false;
     }
