@@ -80,11 +80,22 @@ function normalizeWalletSummary(payload: unknown): WalletSummary {
   if (!backend.success) {
     throw backend.error;
   }
+  const isOwnerSummary = backend.data.totalEarnedNano > 0;
+  if (isOwnerSummary) {
+    return {
+      earnedTotalNano: String(backend.data.totalEarnedNano),
+      inEscrowNano: String(backend.data.pendingBalanceNano),
+      spentTotalNano: '0',
+      activeEscrowNano: '0',
+      activeDealsCount: 0,
+      completedDealsCount: 0,
+    };
+  }
   return {
-    earnedTotalNano: String(backend.data.totalEarnedNano),
-    inEscrowNano: String(backend.data.pendingBalanceNano),
-    spentTotalNano: '0',
-    activeEscrowNano: '0',
+    earnedTotalNano: '0',
+    inEscrowNano: '0',
+    spentTotalNano: String(backend.data.availableBalanceNano),
+    activeEscrowNano: String(backend.data.pendingBalanceNano),
     activeDealsCount: 0,
     completedDealsCount: 0,
   };

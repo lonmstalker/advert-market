@@ -2,6 +2,7 @@ package com.advertmarket.financial.wallet.config;
 
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.config.WalletProperties;
+import com.advertmarket.financial.wallet.repository.WalletReadRepository;
 import com.advertmarket.financial.wallet.service.WalletService;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.metric.MetricsFacade;
@@ -19,11 +20,12 @@ public class WalletConfig {
     @Bean
     WalletService walletService(
             LedgerPort ledgerPort,
+            WalletReadRepository walletReadRepository,
             UserRepository userRepository,
             MetricsFacade metrics,
             WalletProperties walletProperties) {
         return new WalletService(
-                ledgerPort, userRepository, metrics,
+                ledgerPort, walletReadRepository, userRepository, metrics,
                 walletProperties.minWithdrawalNano(),
                 walletProperties.dailyVelocityLimitNano(),
                 walletProperties.manualApprovalThresholdNano());

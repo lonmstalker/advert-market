@@ -7,6 +7,7 @@ import com.advertmarket.financial.api.model.WalletSummary;
 import com.advertmarket.financial.api.model.WithdrawalResponse;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.WalletPort;
+import com.advertmarket.financial.wallet.repository.WalletReadRepository;
 import com.advertmarket.identity.api.port.UserRepository;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.exception.ErrorCodes;
@@ -41,6 +42,7 @@ public class WalletService implements WalletPort {
     private static final String WITHDRAWAL_STATUS_PENDING = "PENDING";
 
     private final LedgerPort ledgerPort;
+    private final WalletReadRepository walletReadRepository;
     private final UserRepository userRepository;
     private final MetricsFacade metrics;
     private final long minWithdrawalNano;
@@ -50,8 +52,28 @@ public class WalletService implements WalletPort {
     @Override
     public @NonNull WalletSummary getSummary(@NonNull UserId userId) {
         var ownerPendingAccount = AccountId.ownerPending(userId);
-        long availableBalance = ledgerPort.getBalance(ownerPendingAccount);
-        return new WalletSummary(0L, availableBalance, 0L);
+        long ownerAvailableBalance = ledgerPort.getBalance(ownerPendingAccount);
+        long ownerTotalEarned = walletReadRepository
+                .sumOwnerTotalEarned(userId);
+        if (ownerAvailableBalance > 0L || ownerTotalEarned > 0L) {
+            return new WalletSummary(
+                    0L,
+                    ownerAvailableBalance,
+                    ownerTotalEarned);
+        }
+
+        long advertiserSpent = walletReadRepository
+                .sumAdvertiserSpent(userId);
+        long advertiserActiveEscrow = walletReadRepository
+                .sumAdvertiserActiveEscrow(userId);
+        if (advertiserSpent > 0L || advertiserActiveEscrow > 0L) {
+            return new WalletSummary(
+                    advertiserActiveEscrow,
+                    advertiserSpent,
+                    0L);
+        }
+
+        return new WalletSummary(0L, 0L, 0L);
     }
 
     @Override
@@ -59,9 +81,8 @@ public class WalletService implements WalletPort {
             @NonNull UserId userId,
             @Nullable String cursor,
             int limit) {
-        var ownerPendingAccount = AccountId.ownerPending(userId);
-        return ledgerPort.getEntriesByAccount(
-                ownerPendingAccount, cursor, limit);
+        return walletReadRepository.findUserTransactions(
+                userId, cursor, limit);
     }
 
     @Override

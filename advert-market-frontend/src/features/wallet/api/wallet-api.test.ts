@@ -60,6 +60,25 @@ describe('fetchWalletSummary', () => {
     });
   });
 
+  it('maps backend advertiser summary shape to advertiser wallet view', async () => {
+    mockGet.mockResolvedValue({
+      pendingBalanceNano: 2_500_000_000,
+      availableBalanceNano: 7_500_000_000,
+      totalEarnedNano: 0,
+    });
+
+    const result = await fetchWalletSummary();
+
+    expect(result).toEqual({
+      earnedTotalNano: '0',
+      inEscrowNano: '0',
+      spentTotalNano: '7500000000',
+      activeEscrowNano: '2500000000',
+      activeDealsCount: 0,
+      completedDealsCount: 0,
+    });
+  });
+
   it('returns EMPTY_SUMMARY on 404 (graceful fallback)', async () => {
     mockGet.mockRejectedValue(makeApiError(404));
 
