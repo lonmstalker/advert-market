@@ -42,6 +42,7 @@ public class TonWalletService implements TonWalletPort {
 
     private static final Duration TX_LOCK_TTL = Duration.ofSeconds(300);
     private static final int MAX_SEND_RETRIES = 3;
+    private static final int RECOVERY_TX_FETCH_LIMIT = 20;
     private static final int DEPLOY_SEQNO_POLL_ATTEMPTS = 10;
     private static final Duration DEPLOY_SEQNO_POLL_DELAY = Duration.ofMillis(300);
     private static final Duration DEPLOY_SEND_RETRY_DELAY = Duration.ofMillis(500);
@@ -128,7 +129,7 @@ public class TonWalletService implements TonWalletPort {
                 return txHash;
             } catch (DomainException ex) {
                 String recovered = handleSendFailure(walletAddress, seqno,
-                        subwalletId, attempt);
+                        subwalletId, destinationAddress, amountNano, attempt);
                 if (recovered != null) {
                     return recovered;
                 }
@@ -141,14 +142,20 @@ public class TonWalletService implements TonWalletPort {
     }
 
     private String handleSendFailure(String walletAddress, long originalSeqno,
-                                      int subwalletId, int attempt) {
+                                      int subwalletId,
+                                      String destinationAddress,
+                                      long amountNano,
+                                      int attempt) {
         long currentSeqno = fetchCurrentSeqnoAfterSendFailure(
                 walletAddress, originalSeqno);
         if (currentSeqno > originalSeqno) {
             log.warn("Seqno advanced {} -> {} after sendBoc failure, "
                             + "recovering TX hash for subwallet={}",
                     originalSeqno, currentSeqno, subwalletId);
-            return recoverTxHash(walletAddress);
+            return recoverTxHash(
+                    walletAddress,
+                    destinationAddress,
+                    amountNano);
         }
 
         if (attempt < MAX_SEND_RETRIES - 1) {
@@ -278,10 +285,21 @@ public class TonWalletService implements TonWalletPort {
         }
     }
 
-    private String recoverTxHash(String walletAddress) {
-        var recent = blockchainPort.getTransactions(walletAddress, 1);
-        if (!recent.isEmpty()) {
-            String recovered = recent.getFirst().txHash();
+    private String recoverTxHash(String walletAddress,
+            String destinationAddress,
+            long amountNano) {
+        var recent = blockchainPort.getOutgoingTransfers(
+                walletAddress,
+                RECOVERY_TX_FETCH_LIMIT);
+        String recovered = recent.stream()
+                .filter(tx -> tx.amountNano() == amountNano)
+                .filter(tx -> isSameTonAddress(
+                        tx.toAddress(),
+                        destinationAddress))
+                .map(tx -> tx.txHash())
+                .findFirst()
+                .orElse("");
+        if (!recovered.isBlank()) {
             metrics.incrementCounter(MetricNames.TON_TX_SUBMITTED,
                     "direction", "OUT");
             log.info("Recovered TX hash after seqno advance: {}",
@@ -290,9 +308,20 @@ public class TonWalletService implements TonWalletPort {
         }
         metrics.incrementCounter(MetricNames.TON_TX_SUBMITTED,
                 "direction", "OUT");
-        log.warn("Seqno advanced but no recent TX found, "
+        log.warn("Seqno advanced but no matching outgoing TX found, "
                 + "returning empty hash");
         return "";
+    }
+
+    private static boolean isSameTonAddress(
+            String leftAddress,
+            String rightAddress) {
+        try {
+            return Address.of(leftAddress).toRaw()
+                    .equals(Address.of(rightAddress).toRaw());
+        } catch (IllegalArgumentException ignored) {
+            return leftAddress.equals(rightAddress);
+        }
     }
 
     private String buildSignedBoc(WalletV4R2 wallet, int subwalletId,

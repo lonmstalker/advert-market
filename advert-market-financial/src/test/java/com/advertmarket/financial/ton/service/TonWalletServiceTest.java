@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.advertmarket.financial.api.model.DepositAddressInfo;
-import com.advertmarket.financial.api.model.TonTransactionInfo;
+import com.advertmarket.financial.api.model.TonOutboundTransferInfo;
 import com.advertmarket.financial.api.port.TonBlockchainPort;
 import com.advertmarket.financial.config.TonProperties;
 import com.advertmarket.shared.exception.DomainException;
@@ -273,8 +273,8 @@ class TonWalletServiceTest {
                     .thenReturn(6L);  // post-failure check: seqno advanced
             when(blockchainPort.sendBoc(anyString()))
                     .thenThrow(new DomainException("TON_API_ERROR", "network error"));
-            when(blockchainPort.getTransactions(anyString(), eq(1)))
-                    .thenReturn(List.of(new TonTransactionInfo(
+            when(blockchainPort.getOutgoingTransfers(anyString(), eq(20)))
+                    .thenReturn(List.of(new TonOutboundTransferInfo(
                             "recovered_hash", 100L, null, destAddress,
                             1_000_000_000L, 5_000L, 1700000000L)));
 
@@ -282,7 +282,37 @@ class TonWalletServiceTest {
                     destAddress, 1_000_000_000L);
 
             assertThat(txHash).isEqualTo("recovered_hash");
-            verify(blockchainPort).getTransactions(anyString(), eq(1));
+            verify(blockchainPort).getOutgoingTransfers(anyString(), eq(20));
+        }
+
+        @Test
+        @DisplayName("Should return empty hash when seqno advanced but matching transfer not found")
+        void returnsEmptyHashWhenRecoveryMissesMatchingTransfer() {
+            String destAddress = generateValidAddress();
+            String otherAddress = generateValidAddress();
+            when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                    .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+            when(blockchainPort.getSeqno(anyString()))
+                    .thenReturn(5L)
+                    .thenReturn(6L);
+            when(blockchainPort.sendBoc(anyString()))
+                    .thenThrow(new DomainException("TON_API_ERROR", "network error"));
+            when(blockchainPort.getOutgoingTransfers(anyString(), eq(20)))
+                    .thenReturn(List.of(new TonOutboundTransferInfo(
+                            "other_hash",
+                            101L,
+                            null,
+                            otherAddress,
+                            500_000_000L,
+                            5_000L,
+                            1700000001L)));
+
+            String txHash = service.submitTransaction(
+                    42,
+                    destAddress,
+                    1_000_000_000L);
+
+            assertThat(txHash).isEmpty();
         }
 
         @Test

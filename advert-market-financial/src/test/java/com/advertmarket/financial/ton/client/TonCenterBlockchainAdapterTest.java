@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.financial.api.model.TonOutboundTransferInfo;
 import com.advertmarket.financial.api.model.TonTransactionInfo;
 import com.advertmarket.shared.exception.DomainException;
 import com.advertmarket.shared.metric.MetricNames;
@@ -227,6 +228,87 @@ class TonCenterBlockchainAdapterTest {
             String hash = adapter.sendBoc("base64boc");
 
             assertThat(hash).isEqualTo("txhash_xyz");
+        }
+    }
+
+    @Nested
+    @DisplayName("getOutgoingTransfers")
+    class GetOutgoingTransfers {
+
+        @Test
+        @DisplayName("Should map out messages to outgoing transfer list")
+        void mapsOutgoingTransfers() {
+            var txId = new TransactionResponse.TransactionId();
+            txId.setHash("out-hash");
+            txId.setLt("900");
+
+            var outMsg = new TransactionResponse.Message();
+            outMsg.setSource("EQWallet");
+            outMsg.setDestination("EQRecipient");
+            outMsg.setValue("700000000");
+
+            var tx = new TransactionResponse();
+            tx.setTransactionId(txId);
+            tx.setFee("12345");
+            tx.setUtime(1700001000L);
+            tx.setOutMsgs(List.of(outMsg));
+
+            var response = okResponse(List.of(tx));
+            when(tonCenter.getTransactions("EQWallet", 10))
+                    .thenReturn(response);
+
+            List<TonOutboundTransferInfo> result =
+                    adapter.getOutgoingTransfers("EQWallet", 10);
+
+            assertThat(result).hasSize(1);
+            TonOutboundTransferInfo info = result.getFirst();
+            assertThat(info.txHash()).isEqualTo("out-hash");
+            assertThat(info.lt()).isEqualTo(900L);
+            assertThat(info.fromAddress()).isEqualTo("EQWallet");
+            assertThat(info.toAddress()).isEqualTo("EQRecipient");
+            assertThat(info.amountNano()).isEqualTo(700_000_000L);
+            assertThat(info.feeNano()).isEqualTo(12_345L);
+            assertThat(info.utime()).isEqualTo(1_700_001_000L);
+        }
+
+        @Test
+        @DisplayName("Should ignore out messages without destination or amount")
+        void filtersInvalidOutgoingMessages() {
+            var txId = new TransactionResponse.TransactionId();
+            txId.setHash("out-hash-2");
+            txId.setLt("901");
+
+            var noDestination = new TransactionResponse.Message();
+            noDestination.setSource("EQWallet");
+            noDestination.setDestination("");
+            noDestination.setValue("1000");
+
+            var zeroAmount = new TransactionResponse.Message();
+            zeroAmount.setSource("EQWallet");
+            zeroAmount.setDestination("EQRecipient2");
+            zeroAmount.setValue("0");
+
+            var valid = new TransactionResponse.Message();
+            valid.setSource("EQWallet");
+            valid.setDestination("EQRecipient3");
+            valid.setValue("2000");
+
+            var tx = new TransactionResponse();
+            tx.setTransactionId(txId);
+            tx.setFee("30");
+            tx.setUtime(1700002000L);
+            tx.setOutMsgs(List.of(noDestination, zeroAmount, valid));
+
+            var response = okResponse(List.of(tx));
+            when(tonCenter.getTransactions("EQWallet", 10))
+                    .thenReturn(response);
+
+            List<TonOutboundTransferInfo> result =
+                    adapter.getOutgoingTransfers("EQWallet", 10);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.getFirst().toAddress()).isEqualTo("EQRecipient3");
+            assertThat(result.getFirst().amountNano()).isEqualTo(2_000L);
         }
     }
 

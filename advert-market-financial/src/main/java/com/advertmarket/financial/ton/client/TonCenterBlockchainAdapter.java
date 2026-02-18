@@ -1,5 +1,6 @@
 package com.advertmarket.financial.ton.client;
 
+import com.advertmarket.financial.api.model.TonOutboundTransferInfo;
 import com.advertmarket.financial.api.model.TonTransactionInfo;
 import com.advertmarket.financial.api.port.TonBlockchainPort;
 import com.advertmarket.shared.exception.DomainException;
@@ -7,6 +8,7 @@ import com.advertmarket.shared.exception.ErrorCodes;
 import com.advertmarket.shared.metric.MetricNames;
 import com.advertmarket.shared.metric.MetricsFacade;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -66,6 +68,55 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
             throw ex;
         } catch (Throwable ex) {
             throw wrapThrowable("getTransactions", ex);
+        }
+    }
+
+    @Override
+    public @NonNull List<TonOutboundTransferInfo> getOutgoingTransfers(
+            @NonNull String address, int limit) {
+        metrics.incrementCounter(MetricNames.TON_API_REQUEST, "method",
+                "getOutgoingTransfers");
+        try {
+            var response = tonCenter.getTransactions(address, limit);
+            checkResponse(response, "getOutgoingTransfers");
+            return response.getResult().stream()
+                    .filter(tx -> {
+                        var txId = tx.getTransactionId();
+                        if (txId == null || txId.getHash() == null) {
+                            log.warn("Skipping outgoing transfer candidates with missing "
+                                    + "txId/hash for address={}", address);
+                            return false;
+                        }
+                        return true;
+                    })
+                    .flatMap(tx -> {
+                        var outMsgs = tx.getOutMsgs();
+                        if (outMsgs == null || outMsgs.isEmpty()) {
+                            return Stream.empty();
+                        }
+                        var txId = tx.getTransactionId();
+                        long lt = parseLong(txId.getLt());
+                        long feeNano = parseLong(tx.getFee());
+                        long utime = tx.getUtime() != null ? tx.getUtime() : 0L;
+                        return outMsgs.stream()
+                                .filter(msg -> msg != null)
+                                .filter(msg -> msg.getDestination() != null
+                                        && !msg.getDestination().isBlank())
+                                .map(msg -> new TonOutboundTransferInfo(
+                                        txId.getHash(),
+                                        lt,
+                                        msg.getSource(),
+                                        msg.getDestination(),
+                                        parseLong(msg.getValue()),
+                                        feeNano,
+                                        utime))
+                                .filter(info -> info.amountNano() > 0);
+                    })
+                    .toList();
+        } catch (DomainException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw wrapThrowable("getOutgoingTransfers", ex);
         }
     }
 

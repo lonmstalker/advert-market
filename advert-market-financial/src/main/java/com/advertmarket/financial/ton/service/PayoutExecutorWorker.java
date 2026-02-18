@@ -236,6 +236,12 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                         ErrorCodes.TON_TX_FAILED,
                         persistFailureMessage);
             }
+            if (txHash.isBlank()) {
+                throw new DomainException(
+                        ErrorCodes.TON_TX_FAILED,
+                        "Outbound payout tx hash is unresolved;"
+                                + " requires reconciliation before retry");
+            }
             return new TxRef(
                     txId,
                     txHash,

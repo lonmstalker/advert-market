@@ -136,6 +136,37 @@ class RefundExecutorWorkerTest {
     }
 
     @Test
+    @DisplayName("should defer refund when wallet returns blank tx hash")
+    void shouldDeferWhenWalletReturnsBlankTxHash() {
+        var dealId = DealId.generate();
+        var command = new ExecuteRefundCommand(
+                7L, 1_500_000_000L, "UQ-advertiser-address", 33);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+        when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "REFUND"))
+                .thenReturn(Optional.empty());
+        when(txRepository.createOutbound(
+                dealId.value(), "REFUND", 1_500_000_000L, "UQ-advertiser-address", 33))
+                .thenReturn(200L);
+        when(txRepository.markSubmitted(200L, "", 0))
+                .thenReturn(true);
+        when(tonWalletPort.submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L))
+                .thenReturn("");
+        when(jsonFacade.toJson(any())).thenReturn("{}");
+
+        assertThatCode(() -> worker.executeRefund(envelope))
+                .doesNotThrowAnyException();
+
+        verify(txRepository).markSubmitted(200L, "", 0);
+        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(txRepository, never()).updateStatus(200L, "CONFIRMED", 0, 1);
+        verify(outboxRepository).save(any(OutboxEntry.class));
+    }
+
+    @Test
     @DisplayName("should propagate TON_TX_FAILED as retryable without abandoning outbound refund")
     void shouldPropagateExceptionOnSubmitFailure() {
         var dealId = DealId.generate();

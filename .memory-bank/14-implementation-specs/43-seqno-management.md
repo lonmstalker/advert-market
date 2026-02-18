@@ -134,6 +134,20 @@ TX #1 (payout): SUBMITTED, seqno=5, no confirmation after 5 min
    b. If seqno still 5 → TX was never accepted, resubmit with seqno=5
    c. If seqno is 6 → TX was accepted but we missed confirmation, mark CONFIRMED
 
+### Scenario 2a: seqno advanced but tx hash recovery is ambiguous
+
+`sendBoc` may fail at transport level while the chain still accepts the message.
+In this case, seqno can advance without a direct response hash.
+
+Recovery policy:
+1. Fetch recent wallet transactions.
+2. Extract outgoing transfers from `out_msgs`.
+3. Match by `(destination_address, amount_nano)` for the attempted transfer.
+4. If a unique match is found -> persist recovered `tx_hash`.
+5. If no match is found -> keep submission in reconciliation-required state (no optimistic completion event).
+
+This guard prevents false-positive `CONFIRMED` statuses caused by attaching an unrelated hash.
+
 ### Scenario 3: Concurrent lock expiry
 
 ```
