@@ -1,7 +1,7 @@
 package com.advertmarket.financial.api.port;
 
-import com.advertmarket.financial.api.model.TonTransactionInfo;
 import com.advertmarket.financial.api.model.TonOutboundTransferInfo;
+import com.advertmarket.financial.api.model.TonTransactionInfo;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
