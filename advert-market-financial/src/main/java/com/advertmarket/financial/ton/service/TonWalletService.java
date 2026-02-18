@@ -44,6 +44,7 @@ public class TonWalletService implements TonWalletPort {
     private static final int MAX_SEND_RETRIES = 3;
     private static final int DEPLOY_SEQNO_POLL_ATTEMPTS = 10;
     private static final Duration DEPLOY_SEQNO_POLL_DELAY = Duration.ofMillis(300);
+    private static final Duration DEPLOY_SEND_RETRY_DELAY = Duration.ofMillis(500);
 
     private final TonBlockchainPort blockchainPort;
     private final DistributedLockPort lockPort;
@@ -174,9 +175,43 @@ public class TonWalletService implements TonWalletPort {
 
     private void deployWallet(WalletV4R2 wallet, String walletAddress) {
         String deployBoc = wallet.prepareDeployMsg().toCell().toBase64();
-        String deployTxHash = blockchainPort.sendBoc(deployBoc);
-        log.info("TON wallet deploy submitted: wallet={}, txHash={}",
-                walletAddress, deployTxHash);
+        for (int attempt = 1; attempt <= MAX_SEND_RETRIES; attempt++) {
+            try {
+                String deployTxHash = blockchainPort.sendBoc(deployBoc);
+                log.info("TON wallet deploy submitted: wallet={}, txHash={}",
+                        walletAddress, deployTxHash);
+                return;
+            } catch (DomainException ex) {
+                if (isWalletInitialized(walletAddress)) {
+                    log.warn("TON wallet deploy send failed but wallet is already initialized: "
+                                    + "wallet={}, attempt={}/{}",
+                            walletAddress,
+                            attempt,
+                            MAX_SEND_RETRIES);
+                    return;
+                }
+                if (attempt == MAX_SEND_RETRIES) {
+                    throw ex;
+                }
+                log.warn("TON wallet deploy send failed, retrying: wallet={}, attempt={}/{}",
+                        walletAddress,
+                        attempt,
+                        MAX_SEND_RETRIES);
+                sleepQuietly(DEPLOY_SEND_RETRY_DELAY);
+            }
+        }
+    }
+
+    private boolean isWalletInitialized(String walletAddress) {
+        try {
+            blockchainPort.getSeqno(walletAddress);
+            return true;
+        } catch (DomainException ex) {
+            if (isUninitializedWallet(ex)) {
+                return false;
+            }
+            throw ex;
+        }
     }
 
     private long waitForWalletSeqno(String walletAddress) {

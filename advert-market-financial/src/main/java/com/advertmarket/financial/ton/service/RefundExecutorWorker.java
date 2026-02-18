@@ -193,6 +193,10 @@ public class RefundExecutorWorker implements RefundExecutorPort {
                     expectedVersion + 1,
                     false);
         } catch (RuntimeException ex) {
+            if (isRetryableSubmissionFailure(ex)) {
+                txRepository.incrementRetryCount(txId);
+                throw ex;
+            }
             txRepository.updateStatus(txId, "ABANDONED", 0, expectedVersion);
             throw ex;
         }
@@ -261,6 +265,26 @@ public class RefundExecutorWorker implements RefundExecutorPort {
             return message != null
                     && message.contains("getSeqno")
                     && message.contains("exitCode: -13");
+        }
+        return false;
+    }
+
+    @SuppressWarnings("ReferenceEquality")
+    private static boolean isRetryableSubmissionFailure(RuntimeException ex) {
+        if (!(ex instanceof DomainException exception)) {
+            return false;
+        }
+        if (exception.getErrorCode() == ErrorCodes.TON_API_ERROR) {
+            return true;
+        }
+        if (exception.getErrorCode() == ErrorCodes.TON_TX_FAILED) {
+            var message = exception.getMessage();
+            if (message == null) {
+                return false;
+            }
+            return message.contains("after 3 retries")
+                    || message.contains("seqno is still unavailable")
+                    || message.contains("Interrupted while waiting for TON wallet deployment");
         }
         return false;
     }
