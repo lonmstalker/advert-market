@@ -22,6 +22,8 @@ import com.advertmarket.shared.model.DealId;
 import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import com.advertmarket.shared.outbox.OutboxStatus;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -29,6 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -243,10 +246,37 @@ public class DepositService implements DepositPort {
         if (toAddress == null || toAddress.isBlank()) {
             return List.of();
         }
-        return blockchainPort.getTransactions(toAddress, TX_FETCH_LIMIT)
-                .stream()
-                .filter(tx -> tx.amountNano() > 0)
-                .toList();
+        try {
+            return blockchainPort.getTransactions(toAddress, TX_FETCH_LIMIT)
+                    .stream()
+                    .filter(tx -> tx.amountNano() > 0)
+                    .toList();
+        } catch (RuntimeException ex) {
+            if (isTransientTonFailure(ex)) {
+                log.warn("TON API transient failure while loading inbound transactions: "
+                                + "address={}, reason={}",
+                        toAddress,
+                        ex.getMessage());
+                return List.of();
+            }
+            throw ex;
+        }
+    }
+
+    private static boolean isTransientTonFailure(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof DomainException) {
+                return true;
+            }
+            if (current instanceof CallNotPermittedException
+                    || current instanceof BulkheadFullException
+                    || current instanceof TimeoutException) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private void publishEvent(
