@@ -52,9 +52,9 @@ The channel marketplace is the entry point for advertisers. It provides a search
 Channel statistics are sourced from Telegram Bot API and refreshed with configurable freshness guarantees:
 
 - Subscriber count — via `getChatMemberCount` (lazy refresh on view + daily batch)
-- Verified by comparing advertised vs actual stats
+- `avg_views` and `engagement_rate` are auto-derived from subscriber count (no manual owner input)
 - Stale listings (>1h for listing page, >15min for deal creation) trigger async refresh
-- Source indicator: `BOT_VERIFIED`, `OWNER_REPORTED`, or `UNVERIFIED`
+- If admin safety checks fail (bot/owner removed), listing is deactivated and owner is notified
 
 See [Channel Statistics Verification](./09-channel-statistics.md) for full spec.
 

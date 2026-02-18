@@ -9,8 +9,8 @@ Channel statistics (subscriber_count, avg_views, engagement_rate) displayed to a
 | Field | Source | Update Frequency |
 |-------|--------|:---------------:|
 | `subscriber_count` | Telegram Bot API: `getChatMemberCount` | On listing view + daily refresh |
-| `avg_views` | Owner-reported (MVP) / TDLib (Scaled) | Daily refresh |
-| `engagement_rate` | Calculated: avg_views / subscriber_count | On avg_views update |
+| `avg_views` | Runtime estimate from `subscriber_count` using `estimated-view-rate-bp` | Daily refresh |
+| `engagement_rate` | Calculated: `avg_views / subscriber_count` (rounded to 2 decimals, %) | On avg_views update |
 | `topic` | Owner-provided | On registration |
 
 ## Collection Mechanism
@@ -55,15 +55,17 @@ GET /bot{token}/getChat?chat_id={channel_id}
 
 Returns: chat title, description, linked_chat_id.
 
-### Average Views (MVP Limitation)
+### Average Views (Current Runtime Behavior)
 
-Telegram Bot API does not expose view counts. MVP strategy:
+Telegram Bot API does not expose post view counts. Current runtime strategy:
 
-- Owner self-reports `avg_views`
-- Platform displays "owner-reported" badge for unverified stats
-- `stats_source` field: `OWNER_REPORTED` | `BOT_VERIFIED` | `UNVERIFIED`
+- `avg_views = floor(subscriber_count * estimated_view_rate_bp / 10000)`
+- default `estimated_view_rate_bp = 1200` (12.00%)
+- `engagement_rate = round(avg_views * 100 / subscriber_count, 2)`
+- no manual stats input from channel owners
 
-Scaled: use Telegram Statistics API (TDLib/MTProto, channels with 500+ subscribers).
+Future enhancement: replace heuristics with external analytics providers
+(e.g. TDLib/MTProto/TGStat) where available.
 
 ## Freshness Guarantees
 
@@ -78,16 +80,17 @@ Scaled: use Telegram Statistics API (TDLib/MTProto, channels with 500+ subscribe
 
 | Rule | Check | Action on Failure |
 |------|-------|-------------------|
-| Bot is channel admin | `getChatAdministrators(channel_id)` contains `bot_id` | Mark "unverified stats" |
+| Bot is channel admin | `getChatAdministrators(channel_id)` contains `bot_id` with posting rights | Deactivate listing, notify owner |
 | Subscriber count > 0 | API returns > 0 | Deactivate listing |
 | Channel exists | `getChat` succeeds | Deactivate listing, notify owner |
-| Owner still owns channel | Creator matches owner_id | Alert, ownership verification |
+| Owner still owns channel | owner remains in admins list | Deactivate listing, notify owner |
 
 ## Database Schema Addition
 
 ```sql
 ALTER TABLE channels ADD COLUMN stats_updated_at TIMESTAMPTZ;
-ALTER TABLE channels ADD COLUMN stats_source VARCHAR(20) DEFAULT 'OWNER_REPORTED';
+ALTER TABLE channels ADD COLUMN avg_views INTEGER DEFAULT 0;
+ALTER TABLE channels ADD COLUMN engagement_rate DECIMAL(5,2) DEFAULT 0.00;
 ```
 
 ## API Endpoints
@@ -100,14 +103,17 @@ ALTER TABLE channels ADD COLUMN stats_source VARCHAR(20) DEFAULT 'OWNER_REPORTED
 ## Configuration
 
 ```yaml
-channel:
-  stats:
-    freshness-window: 1h
-    deal-freshness-window: 15m
-    batch-refresh-schedule: "0 0 3 * * *"  # 3 AM UTC daily
-    batch-size: 100
-    batch-delay-ms: 1000
-    rate-limit-per-sec: 25
+app:
+  marketplace:
+    channel:
+      statistics:
+        enabled: true
+        update-interval: 6h
+        batch-size: 100
+        retry-backoff-ms: 1000
+        max-retries-per-channel: 2
+        admin-check-interval: 24h
+        estimated-view-rate-bp: 1200
 ```
 
 ## Components Involved
@@ -116,7 +122,7 @@ channel:
 |-----------|------|
 | Channel Service | Stats CRUD, freshness checks |
 | Telegram Bot API client | `getChatMemberCount`, `getChat`, `getChatAdministrators` calls |
-| StatsRefreshScheduler | Daily batch refresh cron job |
+| ChannelStatisticsCollectorScheduler | Scheduled refresh + admin safety checks |
 | Search Service | Returns stats with freshness indicator |
 
 ## Metrics

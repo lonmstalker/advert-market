@@ -23,6 +23,7 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.math.BigDecimal;
 import java.time.Duration;
 import javax.sql.DataSource;
 import org.jooq.DSLContext;
@@ -91,6 +92,18 @@ class ChannelStatisticsCollectorIntegrationTest {
                 .where(CHANNELS.ID.eq(CHANNEL_ID))
                 .fetchOne(CHANNELS.SUBSCRIBER_COUNT);
         assertThat(subscriberCount).isEqualTo(1337);
+
+        Integer avgViews = dsl.select(CHANNELS.AVG_VIEWS)
+                .from(CHANNELS)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .fetchOne(CHANNELS.AVG_VIEWS);
+        BigDecimal engagementRate = dsl.select(CHANNELS.ENGAGEMENT_RATE)
+                .from(CHANNELS)
+                .where(CHANNELS.ID.eq(CHANNEL_ID))
+                .fetchOne(CHANNELS.ENGAGEMENT_RATE);
+        assertThat(avgViews).isGreaterThan(0);
+        assertThat(engagementRate).isNotNull();
+        assertThat(engagementRate).isGreaterThan(BigDecimal.ZERO);
     }
 
     @Test
@@ -184,7 +197,7 @@ class ChannelStatisticsCollectorIntegrationTest {
         ChannelStatisticsCollectorProperties
                 channelStatisticsCollectorProperties() {
             return new ChannelStatisticsCollectorProperties(
-                    true, 100, 0, 2, Duration.ofHours(24));
+                    true, 100, 0, 2, Duration.ofHours(24), 1200);
         }
 
         @Bean

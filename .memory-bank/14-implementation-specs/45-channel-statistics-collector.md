@@ -25,14 +25,16 @@ CREATE INDEX idx_channels_stats_updated
 
 - `getChatMemberCount` → `channels.subscriber_count` + `stats_updated_at`
 
-### Manual Input (MVP)
+### Derived Metrics (auto)
 
-- `avg_views` — owner self-reports when registering a channel
-- Validation: `avg_views <= subscriber_count`
+- `avg_views = floor(subscriber_count * estimated_view_rate_bp / 10000)`
+- `engagement_rate = round(avg_views * 100 / subscriber_count, 2)`
+- Default `estimated_view_rate_bp = 1200` (12.00%)
 
 ### Post-MVP
 
-- TGStat API for automatic `avg_views` and `engagement_rate`
+- Replace heuristic `avg_views` with true analytics from external providers
+  (e.g. TDLib/MTProto/TGStat) where accessible.
 
 ## Collection Schedule
 
@@ -64,14 +66,17 @@ CREATE INDEX idx_channels_stats_updated
 ## Configuration
 
 ```yaml
-marketplace:
-  statistics:
-    update-interval: 6h
-    batch-size: 100
-    retry-backoff-ms: 1000
-    max-retries-per-channel: 2
-    stale-threshold: 24h
-    exclude-after: 7d
+app:
+  marketplace:
+    channel:
+      statistics:
+        enabled: true
+        update-interval: 6h
+        batch-size: 100
+        retry-backoff-ms: 1000
+        max-retries-per-channel: 2
+        admin-check-interval: 24h
+        estimated-view-rate-bp: 1200
 ```
 
 ## Hardening Notes (2026-02-16)

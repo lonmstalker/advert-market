@@ -32,6 +32,7 @@ Periodic Telegram subscriber sync for channels
 | `app.marketplace.channel.statistics.retry-backoff-ms` | `PositiveOrZero long` | Backoff in milliseconds between retries for transient Telegram failures |  | No |  |  |
 | `app.marketplace.channel.statistics.max-retries-per-channel` | `PositiveOrZero int` | Maximum retries per channel for transient Telegram failures |  | No |  |  |
 | `app.marketplace.channel.statistics.admin-check-interval` | `Duration` | Minimum interval between periodic admin list checks |  | No |  |  |
+| `app.marketplace.channel.statistics.estimated-view-rate-bp` | `Max(10000L) int` | Estimated 24h views ratio in basis points for automatic avg_views/engagement_rate updates |  | No |  |  |
 
 ## Creative Storage
 

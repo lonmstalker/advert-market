@@ -10,7 +10,7 @@ Telegram Mini App marketplace for advertising in Telegram channels with TON escr
 ## About
 
 Advert Market connects Telegram channel owners with advertisers through a secure marketplace.
-Channel owners list their channels with audience stats and pricing; advertisers browse the catalog,
+Channel owners list their channels with automatically refreshed audience stats and pricing; advertisers browse the catalog,
 create deals, and pay through TON blockchain escrow. The platform verifies ad delivery automatically,
 handles dispute resolution, and releases funds only after confirmation — protecting both parties.
 
@@ -19,7 +19,7 @@ automated delivery verification, dispute resolution, double-entry financial ledg
 
 ## Demo
 
-> **Bot**: [placeholder — insert your @BotUsername link here]
+> **Bot**: [@adv_markt_bot](https://t.me/adv_markt_bot)
 
 ## Tech Stack
 

@@ -18,6 +18,7 @@ import com.advertmarket.shared.json.JsonFacade;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -41,7 +42,7 @@ class ChannelStatisticsCollectorSchedulerTest {
         MetricsFacade metrics = new MetricsFacade(new SimpleMeterRegistry());
         ChannelStatisticsCollectorProperties properties =
                 new ChannelStatisticsCollectorProperties(
-                        true, 100, 0, 2, Duration.ofHours(24));
+                        true, 100, 0, 2, Duration.ofHours(24), 1200);
         ChannelBotProperties botProperties = mock(ChannelBotProperties.class);
         when(botProperties.botUserId()).thenReturn(777L);
 
@@ -58,6 +59,36 @@ class ChannelStatisticsCollectorSchedulerTest {
     }
 
     @Test
+    @DisplayName("Calculates avg views and engagement rate automatically")
+    void collectChannelStatistics_calculatesViewsAndEngagement() {
+        TelegramChannelPort telegramChannelPort = mock(TelegramChannelPort.class);
+        when(telegramChannelPort.getChatMemberCount(101L))
+                .thenReturn(12_345);
+
+        MetricsFacade metrics = new MetricsFacade(new SimpleMeterRegistry());
+        ChannelStatisticsCollectorProperties properties =
+                new ChannelStatisticsCollectorProperties(
+                        true,
+                        100,
+                        0,
+                        2,
+                        Duration.ofHours(24),
+                        1200);
+        ChannelBotProperties botProperties = mock(ChannelBotProperties.class);
+        when(botProperties.botUserId()).thenReturn(777L);
+
+        var scheduler = new TestableScheduler(
+                telegramChannelPort, botProperties, metrics, properties, List.of(101L));
+
+        scheduler.collectChannelStatistics();
+
+        assertThat(scheduler.savedChannels()).containsExactly(101L);
+        assertThat(scheduler.savedAvgViews()).containsExactly(1481);
+        assertThat(scheduler.savedEngagementRates())
+                .containsExactly(new BigDecimal("12.00"));
+    }
+
+    @Test
     @DisplayName("Deactivates channel and notifies owner when owner lost admin rights")
     void collectChannelStatistics_ownerRemoved_deactivatesAndNotifies() {
         TelegramChannelPort telegramChannelPort = mock(TelegramChannelPort.class);
@@ -71,7 +102,7 @@ class ChannelStatisticsCollectorSchedulerTest {
         MetricsFacade metrics = new MetricsFacade(new SimpleMeterRegistry());
         ChannelStatisticsCollectorProperties properties =
                 new ChannelStatisticsCollectorProperties(
-                        true, 100, 0, 2, Duration.ZERO);
+                        true, 100, 0, 2, Duration.ZERO, 1200);
         ChannelBotProperties botProperties = mock(ChannelBotProperties.class);
         when(botProperties.botUserId()).thenReturn(777L);
 
@@ -97,6 +128,10 @@ class ChannelStatisticsCollectorSchedulerTest {
         private final java.util.List<Long> savedChannels =
                 new java.util.ArrayList<>();
         private final java.util.List<Long> deactivatedChannels =
+                new java.util.ArrayList<>();
+        private final java.util.List<Integer> savedAvgViews =
+                new java.util.ArrayList<>();
+        private final java.util.List<BigDecimal> savedEngagementRates =
                 new java.util.ArrayList<>();
         private final java.util.List<Long> retryBackoffs =
                 new java.util.ArrayList<>();
@@ -125,9 +160,14 @@ class ChannelStatisticsCollectorSchedulerTest {
         }
 
         @Override
-        void saveSubscriberCount(long channelId, int memberCount,
+        void saveSubscriberCount(long channelId,
+                int memberCount,
+                int avgViews,
+                BigDecimal engagementRate,
                 OffsetDateTime now) {
             savedChannels.add(channelId);
+            savedAvgViews.add(avgViews);
+            savedEngagementRates.add(engagementRate);
         }
 
         @Override
@@ -168,6 +208,14 @@ class ChannelStatisticsCollectorSchedulerTest {
 
         List<Long> deactivatedChannels() {
             return deactivatedChannels;
+        }
+
+        List<Integer> savedAvgViews() {
+            return savedAvgViews;
+        }
+
+        List<BigDecimal> savedEngagementRates() {
+            return savedEngagementRates;
         }
 
         List<Long> retryBackoffs() {

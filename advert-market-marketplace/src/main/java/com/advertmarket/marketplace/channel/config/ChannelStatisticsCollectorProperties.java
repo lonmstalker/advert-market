@@ -3,6 +3,8 @@ package com.advertmarket.marketplace.channel.config;
 import io.github.springpropertiesmd.api.annotation.PropertyDoc;
 import io.github.springpropertiesmd.api.annotation.PropertyGroupDoc;
 import io.github.springpropertiesmd.api.annotation.Requirement;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.time.Duration;
@@ -18,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
  * @param retryBackoffMs fixed backoff between retries for transient failures
  * @param maxRetriesPerChannel max retries after the first attempt for each channel
  * @param adminCheckInterval minimum interval between admin list checks
+ * @param estimatedViewRateBp estimated 24h views rate in basis points
  */
 @ConfigurationProperties(prefix = "app.marketplace.channel.statistics")
 @PropertyGroupDoc(
@@ -56,6 +59,13 @@ public record ChannelStatisticsCollectorProperties(
                 description = "Minimum interval between periodic admin list checks",
                 required = Requirement.OPTIONAL
         )
-        @DefaultValue("24h") Duration adminCheckInterval
+        @DefaultValue("24h") Duration adminCheckInterval,
+
+        @PropertyDoc(
+                description = "Estimated 24h views ratio in basis points"
+                        + " for automatic avg_views/engagement_rate updates",
+                required = Requirement.OPTIONAL
+        )
+        @Min(0) @Max(10000) @DefaultValue("1200") int estimatedViewRateBp
 ) {
 }

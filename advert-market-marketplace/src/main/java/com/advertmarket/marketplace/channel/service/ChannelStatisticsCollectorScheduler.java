@@ -21,6 +21,8 @@ import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.outbox.OutboxEntry;
 import com.advertmarket.shared.outbox.OutboxRepository;
 import com.advertmarket.shared.outbox.OutboxStatus;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -57,6 +59,10 @@ public class ChannelStatisticsCollectorScheduler {
     private static final String ADMIN_RESULT_PASS = "PASS";
     private static final String ADMIN_RESULT_FAIL_OWNER_REMOVED = "FAIL_OWNER_REMOVED";
     private static final String ADMIN_RESULT_FAIL_BOT_REMOVED = "FAIL_BOT_REMOVED";
+    private static final int BASIS_POINTS = 10_000;
+    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    private static final BigDecimal ZERO_RATE = BigDecimal.ZERO.setScale(
+            2, RoundingMode.HALF_UP);
 
     private final DSLContext dsl;
     private final TelegramChannelPort telegramChannelPort;
@@ -111,8 +117,11 @@ public class ChannelStatisticsCollectorScheduler {
             try {
                 int memberCount = telegramChannelPort
                         .getChatMemberCount(channelId);
-                saveSubscriberCount(channelId, memberCount, nowUtc());
-                checkAdminState(channelId, nowUtc());
+                ChannelStatsSnapshot snapshot = buildStatsSnapshot(memberCount);
+                OffsetDateTime now = nowUtc();
+                saveSubscriberCount(channelId, memberCount, snapshot.avgViews(),
+                        snapshot.engagementRate(), now);
+                checkAdminState(channelId, now);
                 markSuccess();
                 return;
             } catch (DomainException ex) {
@@ -141,10 +150,16 @@ public class ChannelStatisticsCollectorScheduler {
         }
     }
 
-    void saveSubscriberCount(long channelId, int memberCount,
+    void saveSubscriberCount(
+            long channelId,
+            int memberCount,
+            int avgViews,
+            BigDecimal engagementRate,
             OffsetDateTime now) {
         dsl.update(CHANNELS)
                 .set(CHANNELS.SUBSCRIBER_COUNT, memberCount)
+                .set(CHANNELS.AVG_VIEWS, avgViews)
+                .set(CHANNELS.ENGAGEMENT_RATE, engagementRate)
                 .set(CHANNELS.STATS_UPDATED_AT, now)
                 .set(CHANNELS.VERSION, CHANNELS.VERSION.plus(1))
                 .set(CHANNELS.UPDATED_AT, now)
@@ -343,6 +358,24 @@ public class ChannelStatisticsCollectorScheduler {
                 || errorCode == ErrorCode.RATE_LIMIT_EXCEEDED;
     }
 
+    private ChannelStatsSnapshot buildStatsSnapshot(int memberCount) {
+        if (memberCount <= 0) {
+            return new ChannelStatsSnapshot(0, ZERO_RATE);
+        }
+        int avgViews = calculateAvgViews(memberCount);
+        BigDecimal engagementRate = BigDecimal.valueOf(avgViews)
+                .multiply(HUNDRED)
+                .divide(BigDecimal.valueOf(memberCount),
+                        2, RoundingMode.HALF_UP);
+        return new ChannelStatsSnapshot(avgViews, engagementRate);
+    }
+
+    private int calculateAvgViews(int memberCount) {
+        long estimatedViews = ((long) memberCount
+                * properties.estimatedViewRateBp()) / BASIS_POINTS;
+        return (int) Math.max(0L, Math.min(Integer.MAX_VALUE, estimatedViews));
+    }
+
     private boolean isAdminCheckDue(
             @Nullable OffsetDateTime lastVerifiedAt,
             OffsetDateTime now) {
@@ -387,5 +420,10 @@ public class ChannelStatisticsCollectorScheduler {
             long ownerId,
             @Nullable String title,
             @Nullable OffsetDateTime botVerifiedAt) {
+    }
+
+    private record ChannelStatsSnapshot(
+            int avgViews,
+            BigDecimal engagementRate) {
     }
 }
