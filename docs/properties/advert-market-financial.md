@@ -3,6 +3,8 @@
 ## Table of Contents
 
 - [Commission Sweep](#commission-sweep)
+- [Financial Network Fee](#financial-network-fee)
+- [Unclaimed Payouts](#unclaimed-payouts)
 - [Ledger](#ledger)
 - [TON Blockchain](#ton-blockchain)
 - [TON Resilience](#ton-resilience)
@@ -22,6 +24,29 @@ Scheduled sweep of accumulated commissions to treasury
 | `app.financial.commission-sweep.dust-threshold-nano` | `long` | Minimum balance in nanoTON to trigger sweep (dust threshold) |  | No |  |  |
 | `app.financial.commission-sweep.batch-size` | `int` | Max accounts per sweep batch |  | No |  |  |
 | `app.financial.commission-sweep.lock-ttl` | `Duration` | Distributed lock TTL for sweep |  | No |  |  |
+
+## Financial Network Fee
+
+Default network fee estimate for outbound TON transfers
+
+
+| Property | Type | Description | Default | Required | Constraints | Examples |
+|----------|------|-------------|---------|----------|-------------|----------|
+| `app.financial.network-fee.default-estimate-nano` | `long` | Default fee estimate in nanoTON for payout/refund/sweep runtime ledger entries |  | No |  |  |
+
+## Unclaimed Payouts
+
+Scheduler settings for unclaimed payout reminders
+
+
+| Property | Type | Description | Default | Required | Constraints | Examples |
+|----------|------|-------------|---------|----------|-------------|----------|
+| `app.financial.unclaimed-payout.cron` | `NonNull String` | Cron expression for unclaimed payout scheduler |  | No |  |  |
+| `app.financial.unclaimed-payout.batch-size` | `int` | Max deals to process per scheduler run |  | No |  |  |
+| `app.financial.unclaimed-payout.lock-ttl` | `NonNull Duration` | Distributed lock TTL for scheduler run |  | No |  |  |
+| `app.financial.unclaimed-payout.reminder-days` | `Integer>` | Reminder day thresholds after completion |  | No |  |  |
+| `app.financial.unclaimed-payout.operator-review-day` | `int` | Day threshold for operator review escalation |  | No |  |  |
+| `app.financial.unclaimed-payout.notification-locale` | `NonNull String` | Locale used for generated reminder notifications |  | No |  |  |
 
 ## Ledger
 
