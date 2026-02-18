@@ -18,6 +18,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.concurrent.locks.LockSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.ton.ton4j.address.Address;
@@ -275,10 +276,13 @@ public class TonWalletService implements TonWalletPort {
     }
 
     private static void sleepQuietly(Duration delay) {
-        try {
-            Thread.sleep(delay.toMillis());
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
+        if (Thread.currentThread().isInterrupted()) {
+            throw new DomainException(
+                    ErrorCodes.TON_TX_FAILED,
+                    "Interrupted while waiting for TON wallet deployment");
+        }
+        LockSupport.parkNanos(delay.toNanos());
+        if (Thread.interrupted()) {
             throw new DomainException(
                     ErrorCodes.TON_TX_FAILED,
                     "Interrupted while waiting for TON wallet deployment");

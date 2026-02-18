@@ -28,9 +28,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
- 
+import org.springframework.context.annotation.Configuration;
+
 @DisplayName("WorkerCallbackHandler port selection")
 class WorkerCallbackHandlerPortSelectionTest {
 

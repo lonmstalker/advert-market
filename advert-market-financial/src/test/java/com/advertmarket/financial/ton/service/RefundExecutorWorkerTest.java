@@ -215,7 +215,8 @@ class RefundExecutorWorkerTest {
         when(tonWalletPort.submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L))
                 .thenThrow(new DomainException(
                         ErrorCodes.TON_API_ERROR,
-                        "TON Center API call failed: method=getSeqno, reason=getSeqno failed, exitCode: -13"));
+                        "TON Center API call failed: method=getSeqno, "
+                                + "reason=getSeqno failed, exitCode: -13"));
         when(jsonFacade.toJson(any())).thenReturn("{}");
 
         assertThatCode(() -> worker.executeRefund(envelope))
@@ -326,7 +327,8 @@ class RefundExecutorWorkerTest {
     }
 
     @Test
-    @DisplayName("should propagate circuit breaker open as retryable without abandoning outbound refund")
+    @DisplayName("should propagate circuit breaker open as retryable "
+            + "without abandoning outbound refund")
     void shouldPropagateCallNotPermittedWithoutAbandoning() {
         var dealId = DealId.generate();
         var command = new ExecuteRefundCommand(

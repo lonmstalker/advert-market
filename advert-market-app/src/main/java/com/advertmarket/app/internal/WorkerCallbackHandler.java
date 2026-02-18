@@ -45,6 +45,7 @@ public class WorkerCallbackHandler {
     private final ReconciliationResultPort reconciliationResultPort;
     private final MetricsFacade metrics;
 
+    /** Creates handler with explicit adapter ports for callback dispatching. */
     public WorkerCallbackHandler(
             EventTypeRegistry eventTypeRegistry,
             JsonFacade json,

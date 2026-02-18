@@ -102,6 +102,15 @@ class DealServiceTest {
                 0, Instant.now(), Instant.now());
     }
 
+    private DealRecord dealRecordWithStatus(DealId dealId, DealStatus status) {
+        return new DealRecord(
+                dealId.value(), 1L, 100L, 200L, null,
+                status, 1_000_000_000L, 200, 20_000_000L,
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
+                0, Instant.now(), Instant.now());
+    }
+
     private CreativeTemplateDto creativeTemplate(String creativeId) {
         return new CreativeTemplateDto(
                 creativeId,
@@ -326,60 +335,10 @@ class DealServiceTest {
                     null,
                     null);
 
-            var beforeAcceptance = new DealRecord(
-                    dealId.value(),
-                    1L,
-                    100L,
-                    200L,
-                    null,
-                    DealStatus.OFFER_PENDING,
-                    1_000_000_000L,
-                    200,
-                    20_000_000L,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    0,
-                    Instant.now(),
-                    Instant.now());
-            var awaitingPayment = new DealRecord(
-                    dealId.value(),
-                    1L,
-                    100L,
-                    200L,
-                    null,
-                    DealStatus.AWAITING_PAYMENT,
-                    1_000_000_000L,
-                    200,
-                    20_000_000L,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    0,
-                    Instant.now(),
-                    Instant.now());
+            var beforeAcceptance = dealRecordWithStatus(
+                    dealId, DealStatus.OFFER_PENDING);
+            var awaitingPayment = dealRecordWithStatus(
+                    dealId, DealStatus.AWAITING_PAYMENT);
 
             when(dealRepository.findById(dealId))
                     .thenReturn(Optional.of(beforeAcceptance))

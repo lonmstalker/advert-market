@@ -165,46 +165,23 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
             ExecutePayoutCommand command,
             String payoutAddress,
             TonTransactionsRecord record) {
-        String status = record.getStatus() == null
-                ? "" : record.getStatus().toUpperCase(Locale.ROOT);
+        String status = normalizeStatus(record);
         String txHash = record.getTxHash();
-        int version = record.getVersion() == null
-                ? 0 : record.getVersion();
+        int version = normalizeVersion(record);
 
-        if (("SUBMITTED".equals(status) || "CONFIRMED".equals(status))
-                && txHash != null && !txHash.isBlank()) {
-            return new TxRef(
-                    record.getId(),
-                    txHash,
-                    version,
-                    "CONFIRMED".equals(status));
+        if (isReusableSubmittedOrConfirmed(status, txHash)) {
+            return buildReusableTxRef(record, txHash, version, status);
         }
-
-        if ("CREATED".equals(status)
-                && (txHash == null || txHash.isBlank())) {
-            return submitAndMark(
-                    record.getId(),
-                    version,
-                    command.subwalletId(),
-                    payoutAddress,
-                    command.amountNano(),
-                    "Failed to persist resumed outbound payout submission");
+        if (isResumableCreated(status, txHash)) {
+            return resumeCreatedOutbound(command, payoutAddress, record, version);
         }
-
-        if ("ABANDONED".equals(status)
-                && (txHash == null || txHash.isBlank())) {
+        if (isResumableAbandoned(status, txHash)) {
             log.warn(
                     "Resuming ABANDONED outbound payout without tx hash:"
                             + " deal={}, txId={}",
                     dealId.value(),
                     record.getId());
-            return submitAndMark(
-                    record.getId(),
-                    version,
-                    command.subwalletId(),
-                    payoutAddress,
-                    command.amountNano(),
-                    "Failed to persist resumed abandoned outbound payout submission");
+            return resumeAbandonedOutbound(command, payoutAddress, record, version);
         }
 
         throw new DomainException(
@@ -212,6 +189,74 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                 "Outbound payout requires reconciliation before retry: deal="
                         + dealId.value() + ", txId=" + record.getId()
                         + ", status=" + status);
+    }
+
+    private static String normalizeStatus(TonTransactionsRecord record) {
+        return record.getStatus() == null
+                ? "" : record.getStatus().toUpperCase(Locale.ROOT);
+    }
+
+    private static int normalizeVersion(TonTransactionsRecord record) {
+        return record.getVersion() == null ? 0 : record.getVersion();
+    }
+
+    private static boolean isReusableSubmittedOrConfirmed(
+            String status, String txHash) {
+        return ("SUBMITTED".equals(status) || "CONFIRMED".equals(status))
+                && txHash != null
+                && !txHash.isBlank();
+    }
+
+    private static boolean isResumableCreated(String status, String txHash) {
+        return "CREATED".equals(status) && isBlank(txHash);
+    }
+
+    private static boolean isResumableAbandoned(String status, String txHash) {
+        return "ABANDONED".equals(status) && isBlank(txHash);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private static TxRef buildReusableTxRef(
+            TonTransactionsRecord record,
+            String txHash,
+            int version,
+            String status) {
+        return new TxRef(
+                record.getId(),
+                txHash,
+                version,
+                "CONFIRMED".equals(status));
+    }
+
+    private TxRef resumeCreatedOutbound(
+            ExecutePayoutCommand command,
+            String payoutAddress,
+            TonTransactionsRecord record,
+            int version) {
+        return submitAndMark(
+                record.getId(),
+                version,
+                command.subwalletId(),
+                payoutAddress,
+                command.amountNano(),
+                "Failed to persist resumed outbound payout submission");
+    }
+
+    private TxRef resumeAbandonedOutbound(
+            ExecutePayoutCommand command,
+            String payoutAddress,
+            TonTransactionsRecord record,
+            int version) {
+        return submitAndMark(
+                record.getId(),
+                version,
+                command.subwalletId(),
+                payoutAddress,
+                command.amountNano(),
+                "Failed to persist resumed abandoned outbound payout submission");
     }
 
     private TxRef submitAndMark(

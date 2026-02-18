@@ -31,7 +31,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -251,32 +250,15 @@ public class DepositService implements DepositPort {
                     .stream()
                     .filter(tx -> tx.amountNano() > 0)
                     .toList();
-        } catch (RuntimeException ex) {
-            if (isTransientTonFailure(ex)) {
-                log.warn("TON API transient failure while loading inbound transactions: "
-                                + "address={}, reason={}",
-                        toAddress,
-                        ex.getMessage());
-                return List.of();
-            }
-            throw ex;
+        } catch (DomainException
+                 | CallNotPermittedException
+                 | BulkheadFullException ex) {
+            log.warn("TON API transient failure while loading inbound transactions: "
+                            + "address={}, reason={}",
+                    toAddress,
+                    ex.getMessage());
+            return List.of();
         }
-    }
-
-    private static boolean isTransientTonFailure(Throwable throwable) {
-        Throwable current = throwable;
-        while (current != null) {
-            if (current instanceof DomainException) {
-                return true;
-            }
-            if (current instanceof CallNotPermittedException
-                    || current instanceof BulkheadFullException
-                    || current instanceof TimeoutException) {
-                return true;
-            }
-            current = current.getCause();
-        }
-        return false;
     }
 
     private void publishEvent(

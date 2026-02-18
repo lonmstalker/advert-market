@@ -28,6 +28,7 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
     private final TonCenter tonCenter;
     private final MetricsFacade metrics;
 
+    // CHECKSTYLE.OFF: IllegalCatch
     @Override
     public @NonNull List<TonTransactionInfo> getTransactions(
             @NonNull String address, int limit) {
@@ -191,6 +192,7 @@ public class TonCenterBlockchainAdapter implements TonBlockchainPort {
             throw wrapThrowable("estimateFee", ex);
         }
     }
+    // CHECKSTYLE.ON: IllegalCatch
 
     private void checkResponse(TonResponse<?> response, String method) {
         if (!response.isOk()) {

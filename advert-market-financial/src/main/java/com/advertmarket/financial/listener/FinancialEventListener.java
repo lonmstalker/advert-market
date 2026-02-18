@@ -30,6 +30,7 @@ public class FinancialEventListener {
     private final FinancialEventPort financialEventPort;
     private final MetricsFacade metrics;
 
+    /** Creates listener with Kafka envelope deserializer and financial port. */
     public FinancialEventListener(
             EventEnvelopeDeserializer deserializer,
             @Qualifier("financialEventAdapter")

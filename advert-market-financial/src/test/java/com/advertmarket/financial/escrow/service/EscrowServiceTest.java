@@ -12,12 +12,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.financial.api.model.DepositAddressInfo;
 import com.advertmarket.financial.api.model.TransferRequest;
 import com.advertmarket.financial.api.port.LedgerPort;
 import com.advertmarket.financial.api.port.TonWalletPort;
 import com.advertmarket.financial.ton.repository.JooqTonTransactionRepository;
-import com.advertmarket.db.generated.tables.records.TonTransactionsRecord;
 import com.advertmarket.shared.metric.MetricsFacade;
 import com.advertmarket.shared.model.AccountId;
 import com.advertmarket.shared.model.DealId;
@@ -167,7 +167,7 @@ class EscrowServiceTest {
         @Test
         @DisplayName("Should enrich latest inbound TX when callback confirms deposit")
         void enrichesLatestInboundOnConfirm() {
-            var dealId = DealId.generate();
+            final var dealId = DealId.generate();
             var inbound = new TonTransactionsRecord();
             inbound.setId(10L);
             inbound.setVersion(3);
@@ -207,7 +207,7 @@ class EscrowServiceTest {
         @Test
         @DisplayName("Should not rewrite inbound TX when already confirmed and enriched")
         void skipsInboundRewriteWhenAlreadyEnriched() {
-            var dealId = DealId.generate();
+            final var dealId = DealId.generate();
             var inbound = new TonTransactionsRecord();
             inbound.setId(11L);
             inbound.setVersion(1);

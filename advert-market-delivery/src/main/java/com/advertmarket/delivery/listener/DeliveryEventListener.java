@@ -29,6 +29,7 @@ public class DeliveryEventListener {
     private final DeliveryEventPort deliveryEventPort;
     private final MetricsFacade metrics;
 
+    /** Creates listener with Kafka envelope deserializer and delivery port. */
     public DeliveryEventListener(
             EventEnvelopeDeserializer deserializer,
             @Qualifier("deliveryEventAdapter")

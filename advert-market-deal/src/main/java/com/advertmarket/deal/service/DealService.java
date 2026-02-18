@@ -225,7 +225,7 @@ public class DealService implements DealPort {
             bootstrapAwaitingPaymentDeposit(
                     command.dealId(),
                     autoAdvanceResult);
-        } catch (RuntimeException exception) {
+        } catch (DomainException exception) {
             // Keep owner accept committed; retry path remains available via workflow.
             log.error(
                     "Failed to auto-advance deal to AWAITING_PAYMENT after owner acceptance: {}",

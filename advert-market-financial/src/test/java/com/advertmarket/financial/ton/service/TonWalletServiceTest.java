@@ -189,7 +189,8 @@ class TonWalletServiceTest {
         }
 
         @Test
-        @DisplayName("Should deploy wallet then submit first tx when wallet is not initialized (getSeqno -13)")
+        @DisplayName("Should deploy wallet then submit first tx when wallet "
+                + "is not initialized (getSeqno -13)")
         void submitsFirstTransaction_whenWalletIsNotInitialized() {
             String destAddress = generateValidAddress();
             when(lockPort.withLock(anyString(), any(Duration.class), any()))
