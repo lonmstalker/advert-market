@@ -21,8 +21,8 @@ import org.springframework.kafka.listener.CommonErrorHandler;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
-import org.springframework.util.backoff.ExponentialBackOff;
 
 /**
  * Kafka consumer infrastructure with three retry profiles.
@@ -34,9 +34,12 @@ public class KafkaConsumerConfig {
     private static final long DEFAULT_INITIAL_MS = 1_000L;
     private static final long DEFAULT_MAX_MS = 30_000L;
     private static final double BACKOFF_MULTIPLIER = 2.0;
+    private static final int DEFAULT_RETRIES = 3;
     private static final long FINANCIAL_INITIAL_MS = 5_000L;
     private static final long FINANCIAL_MAX_MS = 60_000L;
+    private static final int FINANCIAL_RETRIES = 5;
     private static final long NOTIFICATION_MAX_MS = 10_000L;
+    private static final int NOTIFICATION_RETRIES = 3;
 
     // CHECKSTYLE.SUPPRESS: AbbreviationAsWordInName for +1 lines
     private final String bootstrapServers;
@@ -121,6 +124,7 @@ public class KafkaConsumerConfig {
     private DefaultErrorHandler defaultErrorHandler(
             KafkaTemplate<String, String> kafkaTemplate) {
         return createHandler(kafkaTemplate,
+                DEFAULT_RETRIES,
                 DEFAULT_INITIAL_MS, BACKOFF_MULTIPLIER,
                 DEFAULT_MAX_MS);
     }
@@ -128,6 +132,7 @@ public class KafkaConsumerConfig {
     private DefaultErrorHandler financialErrorHandler(
             KafkaTemplate<String, String> kafkaTemplate) {
         return createHandler(kafkaTemplate,
+                FINANCIAL_RETRIES,
                 FINANCIAL_INITIAL_MS, BACKOFF_MULTIPLIER,
                 FINANCIAL_MAX_MS);
     }
@@ -135,6 +140,7 @@ public class KafkaConsumerConfig {
     private DefaultErrorHandler notificationErrorHandler(
             KafkaTemplate<String, String> kafkaTemplate) {
         return createHandler(kafkaTemplate,
+                NOTIFICATION_RETRIES,
                 DEFAULT_INITIAL_MS, BACKOFF_MULTIPLIER,
                 NOTIFICATION_MAX_MS);
     }
@@ -142,13 +148,16 @@ public class KafkaConsumerConfig {
     @SuppressWarnings("fenum:argument")
     private DefaultErrorHandler createHandler(
             KafkaTemplate<String, String> kafkaTemplate,
+            int maxRetries,
             long initialInterval,
             double multiplier,
             long maxInterval) {
         var dlqRecoverer =
                 new DeadLetterPublishingRecoverer(kafkaTemplate);
-        var backOff = new ExponentialBackOff(
-                initialInterval, multiplier);
+        var backOff = new ExponentialBackOffWithMaxRetries(
+                maxRetries);
+        backOff.setInitialInterval(initialInterval);
+        backOff.setMultiplier(multiplier);
         backOff.setMaxInterval(maxInterval);
         var handler = new DefaultErrorHandler(
                 (record, ex) -> {

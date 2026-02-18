@@ -229,6 +229,40 @@ class PayoutExecutorWorkerTest {
     }
 
     @Test
+    @DisplayName("should defer payout when TON getSeqno -13 is present in cause chain")
+    void shouldDeferWhenTonWalletNotInitializedInCauseChain() {
+        var dealId = DealId.generate();
+        var command = new ExecutePayoutCommand(
+                42L, 1_000_000_000L, 100_000_000L, 11);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_PAYOUT, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+        when(userRepository.findTonAddress(new UserId(42L)))
+                .thenReturn(Optional.of("UQ-owner-address"));
+        when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "PAYOUT"))
+                .thenReturn(Optional.empty());
+        when(txRepository.createOutbound(
+                dealId.value(), "PAYOUT", 1_000_000_000L, "UQ-owner-address", 11))
+                .thenReturn(100L);
+        when(tonWalletPort.submitTransaction(11, "UQ-owner-address", 1_000_000_000L))
+                .thenThrow(new DomainException(
+                        ErrorCodes.TON_API_ERROR,
+                        "TON Center API call failed: getSeqno",
+                        new RuntimeException("getSeqno failed, exitCode: -13")));
+        when(jsonFacade.toJson(any())).thenReturn("{}");
+
+        assertThatCode(() -> worker.executePayout(envelope))
+                .doesNotThrowAnyException();
+
+        verify(txRepository).incrementRetryCount(100L);
+        verify(txRepository, never()).updateStatus(100L, "ABANDONED", 0, 0);
+        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(outboxRepository).save(any(OutboxEntry.class));
+    }
+
+    @Test
     @DisplayName("should propagate retryable TON API error without abandoning outbound payout")
     void shouldPropagateRetryableTonApiErrorWithoutAbandoning() {
         var dealId = DealId.generate();

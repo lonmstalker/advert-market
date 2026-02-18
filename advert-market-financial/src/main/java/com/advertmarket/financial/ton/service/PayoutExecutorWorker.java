@@ -308,14 +308,14 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
     private static boolean shouldDefer(DomainException exception) {
         if (exception.getErrorCode() == ErrorCodes.TON_TX_FAILED) {
             var message = exception.getMessage();
-            return message != null
-                    && message.contains("requires reconciliation before retry");
+            if (message != null
+                    && message.contains("requires reconciliation before retry")) {
+                return true;
+            }
+            return hasUninitializedWalletSignal(exception);
         }
         if (exception.getErrorCode() == ErrorCodes.TON_API_ERROR) {
-            var message = exception.getMessage();
-            return message != null
-                    && message.contains("getSeqno")
-                    && message.contains("exitCode: -13");
+            return hasUninitializedWalletSignal(exception);
         }
         return false;
     }
@@ -360,6 +360,26 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
             current = current.getCause();
         }
         return null;
+    }
+
+    private static boolean hasUninitializedWalletSignal(Throwable throwable) {
+        return containsInErrorChain(throwable, "exitCode: -13")
+                || containsInErrorChain(
+                        throwable,
+                        "Failed to unpack account state");
+    }
+
+    private static boolean containsInErrorChain(
+            Throwable throwable, String needle) {
+        Throwable current = throwable;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null && message.contains(needle)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private <T extends DomainEvent> void publishOutboxEvent(
