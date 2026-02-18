@@ -38,7 +38,26 @@ describe('fetchWalletSummary', () => {
 
     const result = await fetchWalletSummary();
     expect(result).toEqual(summary);
-    expect(mockGet).toHaveBeenCalledWith('/wallet/summary', expect.any(Object));
+    expect(mockGet).toHaveBeenCalledWith('/wallet/summary');
+  });
+
+  it('maps backend summary shape to frontend wallet summary', async () => {
+    mockGet.mockResolvedValue({
+      pendingBalanceNano: 2_500_000_000,
+      availableBalanceNano: 7_500_000_000,
+      totalEarnedNano: 10_000_000_000,
+    });
+
+    const result = await fetchWalletSummary();
+
+    expect(result).toEqual({
+      earnedTotalNano: '10000000000',
+      inEscrowNano: '2500000000',
+      spentTotalNano: '0',
+      activeEscrowNano: '0',
+      activeDealsCount: 0,
+      completedDealsCount: 0,
+    });
   });
 
   it('returns EMPTY_SUMMARY on 404 (graceful fallback)', async () => {
@@ -84,6 +103,62 @@ describe('fetchTransactions', () => {
     expect(result.items).toHaveLength(1);
   });
 
+  it('maps backend ledger entries page to frontend transaction list', async () => {
+    mockGet.mockResolvedValue({
+      items: [
+        {
+          id: 101,
+          dealId: '00000000-0000-0000-0000-000000000101',
+          entryType: 'OWNER_PAYOUT',
+          debitNano: 0,
+          creditNano: 2_000_000_000,
+          description: 'Escrow released',
+          createdAt: '2026-02-18T10:00:00Z',
+        },
+        {
+          id: 102,
+          dealId: null,
+          entryType: 'OWNER_WITHDRAWAL',
+          debitNano: 500_000_000,
+          creditNano: 0,
+          description: 'Withdrawal',
+          createdAt: '2026-02-18T11:00:00Z',
+        },
+      ],
+      nextCursor: 'next',
+      hasNext: true,
+    });
+
+    const result = await fetchTransactions({});
+
+    expect(result.hasNext).toBe(true);
+    expect(result.nextCursor).toBe('next');
+    expect(result.items).toEqual([
+      {
+        id: '101',
+        type: 'payout',
+        status: 'confirmed',
+        amountNano: '2000000000',
+        direction: 'income',
+        dealId: '00000000-0000-0000-0000-000000000101',
+        channelTitle: null,
+        description: 'Escrow released',
+        createdAt: '2026-02-18T10:00:00Z',
+      },
+      {
+        id: '102',
+        type: 'payout',
+        status: 'confirmed',
+        amountNano: '500000000',
+        direction: 'expense',
+        dealId: null,
+        channelTitle: null,
+        description: 'Withdrawal',
+        createdAt: '2026-02-18T11:00:00Z',
+      },
+    ]);
+  });
+
   it('passes filter and pagination params', async () => {
     mockGet.mockResolvedValue({ items: [], nextCursor: null, hasNext: false });
 
@@ -118,17 +193,69 @@ describe('fetchTransactionDetail', () => {
   });
 
   it('returns detail by txId', async () => {
-    const detail = { id: 'tx-1', txHash: 'abc' };
+    const detail = {
+      id: 'tx-1',
+      type: 'payout',
+      status: 'confirmed',
+      amountNano: '1000000000',
+      direction: 'income',
+      dealId: '00000000-0000-0000-0000-000000000001',
+      channelTitle: null,
+      description: 'Escrow released',
+      createdAt: '2026-02-18T10:00:00Z',
+      txHash: 'abc',
+      fromAddress: null,
+      toAddress: null,
+      commissionNano: null,
+    };
     mockGet.mockResolvedValue(detail);
 
     const result = await fetchTransactionDetail('tx-1');
     expect(result).toEqual(detail);
-    expect(mockGet).toHaveBeenCalledWith('/wallet/transactions/tx-1', expect.any(Object));
+    expect(mockGet).toHaveBeenCalledWith('/wallet/transactions/tx-1');
   });
 
   it('propagates errors (no fallback)', async () => {
     mockGet.mockRejectedValue(makeApiError(500));
 
     await expect(fetchTransactionDetail('tx-1')).rejects.toThrow(ApiError);
+  });
+
+  it('falls back to list endpoint when detail endpoint is unavailable', async () => {
+    mockGet
+      .mockRejectedValueOnce(makeApiError(404))
+      .mockResolvedValueOnce({
+        items: [
+          {
+            id: 777,
+            dealId: '00000000-0000-0000-0000-000000000777',
+            entryType: 'OWNER_PAYOUT',
+            debitNano: 0,
+            creditNano: 1_200_000_000,
+            description: 'Escrow released',
+            createdAt: '2026-02-18T12:00:00Z',
+          },
+        ],
+        nextCursor: null,
+        hasNext: false,
+      });
+
+    const result = await fetchTransactionDetail('777');
+
+    expect(result).toEqual({
+      id: '777',
+      type: 'payout',
+      status: 'confirmed',
+      amountNano: '1200000000',
+      direction: 'income',
+      dealId: '00000000-0000-0000-0000-000000000777',
+      channelTitle: null,
+      description: 'Escrow released',
+      createdAt: '2026-02-18T12:00:00Z',
+      txHash: null,
+      fromAddress: null,
+      toAddress: null,
+      commissionNano: null,
+    });
   });
 });
