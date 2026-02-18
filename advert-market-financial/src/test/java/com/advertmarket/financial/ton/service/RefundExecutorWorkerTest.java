@@ -227,6 +227,40 @@ class RefundExecutorWorkerTest {
     }
 
     @Test
+    @DisplayName("should unwrap wrapped retryable TON API error without abandoning outbound refund")
+    void shouldUnwrapWrappedRetryableTonApiErrorWithoutAbandoning() {
+        var dealId = DealId.generate();
+        var command = new ExecuteRefundCommand(
+                7L, 1_500_000_000L, "UQ-advertiser-address", 33);
+        final var envelope = EventEnvelope.create(
+                EventTypes.EXECUTE_REFUND, dealId, command);
+
+        when(lockPort.withLock(anyString(), any(Duration.class), any()))
+                .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(2).get());
+        when(txRepository.findLatestOutboundByDealIdAndType(dealId.value(), "REFUND"))
+                .thenReturn(Optional.empty());
+        when(txRepository.createOutbound(
+                dealId.value(), "REFUND", 1_500_000_000L, "UQ-advertiser-address", 33))
+                .thenReturn(200L);
+        when(tonWalletPort.submitTransaction(33, "UQ-advertiser-address", 1_500_000_000L))
+                .thenThrow(new RuntimeException(
+                        "wrapped",
+                        new DomainException(
+                                ErrorCodes.TON_API_ERROR,
+                                "TON Center API call failed: sendBoc")));
+
+        assertThatThrownBy(() -> worker.executeRefund(envelope))
+                .isInstanceOf(DomainException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCodes.TON_API_ERROR);
+
+        verify(txRepository).incrementRetryCount(200L);
+        verify(txRepository, never()).updateStatus(200L, "ABANDONED", 0, 0);
+        verify(ledgerPort, never()).transfer(any(TransferRequest.class));
+        verify(outboxRepository, never()).save(any(OutboxEntry.class));
+    }
+
+    @Test
     @DisplayName("should defer refund when outbound tx is already ABANDONED")
     void shouldDeferWhenOutboundAlreadyAbandoned() {
         var dealId = DealId.generate();

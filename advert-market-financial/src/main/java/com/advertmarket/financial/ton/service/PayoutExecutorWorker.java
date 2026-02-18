@@ -37,6 +37,7 @@ import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Executes TON payouts to channel owners after deal completion.
@@ -222,11 +223,18 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                     expectedVersion + 1,
                     false);
         } catch (RuntimeException ex) {
-            if (isRetryableSubmissionFailure(ex)) {
+            var domainException = extractDomainException(ex);
+            if (isRetryableSubmissionFailure(domainException)) {
                 txRepository.incrementRetryCount(txId);
+                if (domainException != null) {
+                    throw domainException;
+                }
                 throw ex;
             }
             txRepository.updateStatus(txId, "ABANDONED", 0, expectedVersion);
+            if (domainException != null) {
+                throw domainException;
+            }
             throw ex;
         }
         // CHECKSTYLE.ON: IllegalCatch
@@ -293,8 +301,9 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
     }
 
     @SuppressWarnings("ReferenceEquality")
-    private static boolean isRetryableSubmissionFailure(RuntimeException ex) {
-        if (!(ex instanceof DomainException exception)) {
+    private static boolean isRetryableSubmissionFailure(
+            @Nullable DomainException exception) {
+        if (exception == null) {
             return false;
         }
         if (exception.getErrorCode() == ErrorCodes.TON_API_ERROR) {
@@ -310,6 +319,18 @@ public class PayoutExecutorWorker implements PayoutExecutorPort {
                     || message.contains("Interrupted while waiting for TON wallet deployment");
         }
         return false;
+    }
+
+    private static @Nullable DomainException extractDomainException(
+            Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof DomainException domainException) {
+                return domainException;
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 
     private <T extends DomainEvent> void publishOutboxEvent(
